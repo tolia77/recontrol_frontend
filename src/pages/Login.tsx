@@ -13,12 +13,12 @@ function Login() {
             <h1>Log in</h1>
             <form onSubmit={handleSubmit}>
                 <div>
-                    <label className="text-body" htmlFor="email">Email:</label>
+                    <label className="text-body-small" htmlFor="email">Email:</label>
                     <br/>
                     <input type="email" id="email" name="email" required />
                 </div>
                 <div>
-                    <label className="text-body" htmlFor="password">Password:</label>
+                    <label className="text-body-small" htmlFor="password">Password:</label>
                     <br/>
                     <input type="password" id="password" name="password" required />
                 </div>

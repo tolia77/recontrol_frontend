@@ -12,6 +12,32 @@
     -moz-osx-font-smoothing: grayscale;
 }
 
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    border-color: var(--color-lightgray);
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 16px;
+    background-color: #fff;
+    color: inherit;
+    outline: none;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(30,58,138,0.08); /* subtle focus ring using primary color */
+}
+
+input::placeholder {
+    color: var(--color-darkgray);
+    opacity: 1;
+}
 
 @theme {
     --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
@@ -22,6 +48,7 @@
     --color-background: #F3F4F6;
     --color-text: #111827;
     --color-error: #EF4444;
+    --color-lightgray: #D1D5DB;
     --color-darkgray: #8F8F8F;
 }
 
