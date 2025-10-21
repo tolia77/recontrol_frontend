@@ -69,41 +69,49 @@ html, body, #root {
 h1 {
     font-size: 36px;
     line-height: 40px;
+    font-weight: 700;
 }
 
 h2 {
     font-size: 24px;
     line-height: 32px;
+    font-weight: 600;
 }
 
 h3 {
     font-size: 20px;
     line-height: 28px;
+    font-weight: 500;
 }
 
 p {
     font-size: 16px;
     line-height: 24px;
+    font-weight: 400;
 }
 
 .text-body {
     font-size: 16px;
     line-height: 24px;
+    font-weight: 400;
 }
 
 .text-body-small {
     font-size: 14px;
     line-height: 20px;
+    font-weight: 400;
 }
 
 .text-caption-small {
     font-size: 12px;
     line-height: 16px;
+    font-weight: 400;
 }
 
 .text-caption-tiny {
     font-size: 10px;
     line-height: 12px;
+    font-weight: 400;
 }
 
 .button-primary {
