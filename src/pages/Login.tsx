@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import logoFull from 'src/assets/img/logo-full.svg';
 import {Link, useNavigate} from "react-router";
 import {loginRequest} from "src/services/backend/authRequests.ts";
+import {saveTokens} from "src/services/backend/utils/auth.ts";
 
 function Login() {
     const [email, setEmail] = useState('');
@@ -12,7 +13,8 @@ function Login() {
     async function handleSubmit(event: React.FormEvent) {
         event.preventDefault();
         try {
-            await loginRequest(email, password)
+            const res = await loginRequest(email, password)
+            saveTokens(res.data.access_token, res.data.refresh_token);
             navigate("/dashboard")
         } catch (error: any) {
             if(error.response.status === 401) {
