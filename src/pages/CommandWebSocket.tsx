@@ -1,5 +1,5 @@
-import {useEffect, useRef, useState} from "react";
-import {getAccessToken, getRefreshToken, saveTokens} from "src/services/backend/utils/auth.ts";
+import { useEffect, useRef, useState } from "react";
+import { getAccessToken, getRefreshToken, saveTokens } from "src/services/backend/utils/auth.ts";
 import axios from "axios";
 
 type Message = {
@@ -8,40 +8,40 @@ type Message = {
     payload: Record<string, any>;
 };
 
-type CommandPayload = {
-    device_id: string;
-    command: string;
-    payload?: Record<string, any>;
-};
-
 interface Props {
-    wsUrl: string; // e.g., ws://localhost:3000/cable
+    wsUrl: string;
 }
 
-export function CommandWebSocket({wsUrl}: Props) {
+export function CommandWebSocket({ wsUrl }: Props) {
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const isHandlingAuthReconnect = useRef(false); // Flag to prevent reconnect race conditions
     const [messages, setMessages] = useState<Message[]>([]);
     const [connected, setConnected] = useState(false);
     const [deviceId, setDeviceId] = useState("");
+    const [isConnecting, setIsConnecting] = useState(false);
 
-    // --- Refresh Access Token ---
     const refreshAccessToken = async (): Promise<string | null> => {
         try {
             const refreshToken = getRefreshToken();
-            if (!refreshToken) return null;
+            if (!refreshToken) {
+                console.warn("No refresh token available");
+                return null;
+            }
 
             const res = await axios.post(
                 `${import.meta.env.VITE_BACKEND_URL}/auth/refresh`,
                 {},
-                {headers: {"Refresh-Token": refreshToken}}
+                { headers: { "Refresh-Token": refreshToken } }
             );
 
             const tokens = res.data ?? {};
-            const newAccess = tokens.access_token
-            const newRefresh = tokens.refresh_token
+            const newAccess = tokens.access_token;
+            const newRefresh = tokens.refresh_token;
 
-            if (newAccess) saveTokens(newAccess, newRefresh ?? null);
+            if (newAccess) {
+                saveTokens(newAccess, newRefresh ?? null);
+            }
 
             return newAccess;
         } catch (err) {
@@ -50,28 +50,53 @@ export function CommandWebSocket({wsUrl}: Props) {
         }
     };
 
-    // --- Open WebSocket connection ---
     const connectWebSocket = async () => {
+        if (!deviceId) {
+            console.warn("Cannot connect: deviceId is missing.");
+            return;
+        }
+        if (wsRef.current && wsRef.current.readyState < 2) {
+            console.warn("WebSocket connection already in progress.");
+            return;
+        }
+
+        setIsConnecting(true);
+
+        if (reconnectTimeout.current) {
+            clearTimeout(reconnectTimeout.current);
+            reconnectTimeout.current = null;
+        }
+
         let token = getAccessToken();
         if (!token) {
+            console.log("No access token, attempting refresh before connect...");
             token = await refreshAccessToken();
             if (!token) {
-                console.warn("No valid token available for WebSocket connection");
+                console.error("No valid token available for WebSocket connection");
+                setIsConnecting(false);
                 return;
             }
         }
 
-        const urlWithToken = `${wsUrl}?access_token=${encodeURIComponent(token)}`;
+        const urlWithToken = `${wsUrl}?access_token=${encodeURIComponent(token)}&device_id=${deviceId}`;
         const ws = new WebSocket(urlWithToken);
         wsRef.current = ws;
 
         ws.onopen = () => {
             console.log("WebSocket connected");
             setConnected(true);
+            setIsConnecting(false);
+            isHandlingAuthReconnect.current = false;
+
+            if (reconnectTimeout.current) {
+                clearTimeout(reconnectTimeout.current);
+                reconnectTimeout.current = null;
+            }
+
             ws.send(
                 JSON.stringify({
                     command: "subscribe",
-                    identifier: JSON.stringify({channel: "CommandChannel"}),
+                    identifier: JSON.stringify({ channel: "CommandChannel" }),
                 })
             );
         };
@@ -79,10 +104,25 @@ export function CommandWebSocket({wsUrl}: Props) {
         ws.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
+
+                if (data.type === "ping") {
+                    return;
+                }
+
                 if (data.type === "reject_subscription") {
                     console.warn("WebSocket subscription rejected, refreshing token...");
+                    isHandlingAuthReconnect.current = true;
                     handleReconnection();
+                    return;
                 }
+
+                if (data.type === "disconnect" && data.reason === "unauthorized") {
+                    console.warn("WebSocket 'unauthorized' message received, refreshing token...");
+                    isHandlingAuthReconnect.current = true; // Set flag
+                    handleReconnection();
+                    return;
+                }
+
                 if (data.message) {
                     setMessages((prev) => [...prev, data.message]);
                 }
@@ -93,59 +133,76 @@ export function CommandWebSocket({wsUrl}: Props) {
 
         ws.onclose = async (event) => {
             console.log("WebSocket closed", event.code, event.reason);
+            console.log(event);
             setConnected(false);
+            setIsConnecting(false);
 
-            // Treat abrupt close (1006) as unauthorized (Rails rejects)
-            if (event.code === 4001 || event.code === 1006 || event.reason.includes("unauthorized")) {
+            if (isHandlingAuthReconnect.current) {
+                console.log("Auth reconnect in progress, skipping default onclose logic.");
+                return;
+            }
+
+            if (event.code === 4001 || event.reason.includes("unauthorized")) {
                 console.warn("WebSocket closed due to auth, attempting token refresh...");
                 await handleReconnection();
                 return;
             }
 
-            // Otherwise reconnect normally
             if (!reconnectTimeout.current) {
+                console.log("Scheduling reconnect in 3s...");
                 reconnectTimeout.current = setTimeout(() => {
-                    connectWebSocket();
                     reconnectTimeout.current = null;
+                    connectWebSocket();
                 }, 3000);
             }
         };
 
-
         ws.onerror = (err) => {
             console.error("WebSocket error", err);
+            // Error will likely be followed by onclose, which handles reconnect
         };
     };
 
     // --- Reconnect logic ---
     const handleReconnection = async () => {
-        console.log("Attempting WebSocket reconnection...");
+        console.log("Attempting WebSocket reconnection (auth)...");
+        isHandlingAuthReconnect.current = true; // Mark that we are handling an auth failure
+
         const newToken = await refreshAccessToken();
         if (newToken) {
-            connectWebSocket();
+            connectWebSocket(); // This will connect with the new token
         } else {
             console.error("Unable to refresh token, user may need to re-login.");
+            isHandlingAuthReconnect.current = false; // Failed, clear flag
+            setIsConnecting(false); // Ensure UI is not stuck
         }
     };
 
-    // --- Init on mount ---
+    // --- Cleanup on unmount ---
     useEffect(() => {
-        connectWebSocket();
         return () => {
-            if (wsRef.current) wsRef.current.close();
-            if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
+            if (reconnectTimeout.current) {
+                clearTimeout(reconnectTimeout.current);
+            }
+            if (wsRef.current) {
+                wsRef.current.close(1000, "Component unmounting");
+                wsRef.current = null;
+            }
         };
-    }, [wsUrl]);
+    }, []);
 
     // --- Send message to channel ---
-    const sendCommand = (payload: CommandPayload) => {
-        if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+    const sendCommand = (command: string, payload?: Record<string, any>) => {
+        if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+            console.warn("Cannot send command, WebSocket is not open.");
+            return;
+        }
 
         wsRef.current.send(
             JSON.stringify({
                 command: "message",
-                identifier: JSON.stringify({channel: "CommandChannel"}),
-                data: JSON.stringify(payload),
+                identifier: JSON.stringify({ channel: "CommandChannel" }),
+                data: JSON.stringify({ command, payload }),
             })
         );
     };
@@ -153,7 +210,7 @@ export function CommandWebSocket({wsUrl}: Props) {
     return (
         <div>
             <h2>WebSocket</h2>
-            <p>Status: {connected ? "Connected" : "Disconnected"}</p>
+            <p>Status: {connected ? "Connected" : isConnecting ? "Connecting..." : "Disconnected"}</p>
 
             <label>
                 Device ID:{" "}
@@ -162,17 +219,19 @@ export function CommandWebSocket({wsUrl}: Props) {
                     value={deviceId}
                     onChange={(e) => setDeviceId(e.target.value)}
                     placeholder="Enter device ID"
+                    disabled={connected || isConnecting}
                 />
             </label>
             <button
-                onClick={() =>
-                    sendCommand({
-                        device_id: deviceId,
-                        command: "ping",
-                        payload: {msg: "hello desktop"},
-                    })
-                }
-                disabled={!deviceId}
+                onClick={connectWebSocket}
+                disabled={!deviceId || connected || isConnecting}
+            >
+                Connect
+            </button>
+
+            <button
+                onClick={() => sendCommand("ping", { msg: "hello desktop" })}
+                disabled={!connected}
             >
                 Send Ping
             </button>
@@ -181,8 +240,7 @@ export function CommandWebSocket({wsUrl}: Props) {
             <ul>
                 {messages.map((m, i) => (
                     <li key={i}>
-                        <strong>{m.from}</strong>: {m.command} -{" "}
-                        {JSON.stringify(m.payload)}
+                        <strong>{m.from}</strong>: {m.command} - {JSON.stringify(m.payload)}
                     </li>
                 ))}
             </ul>
