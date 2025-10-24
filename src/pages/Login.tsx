@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import logoFull from 'src/assets/img/logo-full.svg';
 import {Link, useNavigate} from "react-router";
 import {loginRequest} from "src/services/backend/authRequests.ts";
-import {saveTokens} from "src/services/backend/utils/auth.ts";
+import {saveTokens} from "src/utils/auth.ts";
 
 function Login() {
     const [email, setEmail] = useState('');

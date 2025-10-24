@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { getAccessToken, getRefreshToken, saveTokens } from "src/services/backend/utils/auth.ts";
+import { getAccessToken, getRefreshToken, saveTokens } from "src/utils/auth.ts";
 import axios from "axios";
 
 type Message = {

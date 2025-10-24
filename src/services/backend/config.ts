@@ -1,5 +1,5 @@
 import axios from "axios";
-import {getRefreshToken} from "src/services/backend/utils/auth.ts";
+import {getRefreshToken} from "src/utils/auth.ts";
 
 export const backendInstance = axios.create({
     baseURL: import.meta.env.VITE_BACKEND_URL

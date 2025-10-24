@@ -1,5 +1,5 @@
 import {backendInstance} from "src/services/backend/config.ts";
-import {getAccessToken, getRefreshToken} from "src/services/backend/utils/auth.ts";
+import {getAccessToken, getRefreshToken} from "src/utils/auth.ts";
 
 export async function loginRequest(email: string, password: string) {
     return await backendInstance.post("/auth/login", {
