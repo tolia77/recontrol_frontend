@@ -50,6 +50,7 @@ input::placeholder {
     --color-error: #EF4444;
     --color-lightgray: #D1D5DB;
     --color-darkgray: #8F8F8F;
+    --color-amber: #FFB200
 }
 
 html {
