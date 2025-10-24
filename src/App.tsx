@@ -4,6 +4,8 @@ import Index from "src/pages/Index.tsx";
 import Login from "src/pages/Login.tsx";
 import Signup from "src/pages/Signup.tsx";
 import {CommandWebSocket} from "src/pages/CommandWebSocket.tsx";
+import Dashboard from "src/pages/Dashboard.tsx";
+import Devices from "src/pages/Devices.tsx";
 
 function App() {
     return (
@@ -14,7 +16,9 @@ function App() {
                         <Route index element={<Index/>}/>
                         <Route path="/login" element={<Login/>}/>
                         <Route path="/signup" element={<Signup/>}/>
-                        <Route path="/ws" element={<CommandWebSocket wsUrl="ws://localhost:3000/cable" />}/>
+                        <Route path="/ws" element={<CommandWebSocket wsUrl="ws://localhost:3000/cable"/>}/>
+                        <Route path="/dashboard" element={<Dashboard/>}/>
+                        <Route path="/devices" element={<Devices/>}/>
                     </Route>
                 </Routes>
             </BrowserRouter>
