@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { getAccessToken, getRefreshToken, saveTokens } from "src/services/backend/utils/auth.ts";
+import {useEffect, useRef, useState} from "react";
+import {getAccessToken, getRefreshToken, saveTokens} from "src/services/backend/utils/auth.ts";
 import axios from "axios";
 
 type Message = {
@@ -18,7 +18,7 @@ interface Props {
     wsUrl: string; // e.g., ws://localhost:3000/cable
 }
 
-export function CommandWebSocket({ wsUrl }: Props) {
+export function CommandWebSocket({wsUrl}: Props) {
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
@@ -34,19 +34,12 @@ export function CommandWebSocket({ wsUrl }: Props) {
             const res = await axios.post(
                 `${import.meta.env.VITE_BACKEND_URL}/auth/refresh`,
                 {},
-                { headers: { "Refresh-Token": refreshToken } }
+                {headers: {"Refresh-Token": refreshToken}}
             );
 
             const tokens = res.data ?? {};
-            const newAccess =
-                tokens.access ||
-                tokens.access_token ||
-                tokens.accessToken ||
-                tokens.token;
-            const newRefresh =
-                tokens.refresh ||
-                tokens.refresh_token ||
-                tokens.refreshToken;
+            const newAccess = tokens.access_token
+            const newRefresh = tokens.refresh_token
 
             if (newAccess) saveTokens(newAccess, newRefresh ?? null);
 
@@ -78,7 +71,7 @@ export function CommandWebSocket({ wsUrl }: Props) {
             ws.send(
                 JSON.stringify({
                     command: "subscribe",
-                    identifier: JSON.stringify({ channel: "CommandChannel" }),
+                    identifier: JSON.stringify({channel: "CommandChannel"}),
                 })
             );
         };
@@ -99,22 +92,25 @@ export function CommandWebSocket({ wsUrl }: Props) {
         };
 
         ws.onclose = async (event) => {
-            console.log("WebSocket closed", event.reason);
+            console.log("WebSocket closed", event.code, event.reason);
             setConnected(false);
 
-            // Unauthorized or expired token triggers refresh
-            if (event.code === 4001 || event.reason.includes("unauthorized")) {
+            // Treat abrupt close (1006) as unauthorized (Rails rejects)
+            if (event.code === 4001 || event.code === 1006 || event.reason.includes("unauthorized")) {
+                console.warn("WebSocket closed due to auth, attempting token refresh...");
                 await handleReconnection();
-            } else {
-                // Attempt normal reconnect after short delay
-                if (!reconnectTimeout.current) {
-                    reconnectTimeout.current = setTimeout(() => {
-                        connectWebSocket();
-                        reconnectTimeout.current = null;
-                    }, 3000);
-                }
+                return;
+            }
+
+            // Otherwise reconnect normally
+            if (!reconnectTimeout.current) {
+                reconnectTimeout.current = setTimeout(() => {
+                    connectWebSocket();
+                    reconnectTimeout.current = null;
+                }, 3000);
             }
         };
+
 
         ws.onerror = (err) => {
             console.error("WebSocket error", err);
@@ -148,7 +144,7 @@ export function CommandWebSocket({ wsUrl }: Props) {
         wsRef.current.send(
             JSON.stringify({
                 command: "message",
-                identifier: JSON.stringify({ channel: "CommandChannel" }),
+                identifier: JSON.stringify({channel: "CommandChannel"}),
                 data: JSON.stringify(payload),
             })
         );
@@ -173,7 +169,7 @@ export function CommandWebSocket({ wsUrl }: Props) {
                     sendCommand({
                         device_id: deviceId,
                         command: "ping",
-                        payload: { msg: "hello desktop" },
+                        payload: {msg: "hello desktop"},
                     })
                 }
                 disabled={!deviceId}
