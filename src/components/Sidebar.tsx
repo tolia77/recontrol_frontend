@@ -1,8 +1,8 @@
 import React from 'react';
 import {Link} from "react-router";
 import logo from "src/assets/img/logo-full-white-text.svg"
-import dashboardIcon from "src/assets/img/icons/material-symbols_dashboard-outline-rounded.svg"
-import devicesIcon from "src/assets/img/icons/material-symbols_devices-outline.svg"
+import dashboardIcon from "src/assets/img/icons/dashboard.svg"
+import devicesIcon from "src/assets/img/icons/device.svg"
 
 function Sidebar() {
     return (
