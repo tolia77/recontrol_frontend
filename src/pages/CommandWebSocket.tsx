@@ -2,6 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { getAccessToken, getRefreshToken, saveTokens } from "src/utils/auth.ts";
 import axios from "axios";
 
+// new component imports
+import DeviceConnect from "src/components/DeviceConnect";
+import ActionBuilder from "src/components/ActionBuilder";
+import ActionsList from "src/components/ActionsList";
+import MessagesList from "src/components/MessagesList";
+
 type Message = {
     from: string;
     command: string;
@@ -15,7 +21,7 @@ interface Props {
 export function CommandWebSocket({ wsUrl }: Props) {
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const isHandlingAuthReconnect = useRef(false); // Flag to prevent reconnect race conditions
+    const isHandlingAuthReconnect = useRef(false);
     const [messages, setMessages] = useState<Message[]>([]);
     const [connected, setConnected] = useState(false);
     const [deviceId, setDeviceId] = useState("");
@@ -206,10 +212,46 @@ export function CommandWebSocket({ wsUrl }: Props) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // --- Send message to channel ---
-    const sendCommand = (command: string, payload?: Record<string, any>) => {
+    // UUID v4 generator (small helper)
+    const uuidv4 = () => {
+        if (typeof crypto !== "undefined" && (crypto as any).getRandomValues) {
+            const buf = new Uint8Array(16);
+            (crypto as any).getRandomValues(buf);
+            // Adapted RFC4122 version 4
+            buf[6] = (buf[6] & 0x0f) | 0x40;
+            buf[8] = (buf[8] & 0x3f) | 0x80;
+            const hex: string[] = [];
+            for (let i = 0; i < buf.length; i++) {
+                hex.push((buf[i] + 0x100).toString(16).substr(1));
+            }
+            return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex
+                .slice(6, 8)
+                .join("")}-${hex.slice(8, 10).join("")}-${hex.slice(10, 16).join("")}`;
+        }
+        // fallback
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+            const r = (Math.random() * 16) | 0;
+            const v = c === "x" ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+        });
+    };
+
+    // ACTIONS: lightweight state/handlers (action objects are created in ActionBuilder)
+    const [actions, setActions] = useState<any[]>([]);
+
+    const addAction = (action: any) => {
+        setActions((s) => [...s, action]);
+    };
+
+    const removeAction = (idx: number) => setActions((s) => s.filter((_, i) => i !== idx));
+    const clearActions = () => setActions([]);
+
+    // --- Replace batch sender: send individual action messages ---
+    // old sendCommand/sendActions replaced by sendMessagePayload + sendActions
+
+    const sendMessagePayload = (payloadObj: any) => {
         if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-            console.warn("Cannot send command, WebSocket is not open.");
+            console.warn("Cannot send message, WebSocket is not open.");
             return;
         }
 
@@ -217,9 +259,37 @@ export function CommandWebSocket({ wsUrl }: Props) {
             JSON.stringify({
                 command: "message",
                 identifier: JSON.stringify({ channel: "CommandChannel" }),
-                data: JSON.stringify({ command, payload }),
+                data: JSON.stringify(payloadObj),
             })
         );
+    };
+
+    const sendSingleAction = (action: any) => {
+        // action should be { id?: string, type: string, payload: any }
+        const msg = {
+            // include id when present (uuid)
+            ...(action.id ? { id: action.id } : {}),
+            type: action.type,
+            payload: action.payload ?? {},
+        };
+        sendMessagePayload(msg);
+    };
+
+    const sendActions = () => {
+        if (!actions.length) {
+            console.warn("No actions to send.");
+            return;
+        }
+        // send actions one by one
+        actions.forEach((a) => {
+            try {
+                sendSingleAction(a);
+            } catch (err) {
+                console.error("Failed to send action", a, err);
+            }
+        });
+        // clear pending actions after sending to avoid duplicates
+        setActions([]);
     };
 
     return (
@@ -227,38 +297,39 @@ export function CommandWebSocket({ wsUrl }: Props) {
             <h2>WebSocket</h2>
             <p>Status: {connected ? "Connected" : isConnecting ? "Connecting..." : "Disconnected"}</p>
 
-            <label>
-                Device ID:{" "}
-                <input
-                    type="text"
-                    value={deviceId}
-                    onChange={(e) => setDeviceId(e.target.value)}
-                    placeholder="Enter device ID"
-                    disabled={connected || isConnecting}
-                />
-            </label>
-            <button
-                onClick={() => connectWebSocket()}
-                disabled={!deviceId || connected || isConnecting}
-            >
-                Connect
-            </button>
+            {/* Device connect form (fills device id + triggers connect) */}
+            <DeviceConnect
+                deviceId={deviceId}
+                setDeviceId={setDeviceId}
+                connected={connected}
+                isConnecting={isConnecting}
+                onConnect={() => {
+                    // call existing connectWebSocket (it uses state.deviceId)
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-ignore
+                    connectWebSocket();
+                }}
+            />
 
-            <button
-                onClick={() => sendCommand("ping", { msg: "hello desktop" })}
+            <hr />
+
+            {/* Action builder: builds actions & calls addAction(action) */}
+            <ActionBuilder disabled={!connected} addAction={addAction} />
+
+            {/* Actions list: preview, remove, clear, send */}
+            <ActionsList
+                actions={actions}
+                removeAction={removeAction}
+                clearActions={clearActions}
+                sendActions={sendActions}
                 disabled={!connected}
-            >
-                Send Ping
-            </button>
+            />
 
-            <h3>Messages:</h3>
-            <ul>
-                {messages.map((m, i) => (
-                    <li key={i}>
-                        <strong>{m.from}</strong>: {m.command} - {JSON.stringify(m.payload)}
-                    </li>
-                ))}
-            </ul>
+            <hr />
+
+            {/* Messages list */}
+            <MessagesList messages={messages} />
         </div>
     );
 }
+

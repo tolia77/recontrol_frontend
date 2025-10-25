@@ -122,10 +122,34 @@ p {
     min-width: 100px;
     padding: 0 16px;
     border-radius: 8px;
+    border: none;
 }
 
 .button-primary:hover {
     opacity: 0.9;
     transition: opacity 0.2s;
     cursor: pointer;
+}
+
+/* secondary (muted) button */
+.button-secondary {
+    background-color: #fff;
+    color: var(--color-primary);
+    border: 1px solid var(--color-lightgray);
+    min-height: 36px;
+    padding: 0 12px;
+    border-radius: 8px;
+}
+
+/* disabled state */
+.button-primary:disabled,
+.button-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* small helpers used by components */
+.small {
+    font-size: 13px;
+    padding: 6px 10px;
 }
