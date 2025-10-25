@@ -11,11 +11,9 @@ backendInstance.interceptors.response.use(
         const originalRequest: any = error?.config;
         const status = error?.response?.status;
         const respData = error?.response?.data;
-        const messageText =
-            typeof respData === "string" ? respData
-                : respData?.message ?? respData?.detail ?? null;
+        const messageText = respData?.error;
 
-        if (status === 401 && messageText === "Unathorized" && !originalRequest?._retry) {
+        if (status === 401 && messageText === "Unauthorized" && !originalRequest?._retry) {
             originalRequest._retry = true;
             try {
                 const refreshRes = await axios.post(

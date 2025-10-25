@@ -1,15 +1,9 @@
 import React from 'react';
-import { LinkIcon, SettingsIcon } from './icons/Icons';
+import {LinkIcon, SettingsIcon} from './icons/Icons';
+import type {Device} from "src/types/global";
 
-interface Device {
-    id: number;
-    name: string;
-    status: 'Active' | 'Inactive';
-    lastUsed: string;
-    owner: string;
-}
 
-const DeviceRow: React.FC<{ device: Device }> = ({ device }) => {
+const DeviceRow: React.FC<{ device: Device }> = ({device}) => {
     return (
         <tr>
             <td className="p-4 text-left text-sm font-normal leading-5 text-text">
@@ -18,7 +12,8 @@ const DeviceRow: React.FC<{ device: Device }> = ({ device }) => {
                 </a>
             </td>
             <td className="p-4 text-left text-sm font-normal leading-5 text-text">
-                <span className="box-border flex h-[30px] w-[120px] items-center justify-center rounded-lg bg-accent text-xs font-medium text-white">
+                <span
+                    className="box-border flex h-[30px] w-[120px] items-center justify-center rounded-lg bg-accent text-xs font-medium text-white">
                   {device.status}
                 </span>
             </td>
@@ -30,8 +25,9 @@ const DeviceRow: React.FC<{ device: Device }> = ({ device }) => {
             </td>
             <td className="p-4 text-left text-sm font-normal leading-5 text-text">
                 <div className="flex items-center justify-start gap-2">
-                    <button className="box-border pl-3 flex h-[35px] w-[135px] items-center gap-2 rounded-lg bg-primary text-sm font-medium text-white">
-                        <LinkIcon className="h-6 w-6" />
+                    <button
+                        className="box-border pl-3 flex h-[35px] w-[135px] items-center gap-2 rounded-lg bg-primary text-sm font-medium text-white">
+                        <LinkIcon className="h-6 w-6"/>
                         Connect
                     </button>
                     <button className="bg-none p-0" aria-label="Settings">
