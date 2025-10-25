@@ -13,12 +13,7 @@ function Devices() {
     return (
         <div className="ml-20 mt-6">
             <h1 className="mb-6">Devices</h1>
-            <DevicesTable devices={[
-                {id: 1, name: "Device1", status: "Active", lastUsed: "October 12, 2025, 13:00", owner: "You"},
-                {id: 2, name: "Device1", status: "Active", lastUsed: "October 12, 2025, 13:00", owner: "You"},
-                {id: 3, name: "Device1", status: "Active", lastUsed: "October 12, 2025, 13:00", owner: "You"},
-                {id: 4, name: "Device1", status: "Active", lastUsed: "October 12, 2025, 13:00", owner: "You"},
-            ]}/>
+            <DevicesTable devices={devices}/>
         </div>
     );
 }

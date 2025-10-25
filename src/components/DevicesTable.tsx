@@ -1,14 +1,6 @@
 import React from 'react';
 import DeviceRow from "./DeviceRow";
-
-// --- DATA DEFINITIONS ---
-interface Device {
-    id: number;
-    name: string;
-    status: 'Active' | 'Inactive';
-    lastUsed: string;
-    owner: string;
-}
+import type { Device } from "src/types/global"; // <-- use shared type
 
 // --- DEVICE TABLE COMPONENT ---
 interface DeviceTableProps {
