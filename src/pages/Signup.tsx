@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import logoFull from 'src/assets/img/logo-full.svg';
 import {Link, useNavigate} from "react-router";
 import {registerRequest} from "src/services/backend/authRequests.ts";
+import {saveTokens, saveUserId} from "src/utils/auth.ts";
 
 function Signup() {
     const [username, setUsername] = useState('');
@@ -14,8 +15,10 @@ function Signup() {
     async function handleSubmit(event: React.FormEvent) {
         event.preventDefault();
         try {
-            await registerRequest(username, email, password);
-            navigate("/dashboard");
+            const res = await registerRequest(username, email, password);
+            saveTokens(res.data.access_token, res.data.refresh_token);
+            saveUserId(res.data.user_id)
+            navigate("/dashboard")
         } catch (error: any) {
             if (error?.response?.status === 400) {
                 setErrors(["Invalid input."]);

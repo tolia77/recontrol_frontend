@@ -14,11 +14,11 @@ function Login() {
         event.preventDefault();
         try {
             const res = await loginRequest(email, password)
-            console.log(res)
             saveTokens(res.data.access_token, res.data.refresh_token);
-            saveUserId(res.data.user.id)
+            saveUserId(res.data.user_id)
             navigate("/dashboard")
         } catch (error: any) {
+            console.log(error)
             if (error.response.status === 401) {
                 setErrors(["Invalid email or password."]);
             }

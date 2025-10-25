@@ -50,8 +50,10 @@ export function CommandWebSocket({ wsUrl }: Props) {
         }
     };
 
-    const connectWebSocket = async () => {
-        if (!deviceId) {
+    // --- Update: accept optional deviceId param so we can auto-connect with URL param ---
+    const connectWebSocket = async (deviceIdParam?: string) => {
+        const idToUse = deviceIdParam ?? deviceId;
+        if (!idToUse) {
             console.warn("Cannot connect: deviceId is missing.");
             return;
         }
@@ -78,7 +80,8 @@ export function CommandWebSocket({ wsUrl }: Props) {
             }
         }
 
-        const urlWithToken = `${wsUrl}?access_token=${encodeURIComponent(token)}&device_id=${deviceId}`;
+        // use idToUse when building the ws URL
+        const urlWithToken = `${wsUrl}?access_token=${encodeURIComponent(token)}&device_id=${encodeURIComponent(idToUse)}`;
         const ws = new WebSocket(urlWithToken);
         wsRef.current = ws;
 
@@ -191,6 +194,18 @@ export function CommandWebSocket({ wsUrl }: Props) {
         };
     }, []);
 
+    // --- New: on mount, read device_id query param and auto-fill + connect ---
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const paramDeviceId = params.get("device_id");
+        if (paramDeviceId) {
+            setDeviceId(paramDeviceId);
+            // start connecting immediately with the provided id
+            connectWebSocket(paramDeviceId);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     // --- Send message to channel ---
     const sendCommand = (command: string, payload?: Record<string, any>) => {
         if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
@@ -223,7 +238,7 @@ export function CommandWebSocket({ wsUrl }: Props) {
                 />
             </label>
             <button
-                onClick={connectWebSocket}
+                onClick={() => connectWebSocket()}
                 disabled={!deviceId || connected || isConnecting}
             >
                 Connect

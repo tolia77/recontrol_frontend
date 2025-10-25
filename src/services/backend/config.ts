@@ -31,10 +31,10 @@ backendInstance.interceptors.response.use(
                 const newRefresh = tokens.refresh || tokens.refresh_token || tokens.refreshToken;
 
                 if (newAccess) {
-                    localStorage.setItem("accessToken", newAccess);
+                    localStorage.setItem("access_token", newAccess);
                 }
                 if (newRefresh) {
-                    localStorage.setItem("refreshToken", newRefresh);
+                    localStorage.setItem("refresh_token", newRefresh);
                 }
 
                 if (!originalRequest.headers) originalRequest.headers = {};
