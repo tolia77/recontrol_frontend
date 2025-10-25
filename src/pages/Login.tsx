@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import logoFull from 'src/assets/img/logo-full.svg';
 import {Link, useNavigate} from "react-router";
 import {loginRequest} from "src/services/backend/authRequests.ts";
-import {saveTokens} from "src/utils/auth.ts";
+import {saveTokens, saveUserId} from "src/utils/auth.ts";
 
 function Login() {
     const [email, setEmail] = useState('');
@@ -14,10 +14,12 @@ function Login() {
         event.preventDefault();
         try {
             const res = await loginRequest(email, password)
+            console.log(res)
             saveTokens(res.data.access_token, res.data.refresh_token);
+            saveUserId(res.data.user.id)
             navigate("/dashboard")
         } catch (error: any) {
-            if(error.response.status === 401) {
+            if (error.response.status === 401) {
                 setErrors(["Invalid email or password."]);
             }
         }

@@ -10,19 +10,12 @@ interface Device {
     owner: string;
 }
 
-const mockDevices: Device[] = [
-    { id: 1, name: "Device1", status: "Active", lastUsed: "October 12, 2025, 13:00", owner: "You" },
-    { id: 2, name: "Device1", status: "Active", lastUsed: "October 12, 2025, 13:00", owner: "You" },
-    { id: 3, name: "Device1", status: "Active", lastUsed: "October 12, 2025, 13:00", owner: "You" },
-    { id: 4, name: "Device1", status: "Active", lastUsed: "October 12, 2025, 13:00", owner: "You" },
-];
-
 // --- DEVICE TABLE COMPONENT ---
 interface DeviceTableProps {
     devices: Device[];
 }
 
-const DeviceTable: React.FC<DeviceTableProps> = ({ devices }) => {
+const DeviceTable: React.FC<DeviceTableProps> = ({devices}) => {
     return (
         <div className="overflow-hidden rounded-xl border border-lightgray bg-white shadow-sm">
             <table className="w-full max-w-[1200px] table-fixed border-collapse">
@@ -47,7 +40,7 @@ const DeviceTable: React.FC<DeviceTableProps> = ({ devices }) => {
                 </thead>
                 <tbody>
                 {devices.map((device) => (
-                    <DeviceRow key={device.id} device={device} />
+                    <DeviceRow key={device.id} device={device}/>
                 ))}
                 </tbody>
             </table>

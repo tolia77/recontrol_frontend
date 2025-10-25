@@ -28,10 +28,21 @@ export function clearTokens() {
     localStorage.removeItem(REFRESH_TOKEN_KEY);
 }
 
+export function saveUserId(userId: string | null) {
+    return localStorage.setItem("user_id", userId ?? "");
+}
+
+export function getUserId(): string | null {
+    const userId = localStorage.getItem("user_id");
+    return userId && userId.length > 0 ? userId : null;
+}
+
 export default {
     saveTokens,
     getAccessToken,
     getRefreshToken,
     clearTokens,
+    saveUserId,
+    getUserId
 };
 
