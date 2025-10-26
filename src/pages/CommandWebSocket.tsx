@@ -1,32 +1,536 @@
-import {useEffect, useRef, useState} from "react";
-import {getAccessToken, getRefreshToken, saveTokens} from "src/utils/auth.ts";
-import axios from "axios";
+import React, { useState } from "react";
+import { uuidv4 } from "src/utils/uuid";
 
-// new component imports
-import DeviceConnect from "src/components/DeviceConnect";
-import ActionBuilder from "src/components/ActionBuilder";
-import ActionsList from "src/components/ActionsList";
-import MessagesList from "src/components/MessagesList";
-
-type Message = {
+// Common components
+interface Message {
     from: string;
     command: string;
     payload: Record<string, any>;
-};
+}
 
 interface Props {
+    messages: Message[];
+}
+
+export function MessagesList({ messages }: Props) {
+    return (
+        <div className="messages-container">
+            <h3>Messages:</h3>
+            <ul className="messages-list">
+                {messages.map((m, i) => (
+                    <li key={i} className="message-item">
+                        <strong className="message-sender">{m.from}</strong>: {m.command} -
+                        <pre className="message-payload">{JSON.stringify(m.payload)}</pre>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+}
+
+export function DeviceConnect({ deviceId, setDeviceId, connected, isConnecting, onConnect }: {
+    deviceId: string;
+    setDeviceId: (v: string) => void;
+    connected: boolean;
+    isConnecting: boolean;
+    onConnect: () => void;
+}) {
+    const disabled = connected || isConnecting;
+
+    return (
+        <div className="device-connect">
+            <label className="input-label">
+                Device ID:
+                <input
+                    className="small-input"
+                    type="text"
+                    value={deviceId}
+                    onChange={(e) => setDeviceId(e.target.value)}
+                    placeholder="Enter device ID"
+                    disabled={disabled}
+                />
+            </label>
+            <button className="btn-primary" onClick={onConnect} disabled={!deviceId || disabled}>
+                {isConnecting ? "Connecting..." : "Connect"}
+            </button>
+        </div>
+    );
+}
+
+// Interactive Mode Components
+export function InteractiveMode({ disabled, addAction }: {
+    disabled: boolean;
+    addAction: (a: any) => void;
+}) {
+    const [activeTool, setActiveTool] = useState<string>("select");
+
+    const tools = [
+        { id: "select", label: "Select", icon: "🔍" },
+        { id: "click", label: "Click", icon: "👆" },
+        { id: "type", label: "Type", icon: "⌨️" },
+        { id: "drag", label: "Drag", icon: "↔️" },
+        { id: "right-click", label: "Right Click", icon: "🖱️" }
+    ];
+
+    return (
+        <div className="interactive-mode">
+            {/* Menu Bar */}
+            <div className="menu-bar">
+                <div className="menu-section">
+                    <span className="menu-title">File</span>
+                    <span className="menu-title">Edit</span>
+                    <span className="menu-title">View</span>
+                    <span className="menu-title">Tools</span>
+                </div>
+                <div className="menu-section">
+                    <span className="status-indicator">
+                        Status: {disabled ? "Disconnected" : "Connected"}
+                    </span>
+                </div>
+            </div>
+
+            {/* Toolbar */}
+            <div className="toolbar">
+                {tools.map(tool => (
+                    <button
+                        key={tool.id}
+                        className={`tool-btn ${activeTool === tool.id ? 'active' : ''}`}
+                        onClick={() => setActiveTool(tool.id)}
+                        disabled={disabled}
+                    >
+                        <span className="tool-icon">{tool.icon}</span>
+                        {tool.label}
+                    </button>
+                ))}
+            </div>
+
+            {/* Canvas Area */}
+            <div className="canvas-container">
+                <div className="canvas-placeholder">
+                    <div className="canvas-content">
+                        <span className="canvas-text">Interactive Canvas Area (16:9)</span>
+                        <span className="canvas-subtext">
+                            Selected: {tools.find(t => t.id === activeTool)?.label}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="quick-actions">
+                <h4>Quick Actions</h4>
+                <div className="action-buttons">
+                    <button className="btn-secondary" onClick={() => addAction({
+                        id: uuidv4(),
+                        type: "mouse.click",
+                        payload: { button: "Left" }
+                    })} disabled={disabled}>
+                        Left Click
+                    </button>
+                    <button className="btn-secondary" onClick={() => addAction({
+                        id: uuidv4(),
+                        type: "mouse.rightClick",
+                        payload: {}
+                    })} disabled={disabled}>
+                        Right Click
+                    </button>
+                    <button className="btn-secondary" onClick={() => addAction({
+                        id: uuidv4(),
+                        type: "keyboard.press",
+                        payload: { key: "Enter" }
+                    })} disabled={disabled}>
+                        Press Enter
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// Manual Mode Components
+export function ManualMode({ disabled, addAction }: {
+    disabled: boolean;
+    addAction: (a: any) => void;
+}) {
+    const [activeSection, setActiveSection] = useState<"keyboard" | "mouse" | "terminal">("keyboard");
+
+    // Keyboard state
+    const [kbdKey, setKbdKey] = useState("A");
+    const [kbdHoldMs, setKbdHoldMs] = useState<number | "">("");
+
+    // Mouse state
+    const [mouseDeltaX, setMouseDeltaX] = useState<number>(0);
+    const [mouseDeltaY, setMouseDeltaY] = useState<number>(0);
+    const [mouseButton, setMouseButton] = useState<"Left" | "Right" | "Middle">("Left");
+    const [mouseDelayMs, setMouseDelayMs] = useState<number | "">("");
+
+    // Terminal state
+    const [termCommand, setTermCommand] = useState("");
+    const [termTimeout, setTermTimeout] = useState<number | "">("");
+    const [termPid, setTermPid] = useState<number | "">("");
+    const [termFileName, setTermFileName] = useState("");
+    const [termArgs, setTermArgs] = useState("");
+    const [termRedirectOutput, setTermRedirectOutput] = useState(false);
+    const [termPath, setTermPath] = useState("");
+    const [termForceKill, setTermForceKill] = useState(false);
+
+    return (
+        <div className="manual-mode">
+            <div className="mode-header">
+                <h3>Manual Action Builder</h3>
+                <div className="section-tabs">
+                    <button
+                        className={`tab-btn ${activeSection === "keyboard" ? "active" : ""}`}
+                        onClick={() => setActiveSection("keyboard")}
+                    >
+                        Keyboard
+                    </button>
+                    <button
+                        className={`tab-btn ${activeSection === "mouse" ? "active" : ""}`}
+                        onClick={() => setActiveSection("mouse")}
+                    >
+                        Mouse
+                    </button>
+                    <button
+                        className={`tab-btn ${activeSection === "terminal" ? "active" : ""}`}
+                        onClick={() => setActiveSection("terminal")}
+                    >
+                        Terminal
+                    </button>
+                </div>
+            </div>
+
+            <div className="section-content">
+                {activeSection === "keyboard" && (
+                    <div className="keyboard-section">
+                        <div className="input-group">
+                            <label className="input-label">
+                                Key:
+                                <input
+                                    className="small-input"
+                                    value={kbdKey}
+                                    onChange={(e) => setKbdKey(e.target.value)}
+                                    disabled={disabled}
+                                />
+                            </label>
+                            <label className="input-label">
+                                Hold (ms):
+                                <input
+                                    className="small-input"
+                                    type="number"
+                                    value={kbdHoldMs}
+                                    onChange={(e) => setKbdHoldMs(e.target.value === "" ? "" : Number(e.target.value))}
+                                    disabled={disabled}
+                                />
+                            </label>
+                        </div>
+                        <div className="action-buttons">
+                            <button className="btn-secondary" onClick={() => addAction({
+                                id: uuidv4(),
+                                type: "keyboard.keyDown",
+                                payload: { key: kbdKey }
+                            })} disabled={disabled}>
+                                Key Down
+                            </button>
+                            <button className="btn-secondary" onClick={() => addAction({
+                                id: uuidv4(),
+                                type: "keyboard.keyUp",
+                                payload: { key: kbdKey }
+                            })} disabled={disabled}>
+                                Key Up
+                            </button>
+                            <button className="btn-secondary" onClick={() => addAction({
+                                id: uuidv4(),
+                                type: "keyboard.press",
+                                payload: {
+                                    key: kbdKey,
+                                    ...(kbdHoldMs !== "" ? { holdMs: Number(kbdHoldMs) } : {})
+                                }
+                            })} disabled={disabled}>
+                                Press Key
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {activeSection === "mouse" && (
+                    <div className="mouse-section">
+                        <div className="input-group">
+                            <label className="input-label">
+                                Delta X:
+                                <input
+                                    className="small-input"
+                                    type="number"
+                                    value={mouseDeltaX}
+                                    onChange={(e) => setMouseDeltaX(Number(e.target.value))}
+                                    disabled={disabled}
+                                />
+                            </label>
+                            <label className="input-label">
+                                Delta Y:
+                                <input
+                                    className="small-input"
+                                    type="number"
+                                    value={mouseDeltaY}
+                                    onChange={(e) => setMouseDeltaY(Number(e.target.value))}
+                                    disabled={disabled}
+                                />
+                            </label>
+                            <label className="input-label">
+                                Button:
+                                <select
+                                    className="small-input"
+                                    value={mouseButton}
+                                    onChange={(e) => setMouseButton(e.target.value as any)}
+                                    disabled={disabled}
+                                >
+                                    <option>Left</option>
+                                    <option>Right</option>
+                                    <option>Middle</option>
+                                </select>
+                            </label>
+                            <label className="input-label">
+                                Delay (ms):
+                                <input
+                                    className="small-input"
+                                    type="number"
+                                    value={mouseDelayMs}
+                                    onChange={(e) => setMouseDelayMs(e.target.value === "" ? "" : Number(e.target.value))}
+                                    disabled={disabled}
+                                />
+                            </label>
+                        </div>
+                        <div className="action-buttons">
+                            <button className="btn-secondary" onClick={() => addAction({
+                                id: uuidv4(),
+                                type: "mouse.move",
+                                payload: { deltaX: mouseDeltaX, deltaY: mouseDeltaY }
+                            })} disabled={disabled}>
+                                Move
+                            </button>
+                            <button className="btn-secondary" onClick={() => addAction({
+                                id: uuidv4(),
+                                type: "mouse.click",
+                                payload: {
+                                    button: mouseButton,
+                                    ...(mouseDelayMs !== "" ? { delayMs: Number(mouseDelayMs) } : {})
+                                }
+                            })} disabled={disabled}>
+                                Click
+                            </button>
+                            <button className="btn-secondary" onClick={() => addAction({
+                                id: uuidv4(),
+                                type: "mouse.doubleClick",
+                                payload: {
+                                    ...(mouseDelayMs !== "" ? { delayMs: Number(mouseDelayMs) } : {})
+                                }
+                            })} disabled={disabled}>
+                                Double Click
+                            </button>
+                            <button className="btn-secondary" onClick={() => addAction({
+                                id: uuidv4(),
+                                type: "mouse.scroll",
+                                payload: { clicks: mouseDeltaY }
+                            })} disabled={disabled}>
+                                Scroll
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {activeSection === "terminal" && (
+                    <div className="terminal-section">
+                        <div className="terminal-subsection">
+                            <h4>Command Execution</h4>
+                            <div className="input-group">
+                                <label className="input-label">
+                                    Command:
+                                    <input
+                                        className="small-input"
+                                        value={termCommand}
+                                        onChange={(e) => setTermCommand(e.target.value)}
+                                        disabled={disabled}
+                                    />
+                                </label>
+                                <label className="input-label">
+                                    Timeout (ms):
+                                    <input
+                                        className="small-input"
+                                        type="number"
+                                        value={termTimeout}
+                                        onChange={(e) => setTermTimeout(e.target.value === "" ? "" : Number(e.target.value))}
+                                        disabled={disabled}
+                                    />
+                                </label>
+                            </div>
+                            <div className="action-buttons">
+                                <button className="btn-secondary" onClick={() => addAction({
+                                    id: uuidv4(),
+                                    type: "terminal.execute",
+                                    payload: {
+                                        command: termCommand,
+                                        ...(termTimeout !== "" ? { timeout: Number(termTimeout) } : {})
+                                    }
+                                })} disabled={disabled}>
+                                    Execute
+                                </button>
+                                <button className="btn-secondary" onClick={() => addAction({
+                                    id: uuidv4(),
+                                    type: "terminal.powershell",
+                                    payload: {
+                                        command: termCommand,
+                                        ...(termTimeout !== "" ? { timeout: Number(termTimeout) } : {})
+                                    }
+                                })} disabled={disabled}>
+                                    PowerShell
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="terminal-subsection">
+                            <h4>Process Management</h4>
+                            <div className="input-group">
+                                <label className="input-label">
+                                    PID:
+                                    <input
+                                        className="small-input"
+                                        type="number"
+                                        value={termPid}
+                                        onChange={(e) => setTermPid(e.target.value === "" ? "" : Number(e.target.value))}
+                                        disabled={disabled}
+                                    />
+                                </label>
+                                <label className="checkbox-label">
+                                    <input
+                                        type="checkbox"
+                                        checked={termForceKill}
+                                        onChange={(e) => setTermForceKill(e.target.checked)}
+                                        disabled={disabled}
+                                    />
+                                    Force Kill
+                                </label>
+                            </div>
+                            <div className="action-buttons">
+                                <button className="btn-secondary" onClick={() => addAction({
+                                    id: uuidv4(),
+                                    type: "terminal.killProcess",
+                                    payload: { pid: Number(termPid), force: termForceKill }
+                                })} disabled={disabled}>
+                                    Kill Process
+                                </button>
+                                <button className="btn-secondary" onClick={() => addAction({
+                                    id: uuidv4(),
+                                    type: "terminal.listProcesses",
+                                    payload: {}
+                                })} disabled={disabled}>
+                                    List Processes
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="terminal-subsection">
+                            <h4>System Commands</h4>
+                            <div className="input-group">
+                                <label className="input-label">
+                                    Working Directory:
+                                    <input
+                                        className="small-input"
+                                        value={termPath}
+                                        onChange={(e) => setTermPath(e.target.value)}
+                                        disabled={disabled}
+                                    />
+                                </label>
+                            </div>
+                            <div className="action-buttons">
+                                <button className="btn-secondary" onClick={() => addAction({
+                                    id: uuidv4(),
+                                    type: "terminal.getCwd",
+                                    payload: {}
+                                })} disabled={disabled}>
+                                    Get CWD
+                                </button>
+                                <button className="btn-secondary" onClick={() => addAction({
+                                    id: uuidv4(),
+                                    type: "terminal.setCwd",
+                                    payload: { path: termPath }
+                                })} disabled={disabled}>
+                                    Set CWD
+                                </button>
+                                <button className="btn-secondary" onClick={() => addAction({
+                                    id: uuidv4(),
+                                    type: "terminal.whoAmI",
+                                    payload: {}
+                                })} disabled={disabled}>
+                                    WhoAmI
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+export function ActionsList({ actions, removeAction, clearActions, sendActions, disabled }: {
+    actions: any[];
+    removeAction: (idx: number) => void;
+    clearActions: () => void;
+    sendActions: () => void;
+    disabled: boolean;
+}) {
+    return (
+        <div className="actions-list">
+            <div className="actions-header">
+                <h3>Pending Actions ({actions.length})</h3>
+                <div className="action-controls">
+                    <button className="btn-primary" onClick={sendActions} disabled={disabled || actions.length === 0}>
+                        Send Actions
+                    </button>
+                    <button className="btn-secondary" onClick={clearActions} disabled={actions.length === 0}>
+                        Clear All
+                    </button>
+                </div>
+            </div>
+
+            <ol className="actions-items">
+                {actions.map((a, i) => (
+                    <li key={a.id ?? i} className="action-item">
+                        <pre className="action-preview">{JSON.stringify(a, null, 2)}</pre>
+                        <button className="btn-secondary" onClick={() => removeAction(i)} disabled={disabled}>
+                            Remove
+                        </button>
+                    </li>
+                ))}
+            </ol>
+        </div>
+    );
+}
+
+// Main Component
+import { useEffect, useRef } from "react";
+import { getAccessToken, getRefreshToken, saveTokens } from "src/utils/auth.ts";
+import axios from "axios";
+
+interface CommandWebSocketProps {
     wsUrl: string;
 }
 
-export function CommandWebSocket({wsUrl}: Props) {
+export function CommandWebSocket({ wsUrl }: CommandWebSocketProps) {
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isHandlingAuthReconnect = useRef(false);
+
     const [messages, setMessages] = useState<Message[]>([]);
     const [connected, setConnected] = useState(false);
     const [deviceId, setDeviceId] = useState("");
     const [isConnecting, setIsConnecting] = useState(false);
+    const [mode, setMode] = useState<"interactive" | "manual">("interactive");
 
+    // Actions state
+    const [actions, setActions] = useState<any[]>([]);
+
+    // WebSocket and connection logic remains the same...
     const refreshAccessToken = async (): Promise<string | null> => {
         try {
             const refreshToken = getRefreshToken();
@@ -38,7 +542,7 @@ export function CommandWebSocket({wsUrl}: Props) {
             const res = await axios.post(
                 `${import.meta.env.VITE_BACKEND_URL}/auth/refresh`,
                 {},
-                {headers: {"Refresh-Token": refreshToken}}
+                { headers: { "Refresh-Token": refreshToken } }
             );
 
             const tokens = res.data ?? {};
@@ -56,7 +560,6 @@ export function CommandWebSocket({wsUrl}: Props) {
         }
     };
 
-    // --- Update: accept optional deviceId param so we can auto-connect with URL param ---
     const connectWebSocket = async (deviceIdParam?: string) => {
         const idToUse = deviceIdParam ?? deviceId;
         if (!idToUse) {
@@ -86,7 +589,6 @@ export function CommandWebSocket({wsUrl}: Props) {
             }
         }
 
-        // use idToUse when building the ws URL
         const urlWithToken = `${wsUrl}?access_token=${encodeURIComponent(token)}&device_id=${encodeURIComponent(idToUse)}`;
         const ws = new WebSocket(urlWithToken);
         wsRef.current = ws;
@@ -105,7 +607,7 @@ export function CommandWebSocket({wsUrl}: Props) {
             ws.send(
                 JSON.stringify({
                     command: "subscribe",
-                    identifier: JSON.stringify({channel: "CommandChannel"}),
+                    identifier: JSON.stringify({ channel: "CommandChannel" }),
                 })
             );
         };
@@ -127,7 +629,7 @@ export function CommandWebSocket({wsUrl}: Props) {
 
                 if (data.type === "disconnect" && data.reason === "unauthorized") {
                     console.warn("WebSocket 'unauthorized' message received, refreshing token...");
-                    isHandlingAuthReconnect.current = true; // Set flag
+                    isHandlingAuthReconnect.current = true;
                     handleReconnection();
                     return;
                 }
@@ -142,7 +644,6 @@ export function CommandWebSocket({wsUrl}: Props) {
 
         ws.onclose = async (event) => {
             console.log("WebSocket closed", event.code, event.reason);
-            console.log(event);
             setConnected(false);
             setIsConnecting(false);
 
@@ -168,26 +669,23 @@ export function CommandWebSocket({wsUrl}: Props) {
 
         ws.onerror = (err) => {
             console.error("WebSocket error", err);
-            // Error will likely be followed by onclose, which handles reconnect
         };
     };
 
-    // --- Reconnect logic ---
     const handleReconnection = async () => {
         console.log("Attempting WebSocket reconnection (auth)...");
-        isHandlingAuthReconnect.current = true; // Mark that we are handling an auth failure
+        isHandlingAuthReconnect.current = true;
 
         const newToken = await refreshAccessToken();
         if (newToken) {
-            connectWebSocket(); // This will connect with the new token
+            connectWebSocket();
         } else {
             console.error("Unable to refresh token, user may need to re-login.");
-            isHandlingAuthReconnect.current = false; // Failed, clear flag
-            setIsConnecting(false); // Ensure UI is not stuck
+            isHandlingAuthReconnect.current = false;
+            setIsConnecting(false);
         }
     };
 
-    // --- Cleanup on unmount ---
     useEffect(() => {
         return () => {
             if (reconnectTimeout.current) {
@@ -200,54 +698,23 @@ export function CommandWebSocket({wsUrl}: Props) {
         };
     }, []);
 
-    // --- New: on mount, read device_id query param and auto-fill + connect ---
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const paramDeviceId = params.get("device_id");
         if (paramDeviceId) {
             setDeviceId(paramDeviceId);
-            // start connecting immediately with the provided id
             connectWebSocket(paramDeviceId);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // UUID v4 generator (small helper)
-    const uuidv4 = () => {
-        if (typeof crypto !== "undefined" && (crypto as any).getRandomValues) {
-            const buf = new Uint8Array(16);
-            (crypto as any).getRandomValues(buf);
-            // Adapted RFC4122 version 4
-            buf[6] = (buf[6] & 0x0f) | 0x40;
-            buf[8] = (buf[8] & 0x3f) | 0x80;
-            const hex: string[] = [];
-            for (let i = 0; i < buf.length; i++) {
-                hex.push((buf[i] + 0x100).toString(16).substr(1));
-            }
-            return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex
-                .slice(6, 8)
-                .join("")}-${hex.slice(8, 10).join("")}-${hex.slice(10, 16).join("")}`;
-        }
-        // fallback
-        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-            const r = (Math.random() * 16) | 0;
-            const v = c === "x" ? r : (r & 0x3) | 0x8;
-            return v.toString(16);
-        });
-    };
-
-    // ACTIONS: lightweight state/handlers (action objects are created in ActionBuilder)
-    const [actions, setActions] = useState<any[]>([]);
-
+    // Action handlers
     const addAction = (action: any) => {
         setActions((s) => [...s, action]);
     };
 
     const removeAction = (idx: number) => setActions((s) => s.filter((_, i) => i !== idx));
     const clearActions = () => setActions([]);
-
-    // --- Replace batch sender: send individual action messages ---
-    // old sendCommand/sendActions replaced by sendMessagePayload + sendActions
 
     const sendMessagePayload = (payloadObj: any) => {
         if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
@@ -258,17 +725,15 @@ export function CommandWebSocket({wsUrl}: Props) {
         wsRef.current.send(
             JSON.stringify({
                 command: "message",
-                identifier: JSON.stringify({channel: "CommandChannel"}),
+                identifier: JSON.stringify({ channel: "CommandChannel" }),
                 data: JSON.stringify(payloadObj),
             })
         );
     };
 
     const sendSingleAction = (action: any) => {
-        // action should be { id?: string, type: string, payload: any }
         const msg = {
-            // include id when present (uuid)
-            ...(action.id ? {id: action.id} : {}),
+            ...(action.id ? { id: action.id } : {}),
             command: action.type,
             payload: action.payload ?? {},
         };
@@ -280,7 +745,6 @@ export function CommandWebSocket({wsUrl}: Props) {
             console.warn("No actions to send.");
             return;
         }
-        // send actions one by one
         actions.forEach((a) => {
             try {
                 sendSingleAction(a);
@@ -288,48 +752,60 @@ export function CommandWebSocket({wsUrl}: Props) {
                 console.error("Failed to send action", a, err);
             }
         });
-        // clear pending actions after sending to avoid duplicates
         setActions([]);
     };
 
     return (
-        <div>
-            <h2>WebSocket</h2>
-            <p>Status: {connected ? "Connected" : isConnecting ? "Connecting..." : "Disconnected"}</p>
+        <div className="command-websocket">
+            <div className="app-header">
+                <h2>Remote Control Interface</h2>
+                <div className="header-controls">
+                    <DeviceConnect
+                        deviceId={deviceId}
+                        setDeviceId={setDeviceId}
+                        connected={connected}
+                        isConnecting={isConnecting}
+                        onConnect={() => connectWebSocket()}
+                    />
 
-            {/* Device connect form (fills device id + triggers connect) */}
-            <DeviceConnect
-                deviceId={deviceId}
-                setDeviceId={setDeviceId}
-                connected={connected}
-                isConnecting={isConnecting}
-                onConnect={() => {
-                    // call existing connectWebSocket (it uses state.deviceId)
-                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                    // @ts-ignore
-                    connectWebSocket();
-                }}
-            />
+                    <div className="mode-selector">
+                        <button
+                            className={`mode-btn ${mode === "interactive" ? "active" : ""}`}
+                            onClick={() => setMode("interactive")}
+                        >
+                            Interactive Mode
+                        </button>
+                        <button
+                            className={`mode-btn ${mode === "manual" ? "active" : ""}`}
+                            onClick={() => setMode("manual")}
+                        >
+                            Manual Mode
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-            <hr/>
+            <div className="app-content">
+                <div className="main-panel">
+                    {mode === "interactive" ? (
+                        <InteractiveMode disabled={!connected} addAction={addAction} />
+                    ) : (
+                        <ManualMode disabled={!connected} addAction={addAction} />
+                    )}
+                </div>
 
-            {/* Action builder: builds actions & calls addAction(action) */}
-            <ActionBuilder disabled={!connected} addAction={addAction}/>
+                <div className="side-panel">
+                    <ActionsList
+                        actions={actions}
+                        removeAction={removeAction}
+                        clearActions={clearActions}
+                        sendActions={sendActions}
+                        disabled={!connected}
+                    />
 
-            {/* Actions list: preview, remove, clear, send */}
-            <ActionsList
-                actions={actions}
-                removeAction={removeAction}
-                clearActions={clearActions}
-                sendActions={sendActions}
-                disabled={!connected}
-            />
-
-            <hr/>
-
-            {/* Messages list */}
-            <MessagesList messages={messages}/>
+                    <MessagesList messages={messages} />
+                </div>
+            </div>
         </div>
     );
 }
-
