@@ -1,5 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { uuidv4 } from "src/utils/uuid";
+import DeviceConnect from "src/components/DeviceConnect";
+import ActionsList from "src/components/ActionsList";
+import MessagesList from "src/components/MessagesList";
+import { getAccessToken, getRefreshToken, saveTokens } from "src/utils/auth.ts";
+import axios from "axios";
 
 // Common components
 interface Message {
@@ -8,53 +13,8 @@ interface Message {
     payload: Record<string, any>;
 }
 
-interface Props {
-    messages: Message[];
-}
-
-export function MessagesList({ messages }: Props) {
-    return (
-        <div className="messages-container">
-            <h3>Messages:</h3>
-            <ul className="messages-list">
-                {messages.map((m, i) => (
-                    <li key={i} className="message-item">
-                        <strong className="message-sender">{m.from}</strong>: {m.command} -
-                        <pre className="message-payload">{JSON.stringify(m.payload)}</pre>
-                    </li>
-                ))}
-            </ul>
-        </div>
-    );
-}
-
-export function DeviceConnect({ deviceId, setDeviceId, connected, isConnecting, onConnect }: {
-    deviceId: string;
-    setDeviceId: (v: string) => void;
-    connected: boolean;
-    isConnecting: boolean;
-    onConnect: () => void;
-}) {
-    const disabled = connected || isConnecting;
-
-    return (
-        <div className="device-connect">
-            <label className="input-label">
-                Device ID:
-                <input
-                    className="small-input"
-                    type="text"
-                    value={deviceId}
-                    onChange={(e) => setDeviceId(e.target.value)}
-                    placeholder="Enter device ID"
-                    disabled={disabled}
-                />
-            </label>
-            <button className="btn-primary" onClick={onConnect} disabled={!deviceId || disabled}>
-                {isConnecting ? "Connecting..." : "Connect"}
-            </button>
-        </div>
-    );
+interface CommandWebSocketProps {
+    wsUrl: string;
 }
 
 // Interactive Mode Components
@@ -472,50 +432,6 @@ export function ManualMode({ disabled, addAction }: {
     );
 }
 
-export function ActionsList({ actions, removeAction, clearActions, sendActions, disabled }: {
-    actions: any[];
-    removeAction: (idx: number) => void;
-    clearActions: () => void;
-    sendActions: () => void;
-    disabled: boolean;
-}) {
-    return (
-        <div className="actions-list">
-            <div className="actions-header">
-                <h3>Pending Actions ({actions.length})</h3>
-                <div className="action-controls">
-                    <button className="btn-primary" onClick={sendActions} disabled={disabled || actions.length === 0}>
-                        Send Actions
-                    </button>
-                    <button className="btn-secondary" onClick={clearActions} disabled={actions.length === 0}>
-                        Clear All
-                    </button>
-                </div>
-            </div>
-
-            <ol className="actions-items">
-                {actions.map((a, i) => (
-                    <li key={a.id ?? i} className="action-item">
-                        <pre className="action-preview">{JSON.stringify(a, null, 2)}</pre>
-                        <button className="btn-secondary" onClick={() => removeAction(i)} disabled={disabled}>
-                            Remove
-                        </button>
-                    </li>
-                ))}
-            </ol>
-        </div>
-    );
-}
-
-// Main Component
-import { useEffect, useRef } from "react";
-import { getAccessToken, getRefreshToken, saveTokens } from "src/utils/auth.ts";
-import axios from "axios";
-
-interface CommandWebSocketProps {
-    wsUrl: string;
-}
-
 export function CommandWebSocket({ wsUrl }: CommandWebSocketProps) {
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -530,7 +446,6 @@ export function CommandWebSocket({ wsUrl }: CommandWebSocketProps) {
     // Actions state
     const [actions, setActions] = useState<any[]>([]);
 
-    // WebSocket and connection logic remains the same...
     const refreshAccessToken = async (): Promise<string | null> => {
         try {
             const refreshToken = getRefreshToken();
