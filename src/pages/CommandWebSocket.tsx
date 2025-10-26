@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { getAccessToken, getRefreshToken, saveTokens } from "src/utils/auth.ts";
+import {useEffect, useRef, useState} from "react";
+import {getAccessToken, getRefreshToken, saveTokens} from "src/utils/auth.ts";
 import axios from "axios";
 
 // new component imports
@@ -18,7 +18,7 @@ interface Props {
     wsUrl: string;
 }
 
-export function CommandWebSocket({ wsUrl }: Props) {
+export function CommandWebSocket({wsUrl}: Props) {
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isHandlingAuthReconnect = useRef(false);
@@ -38,7 +38,7 @@ export function CommandWebSocket({ wsUrl }: Props) {
             const res = await axios.post(
                 `${import.meta.env.VITE_BACKEND_URL}/auth/refresh`,
                 {},
-                { headers: { "Refresh-Token": refreshToken } }
+                {headers: {"Refresh-Token": refreshToken}}
             );
 
             const tokens = res.data ?? {};
@@ -105,7 +105,7 @@ export function CommandWebSocket({ wsUrl }: Props) {
             ws.send(
                 JSON.stringify({
                     command: "subscribe",
-                    identifier: JSON.stringify({ channel: "CommandChannel" }),
+                    identifier: JSON.stringify({channel: "CommandChannel"}),
                 })
             );
         };
@@ -258,7 +258,7 @@ export function CommandWebSocket({ wsUrl }: Props) {
         wsRef.current.send(
             JSON.stringify({
                 command: "message",
-                identifier: JSON.stringify({ channel: "CommandChannel" }),
+                identifier: JSON.stringify({channel: "CommandChannel"}),
                 data: JSON.stringify(payloadObj),
             })
         );
@@ -268,8 +268,8 @@ export function CommandWebSocket({ wsUrl }: Props) {
         // action should be { id?: string, type: string, payload: any }
         const msg = {
             // include id when present (uuid)
-            ...(action.id ? { id: action.id } : {}),
-            type: action.type,
+            ...(action.id ? {id: action.id} : {}),
+            command: action.type,
             payload: action.payload ?? {},
         };
         sendMessagePayload(msg);
@@ -311,10 +311,10 @@ export function CommandWebSocket({ wsUrl }: Props) {
                 }}
             />
 
-            <hr />
+            <hr/>
 
             {/* Action builder: builds actions & calls addAction(action) */}
-            <ActionBuilder disabled={!connected} addAction={addAction} />
+            <ActionBuilder disabled={!connected} addAction={addAction}/>
 
             {/* Actions list: preview, remove, clear, send */}
             <ActionsList
@@ -325,10 +325,10 @@ export function CommandWebSocket({ wsUrl }: Props) {
                 disabled={!connected}
             />
 
-            <hr />
+            <hr/>
 
             {/* Messages list */}
-            <MessagesList messages={messages} />
+            <MessagesList messages={messages}/>
         </div>
     );
 }
