@@ -2,33 +2,22 @@ import React from "react";
 
 interface Props {
     deviceId: string;
-    setDeviceId: (v: string) => void;
     connected: boolean;
     isConnecting: boolean;
-    onConnect: () => void;
 }
 
-export default function DeviceConnect({ deviceId, setDeviceId, connected, isConnecting, onConnect }: Props) {
-    const disabled = connected || isConnecting;
-
+export default function DeviceConnect({ deviceId, connected, isConnecting }: Props) {
+    const statusText = isConnecting ? "Connecting..." : connected ? "Connected" : "Disconnected";
     return (
         <div>
-            <label>
-                Device ID:&nbsp;
-                <input
-                    className="small"
-                    type="text"
-                    value={deviceId}
-                    onChange={(e) => setDeviceId(e.target.value)}
-                    placeholder="Enter device ID"
-                    disabled={disabled}
-                />
-            </label>
-            &nbsp;
-            <button className="button-primary" onClick={onConnect} disabled={!deviceId || disabled}>
-                Connect
-            </button>
+            <div>
+                <strong>Device ID:</strong>&nbsp;
+                <span>{deviceId || <em>No device_id in URL</em>}</span>
+            </div>
+            <div style={{ marginTop: 6 }}>
+                <strong>Status:</strong>&nbsp;
+                <span>{statusText}</span>
+            </div>
         </div>
     );
 }
-
