@@ -84,9 +84,24 @@ export default function InteractiveMode({ disabled, addAction }: {
                     })} disabled={disabled}>
                         Press Enter
                     </button>
+
+                    {/* Screen stream controls */}
+                    <button className="btn-secondary" onClick={() => addAction({
+                        id: uuidv4(),
+                        type: "screen.start",
+                        payload: {}
+                    })} disabled={disabled}>
+                        Start Screen Stream
+                    </button>
+                    <button className="btn-secondary" onClick={() => addAction({
+                        id: uuidv4(),
+                        type: "screen.stop",
+                        payload: {}
+                    })} disabled={disabled}>
+                        Stop Screen Stream
+                    </button>
                 </div>
             </div>
         </div>
     );
 }
-
