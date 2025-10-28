@@ -34,6 +34,10 @@ export function CommandWebSocket({ wsUrl }: CommandWebSocketProps) {
     // Actions state
     const [actions, setActions] = useState<any[]>([]);
 
+    // New: screen frames and tiles
+    const [frames, setFrames] = useState<{ id: string; image: string }[]>([]);
+    const [tiles, setTiles] = useState<any[]>([]);
+
     const refreshAccessToken = async (): Promise<string | null> => {
         try {
             const refreshToken = getRefreshToken();
@@ -138,7 +142,29 @@ export function CommandWebSocket({ wsUrl }: CommandWebSocketProps) {
                 }
 
                 if (data.message) {
+                    // push incoming message into messages list
                     setMessages((prev) => [...prev, data.message]);
+
+                    // inspect incoming message command for screen images
+                    try {
+                        const msg = data.message as Message & any;
+                        const cmd = msg.command;
+                        const payload = msg.payload ?? {};
+
+                        if (cmd === "screen.frame") {
+                            // payload expected to have { image: "<base64 jpg>" }
+                            const imgBase64 = payload.image ?? (typeof payload === "string" ? payload : undefined);
+                            if (imgBase64) {
+                                setFrames((prev) => [...prev, { id: uuidv4(), image: imgBase64 }]);
+                            }
+                        } else if (cmd === "screen.tile") {
+                            // payload expected to have { x, y, width, height, image: "<base64 png>" }
+                            setTiles((prev) => [...prev, { id: uuidv4(), ...(payload || {}) }]);
+                        }
+                    } catch (e) {
+                        // non-fatal; already added to messages
+                        console.warn("Failed to process screen image message", e);
+                    }
                 }
             } catch (err) {
                 console.error("Failed to parse WS message:", err);
@@ -289,7 +315,8 @@ export function CommandWebSocket({ wsUrl }: CommandWebSocketProps) {
             <div className="app-content">
                 <div className="main-panel">
                     {mode === "interactive" ? (
-                        <InteractiveMode disabled={!connected} addAction={addAction} />
+                        // pass frames and tiles into InteractiveMode
+                        <InteractiveMode disabled={!connected} addAction={addAction} frames={frames} tiles={tiles} />
                     ) : (
                         <ManualMode disabled={!connected} addAction={addAction} />
                     )}
