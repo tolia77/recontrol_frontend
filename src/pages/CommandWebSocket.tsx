@@ -142,10 +142,7 @@ export function CommandWebSocket({ wsUrl }: CommandWebSocketProps) {
                 }
 
                 if (data.message) {
-                    // push incoming message into messages list
-                    setMessages((prev) => [...prev, data.message]);
-
-                    // inspect incoming message command for screen images
+                    // inspect incoming message command for screen images first
                     try {
                         const msg = data.message as Message & any;
                         const cmd = msg.command;
@@ -155,16 +152,24 @@ export function CommandWebSocket({ wsUrl }: CommandWebSocketProps) {
                             // payload expected to have { image: "<base64 jpg>" }
                             const imgBase64 = payload.image ?? (typeof payload === "string" ? payload : undefined);
                             if (imgBase64) {
-                                setFrames((prev) => [...prev, { id: uuidv4(), image: imgBase64 }]);
+                                // store only latest frame to avoid accumulating previous images
+                                setFrames([{ id: uuidv4(), image: imgBase64 }]);
                             }
+                            // do not add to messages list
+                            return;
                         } else if (cmd === "screen.tile") {
                             // payload expected to have { x, y, width, height, image: "<base64 png>" }
                             setTiles((prev) => [...prev, { id: uuidv4(), ...(payload || {}) }]);
+                            // do not add to messages list
+                            return;
                         }
                     } catch (e) {
                         // non-fatal; already added to messages
                         console.warn("Failed to process screen image message", e);
                     }
+
+                    // only add non-image messages to the list
+                    setMessages((prev) => [...prev, data.message]);
                 }
             } catch (err) {
                 console.error("Failed to parse WS message:", err);

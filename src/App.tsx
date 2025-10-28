@@ -16,10 +16,11 @@ function App() {
                         <Route index element={<Index/>}/>
                         <Route path="/login" element={<Login/>}/>
                         <Route path="/signup" element={<Signup/>}/>
-                        <Route path="/ws" element={<CommandWebSocket wsUrl="ws://localhost:3000/cable"/>}/>
                         <Route path="/dashboard" element={<Dashboard/>}/>
                         <Route path="/devices" element={<Devices/>}/>
                     </Route>
+                    <Route path="/ws" element={<CommandWebSocket wsUrl="ws://localhost:3000/cable"/>}/>
+
                 </Routes>
             </BrowserRouter>
         </>
