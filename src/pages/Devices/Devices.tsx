@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import DevicesTable from "src/components/DevicesTable.tsx";
+import DevicesTable from "src/pages/Devices/DevicesTable.tsx";
 import type {Device} from "src/types/global";
 import {getMyDevicesRequest} from "src/services/backend/devicesRequests.ts";
 

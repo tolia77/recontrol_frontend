@@ -1,13 +1,14 @@
 import React from 'react';
-import {LinkIcon, SettingsIcon} from './icons/Icons';
+import {LinkIcon, SettingsIcon} from '../../components/icons/Icons.tsx';
 import type {Device} from "src/types/global";
+import {useNavigate} from "react-router";
 
 
 const DeviceRow: React.FC<{ device: Device }> = ({device}) => {
     const status = (device.status ?? '').toString().toLowerCase();
     const statusLabel = status === 'active' ? 'Active' : 'Inactive';
     const statusBg = status === 'active' ? 'bg-accent' : 'bg-gray-300'; // adapt classes as needed
-
+    const navigate = useNavigate()
     const lastSeen = device.last_active_at
         ? new Date(device.last_active_at).toLocaleString()
         : 'Never';
@@ -38,7 +39,7 @@ const DeviceRow: React.FC<{ device: Device }> = ({device}) => {
                     <button
                         // Navigate to CommandWebSocket page and include device_id as URL param
                         onClick={() => {
-                            window.location.href = `/ws?device_id=${encodeURIComponent(device.id)}`;
+                            navigate(`/device-control?device_id=${encodeURIComponent(device.id)}`);
                         }}
                         className="box-border pl-3 flex h-[35px] w-[135px] items-center gap-2 rounded-lg bg-primary text-sm font-medium text-white">
                         <LinkIcon className="h-6 w-6"/>

@@ -1,5 +1,5 @@
 import React from 'react';
-import DeviceRow from "./DeviceRow";
+import DeviceRow from "./DeviceRow.tsx";
 import type { Device } from "src/types/global"; // <-- use shared type
 
 // --- DEVICE TABLE COMPONENT ---

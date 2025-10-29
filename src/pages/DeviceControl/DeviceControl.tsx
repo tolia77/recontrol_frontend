@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import { uuidv4 } from "src/utils/uuid";
+import { uuidv4 } from "src/utils/uuid.ts";
 // Imports for old UI (DeviceConnect, ActionsList, MessagesList, InteractiveMode, ManualMode) removed.
 // Import new UI components from App.jsx
-import { Sidebar, MainContent } from "src/pages/Interactive.tsx"; // Assuming App.jsx is in the same folder
+import { Sidebar, MainContent } from "src/pages/DeviceControl/Interactive.tsx"; // Assuming App.jsx is in the same folder
 import { getAccessToken, getRefreshToken, saveTokens } from "src/utils/auth.ts";
 import axios from "axios";
 
@@ -23,7 +23,7 @@ type Mode = 'interactive' | 'manual';
 type AccordionSection = 'power' | 'terminal' | 'processes';
 
 
-export function CommandWebSocket({ wsUrl }: CommandWebSocketProps) {
+export function DeviceControl({ wsUrl }: CommandWebSocketProps) {
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isHandlingAuthReconnect = useRef(false);
