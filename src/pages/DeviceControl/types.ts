@@ -23,19 +23,8 @@ export interface Frame {
     image: string;
 }
 
-export interface Tile {
-    id?: string;
-    image?: string;
-    x?: number;
-    y?: number;
-    width?: number;
-    height?: number;
-}
-
 export interface MainContentProps {
     disabled: boolean;
     addAction: (action: any) => void;
     frames?: Frame[];
-    tiles?: Tile[];
 }
-

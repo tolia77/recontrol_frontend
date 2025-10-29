@@ -1,5 +1,5 @@
 import React from 'react';
-import type {MainContentProps, Tile} from './types.ts';
+import type {MainContentProps} from './types.ts';
 
 /**
  * Main Content Area
@@ -8,7 +8,6 @@ export const MainContent: React.FC<MainContentProps> = ({
                                                             disabled,
                                                             addAction,
                                                             frames = [],
-                                                            tiles = [],
                                                         }) => {
     // get latest full-frame (jpg) if any
     const latestFrame = frames && frames.length ? frames[frames.length - 1] : null;
@@ -50,32 +49,6 @@ export const MainContent: React.FC<MainContentProps> = ({
                             }}
                         />
                     )}
-
-                    {/* render tiles (png) on top */}
-                    {tiles &&
-                        tiles.map((t: Tile) => {
-                            const imgSrc = t.image
-                                ? `data:image/png;base64,${t.image}`
-                                : undefined;
-                            const style: React.CSSProperties = {
-                                position: 'absolute',
-                                left: typeof t.x === 'number' ? t.x : 0,
-                                top: typeof t.y === 'number' ? t.y : 0,
-                                width: typeof t.width === 'number' ? t.width : undefined,
-                                height: typeof t.height === 'number' ? t.height : undefined,
-                                zIndex: 2,
-                                pointerEvents: 'none',
-                                imageRendering: 'pixelated',
-                            };
-                            return imgSrc ? (
-                                <img
-                                    key={t.id ?? crypto.randomUUID()}
-                                    src={imgSrc}
-                                    alt="tile"
-                                    style={style}
-                                />
-                            ) : null;
-                        })}
 
                     {!latestFrame && (
                         <div
@@ -128,4 +101,3 @@ export const MainContent: React.FC<MainContentProps> = ({
         </div>
     );
 };
-

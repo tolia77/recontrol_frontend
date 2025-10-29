@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
-import { uuidv4 } from "src/utils/uuid.ts";
-// Imports for old UI (DeviceConnect, ActionsList, MessagesList, InteractiveMode, ManualMode) removed.
-// Import new UI components from App.jsx
-import { Sidebar, MainContent } from "src/pages/DeviceControl/Interactive.tsx"; // Assuming App.jsx is in the same folder
-import { getAccessToken, getRefreshToken, saveTokens } from "src/utils/auth.ts";
+import React, {useState, useEffect, useRef} from "react";
+import {uuidv4} from "src/utils/uuid.ts";
+import {Sidebar} from "src/pages/DeviceControl/Sidebar.tsx";
+import {MainContent} from "src/pages/DeviceControl/MainContent.tsx";
+import {getAccessToken, getRefreshToken, saveTokens} from "src/utils/auth.ts";
 import axios from "axios";
+import type {AccordionSection, Mode} from "src/pages/DeviceControl/types.ts";
 
-// Common components
 interface Message {
     from: string;
     command: string;
@@ -17,32 +16,19 @@ interface CommandWebSocketProps {
     wsUrl: string;
 }
 
-// --- Types from App.jsx (Redefined here) ---
-// NOTE: Ideally, these would be exported from App.jsx
-type Mode = 'interactive' | 'manual';
-type AccordionSection = 'power' | 'terminal' | 'processes';
-
-
-export function DeviceControl({ wsUrl }: CommandWebSocketProps) {
+export function DeviceControl({wsUrl}: CommandWebSocketProps) {
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isHandlingAuthReconnect = useRef(false);
 
-    // Removed messages state
     const [connected, setConnected] = useState(false);
     const [deviceId, setDeviceId] = useState("");
     const [isConnecting, setIsConnecting] = useState(false);
 
-    // State for new Sidebar UI
     const [activeMode, setActiveMode] = useState<Mode>("interactive");
     const [openAccordion, setOpenAccordion] = useState<AccordionSection | null>(null);
 
-    // Removed Actions state
-    // const [actions, setActions] = useState<any[]>([]);
-
-    // Screen frames and tiles state
     const [frames, setFrames] = useState<{ id: string; image: string }[]>([]);
-    const [tiles, setTiles] = useState<any[]>([]);
 
     const refreshAccessToken = async (): Promise<string | null> => {
         try {
@@ -55,7 +41,7 @@ export function DeviceControl({ wsUrl }: CommandWebSocketProps) {
             const res = await axios.post(
                 `${import.meta.env.VITE_BACKEND_URL}/auth/refresh`,
                 {},
-                { headers: { "Refresh-Token": refreshToken } }
+                {headers: {"Refresh-Token": refreshToken}}
             );
 
             const tokens = res.data ?? {};
@@ -120,7 +106,7 @@ export function DeviceControl({ wsUrl }: CommandWebSocketProps) {
             ws.send(
                 JSON.stringify({
                     command: "subscribe",
-                    identifier: JSON.stringify({ channel: "CommandChannel" }),
+                    identifier: JSON.stringify({channel: "CommandChannel"}),
                 })
             );
         };
@@ -159,18 +145,11 @@ export function DeviceControl({ wsUrl }: CommandWebSocketProps) {
                             const imgBase64 = payload.image ?? (typeof payload === "string" ? payload : undefined);
                             if (imgBase64) {
                                 // store only latest frame to avoid accumulating previous images
-                                setFrames([{ id: uuidv4(), image: imgBase64 }]);
+                                setFrames([{id: uuidv4(), image: imgBase64}]);
                             }
-                            // do not add to messages list
-                            return;
-                        } else if (cmd === "screen.tile") {
-                            // payload expected to have { x, y, width, height, image: "<base64 png>" }
-                            setTiles((prev) => [...prev, { id: uuidv4(), ...(payload || {}) }]);
-                            // do not add to messages list
                             return;
                         }
                     } catch (e) {
-                        // non-fatal
                         console.warn("Failed to process screen image message", e);
                     }
 
@@ -247,9 +226,6 @@ export function DeviceControl({ wsUrl }: CommandWebSocketProps) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Action handlers
-    // Removed addAction, removeAction, clearActions, and sendActions
-
     const sendMessagePayload = (payloadObj: any) => {
         if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
             console.warn("Cannot send message, WebSocket is not open.");
@@ -259,7 +235,7 @@ export function DeviceControl({ wsUrl }: CommandWebSocketProps) {
         wsRef.current.send(
             JSON.stringify({
                 command: "message",
-                identifier: JSON.stringify({ channel: "CommandChannel" }),
+                identifier: JSON.stringify({channel: "CommandChannel"}),
                 data: JSON.stringify(payloadObj),
             })
         );
@@ -267,7 +243,6 @@ export function DeviceControl({ wsUrl }: CommandWebSocketProps) {
 
     const sendSingleAction = (action: any) => {
         const msg = {
-            // Use uuidv4 if id is not provided, though MainContent should provide one
             id: action.id ?? uuidv4(),
             command: action.type,
             payload: action.payload ?? {},
@@ -292,7 +267,6 @@ export function DeviceControl({ wsUrl }: CommandWebSocketProps) {
                     // Pass sendSingleAction as the addAction prop
                     addAction={sendSingleAction}
                     frames={frames}
-                    tiles={tiles}
                 />
             </main>
         </div>
