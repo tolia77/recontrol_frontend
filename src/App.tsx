@@ -19,7 +19,7 @@ function App() {
                         <Route path="/dashboard" element={<Dashboard/>}/>
                         <Route path="/devices" element={<Devices/>}/>
                     </Route>
-                    <Route path="/ws" element={<CommandWebSocket wsUrl="ws://localhost:3000/cable"/>}/>
+                    <Route path="/ws" element={<CommandWebSocket wsUrl={import.meta.env.VITE_WEBSOCKETS_URL}/>}/>
 
                 </Routes>
             </BrowserRouter>
