@@ -1,5 +1,5 @@
 import React from 'react';
-import { AccordionItemProps } from './types.ts';
+import type {AccordionItemProps} from './types.ts';
 import { ChevronDownIcon } from './icons.tsx';
 
 /**

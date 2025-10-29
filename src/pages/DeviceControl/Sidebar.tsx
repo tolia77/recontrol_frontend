@@ -1,5 +1,5 @@
 import React from 'react';
-import { SidebarProps, AccordionSection } from './types.ts';
+import type {SidebarProps, AccordionSection} from './types.ts';
 import { ChevronLeftIcon } from './icons.tsx';
 import { AccordionItem } from './AccordionItem.tsx';
 
