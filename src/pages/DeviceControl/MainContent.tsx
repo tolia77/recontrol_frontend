@@ -101,6 +101,8 @@ export const MainContent: React.FC<MainContentProps> = ({
     }, [getRealCoordsFromClient, buttonName, pressedButtonsFromMask]);
 
     const handlePointerDown = useCallback((e: React.PointerEvent) => {
+        // prevent default immediately (helps block native context menu on some browsers)
+        e.preventDefault();
         // ensure we keep receiving pointer events
         try {
             (e.target as Element).setPointerCapture(e.pointerId);
@@ -190,6 +192,10 @@ export const MainContent: React.FC<MainContentProps> = ({
                                 onPointerUp={handlePointerUp}
                                 onPointerCancel={handlePointerCancel}
                                 onWheel={handleWheel}
+                                onContextMenu={(e) => {
+                                    // disable default right-click context menu
+                                    e.preventDefault();
+                                }}
                                 style={{
                                     position: 'absolute',
                                     top: 0,
