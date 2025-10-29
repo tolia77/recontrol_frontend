@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { uuidv4 } from "src/utils/uuid";
-import DeviceConnect from "src/components/DeviceConnect";
-import ActionsList from "src/components/ActionsList";
-import MessagesList from "src/components/MessagesList";
-import InteractiveMode from "src/components/InteractiveMode";
-import ManualMode from "src/components/ManualMode";
+// Imports for old UI (DeviceConnect, ActionsList, MessagesList, InteractiveMode, ManualMode) removed.
+// Import new UI components from App.jsx
+import { Sidebar, MainContent } from "src/pages/Interactive.tsx"; // Assuming App.jsx is in the same folder
 import { getAccessToken, getRefreshToken, saveTokens } from "src/utils/auth.ts";
 import axios from "axios";
 
@@ -19,22 +17,30 @@ interface CommandWebSocketProps {
     wsUrl: string;
 }
 
+// --- Types from App.jsx (Redefined here) ---
+// NOTE: Ideally, these would be exported from App.jsx
+type Mode = 'interactive' | 'manual';
+type AccordionSection = 'power' | 'terminal' | 'processes';
+
 
 export function CommandWebSocket({ wsUrl }: CommandWebSocketProps) {
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isHandlingAuthReconnect = useRef(false);
 
-    const [messages, setMessages] = useState<Message[]>([]);
+    // Removed messages state
     const [connected, setConnected] = useState(false);
     const [deviceId, setDeviceId] = useState("");
     const [isConnecting, setIsConnecting] = useState(false);
-    const [mode, setMode] = useState<"interactive" | "manual">("interactive");
 
-    // Actions state
-    const [actions, setActions] = useState<any[]>([]);
+    // State for new Sidebar UI
+    const [activeMode, setActiveMode] = useState<Mode>("interactive");
+    const [openAccordion, setOpenAccordion] = useState<AccordionSection | null>(null);
 
-    // New: screen frames and tiles
+    // Removed Actions state
+    // const [actions, setActions] = useState<any[]>([]);
+
+    // Screen frames and tiles state
     const [frames, setFrames] = useState<{ id: string; image: string }[]>([]);
     const [tiles, setTiles] = useState<any[]>([]);
 
@@ -164,12 +170,11 @@ export function CommandWebSocket({ wsUrl }: CommandWebSocketProps) {
                             return;
                         }
                     } catch (e) {
-                        // non-fatal; already added to messages
+                        // non-fatal
                         console.warn("Failed to process screen image message", e);
                     }
 
-                    // only add non-image messages to the list
-                    setMessages((prev) => [...prev, data.message]);
+                    // Removed setMessages call
                 }
             } catch (err) {
                 console.error("Failed to parse WS message:", err);
@@ -243,12 +248,7 @@ export function CommandWebSocket({ wsUrl }: CommandWebSocketProps) {
     }, []);
 
     // Action handlers
-    const addAction = (action: any) => {
-        setActions((s) => [...s, action]);
-    };
-
-    const removeAction = (idx: number) => setActions((s) => s.filter((_, i) => i !== idx));
-    const clearActions = () => setActions([]);
+    // Removed addAction, removeAction, clearActions, and sendActions
 
     const sendMessagePayload = (payloadObj: any) => {
         if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
@@ -267,78 +267,34 @@ export function CommandWebSocket({ wsUrl }: CommandWebSocketProps) {
 
     const sendSingleAction = (action: any) => {
         const msg = {
-            ...(action.id ? { id: action.id } : {}),
+            // Use uuidv4 if id is not provided, though MainContent should provide one
+            id: action.id ?? uuidv4(),
             command: action.type,
             payload: action.payload ?? {},
         };
         sendMessagePayload(msg);
     };
 
-    const sendActions = () => {
-        if (!actions.length) {
-            console.warn("No actions to send.");
-            return;
-        }
-        actions.forEach((a) => {
-            try {
-                sendSingleAction(a);
-            } catch (err) {
-                console.error("Failed to send action", a, err);
-            }
-        });
-        setActions([]);
-    };
-
+    // New UI rendering
     return (
-        <div className="command-websocket">
-            <div className="app-header">
-                <h2>Remote Control Interface</h2>
-                <div className="header-controls">
-                    <DeviceConnect
-                        deviceId={deviceId}
-                        connected={connected}
-                        isConnecting={isConnecting}
-                    />
-
-                    <div className="mode-selector">
-                        <button
-                            className={`mode-btn ${mode === "interactive" ? "active" : ""}`}
-                            onClick={() => setMode("interactive")}
-                        >
-                            Interactive Mode
-                        </button>
-                        <button
-                            className={`mode-btn ${mode === "manual" ? "active" : ""}`}
-                            onClick={() => setMode("manual")}
-                        >
-                            Manual Mode
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div className="app-content">
-                <div className="main-panel">
-                    {mode === "interactive" ? (
-                        // pass frames and tiles into InteractiveMode
-                        <InteractiveMode disabled={!connected} addAction={addAction} frames={frames} tiles={tiles} />
-                    ) : (
-                        <ManualMode disabled={!connected} addAction={addAction} />
-                    )}
-                </div>
-
-                <div className="side-panel">
-                    <ActionsList
-                        actions={actions}
-                        removeAction={removeAction}
-                        clearActions={clearActions}
-                        sendActions={sendActions}
-                        disabled={!connected}
-                    />
-
-                    <MessagesList messages={messages} />
-                </div>
-            </div>
+        <div className="command-websocket flex h-screen w-full font-sans antialiased bg-[#F3F4F6]">
+            <Sidebar
+                activeMode={activeMode}
+                // The setActiveMode prop is still needed by the Sidebar component
+                setActiveMode={setActiveMode}
+                openAccordion={openAccordion}
+                setOpenAccordion={setOpenAccordion}
+            />
+            {/* Main content area with margin-left to account for the sidebar width */}
+            <main className="flex-1 ml-64">
+                <MainContent
+                    disabled={!connected}
+                    // Pass sendSingleAction as the addAction prop
+                    addAction={sendSingleAction}
+                    frames={frames}
+                    tiles={tiles}
+                />
+            </main>
         </div>
     );
 }
