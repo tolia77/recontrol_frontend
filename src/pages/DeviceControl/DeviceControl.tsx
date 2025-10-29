@@ -259,6 +259,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                 setActiveMode={setActiveMode}
                 openAccordion={openAccordion}
                 setOpenAccordion={setOpenAccordion}
+                addAction={sendSingleAction}
             />
             {/* Main content area with margin-left to account for the sidebar width */}
             <main className="flex-1 ml-64">
