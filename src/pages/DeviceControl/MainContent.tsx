@@ -54,16 +54,51 @@ export const MainContent: React.FC<MainContentProps> = ({
         };
     }, [naturalSize]);
 
+    // helper: map single button number to name
+    const buttonName = useCallback((button: number | undefined) => {
+        switch (button) {
+            case 0: return 'left';
+            case 1: return 'middle';
+            case 2: return 'right';
+            case 3: return 'back';
+            case 4: return 'forward';
+            default: return 'unknown';
+        }
+    }, []);
+
+    // helper: decode buttons bitmask to names array
+    const pressedButtonsFromMask = useCallback((mask: number) => {
+        const names: string[] = [];
+        if (mask & 1) names.push('left');
+        if (mask & 2) names.push('right');
+        if (mask & 4) names.push('middle');
+        if (mask & 8) names.push('back');
+        if (mask & 16) names.push('forward');
+        return names;
+    }, []);
+
     const handlePointerEvent = useCallback((e: React.PointerEvent, name: string) => {
-        e.preventDefault();
+        // do not stop default UX unless necessary; we still want to report events
+        e.preventDefault?.();
         const coords = getRealCoordsFromClient(e.clientX, e.clientY);
         if (!coords) return;
+
+        // e.button indicates the button associated with this event (for down/up)
+        // e.buttons is a mask of all currently pressed buttons
+        const btn = typeof e.button === 'number' ? e.button : undefined;
+        const btnName = buttonName(btn);
+        const pressed = pressedButtonsFromMask(e.buttons);
+
         console.log(`[screen-image] ${name}`, {
+            button: btn,
+            buttonName: btnName,
+            pressedButtonsMask: e.buttons,
+            pressedButtons: pressed,
             x: Math.round(coords.x),
             y: Math.round(coords.y),
             debug: coords.debug,
         });
-    }, [getRealCoordsFromClient]);
+    }, [getRealCoordsFromClient, buttonName, pressedButtonsFromMask]);
 
     const handlePointerDown = useCallback((e: React.PointerEvent) => {
         // ensure we keep receiving pointer events
@@ -87,6 +122,23 @@ export const MainContent: React.FC<MainContentProps> = ({
         }
         handlePointerEvent(e, 'pointerup');
     }, [handlePointerEvent]);
+
+    const handlePointerCancel = useCallback((e: React.PointerEvent) => {
+        handlePointerEvent(e, 'pointercancel');
+    }, [handlePointerEvent]);
+
+    const handleWheel = useCallback((e: React.WheelEvent) => {
+        const coords = getRealCoordsFromClient(e.clientX, e.clientY);
+        if (!coords) return;
+        console.log('[screen-image] wheel', {
+            deltaX: e.deltaX,
+            deltaY: e.deltaY,
+            deltaMode: e.deltaMode,
+            x: Math.round(coords.x),
+            y: Math.round(coords.y),
+            debug: coords.debug,
+        });
+    }, [getRealCoordsFromClient]);
 
     return (
         <div className="flex-1 bg-[#F3F4F6] p-8 flex flex-col items-center">
@@ -136,6 +188,8 @@ export const MainContent: React.FC<MainContentProps> = ({
                                 onPointerDown={handlePointerDown}
                                 onPointerMove={handlePointerMove}
                                 onPointerUp={handlePointerUp}
+                                onPointerCancel={handlePointerCancel}
+                                onWheel={handleWheel}
                                 style={{
                                     position: 'absolute',
                                     top: 0,
