@@ -17,6 +17,9 @@ export const MainContent: React.FC<MainContentProps> = ({
     const imgRef = useRef<HTMLImageElement | null>(null);
     const [naturalSize, setNaturalSize] = useState<{w: number; h: number} | null>(null);
 
+    // track last reported real-image coordinates to compute deltas for mouse.move
+    const lastCoordsRef = useRef<{x: number; y: number} | null>(null);
+
     const onImageLoad = useCallback(() => {
         const img = imgRef.current;
         if (img) {
@@ -98,7 +101,57 @@ export const MainContent: React.FC<MainContentProps> = ({
             y: Math.round(coords.y),
             debug: coords.debug,
         });
-    }, [getRealCoordsFromClient, buttonName, pressedButtonsFromMask]);
+
+        // Send commands to backend via addAction for down, up and move
+        if (typeof addAction === 'function' && !disabled) {
+            try {
+                if (name === 'pointerdown') {
+                    // set last coords so subsequent moves have a reference
+                    lastCoordsRef.current = { x: Math.round(coords.x), y: Math.round(coords.y) };
+                    addAction({
+                        id: crypto.randomUUID(),
+                        type: 'mouse.down',
+                        payload: {
+                            Button: btn ?? 0,
+                        },
+                    });
+                } else if (name === 'pointerup') {
+                    addAction({
+                        id: crypto.randomUUID(),
+                        type: 'mouse.up',
+                        payload: {
+                            Button: btn ?? 0,
+                        },
+                    });
+                    // clear tracking on up
+                    lastCoordsRef.current = null;
+                } else if (name === 'pointermove') {
+                    const prev = lastCoordsRef.current;
+                    const curX = Math.round(coords.x);
+                    const curY = Math.round(coords.y);
+                    let deltaX = 0;
+                    let deltaY = 0;
+                    if (prev) {
+                        deltaX = curX - prev.x;
+                        deltaY = curY - prev.y;
+                    }
+                    // update last coords for next delta calculation
+                    lastCoordsRef.current = { x: curX, y: curY };
+
+                    addAction({
+                        id: crypto.randomUUID(),
+                        type: 'mouse.move',
+                        payload: {
+                            DeltaX: Math.round(deltaX),
+                            DeltaY: Math.round(deltaY),
+                        },
+                    });
+                }
+            } catch (err) {
+                console.warn('Failed to send mouse action', err);
+            }
+        }
+    }, [getRealCoordsFromClient, buttonName, pressedButtonsFromMask, addAction, disabled]);
 
     const handlePointerDown = useCallback((e: React.PointerEvent) => {
         // prevent default immediately (helps block native context menu on some browsers)
