@@ -160,7 +160,7 @@ export const MainContent: React.FC<MainContentProps> = ({
         try {
             (e.target as Element).setPointerCapture(e.pointerId);
         } catch (err) {
-            // ignore if not supported
+            console.warn(err)
         }
         handlePointerEvent(e, 'pointerdown');
     }, [handlePointerEvent]);
@@ -173,7 +173,7 @@ export const MainContent: React.FC<MainContentProps> = ({
         try {
             (e.target as Element).releasePointerCapture(e.pointerId);
         } catch (err) {
-            // ignore if not supported
+            console.warn(err)
         }
         handlePointerEvent(e, 'pointerup');
     }, [handlePointerEvent]);
@@ -183,17 +183,54 @@ export const MainContent: React.FC<MainContentProps> = ({
     }, [handlePointerEvent]);
 
     const handleWheel = useCallback((e: React.WheelEvent) => {
+        // prevent page scrolling / native behavior
+        e.preventDefault();
+        e.stopPropagation?.();
+
         const coords = getRealCoordsFromClient(e.clientX, e.clientY);
         if (!coords) return;
+
+        // Normalize wheel delta to "lines"
+        // deltaMode: 0 = pixels, 1 = lines, 2 = pages
+        const PIXELS_PER_LINE = 16;
+        let deltaLines: number;
+        if (e.deltaMode === 0) {
+            deltaLines = e.deltaY / PIXELS_PER_LINE;
+        } else if (e.deltaMode === 1) {
+            deltaLines = e.deltaY;
+        } else {
+            // pages -> assume ~60 lines per page
+            deltaLines = e.deltaY * 60;
+        }
+
+        // Convert to integer clicks, ensure at least 1 in magnitude for any non-zero input
+        const clicks = deltaLines === 0 ? 0 : Math.sign(deltaLines) * Math.max(1, Math.round(Math.abs(deltaLines)));
+
         console.log('[screen-image] wheel', {
             deltaX: e.deltaX,
             deltaY: e.deltaY,
             deltaMode: e.deltaMode,
+            clicks,
             x: Math.round(coords.x),
             y: Math.round(coords.y),
             debug: coords.debug,
         });
-    }, [getRealCoordsFromClient]);
+
+        // send mouse.scroll action to backend
+        if (typeof addAction === 'function' && !disabled && clicks !== 0) {
+            try {
+                addAction({
+                    id: crypto.randomUUID(),
+                    type: 'mouse.scroll',
+                    payload: {
+                        Clicks: clicks,
+                    },
+                });
+            } catch (err) {
+                console.warn('Failed to send mouse.scroll action', err);
+            }
+        }
+    }, [getRealCoordsFromClient, addAction, disabled]);
 
     return (
         <div className="flex-1 bg-[#F3F4F6] p-8 flex flex-col items-center">
