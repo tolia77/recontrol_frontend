@@ -20,15 +20,23 @@ export function pressedButtonsFromMask(mask: number): string[] {
 }
 
 export function normalizeWheelToClicks(deltaY: number, deltaMode: number): number {
-  const PIXELS_PER_LINE = 16;
-  let deltaLines: number;
-  if (deltaMode === 0) {
-    deltaLines = deltaY / PIXELS_PER_LINE;
-  } else if (deltaMode === 1) {
-    deltaLines = deltaY;
-  } else {
-    deltaLines = deltaY * 60;
-  }
-  return deltaLines === 0 ? 0 : Math.sign(deltaLines) * Math.max(1, Math.round(Math.abs(deltaLines)));
-}
+  // Invert to match Windows: positive = wheel forward (scroll up), negative = down
+  const dy = -deltaY;
 
+  if (deltaMode === 1) {
+    // DOM_DELTA_LINE: use line units, round and ensure at least ±1 when non-zero
+    const lines = dy;
+    return lines === 0 ? 0 : Math.sign(lines) * Math.max(1, Math.round(Math.abs(lines)));
+  }
+
+  if (deltaMode === 2) {
+    // DOM_DELTA_PAGE: approximate as multiple lines (heuristic)
+    const approxLines = dy * 3;
+    return approxLines === 0 ? 0 : Math.sign(approxLines) * Math.max(1, Math.round(Math.abs(approxLines)));
+  }
+
+  // DOM_DELTA_PIXEL: map pixels to notches using typical WHEEL_DELTA = 120
+  const PIXELS_PER_NOTCH = 120;
+  const clicks = dy / PIXELS_PER_NOTCH;
+  return clicks === 0 ? 0 : Math.sign(clicks) * Math.max(1, Math.round(Math.abs(clicks)));
+}
