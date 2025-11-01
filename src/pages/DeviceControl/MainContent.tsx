@@ -126,24 +126,19 @@ export const MainContent: React.FC<MainContentProps> = ({
                     // clear tracking on up
                     lastCoordsRef.current = null;
                 } else if (name === 'pointermove') {
-                    const prev = lastCoordsRef.current;
+                    // compute absolute coordinates on the real image and send them
                     const curX = Math.round(coords.x);
                     const curY = Math.round(coords.y);
-                    let deltaX = 0;
-                    let deltaY = 0;
-                    if (prev) {
-                        deltaX = curX - prev.x;
-                        deltaY = curY - prev.y;
-                    }
-                    // update last coords for next delta calculation
+                    // update last coords for potential other use
                     lastCoordsRef.current = { x: curX, y: curY };
 
                     addAction({
                         id: crypto.randomUUID(),
                         type: 'mouse.move',
                         payload: {
-                            DeltaX: Math.round(deltaX),
-                            DeltaY: Math.round(deltaY),
+                            // send absolute coordinates (integers)
+                            X: curX,
+                            Y: curY,
                         },
                     });
                 }
