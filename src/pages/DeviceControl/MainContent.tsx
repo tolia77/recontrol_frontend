@@ -1,5 +1,10 @@
 import React, {useRef, useState, useCallback} from 'react';
 import type {MainContentProps} from './types.ts';
+import {computeRealImageCoords} from './utils/coords.ts';
+import {buttonName, pressedButtonsFromMask, normalizeWheelToClicks} from './utils/mouse.ts';
+import {mapToVirtualKey} from './utils/keyboard.ts';
+import {ScreenCanvas} from './components/ScreenCanvas.tsx';
+import {QuickActions} from './components/QuickActions.tsx';
 
 /**
  * Main Content Area
@@ -16,9 +21,10 @@ export const MainContent: React.FC<MainContentProps> = ({
     const containerRef = useRef<HTMLDivElement | null>(null);
     const imgRef = useRef<HTMLImageElement | null>(null);
     const [naturalSize, setNaturalSize] = useState<{w: number; h: number} | null>(null);
-
     // track last reported real-image coordinates to compute deltas for mouse.move
     const lastCoordsRef = useRef<{x: number; y: number} | null>(null);
+    // NEW: overlay element ref to focus for keyboard events
+    const overlayRef = useRef<HTMLDivElement | null>(null);
 
     const onImageLoad = useCallback(() => {
         const img = imgRef.current;
@@ -27,6 +33,7 @@ export const MainContent: React.FC<MainContentProps> = ({
         }
     }, []);
 
+    // REPLACED: use util to compute real coords (wrapper remains small)
     const getRealCoordsFromClient = useCallback((clientX: number, clientY: number) => {
         const container = containerRef.current;
         const img = imgRef.current;
@@ -36,49 +43,8 @@ export const MainContent: React.FC<MainContentProps> = ({
         const nW = img.naturalWidth || naturalSize?.w || 1;
         const nH = img.naturalHeight || naturalSize?.h || 1;
 
-        // compute scale used by object-fit: contain
-        const scale = Math.min(rect.width / nW, rect.height / nH);
-        const dispW = nW * scale;
-        const dispH = nH * scale;
-        const offsetX = (rect.width - dispW) / 2;
-        const offsetY = (rect.height - dispH) / 2;
-
-        const relX = clientX - rect.left - offsetX;
-        const relY = clientY - rect.top - offsetY;
-
-        // convert to natural image coordinates and clamp
-        const x = Math.max(0, Math.min(nW, (relX / dispW) * nW));
-        const y = Math.max(0, Math.min(nH, (relY / dispH) * nH));
-
-        return {
-            x,
-            y,
-            debug: {clientX, clientY, rect, nW, nH, dispW, dispH, offsetX, offsetY},
-        };
+        return computeRealImageCoords(rect, nW, nH, clientX, clientY);
     }, [naturalSize]);
-
-    // helper: map single button number to name
-    const buttonName = useCallback((button: number | undefined) => {
-        switch (button) {
-            case 0: return 'left';
-            case 1: return 'middle';
-            case 2: return 'right';
-            case 3: return 'back';
-            case 4: return 'forward';
-            default: return 'unknown';
-        }
-    }, []);
-
-    // helper: decode buttons bitmask to names array
-    const pressedButtonsFromMask = useCallback((mask: number) => {
-        const names: string[] = [];
-        if (mask & 1) names.push('left');
-        if (mask & 2) names.push('right');
-        if (mask & 4) names.push('middle');
-        if (mask & 8) names.push('back');
-        if (mask & 16) names.push('forward');
-        return names;
-    }, []);
 
     const handlePointerEvent = useCallback((e: React.PointerEvent, name: string) => {
         // do not stop default UX unless necessary; we still want to report events
@@ -148,6 +114,36 @@ export const MainContent: React.FC<MainContentProps> = ({
         }
     }, [getRealCoordsFromClient, buttonName, pressedButtonsFromMask, addAction, disabled]);
 
+    // NEW: keyboard handlers
+    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+        // prevent browser shortcuts while controlling remote device
+        e.preventDefault();
+        const vk = mapToVirtualKey(e);
+        console.log('[keyboard] keyDown', { key: e.key, code: e.code, vk });
+
+        if (typeof addAction === 'function' && !disabled && vk) {
+            addAction({
+                id: crypto.randomUUID(),
+                type: 'keyboard.keyDown',
+                payload: { Key: vk },
+            });
+        }
+    }, [addAction, disabled, mapToVirtualKey]);
+
+    const handleKeyUp = useCallback((e: React.KeyboardEvent) => {
+        e.preventDefault();
+        const vk = mapToVirtualKey(e);
+        console.log('[keyboard] keyUp', { key: e.key, code: e.code, vk });
+
+        if (typeof addAction === 'function' && !disabled && vk) {
+            addAction({
+                id: crypto.randomUUID(),
+                type: 'keyboard.keyUp',
+                payload: { Key: vk },
+            });
+        }
+    }, [addAction, disabled, mapToVirtualKey]);
+
     const handlePointerDown = useCallback((e: React.PointerEvent) => {
         // prevent default immediately (helps block native context menu on some browsers)
         e.preventDefault();
@@ -157,6 +153,8 @@ export const MainContent: React.FC<MainContentProps> = ({
         } catch (err) {
             console.warn(err)
         }
+        // NEW: focus overlay to capture subsequent keyboard events
+        overlayRef.current?.focus();
         handlePointerEvent(e, 'pointerdown');
     }, [handlePointerEvent]);
 
@@ -178,28 +176,13 @@ export const MainContent: React.FC<MainContentProps> = ({
     }, [handlePointerEvent]);
 
     const handleWheel = useCallback((e: React.WheelEvent) => {
-        // prevent page scrolling / native behavior
         e.preventDefault();
         e.stopPropagation?.();
 
         const coords = getRealCoordsFromClient(e.clientX, e.clientY);
         if (!coords) return;
 
-        // Normalize wheel delta to "lines"
-        // deltaMode: 0 = pixels, 1 = lines, 2 = pages
-        const PIXELS_PER_LINE = 16;
-        let deltaLines: number;
-        if (e.deltaMode === 0) {
-            deltaLines = e.deltaY / PIXELS_PER_LINE;
-        } else if (e.deltaMode === 1) {
-            deltaLines = e.deltaY;
-        } else {
-            // pages -> assume ~60 lines per page
-            deltaLines = e.deltaY * 60;
-        }
-
-        // Convert to integer clicks, ensure at least 1 in magnitude for any non-zero input
-        const clicks = deltaLines === 0 ? 0 : Math.sign(deltaLines) * Math.max(1, Math.round(Math.abs(deltaLines)));
+        const clicks = normalizeWheelToClicks(e.deltaY, e.deltaMode);
 
         console.log('[screen-image] wheel', {
             deltaX: e.deltaX,
@@ -229,120 +212,21 @@ export const MainContent: React.FC<MainContentProps> = ({
 
     return (
         <div className="flex-1 bg-[#F3F4F6] p-8 flex flex-col items-center">
-            {/* Canvas Area */}
-            <div className="canvas-container w-full" style={{ maxWidth: 1280 }}>
-                <div
-                    ref={containerRef}
-                    className="canvas-placeholder"
-                    style={{
-                        position: 'relative',
-                        width: '100%',
-                        // enforce 16:9 aspect ratio visually
-                        aspectRatio: '16/9',
-                        background: '#111827',
-                        overflow: 'hidden',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '0.75rem',
-                        boxShadow: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
-                    }}
-                >
-                    {/* render latest full-frame JPEG as background/full image */}
-                    {latestFrame && (
-                        <>
-                            <img
-                                ref={imgRef}
-                                src={`data:image/jpeg;base64,${latestFrame.image}`}
-                                alt="screen-frame"
-                                onLoad={onImageLoad}
-                                style={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'contain',
-                                    zIndex: 1,
-                                    // pointer events disabled on the image itself; overlay will receive events
-                                    pointerEvents: 'none',
-                                }}
-                            />
-
-                            {/* transparent overlay to capture pointer events */}
-                            <div
-                                className="overlay pointer-events-auto"
-                                onPointerDown={handlePointerDown}
-                                onPointerMove={handlePointerMove}
-                                onPointerUp={handlePointerUp}
-                                onPointerCancel={handlePointerCancel}
-                                onWheel={handleWheel}
-                                onContextMenu={(e) => {
-                                    // disable default right-click context menu
-                                    e.preventDefault();
-                                }}
-                                style={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    width: '100%',
-                                    height: '100%',
-                                    zIndex: 10,
-                                    // keep overlay invisible but interactive
-                                    background: 'transparent',
-                                }}
-                            />
-                        </>
-                    )}
-
-                    {!latestFrame && (
-                        <div
-                            className="canvas-content"
-                            style={{
-                                position: 'relative',
-                                zIndex: 3,
-                                color: '#D1D5DB', // Light gray text
-                            }}
-                        >
-              <span className="canvas-text text-lg font-medium">
-                Interactive Canvas Area
-              </span>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Quick Actions (Only Stream Buttons) */}
-            <div className="quick-actions mt-6">
-                <div className="action-buttons flex gap-4">
-                    <button
-                        className="px-4 py-2 bg-[#3B82F6] text-white rounded-lg font-medium shadow hover:bg-[#1E3A8A] disabled:bg-[#D1D5DB] disabled:text-[#8F8F8F] disabled:cursor-not-allowed transition-colors"
-                        onClick={() =>
-                            addAction({
-                                id: crypto.randomUUID(),
-                                type: 'screen.start',
-                                payload: {},
-                            })
-                        }
-                        disabled={disabled}
-                    >
-                        Start Screen Stream
-                    </button>
-                    <button
-                        className="px-4 py-2 bg-[#3B82F6] text-white rounded-lg font-medium shadow hover:bg-[#1E3A8A] disabled:bg-[#D1D5DB] disabled:text-[#8F8F8F] disabled:cursor-not-allowed transition-colors"
-                        onClick={() =>
-                            addAction({
-                                id: crypto.randomUUID(),
-                                type: 'screen.stop',
-                                payload: {},
-                            })
-                        }
-                        disabled={disabled}
-                    >
-                        Stop Screen Stream
-                    </button>
-                </div>
-            </div>
+            <ScreenCanvas
+                latestFrame={latestFrame}
+                containerRef={containerRef}
+                imgRef={imgRef}
+                overlayRef={overlayRef}
+                onImageLoad={onImageLoad}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerCancel}
+                onWheel={handleWheel}
+                onKeyDown={handleKeyDown}
+                onKeyUp={handleKeyUp}
+            />
+            <QuickActions disabled={disabled} addAction={addAction} />
         </div>
     );
 };
