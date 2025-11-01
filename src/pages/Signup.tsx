@@ -45,7 +45,7 @@ function Signup() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center">
+        <main className="min-h-screen flex items-center justify-center">
             <div className="flex flex-col items-center space-y-8">
                 <img src={logoFull} alt="logo"/>
                 <h1>Sign up your account</h1>
@@ -81,7 +81,7 @@ function Signup() {
                     <p>Already have an account? <Link className="text-secondary" to={"/login"}>Log in</Link></p>
                 </form>
             </div>
-        </div>
+        </main>
     );
 }
 
