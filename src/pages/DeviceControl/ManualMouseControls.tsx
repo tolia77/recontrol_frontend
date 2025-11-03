@@ -8,15 +8,25 @@ export const ManualMouseControls: React.FC<{
     const [yVal, setYVal] = useState<number>(0);
     const [scrollClicks, setScrollClicks] = useState<number>(1);
 
+    // small helper sleep (50ms)
+    const sleep = (ms: number) => new Promise<void>((res) => setTimeout(res, ms));
+    const CLICK_DELAY_MS = 50;
+
     const send = useCallback((type: string, payload: Record<string, any>) => {
         if (!addAction || disabled) return;
         addAction({ id: crypto.randomUUID(), type, payload });
     }, [addAction, disabled]);
 
-    const clickSeq = useCallback((button: number, times = 1) => {
+    // add 50ms delays between events
+    const clickSeq = useCallback(async (button: number, times = 1) => {
         for (let i = 0; i < times; i++) {
             send('mouse.down', { Button: button });
+            await sleep(CLICK_DELAY_MS);
             send('mouse.up', { Button: button });
+            // wait before next click (or just to separate down->up)
+            if (i < times - 1) {
+                await sleep(CLICK_DELAY_MS);
+            }
         }
     }, [send]);
 
@@ -62,18 +72,18 @@ export const ManualMouseControls: React.FC<{
                     <div className="flex flex-wrap gap-2">
                         <button className="btn-secondary" disabled={disabled} onClick={() => send('mouse.down', { Button: 0 })}>Left Down</button>
                         <button className="btn-secondary" disabled={disabled} onClick={() => send('mouse.up', { Button: 0 })}>Left Up</button>
-                        <button className="btn-secondary" disabled={disabled} onClick={() => clickSeq(0, 1)}>Left Click</button>
-                        <button className="btn-secondary" disabled={disabled} onClick={() => clickSeq(0, 2)}>Left Double</button>
+                        <button className="btn-secondary" disabled={disabled} onClick={() => { void clickSeq(0, 1); }}>Left Click</button>
+                        <button className="btn-secondary" disabled={disabled} onClick={() => { void clickSeq(0, 2); }}>Left Double</button>
                     </div>
                     <div className="flex flex-wrap gap-2">
                         <button className="btn-secondary" disabled={disabled} onClick={() => send('mouse.down', { Button: 2 })}>Right Down</button>
                         <button className="btn-secondary" disabled={disabled} onClick={() => send('mouse.up', { Button: 2 })}>Right Up</button>
-                        <button className="btn-secondary" disabled={disabled} onClick={() => clickSeq(2, 1)}>Right Click</button>
+                        <button className="btn-secondary" disabled={disabled} onClick={() => { void clickSeq(2, 1); }}>Right Click</button>
                     </div>
                     <div className="flex flex-wrap gap-2">
                         <button className="btn-secondary" disabled={disabled} onClick={() => send('mouse.down', { Button: 1 })}>Middle Down</button>
                         <button className="btn-secondary" disabled={disabled} onClick={() => send('mouse.up', { Button: 1 })}>Middle Up</button>
-                        <button className="btn-secondary" disabled={disabled} onClick={() => clickSeq(1, 1)}>Middle Click</button>
+                        <button className="btn-secondary" disabled={disabled} onClick={() => { void clickSeq(1, 1); }}>Middle Click</button>
                     </div>
                 </div>
 
@@ -98,4 +108,3 @@ export const ManualMouseControls: React.FC<{
         </div>
     );
 };
-
