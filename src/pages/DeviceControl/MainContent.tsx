@@ -5,15 +5,23 @@ import {buttonName, pressedButtonsFromMask, normalizeWheelToClicks} from './util
 import {mapToVirtualKey} from './utils/keyboard.ts';
 import {ScreenCanvas} from './ScreenCanvas.tsx';
 import {QuickActions} from './QuickActions.tsx';
+import { ManualMouseControls } from './ManualMouseControls.tsx';
 
 /**
  * Main Content Area
  */
-export const MainContent: React.FC<MainContentProps> = ({
+export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive' | 'manual' }> = ({
                                                             disabled,
                                                             addAction,
                                                             frames = [],
+                                                            activeMode,
                                                         }) => {
+    // Manual mode rendering only mouse controls
+    if (activeMode === 'manual') {
+        return <ManualMouseControls disabled={disabled} addAction={addAction} />;
+    }
+
+    // Interactive mode (existing)
     // get latest full-frame (jpg) if any
     const latestFrame = frames && frames.length ? frames[frames.length - 1] : null;
 
@@ -21,9 +29,7 @@ export const MainContent: React.FC<MainContentProps> = ({
     const containerRef = useRef<HTMLDivElement | null>(null);
     const imgRef = useRef<HTMLImageElement | null>(null);
     const [naturalSize, setNaturalSize] = useState<{w: number; h: number} | null>(null);
-    // track last reported real-image coordinates to compute deltas for mouse.move
     const lastCoordsRef = useRef<{x: number; y: number} | null>(null);
-    // NEW: overlay element ref to focus for keyboard events
     const overlayRef = useRef<HTMLDivElement | null>(null);
 
     const onImageLoad = useCallback(() => {
@@ -33,7 +39,6 @@ export const MainContent: React.FC<MainContentProps> = ({
         }
     }, []);
 
-    // REPLACED: use util to compute real coords (wrapper remains small)
     const getRealCoordsFromClient = useCallback((clientX: number, clientY: number) => {
         const container = containerRef.current;
         const img = imgRef.current;

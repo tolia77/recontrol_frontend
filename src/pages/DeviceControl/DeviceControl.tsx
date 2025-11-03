@@ -280,6 +280,8 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                     // Pass sendSingleAction as the addAction prop
                     addAction={sendSingleAction}
                     frames={frames}
+                    // NEW
+                    activeMode={activeMode}
                 />
             </main>
         </div>

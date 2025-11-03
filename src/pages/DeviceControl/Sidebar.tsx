@@ -41,7 +41,7 @@ export const Sidebar: React.FC<SidebarProps & { addAction?: (action: any) => voi
                  <button className="p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-200">
                      <ChevronLeftIcon className="w-8 h-8" />
                  </button>
-                 <h2 className="text-xl font-semibold text-gray-200">Interactive</h2>
+                 <h2 className="text-xl font-semibold text-gray-200">Control</h2>
              </div>
 
              {/* Mode Toggle */}
@@ -73,54 +73,55 @@ export const Sidebar: React.FC<SidebarProps & { addAction?: (action: any) => voi
                  </div>
              </div>
 
-             {/* Navigation Links (Accordion) */}
-             <nav className="flex-grow space-y-1">
-                {/* Power accordion - expanded content rendered inline to include power actions */}
-                <AccordionItem
-                    title="Power"
-                    isOpen={openAccordion === "power"}
-                    onClick={() => toggleAccordion("power")}
-                />
-                {openAccordion === "power" && (
-                    <div className="mt-2 ml-2 mr-2 p-2 rounded">
-                        {POWER_OPTIONS.map((opt) => (
-                            <button
-                                key={opt.key}
-                                onClick={() => {
-                                    if (!addAction) {
-                                        console.warn('No addAction provided to Sidebar, cannot send command');
-                                        return;
-                                    }
-                                    addAction({
-                                        id: typeof crypto !== 'undefined' && (crypto as any).randomUUID ? (crypto as any).randomUUID() : `${Date.now()}-${Math.random()}`,
-                                        type: opt.key,
-                                        payload: {},
-                                    });
-                                }}
-                                className="w-full text-left px-3 py-2 mb-2 cursor-pointer rounded text-sm"
-                            >
-                                {opt.label}
-                            </button>
-                        ))}
-                    </div>
-                )}
-                 <AccordionItem
-                     title="Terminal"
-                     isOpen={openAccordion === "terminal"}
-                     onClick={() => toggleAccordion("terminal")}
-                 />
-                 <AccordionItem
-                     title="Processes"
-                     isOpen={openAccordion === "processes"}
-                     onClick={() => toggleAccordion("processes")}
-                 />
-             </nav>
+             {/* Navigation Links (Accordion) - HIDDEN in Manual mode */}
+             {activeMode !== 'manual' && (
+               <nav className="flex-grow space-y-1">
+                  {/* Power accordion */}
+                  <AccordionItem
+                      title="Power"
+                      isOpen={openAccordion === "power"}
+                      onClick={() => toggleAccordion("power")}
+                  />
+                  {openAccordion === "power" && (
+                      <div className="mt-2 ml-2 mr-2 p-2 rounded">
+                          {POWER_OPTIONS.map((opt) => (
+                              <button
+                                  key={opt.key}
+                                  onClick={() => {
+                                      if (!addAction) {
+                                          console.warn('No addAction provided to Sidebar, cannot send command');
+                                          return;
+                                      }
+                                      addAction({
+                                          id: typeof crypto !== 'undefined' && (crypto as any).randomUUID ? (crypto as any).randomUUID() : `${Date.now()}-${Math.random()}`,
+                                          type: opt.key,
+                                          payload: {},
+                                      });
+                                  }}
+                                  className="w-full text-left px-3 py-2 mb-2 cursor-pointer rounded text-sm"
+                              >
+                                  {opt.label}
+                              </button>
+                          ))}
+                      </div>
+                  )}
+                  <AccordionItem
+                      title="Terminal"
+                      isOpen={openAccordion === "terminal"}
+                      onClick={() => toggleAccordion("terminal")}
+                  />
+                  <AccordionItem
+                      title="Processes"
+                      isOpen={openAccordion === "processes"}
+                      onClick={() => toggleAccordion("processes")}
+                  />
+               </nav>
+             )}
 
              {/* Sidebar Footer */}
              <div className="mt-auto">
                  <div className="flex items-center justify-between">
                      <span className="text-sm text-gray-300">Device</span>
-                     {/* Battery icon omitted as requested */}
                  </div>
              </div>
          </div>
