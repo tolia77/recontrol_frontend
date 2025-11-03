@@ -37,11 +37,11 @@ export const Sidebar: React.FC<SidebarProps & { addAction?: (action: any) => voi
      return (
          <div className="w-64 bg-[#1E3A8A] text-white p-6 flex flex-col h-screen fixed left-0 top-0">
              {/* Sidebar Header */}
-             <div className="flex items-center justify-between mb-8">
-                 <h1 className="text-xl font-semibold text-gray-200">Interactive</h1>
-                 <button className="p-1 rounded-full hover:bg-white/10">
-                     <ChevronLeftIcon className="w-5 h-5" />
+             <div className="flex items-center gap-3 mb-8">
+                 <button className="p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-200">
+                     <ChevronLeftIcon className="w-8 h-8" />
                  </button>
+                 <h2 className="text-xl font-semibold text-gray-200">Interactive</h2>
              </div>
 
              {/* Mode Toggle */}
