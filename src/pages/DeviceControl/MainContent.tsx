@@ -3,8 +3,8 @@ import type {MainContentProps} from './types.ts';
 import {computeRealImageCoords} from './utils/coords.ts';
 import {buttonName, pressedButtonsFromMask, normalizeWheelToClicks} from './utils/mouse.ts';
 import {mapToVirtualKey} from './utils/keyboard.ts';
-import {ScreenCanvas} from './components/ScreenCanvas.tsx';
-import {QuickActions} from './components/QuickActions.tsx';
+import {ScreenCanvas} from './ScreenCanvas.tsx';
+import {QuickActions} from './QuickActions.tsx';
 
 /**
  * Main Content Area
