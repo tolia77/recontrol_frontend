@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import { mapButtonToBackend } from './utils/mouse.ts';
 
 export const ManualMouseControls: React.FC<{
     disabled: boolean;
@@ -17,18 +18,26 @@ export const ManualMouseControls: React.FC<{
         addAction({ id: crypto.randomUUID(), type, payload });
     }, [addAction, disabled]);
 
+    const sendDown = useCallback((logicalBtn: number) => {
+        send('mouse.down', { Button: mapButtonToBackend(logicalBtn) });
+    }, [send]);
+
+    const sendUp = useCallback((logicalBtn: number) => {
+        send('mouse.up', { Button: mapButtonToBackend(logicalBtn) });
+    }, [send]);
+
     // add 50ms delays between events
-    const clickSeq = useCallback(async (button: number, times = 1) => {
+    const clickSeq = useCallback(async (logicalBtn: number, times = 1) => {
         for (let i = 0; i < times; i++) {
-            send('mouse.down', { Button: button });
+            sendDown(logicalBtn);
             await sleep(CLICK_DELAY_MS);
-            send('mouse.up', { Button: button });
+            sendUp(logicalBtn);
             // wait before next click (or just to separate down->up)
             if (i < times - 1) {
                 await sleep(CLICK_DELAY_MS);
             }
         }
-    }, [send]);
+    }, [sendDown, sendUp]);
 
     return (
         <div className="flex-1 bg-[#F3F4F6] p-8 flex flex-col items-center">
@@ -70,19 +79,19 @@ export const ManualMouseControls: React.FC<{
 
                 <div className="flex flex-col gap-2 mb-4">
                     <div className="flex flex-wrap gap-2">
-                        <button className="btn-secondary" disabled={disabled} onClick={() => send('mouse.down', { Button: 0 })}>Left Down</button>
-                        <button className="btn-secondary" disabled={disabled} onClick={() => send('mouse.up', { Button: 0 })}>Left Up</button>
+                        <button className="btn-secondary" disabled={disabled} onClick={() => sendDown(0)}>Left Down</button>
+                        <button className="btn-secondary" disabled={disabled} onClick={() => sendUp(0)}>Left Up</button>
                         <button className="btn-secondary" disabled={disabled} onClick={() => { void clickSeq(0, 1); }}>Left Click</button>
                         <button className="btn-secondary" disabled={disabled} onClick={() => { void clickSeq(0, 2); }}>Left Double</button>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        <button className="btn-secondary" disabled={disabled} onClick={() => send('mouse.down', { Button: 2 })}>Right Down</button>
-                        <button className="btn-secondary" disabled={disabled} onClick={() => send('mouse.up', { Button: 2 })}>Right Up</button>
+                        <button className="btn-secondary" disabled={disabled} onClick={() => sendDown(2)}>Right Down</button>
+                        <button className="btn-secondary" disabled={disabled} onClick={() => sendUp(2)}>Right Up</button>
                         <button className="btn-secondary" disabled={disabled} onClick={() => { void clickSeq(2, 1); }}>Right Click</button>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        <button className="btn-secondary" disabled={disabled} onClick={() => send('mouse.down', { Button: 1 })}>Middle Down</button>
-                        <button className="btn-secondary" disabled={disabled} onClick={() => send('mouse.up', { Button: 1 })}>Middle Up</button>
+                        <button className="btn-secondary" disabled={disabled} onClick={() => sendDown(1)}>Middle Down</button>
+                        <button className="btn-secondary" disabled={disabled} onClick={() => sendUp(1)}>Middle Up</button>
                         <button className="btn-secondary" disabled={disabled} onClick={() => { void clickSeq(1, 1); }}>Middle Click</button>
                     </div>
                 </div>

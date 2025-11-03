@@ -40,3 +40,11 @@ export function normalizeWheelToClicks(deltaY: number, deltaMode: number): numbe
   const clicks = dy / PIXELS_PER_NOTCH;
   return clicks === 0 ? 0 : Math.sign(clicks) * Math.max(1, Math.round(Math.abs(clicks)));
 }
+
+export function mapButtonToBackend(jsButton: number | undefined): number {
+  // Browser: 0=left, 1=middle, 2=right
+  // Backend expects middle/right swapped
+  if (jsButton === 1) return 2; // middle -> right
+  if (jsButton === 2) return 1; // right -> middle
+  return jsButton ?? 0;         // default to left if undefined
+}

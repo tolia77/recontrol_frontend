@@ -1,7 +1,7 @@
 import React, {useRef, useState, useCallback} from 'react';
 import type {MainContentProps} from './types.ts';
 import {computeRealImageCoords} from './utils/coords.ts';
-import {buttonName, pressedButtonsFromMask, normalizeWheelToClicks} from './utils/mouse.ts';
+import {buttonName, pressedButtonsFromMask, normalizeWheelToClicks, mapButtonToBackend} from './utils/mouse.ts';
 import {mapToVirtualKey} from './utils/keyboard.ts';
 import {ScreenCanvas} from './ScreenCanvas.tsx';
 import {QuickActions} from './QuickActions.tsx';
@@ -83,7 +83,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                         id: crypto.randomUUID(),
                         type: 'mouse.down',
                         payload: {
-                            Button: btn ?? 0,
+                            Button: mapButtonToBackend(btn),
                         },
                     });
                 } else if (name === 'pointerup') {
@@ -91,7 +91,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                         id: crypto.randomUUID(),
                         type: 'mouse.up',
                         payload: {
-                            Button: btn ?? 0,
+                            Button: mapButtonToBackend(btn),
                         },
                     });
                     // clear tracking on up
