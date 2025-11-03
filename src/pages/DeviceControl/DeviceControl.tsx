@@ -20,6 +20,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isHandlingAuthReconnect = useRef(false);
+    const lastDeviceIdRef = useRef<string | null>(null);
 
     const [connected, setConnected] = useState(false);
     const [deviceId, setDeviceId] = useState("");
@@ -59,12 +60,15 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         }
     };
 
-    const connectWebSocket = async (deviceIdParam?: string) => {
-        const idToUse = deviceIdParam ?? deviceId;
+    const connectWebSocket = async (deviceIdParam?: string | null) => {
+        const idToUse = (deviceIdParam ?? lastDeviceIdRef.current ?? deviceId) || "";
         if (!idToUse) {
             console.warn("Cannot connect: deviceId is missing.");
             return;
         }
+        // Persist last known device id for future reconnects
+        lastDeviceIdRef.current = idToUse;
+
         if (wsRef.current && wsRef.current.readyState < 2) {
             console.warn("WebSocket connection already in progress.");
             return;
@@ -194,9 +198,16 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         console.log("Attempting WebSocket reconnection (auth)...");
         isHandlingAuthReconnect.current = true;
 
+        // Ensure the old socket is closed before reconnecting
+        if (wsRef.current && wsRef.current.readyState < 2) {
+            try {
+                wsRef.current.close(4001, "Reauth - closing old socket");
+            } catch {}
+        }
+
         const newToken = await refreshAccessToken();
         if (newToken) {
-            connectWebSocket();
+            connectWebSocket(lastDeviceIdRef.current ?? deviceId);
         } else {
             console.error("Unable to refresh token, user may need to re-login.");
             isHandlingAuthReconnect.current = false;
@@ -221,6 +232,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         const paramDeviceId = params.get("device_id");
         if (paramDeviceId) {
             setDeviceId(paramDeviceId);
+            lastDeviceIdRef.current = paramDeviceId;
             connectWebSocket(paramDeviceId);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
