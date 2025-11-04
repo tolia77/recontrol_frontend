@@ -9,7 +9,6 @@ export const ManualMouseControls: React.FC<{
     const [yVal, setYVal] = useState<number>(0);
     const [scrollClicks, setScrollClicks] = useState<number>(1);
 
-    // small helper sleep (50ms)
     const sleep = (ms: number) => new Promise<void>((res) => setTimeout(res, ms));
     const CLICK_DELAY_MS = 50;
 
@@ -26,13 +25,11 @@ export const ManualMouseControls: React.FC<{
         send('mouse.up', { Button: mapButtonToBackend(logicalBtn) });
     }, [send]);
 
-    // add 50ms delays between events
     const clickSeq = useCallback(async (logicalBtn: number, times = 1) => {
         for (let i = 0; i < times; i++) {
             sendDown(logicalBtn);
             await sleep(CLICK_DELAY_MS);
             sendUp(logicalBtn);
-            // wait before next click (or just to separate down->up)
             if (i < times - 1) {
                 await sleep(CLICK_DELAY_MS);
             }
@@ -40,13 +37,15 @@ export const ManualMouseControls: React.FC<{
     }, [sendDown, sendUp]);
 
     return (
-        <div className="flex-1 bg-[#F3F4F6] p-8 flex flex-col items-center">
-            <div className="w-full max-w-xl bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                <h3 className="text-lg font-semibold mb-3">Manual Mouse Controls</h3>
+        <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Manual Mouse Controls</h3>
 
-                <div className="grid grid-cols-2 gap-3 mb-4">
+            {/* Position Section */}
+            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Mouse Position</h4>
+                <div className="grid grid-cols-2 gap-3 mb-3">
                     <label className="flex flex-col text-sm">
-                        X
+                        <span className="text-gray-600 mb-1">X</span>
                         <input
                             type="number"
                             className="small-input"
@@ -56,7 +55,7 @@ export const ManualMouseControls: React.FC<{
                         />
                     </label>
                     <label className="flex flex-col text-sm">
-                        Y
+                        <span className="text-gray-600 mb-1">Y</span>
                         <input
                             type="number"
                             className="small-input"
@@ -66,39 +65,58 @@ export const ManualMouseControls: React.FC<{
                         />
                     </label>
                 </div>
+                <button
+                    className="btn-primary w-full"
+                    disabled={disabled}
+                    onClick={() => send('mouse.move', { X: Math.round(xVal), Y: Math.round(yVal) })}
+                >
+                    Move to (X, Y)
+                </button>
+            </div>
 
-                <div className="flex flex-wrap gap-2 mb-4">
-                    <button
-                        className="btn-primary"
-                        disabled={disabled}
-                        onClick={() => send('mouse.move', { X: Math.round(xVal), Y: Math.round(yVal) })}
-                    >
-                        Move to (X,Y)
-                    </button>
+            {/* Click Actions Section */}
+            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Mouse Buttons</h4>
+                <div className="space-y-3">
+                    {/* Left Button */}
+                    <div>
+                        <p className="text-xs text-gray-600 mb-2">Left Button</p>
+                        <div className="flex flex-wrap gap-2">
+                            <button className="btn-secondary small" disabled={disabled} onClick={() => sendDown(0)}>Down</button>
+                            <button className="btn-secondary small" disabled={disabled} onClick={() => sendUp(0)}>Up</button>
+                            <button className="btn-secondary small" disabled={disabled} onClick={() => { void clickSeq(0, 1); }}>Click</button>
+                            <button className="btn-secondary small" disabled={disabled} onClick={() => { void clickSeq(0, 2); }}>Double</button>
+                        </div>
+                    </div>
+
+                    {/* Right Button */}
+                    <div>
+                        <p className="text-xs text-gray-600 mb-2">Right Button</p>
+                        <div className="flex flex-wrap gap-2">
+                            <button className="btn-secondary small" disabled={disabled} onClick={() => sendDown(2)}>Down</button>
+                            <button className="btn-secondary small" disabled={disabled} onClick={() => sendUp(2)}>Up</button>
+                            <button className="btn-secondary small" disabled={disabled} onClick={() => { void clickSeq(2, 1); }}>Click</button>
+                        </div>
+                    </div>
+
+                    {/* Middle Button */}
+                    <div>
+                        <p className="text-xs text-gray-600 mb-2">Middle Button</p>
+                        <div className="flex flex-wrap gap-2">
+                            <button className="btn-secondary small" disabled={disabled} onClick={() => sendDown(1)}>Down</button>
+                            <button className="btn-secondary small" disabled={disabled} onClick={() => sendUp(1)}>Up</button>
+                            <button className="btn-secondary small" disabled={disabled} onClick={() => { void clickSeq(1, 1); }}>Click</button>
+                        </div>
+                    </div>
                 </div>
+            </div>
 
-                <div className="flex flex-col gap-2 mb-4">
-                    <div className="flex flex-wrap gap-2">
-                        <button className="btn-secondary" disabled={disabled} onClick={() => sendDown(0)}>Left Down</button>
-                        <button className="btn-secondary" disabled={disabled} onClick={() => sendUp(0)}>Left Up</button>
-                        <button className="btn-secondary" disabled={disabled} onClick={() => { void clickSeq(0, 1); }}>Left Click</button>
-                        <button className="btn-secondary" disabled={disabled} onClick={() => { void clickSeq(0, 2); }}>Left Double</button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        <button className="btn-secondary" disabled={disabled} onClick={() => sendDown(2)}>Right Down</button>
-                        <button className="btn-secondary" disabled={disabled} onClick={() => sendUp(2)}>Right Up</button>
-                        <button className="btn-secondary" disabled={disabled} onClick={() => { void clickSeq(2, 1); }}>Right Click</button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        <button className="btn-secondary" disabled={disabled} onClick={() => sendDown(1)}>Middle Down</button>
-                        <button className="btn-secondary" disabled={disabled} onClick={() => sendUp(1)}>Middle Up</button>
-                        <button className="btn-secondary" disabled={disabled} onClick={() => { void clickSeq(1, 1); }}>Middle Click</button>
-                    </div>
-                </div>
-
+            {/* Scroll Section */}
+            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Mouse Scroll</h4>
                 <div className="flex items-end gap-3">
-                    <label className="flex flex-col text-sm">
-                        Scroll clicks
+                    <label className="flex flex-col text-sm flex-1">
+                        <span className="text-gray-600 mb-1">Scroll clicks</span>
                         <input
                             type="number"
                             className="small-input"
@@ -109,8 +127,12 @@ export const ManualMouseControls: React.FC<{
                         />
                     </label>
                     <div className="flex gap-2">
-                        <button className="btn-secondary" disabled={disabled} onClick={() => send('mouse.scroll', { Clicks: +Math.abs(scrollClicks) })}>Scroll Up</button>
-                        <button className="btn-secondary" disabled={disabled} onClick={() => send('mouse.scroll', { Clicks: -Math.abs(scrollClicks) })}>Scroll Down</button>
+                        <button className="btn-secondary" disabled={disabled} onClick={() => send('mouse.scroll', { Clicks: +Math.abs(scrollClicks) })}>
+                            Scroll Up
+                        </button>
+                        <button className="btn-secondary" disabled={disabled} onClick={() => send('mouse.scroll', { Clicks: -Math.abs(scrollClicks) })}>
+                            Scroll Down
+                        </button>
                     </div>
                 </div>
             </div>

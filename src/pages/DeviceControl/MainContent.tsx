@@ -5,7 +5,7 @@ import {buttonName, pressedButtonsFromMask, normalizeWheelToClicks, mapButtonToB
 import {mapToVirtualKey} from './utils/keyboard.ts';
 import {ScreenCanvas} from './ScreenCanvas.tsx';
 import {QuickActions} from './QuickActions.tsx';
-import { ManualMouseControls } from './ManualMouseControls.tsx';
+import { ManualControls } from './ManualControls.tsx';
 
 /**
  * Main Content Area
@@ -16,9 +16,9 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                                                             frames = [],
                                                             activeMode,
                                                         }) => {
-    // Manual mode rendering only mouse controls
+    // Manual mode rendering
     if (activeMode === 'manual') {
-        return <ManualMouseControls disabled={disabled} addAction={addAction} />;
+        return <ManualControls disabled={disabled} addAction={addAction} />;
     }
 
     // Interactive mode (existing)
