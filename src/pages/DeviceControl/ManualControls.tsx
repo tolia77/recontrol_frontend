@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { ManualMouseControls } from './ManualMouseControls.tsx';
 import { ManualKeyboardControls } from './ManualKeyboardControls.tsx';
 import { ManualPowerControls } from './ManualPowerControls.tsx';
+import { ManualTerminalControls } from './ManualTerminalControls.tsx';
 
-type ManualSection = 'mouse' | 'keyboard' | 'power';
+type ManualSection = 'mouse' | 'keyboard' | 'power' | 'terminal';
 
 export const ManualControls: React.FC<{
     disabled: boolean;
@@ -47,6 +48,16 @@ export const ManualControls: React.FC<{
                         >
                             Power
                         </button>
+                        <button
+                            onClick={() => setActiveSection('terminal')}
+                            className={`flex-1 py-3 px-4 text-sm font-medium transition-colors duration-200 ${
+                                activeSection === 'terminal'
+                                    ? 'text-[#1E3A8A] border-b-2 border-[#1E3A8A] bg-[#D7E6FF]/30'
+                                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                            }`}
+                        >
+                            Terminal
+                        </button>
                     </div>
                 </div>
 
@@ -60,6 +71,9 @@ export const ManualControls: React.FC<{
                     )}
                     {activeSection === 'power' && (
                         <ManualPowerControls disabled={disabled} addAction={addAction} />
+                    )}
+                    {activeSection === 'terminal' && (
+                        <ManualTerminalControls disabled={disabled} addAction={addAction} />
                     )}
                 </div>
             </div>
