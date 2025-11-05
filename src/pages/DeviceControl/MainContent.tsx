@@ -31,6 +31,8 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
     const [naturalSize, setNaturalSize] = useState<{w: number; h: number} | null>(null);
     const lastCoordsRef = useRef<{x: number; y: number} | null>(null);
     const overlayRef = useRef<HTMLDivElement | null>(null);
+    // NEW: throttle mouse move sending (100 ms)
+    const lastMoveSentAtRef = useRef<number>(0);
 
     const onImageLoad = useCallback(() => {
         const img = imgRef.current;
@@ -102,6 +104,14 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                     const curY = Math.round(coords.y);
                     // update last coords for potential other use
                     lastCoordsRef.current = { x: curX, y: curY };
+
+                    // NEW: throttle move events - send only if last send was >= 100 ms ago
+                    const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+                    if (now - lastMoveSentAtRef.current < 100) {
+                        // skip sending this move due to throttle
+                        return;
+                    }
+                    lastMoveSentAtRef.current = now;
 
                     addAction({
                         id: crypto.randomUUID(),

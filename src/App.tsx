@@ -13,10 +13,10 @@ function App() {
             <BrowserRouter>
                 <Routes>
                     <Route path="/" element={<Layout/>}>
-                        <Route index element={<Index/>}/>
                         <Route path="/dashboard" element={<Dashboard/>}/>
                         <Route path="/devices" element={<Devices/>}/>
                     </Route>
+                    <Route index element={<Index/>}/>
                     <Route path="/login" element={<Login/>}/>
                     <Route path="/signup" element={<Signup/>}/>
                     <Route path="/device-control" element={<DeviceControl wsUrl={import.meta.env.VITE_WEBSOCKETS_URL}/>}/>
