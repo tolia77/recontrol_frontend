@@ -12,11 +12,16 @@ function App() {
         <>
             <BrowserRouter>
                 <Routes>
-                    <Route path="/" element={<Layout/>}>
+                    {/* Public landing page without sidebar */}
+                    <Route path="/" element={<Index/>}/>
+
+                    {/* App pages with sidebar layout */}
+                    <Route element={<Layout/>}>
                         <Route path="/dashboard" element={<Dashboard/>}/>
                         <Route path="/devices" element={<Devices/>}/>
                     </Route>
-                    <Route index element={<Index/>}/>
+
+                    {/* Auth and utilities */}
                     <Route path="/login" element={<Login/>}/>
                     <Route path="/signup" element={<Signup/>}/>
                     <Route path="/device-control" element={<DeviceControl wsUrl={import.meta.env.VITE_WEBSOCKETS_URL}/>}/>
