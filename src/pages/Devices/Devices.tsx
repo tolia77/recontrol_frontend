@@ -11,7 +11,7 @@ function Devices() {
         })
     }, []);
     return (
-        <div className="ml-20 mt-6">
+        <div className="ml-5 mr-5 lg:ml-20 lg:mr-10 mt-6">
             <h1 className="mb-6">Devices</h1>
             <DevicesTable devices={devices}/>
         </div>
