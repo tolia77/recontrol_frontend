@@ -36,15 +36,19 @@ const DeviceRow: React.FC<{ device: Device }> = ({device}) => {
             <td className="p-4 text-left text-sm font-normal leading-5 text-text">
                 <div className="flex items-center justify-start gap-2">
                     <button
-                        // Navigate to CommandWebSocket page and include device_id as URL param
                         onClick={() => {
                             navigate(`/device-control?device_id=${encodeURIComponent(device.id)}`);
                         }}
-                        className="box-border pl-3 flex h-[35px] w-[135px] items-center gap-2 rounded-lg bg-primary text-sm font-medium text-white">
+                        className="box-border pl-3 flex h-[35px] w-[135px] items-center gap-2 rounded-lg bg-primary text-sm font-medium text-white"
+                    >
                         <LinkIcon className="h-6 w-6"/>
                         Connect
                     </button>
-                    <button className="bg-none p-0" aria-label="Settings">
+                    <button
+                        onClick={() => navigate(`/devices/${device.id}/settings`)}
+                        className="bg-none p-0"
+                        aria-label="Settings"
+                    >
                         <SettingsIcon
                             className="h-8 w-8"
                             fill="darkgray"

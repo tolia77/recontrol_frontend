@@ -6,6 +6,7 @@ import Signup from "src/pages/Signup.tsx";
 import {DeviceControl} from "src/pages/DeviceControl/DeviceControl.tsx";
 import Dashboard from "src/pages/Dashboard.tsx";
 import Devices from "src/pages/Devices/Devices.tsx";
+import DeviceSettings from "src/pages/DeviceSettings.tsx";
 
 function App() {
     return (
@@ -19,6 +20,7 @@ function App() {
                     <Route element={<Layout/>}>
                         <Route path="/dashboard" element={<Dashboard/>}/>
                         <Route path="/devices" element={<Devices/>}/>
+                        <Route path="/devices/:deviceId/settings" element={<DeviceSettings />} />
                     </Route>
 
                     {/* Auth and utilities */}
