@@ -50,3 +50,25 @@ export interface DeviceShare {
     user?: Pick<User, 'id' | 'username' | 'email'>;
     permissions_group?: Pick<PermissionsGroup, 'id' | 'name' | 'see_screen' | 'see_system_info' | 'access_mouse' | 'access_keyboard' | 'access_terminal' | 'manage_power'>;
 }
+
+// New helper types for creating shares
+export interface PermissionsGroupAttributes {
+    name: string;
+    see_screen?: boolean | null;
+    see_system_info?: boolean | null;
+    access_mouse?: boolean | null;
+    access_keyboard?: boolean | null;
+    access_terminal?: boolean | null;
+    manage_power?: boolean | null;
+    user_id?: string;
+}
+
+export interface DeviceShareCreatePayload {
+    device_id: string;
+    user_id?: string;
+    user_email?: string;
+    permissions_group_id?: string;
+    permissions_group_attributes?: PermissionsGroupAttributes;
+    expires_at?: string;
+    // status intentionally omitted from UI editing
+}

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { backendInstance } from 'src/services/backend/config.ts';
 import { getAccessToken } from 'src/utils/auth.ts';
-import type { Device, DeviceShare, PermissionsGroup } from 'src/types/global';
+import type { Device, DeviceShare, PermissionsGroup, DeviceShareCreatePayload } from 'src/types/global';
 
 const DeviceSettings: React.FC = () => {
     const { deviceId } = useParams<{ deviceId: string }>();
@@ -12,18 +12,25 @@ const DeviceSettings: React.FC = () => {
     const [shares, setShares] = useState<DeviceShare[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string>('');
-    const [activeTab, setActiveTab] = useState<'details' | 'sharing'>('details');
 
-    // Form states
+    // Single-page: remove tabs and statuses
     const [deviceForm, setDeviceForm] = useState({
-        name: '',
-        status: 'active'
+        name: ''
     });
     const [shareForm, setShareForm] = useState({
         userEmail: '',
         permissionsGroupId: '',
         expiresAt: '',
-        status: 'active'
+        createNewGroup: false,
+        newGroup: {
+            name: '',
+            see_screen: false,
+            see_system_info: false,
+            access_mouse: false,
+            access_keyboard: false,
+            access_terminal: false,
+            manage_power: false
+        }
     });
     const [permissionsGroups, setPermissionsGroups] = useState<PermissionsGroup[]>([]);
     const [showShareForm, setShowShareForm] = useState(false);
@@ -43,8 +50,7 @@ const DeviceSettings: React.FC = () => {
             });
             setDevice(response.data);
             setDeviceForm({
-                name: response.data.name,
-                status: response.data.status
+                name: response.data.name
             });
         } catch (err) {
             setError('Failed to load device details');
@@ -80,7 +86,7 @@ const DeviceSettings: React.FC = () => {
         e.preventDefault();
         try {
             const response = await backendInstance.patch(`/devices/${deviceId}`, {
-                device: deviceForm
+                device: { name: deviceForm.name } // status removed
             }, {
                 headers: { Authorization: getAccessToken() }
             });
@@ -93,16 +99,40 @@ const DeviceSettings: React.FC = () => {
 
     const handleShareSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!shareForm.userEmail) {
+            setError('Email is required');
+            return;
+        }
+
+        // Build payload based on selection vs new group
+        const payload: DeviceShareCreatePayload = {
+            device_id: deviceId!,
+            user_email: shareForm.userEmail || undefined,
+            expires_at: shareForm.expiresAt || undefined
+            // status intentionally not sent
+        };
+
+        if (shareForm.createNewGroup) {
+            if (!shareForm.newGroup.name.trim()) {
+                setError('Permission group name is required');
+                return;
+            }
+            payload.permissions_group_attributes = {
+                name: shareForm.newGroup.name.trim(),
+                see_screen: shareForm.newGroup.see_screen,
+                see_system_info: shareForm.newGroup.see_system_info,
+                access_mouse: shareForm.newGroup.access_mouse,
+                access_keyboard: shareForm.newGroup.access_keyboard,
+                access_terminal: shareForm.newGroup.access_terminal,
+                manage_power: shareForm.newGroup.manage_power
+            };
+        } else if (shareForm.permissionsGroupId) {
+            payload.permissions_group_id = shareForm.permissionsGroupId;
+        }
+
         try {
-            await backendInstance.post('/device_shares', {
-                device_share: {
-                    device_id: deviceId,
-                    user_email: shareForm.userEmail, // send email directly
-                    permissions_group_id: shareForm.permissionsGroupId || undefined,
-                    expires_at: shareForm.expiresAt || undefined,
-                    status: shareForm.status
-                }
-            }, {
+            await backendInstance.post('/device_shares', { device_share: payload }, {
                 headers: { Authorization: getAccessToken() }
             });
 
@@ -110,7 +140,16 @@ const DeviceSettings: React.FC = () => {
                 userEmail: '',
                 permissionsGroupId: '',
                 expiresAt: '',
-                status: 'active'
+                createNewGroup: false,
+                newGroup: {
+                    name: '',
+                    see_screen: false,
+                    see_system_info: false,
+                    access_mouse: false,
+                    access_keyboard: false,
+                    access_terminal: false,
+                    manage_power: false
+                }
             });
             setShowShareForm(false);
             loadShares();
@@ -144,114 +183,86 @@ const DeviceSettings: React.FC = () => {
                 <p className="text-gray-600">Manage device details and sharing</p>
             </div>
 
-            {/* Tabs */}
-            <div className="border-b border-gray-200 mb-6">
-                <nav className="-mb-px flex space-x-8">
-                    <button
-                        onClick={() => setActiveTab('details')}
-                        className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                            activeTab === 'details'
-                                ? 'border-primary text-primary'
-                                : 'border-transparent text-gray-500 hover:text-gray-700'
-                        }`}
-                    >
-                        Device Details
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('sharing')}
-                        className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                            activeTab === 'sharing'
-                                ? 'border-primary text-primary'
-                                : 'border-transparent text-gray-500 hover:text-gray-700'
-                        }`}
-                    >
-                        Sharing
-                    </button>
-                </nav>
+            {/* Single page (no tabs) - Device Information */}
+            <div className="bg-white rounded-lg shadow p-6 mb-6">
+                <h2 className="text-lg font-semibold mb-4">Device Information</h2>
+                <form onSubmit={handleDeviceUpdate}>
+                    <div className="grid grid-cols-1 gap-4 mb-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Device Name
+                            </label>
+                            <input
+                                type="text"
+                                value={deviceForm.name}
+                                onChange={(e) => setDeviceForm({ ...deviceForm, name: e.target.value })}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                                required
+                            />
+                        </div>
+                    </div>
+                    <div className="flex justify-end space-x-3">
+                        <button
+                            type="button"
+                            onClick={() => navigate('/devices')}
+                            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
+                        >
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
             </div>
 
-            {/* Device Details Tab */}
-            {activeTab === 'details' && (
+            {/* Single page - Sharing */}
+            <div className="space-y-6">
                 <div className="bg-white rounded-lg shadow p-6">
-                    <h2 className="text-lg font-semibold mb-4">Device Information</h2>
-                    <form onSubmit={handleDeviceUpdate}>
-                        <div className="grid grid-cols-1 gap-4 mb-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Device Name
-                                </label>
-                                <input
-                                    type="text"
-                                    value={deviceForm.name}
-                                    onChange={(e) => setDeviceForm({ ...deviceForm, name: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Status
-                                </label>
-                                <select
-                                    value={deviceForm.status}
-                                    onChange={(e) => setDeviceForm({ ...deviceForm, status: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                                >
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div className="flex justify-end space-x-3">
-                            <button
-                                type="button"
-                                onClick={() => navigate('/devices')}
-                                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
-                            >
-                                Save Changes
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            )}
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-lg font-semibold">Shared With</h2>
+                        <button
+                            onClick={() => setShowShareForm(!showShareForm)}
+                            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
+                        >
+                            {showShareForm ? 'Cancel' : 'Invite User'}
+                        </button>
+                    </div>
 
-            {/* Sharing Tab */}
-            {activeTab === 'sharing' && (
-                <div className="space-y-6">
-                    {/* Invite User Section */}
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-lg font-semibold">Shared With</h2>
-                            <button
-                                onClick={() => setShowShareForm(!showShareForm)}
-                                className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
-                            >
-                                {showShareForm ? 'Cancel' : 'Invite User'}
-                            </button>
-                        </div>
+                    {showShareForm && (
+                        <form onSubmit={handleShareSubmit} className="mb-6 p-4 border border-gray-200 rounded-lg">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        User Email
+                                    </label>
+                                    <input
+                                        type="email"
+                                        value={shareForm.userEmail}
+                                        onChange={(e) => setShareForm({ ...shareForm, userEmail: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                                        required
+                                    />
+                                </div>
 
-                        {showShareForm && (
-                            <form onSubmit={handleShareSubmit} className="mb-6 p-4 border border-gray-200 rounded-lg">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            User Email
-                                        </label>
+                                {/* Toggle new permissions group vs select existing */}
+                                <div className="flex items-end">
+                                    <label className="inline-flex items-center space-x-2 select-none">
                                         <input
-                                            type="email"
-                                            value={shareForm.userEmail}
-                                            onChange={(e) => setShareForm({ ...shareForm, userEmail: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                                            required
+                                            type="checkbox"
+                                            checked={shareForm.createNewGroup}
+                                            onChange={(e) => setShareForm({ ...shareForm, createNewGroup: e.target.checked })}
+                                            className="h-4 w-4"
                                         />
-                                    </div>
-                                    <div>
+                                        <span className="text-sm text-gray-700">Create new permissions group</span>
+                                    </label>
+                                </div>
+
+                                {!shareForm.createNewGroup && (
+                                    <div className="md:col-span-2">
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
                                             Permissions Group
                                         </label>
@@ -268,71 +279,102 @@ const DeviceSettings: React.FC = () => {
                                             ))}
                                         </select>
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Expires At
-                                        </label>
-                                        <input
-                                            type="datetime-local"
-                                            value={shareForm.expiresAt}
-                                            onChange={(e) => setShareForm({ ...shareForm, expiresAt: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Status
-                                        </label>
-                                        <select
-                                            value={shareForm.status}
-                                            onChange={(e) => setShareForm({ ...shareForm, status: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                                        >
-                                            <option value="active">Active</option>
-                                            <option value="inactive">Inactive</option>
-                                        </select>
-                                    </div>
+                                )}
+
+                                {shareForm.createNewGroup && (
+                                    <>
+                                        <div className="md:col-span-2">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                New Group Name
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={shareForm.newGroup.name}
+                                                onChange={(e) => setShareForm({ ...shareForm, newGroup: { ...shareForm.newGroup, name: e.target.value } })}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                                                required
+                                            />
+                                        </div>
+                                        <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            {[
+                                                { key: 'see_screen', label: 'See screen' },
+                                                { key: 'see_system_info', label: 'See system info' },
+                                                { key: 'access_mouse', label: 'Access mouse' },
+                                                { key: 'access_keyboard', label: 'Access keyboard' },
+                                                { key: 'access_terminal', label: 'Access terminal' },
+                                                { key: 'manage_power', label: 'Manage power' },
+                                            ].map((perm) => (
+                                                <label key={perm.key} className="inline-flex items-center space-x-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={(shareForm.newGroup as any)[perm.key]}
+                                                        onChange={(e) =>
+                                                            setShareForm({
+                                                                ...shareForm,
+                                                                newGroup: { ...(shareForm.newGroup as any), [perm.key]: e.target.checked }
+                                                            })
+                                                        }
+                                                        className="h-4 w-4"
+                                                    />
+                                                    <span className="text-sm text-gray-700">{perm.label}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Expires At
+                                    </label>
+                                    <input
+                                        type="datetime-local"
+                                        value={shareForm.expiresAt}
+                                        onChange={(e) => setShareForm({ ...shareForm, expiresAt: e.target.value })}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                                    />
                                 </div>
-                                <div className="flex justify-end">
+                            </div>
+                            <div className="flex justify-end">
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
+                                >
+                                    Send Invitation
+                                </button>
+                            </div>
+                        </form>
+                    )}
+
+                    {/* Shares List */}
+                    <div className="space-y-3">
+                        {shares.length === 0 ? (
+                            <p className="text-gray-500 text-center py-4">No users have been shared with this device</p>
+                        ) : (
+                            shares.map((share) => (
+                                <div key={share.id} className="flex justify-between items-center p-3 border border-gray-200 rounded-lg">
+                                    <div>
+                                        <p className="font-medium">{share.user?.username || share.user?.email}</p>
+                                        <p className="text-sm text-gray-500">
+                                            Permissions: {share.permissions_group?.name || 'Default'}
+                                            {share.expires_at && ` • Expires: ${new Date(share.expires_at).toLocaleDateString()}`}
+                                        </p>
+                                    </div>
                                     <button
-                                        type="submit"
-                                        className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
+                                        onClick={() => handleDeleteShare(share.id)}
+                                        className="px-3 py-1 text-red-600 hover:bg-red-50 rounded-md"
                                     >
-                                        Send Invitation
+                                        Remove
                                     </button>
                                 </div>
-                            </form>
+                            ))
                         )}
-
-                        {/* Shares List */}
-                        <div className="space-y-3">
-                            {shares.length === 0 ? (
-                                <p className="text-gray-500 text-center py-4">No users have been shared with this device</p>
-                            ) : (
-                                shares.map((share) => (
-                                    <div key={share.id} className="flex justify-between items-center p-3 border border-gray-200 rounded-lg">
-                                        <div>
-                                            <p className="font-medium">{share.user?.username || share.user?.email}</p>
-                                            <p className="text-sm text-gray-500">
-                                                Permissions: {share.permissions_group?.name || 'Default'}
-                                                {share.expires_at && ` • Expires: ${new Date(share.expires_at).toLocaleDateString()}`}
-                                            </p>
-                                        </div>
-                                        <button
-                                            onClick={() => handleDeleteShare(share.id)}
-                                            className="px-3 py-1 text-red-600 hover:bg-red-50 rounded-md"
-                                        >
-                                            Remove
-                                        </button>
-                                    </div>
-                                ))
-                            )}
-                        </div>
                     </div>
                 </div>
-            )}
+            </div>
         </div>
     );
 };
 
 export default DeviceSettings;
+
