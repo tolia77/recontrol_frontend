@@ -7,7 +7,7 @@ function Devices() {
     const [devices, setDevices] = useState<Device[]>([]);
     useEffect(() => {
         getMyDevicesRequest().then(res => {
-            setDevices(res.data);
+            setDevices(res.data.devices);
         })
     }, []);
     return (

@@ -18,13 +18,12 @@ const DeviceRow: React.FC<{ device: Device }> = ({device}) => {
     return (
         <tr>
             <td className="p-4 text-left text-sm font-normal leading-5 text-text">
-                <a href="#" className="font-medium text-secondary no-underline">
-                    {device.name}
-                </a>
+                {/* Plain text to match other columns */}
+                <span>{device.name}</span>
             </td>
             <td className="p-4 text-left text-sm font-normal leading-5 text-text">
                 <span
-                    className={`box-border flex h-[30px] w-[120px] items-center justify-center rounded-lg text-xs font-medium text-white ${statusBg}`}>
+                    className={`box-border inline-flex h-[30px] items-center justify-center rounded-lg px-2 text-xs font-medium text-white ${statusBg}`}>
                   {statusLabel}
                 </span>
             </td>
