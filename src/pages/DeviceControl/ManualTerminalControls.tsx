@@ -1,9 +1,11 @@
 import React, { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export const ManualTerminalControls: React.FC<{
     disabled: boolean;
     addAction?: (action: any) => void;
 }> = ({ disabled, addAction }) => {
+    const { t } = useTranslation('deviceControl');
     // Command execution state
     const [cmdInput, setCmdInput] = useState<string>('');
     const [cmdTimeout, setCmdTimeout] = useState<number>(5000);
@@ -89,29 +91,29 @@ export const ManualTerminalControls: React.FC<{
 
     return (
         <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Manual Terminal Controls</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">{t('manual.terminal.title')}</h3>
 
             {/* Command Execution Section */}
             <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Command Execution</h4>
+                <h4 className="text-sm font-medium text-gray-700 mb-3">{t('manual.terminal.commandExec')}</h4>
 
                 {/* CMD Execute */}
                 <div className="space-y-3 mb-4 pb-4 border-b border-gray-200">
                     <label className="flex flex-col text-sm">
-                        <span className="text-gray-600 mb-1">CMD Command</span>
+                        <span className="text-gray-600 mb-1">{t('manual.terminal.cmdCommand')}</span>
                         <input
                             type="text"
                             className="small-input"
                             value={cmdInput}
                             onChange={(e) => setCmdInput(e.target.value)}
                             disabled={disabled}
-                            placeholder="dir C:\"
+                            placeholder="dir C:\\\\"
                             onKeyDown={(e) => e.key === 'Enter' && executeCmd()}
                         />
                     </label>
                     <div className="flex items-end gap-3">
                         <label className="flex flex-col text-sm flex-1">
-                            <span className="text-gray-600 mb-1">Timeout (ms)</span>
+                            <span className="text-gray-600 mb-1">{t('manual.terminal.timeoutMs')}</span>
                             <input
                                 type="number"
                                 className="small-input"
@@ -126,7 +128,7 @@ export const ManualTerminalControls: React.FC<{
                             disabled={disabled || !cmdInput.trim()}
                             onClick={executeCmd}
                         >
-                            Execute CMD
+                            {t('manual.terminal.execCmd')}
                         </button>
                     </div>
                 </div>
@@ -134,7 +136,7 @@ export const ManualTerminalControls: React.FC<{
                 {/* PowerShell Execute */}
                 <div className="space-y-3">
                     <label className="flex flex-col text-sm">
-                        <span className="text-gray-600 mb-1">PowerShell Command</span>
+                        <span className="text-gray-600 mb-1">{t('manual.terminal.psCommand')}</span>
                         <input
                             type="text"
                             className="small-input"
@@ -147,7 +149,7 @@ export const ManualTerminalControls: React.FC<{
                     </label>
                     <div className="flex items-end gap-3">
                         <label className="flex flex-col text-sm flex-1">
-                            <span className="text-gray-600 mb-1">Timeout (ms)</span>
+                            <span className="text-gray-600 mb-1">{t('manual.terminal.timeoutMs')}</span>
                             <input
                                 type="number"
                                 className="small-input"
@@ -162,7 +164,7 @@ export const ManualTerminalControls: React.FC<{
                             disabled={disabled || !psInput.trim()}
                             onClick={executePowerShell}
                         >
-                            Execute PowerShell
+                            {t('manual.terminal.execPs')}
                         </button>
                     </div>
                 </div>
@@ -173,14 +175,14 @@ export const ManualTerminalControls: React.FC<{
                         disabled={disabled}
                         onClick={abortCommand}
                     >
-                        Abort Running Command
+                        {t('manual.terminal.abort')}
                     </button>
                 </div>
             </div>
 
             {/* Process Management Section */}
             <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Process Management</h4>
+                <h4 className="text-sm font-medium text-gray-700 mb-3">{t('manual.terminal.processMgmt')}</h4>
 
                 <div className="space-y-3 mb-4 pb-4 border-b border-gray-200">
                     <button
@@ -188,13 +190,13 @@ export const ManualTerminalControls: React.FC<{
                         disabled={disabled}
                         onClick={listProcesses}
                     >
-                        List All Processes
+                        {t('manual.terminal.listProcesses')}
                     </button>
                 </div>
 
                 <div className="space-y-3 mb-4 pb-4 border-b border-gray-200">
                     <label className="flex flex-col text-sm">
-                        <span className="text-gray-600 mb-1">Kill Process by PID</span>
+                        <span className="text-gray-600 mb-1">{t('manual.terminal.killPid')}</span>
                         <div className="flex gap-2">
                             <input
                                 type="text"
@@ -209,7 +211,7 @@ export const ManualTerminalControls: React.FC<{
                                 disabled={disabled || !pidToKill.trim()}
                                 onClick={killProcess}
                             >
-                                Kill
+                                {t('manual.terminal.kill')}
                             </button>
                         </div>
                     </label>
@@ -217,25 +219,25 @@ export const ManualTerminalControls: React.FC<{
 
                 <div className="space-y-3">
                     <label className="flex flex-col text-sm">
-                        <span className="text-gray-600 mb-1">Start Process</span>
+                        <span className="text-gray-600 mb-1">{t('manual.terminal.startProcess')}</span>
                         <input
                             type="text"
                             className="small-input"
                             value={processPath}
                             onChange={(e) => setProcessPath(e.target.value)}
                             disabled={disabled}
-                            placeholder="C:\Windows\System32\notepad.exe"
+                            placeholder={t('manual.terminal.startProcessPlaceholder')}
                         />
                     </label>
                     <label className="flex flex-col text-sm">
-                        <span className="text-gray-600 mb-1">Arguments (optional)</span>
+                        <span className="text-gray-600 mb-1">{t('manual.terminal.argsOptional')}</span>
                         <input
                             type="text"
                             className="small-input"
                             value={processArgs}
                             onChange={(e) => setProcessArgs(e.target.value)}
                             disabled={disabled}
-                            placeholder="file.txt"
+                            placeholder={t('manual.terminal.filePlaceholder')}
                         />
                     </label>
                     <button
@@ -243,27 +245,27 @@ export const ManualTerminalControls: React.FC<{
                         disabled={disabled || !processPath.trim()}
                         onClick={startProcess}
                     >
-                        Start Process
+                        {t('manual.terminal.startProcess')}
                     </button>
                 </div>
             </div>
 
             {/* Directory & System Info Section */}
             <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Directory & System Info</h4>
+                <h4 className="text-sm font-medium text-gray-700 mb-3">{t('manual.terminal.directoryInfo')}</h4>
 
-                <div className="space-y-3 mb-4 pb-4 border-b border-gray-200">
+                <div className="space-y-3 mb-4 pb-4 border-gray-200">
                     <div className="flex gap-2">
                         <button
                             className="btn-secondary flex-1"
                             disabled={disabled}
                             onClick={getCwd}
                         >
-                            Get Current Directory
+                            {t('manual.terminal.getCwd')}
                         </button>
                     </div>
                     <label className="flex flex-col text-sm">
-                        <span className="text-gray-600 mb-1">Set Current Directory</span>
+                        <span className="text-gray-600 mb-1">{t('manual.terminal.setCwdLabel')}</span>
                         <div className="flex gap-2">
                             <input
                                 type="text"
@@ -271,14 +273,14 @@ export const ManualTerminalControls: React.FC<{
                                 value={newCwd}
                                 onChange={(e) => setNewCwd(e.target.value)}
                                 disabled={disabled}
-                                placeholder="C:\Users\Public"
+                                placeholder="C:\\Users\\Public"
                             />
                             <button
                                 className="btn-secondary"
                                 disabled={disabled || !newCwd.trim()}
                                 onClick={setCwd}
                             >
-                                Set
+                                {t('manual.terminal.setBtn')}
                             </button>
                         </div>
                     </label>
@@ -290,18 +292,17 @@ export const ManualTerminalControls: React.FC<{
                         disabled={disabled}
                         onClick={whoAmI}
                     >
-                        Who Am I
+                        {t('manual.terminal.whoAmI')}
                     </button>
                     <button
                         className="btn-secondary flex-1"
                         disabled={disabled}
                         onClick={getUptime}
                     >
-                        Get Uptime
+                        {t('manual.terminal.getUptime')}
                     </button>
                 </div>
             </div>
         </div>
     );
 };
-

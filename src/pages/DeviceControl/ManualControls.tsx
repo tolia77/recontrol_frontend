@@ -3,6 +3,7 @@ import { ManualMouseControls } from './ManualMouseControls.tsx';
 import { ManualKeyboardControls } from './ManualKeyboardControls.tsx';
 import { ManualPowerControls } from './ManualPowerControls.tsx';
 import { ManualTerminalControls } from './ManualTerminalControls.tsx';
+import { useTranslation } from 'react-i18next';
 
 type ManualSection = 'mouse' | 'keyboard' | 'power' | 'terminal';
 
@@ -10,6 +11,7 @@ export const ManualControls: React.FC<{
     disabled: boolean;
     addAction?: (action: any) => void;
 }> = ({ disabled, addAction }) => {
+    const { t } = useTranslation('deviceControl');
     const [activeSection, setActiveSection] = useState<ManualSection>('mouse');
 
     return (
@@ -26,7 +28,7 @@ export const ManualControls: React.FC<{
                                     : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
                             }`}
                         >
-                            Mouse
+                            {t('manual.tabs.mouse')}
                         </button>
                         <button
                             onClick={() => setActiveSection('keyboard')}
@@ -36,7 +38,7 @@ export const ManualControls: React.FC<{
                                     : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
                             }`}
                         >
-                            Keyboard
+                            {t('manual.tabs.keyboard')}
                         </button>
                         <button
                             onClick={() => setActiveSection('power')}
@@ -46,7 +48,7 @@ export const ManualControls: React.FC<{
                                     : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
                             }`}
                         >
-                            Power
+                            {t('manual.tabs.power')}
                         </button>
                         <button
                             onClick={() => setActiveSection('terminal')}
@@ -56,7 +58,7 @@ export const ManualControls: React.FC<{
                                     : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
                             }`}
                         >
-                            Terminal
+                            {t('manual.tabs.terminal')}
                         </button>
                     </div>
                 </div>

@@ -7,6 +7,16 @@ import help_en from 'src/locales/en/help.ts';
 import help_uk from 'src/locales/uk/help.ts';
 import common_en from 'src/locales/en/common.ts';
 import common_uk from 'src/locales/uk/common.ts';
+import index_en from 'src/locales/en/index.ts';
+import index_uk from 'src/locales/uk/index.ts';
+import auth_en from 'src/locales/en/auth.ts';
+import auth_uk from 'src/locales/uk/auth.ts';
+import devices_en from 'src/locales/en/devices.ts';
+import devices_uk from 'src/locales/uk/devices.ts';
+import deviceSettings_en from 'src/locales/en/deviceSettings.ts';
+import deviceSettings_uk from 'src/locales/uk/deviceSettings.ts';
+import deviceControl_en from 'src/locales/en/deviceControl.ts';
+import deviceControl_uk from 'src/locales/uk/deviceControl.ts';
 
 void i18n
   .use(LanguageDetector)
@@ -14,11 +24,11 @@ void i18n
   .init({
     fallbackLng: 'en',
     supportedLngs: ['en', 'uk'],
-    ns: ['common', 'help'],
+    ns: ['common', 'help', 'index', 'auth', 'devices', 'deviceSettings', 'deviceControl'],
     defaultNS: 'common',
     resources: {
-      en: { common: common_en, help: help_en },
-      uk: { common: common_uk, help: help_uk },
+      en: { common: common_en, help: help_en, index: index_en, auth: auth_en, devices: devices_en, deviceSettings: deviceSettings_en, deviceControl: deviceControl_en },
+      uk: { common: common_uk, help: help_uk, index: index_uk, auth: auth_uk, devices: devices_uk, deviceSettings: deviceSettings_uk, deviceControl: deviceControl_uk },
     },
     detection: {
       // prefer query ?lng=uk, then localStorage, then browser language

@@ -1,9 +1,11 @@
 import React, { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export const ManualKeyboardControls: React.FC<{
     disabled: boolean;
     addAction?: (action: any) => void;
 }> = ({ disabled, addAction }) => {
+    const { t } = useTranslation('deviceControl');
     const [keyInput, setKeyInput] = useState<string>('');
     const [textInput, setTextInput] = useState<string>('');
 
@@ -40,14 +42,14 @@ export const ManualKeyboardControls: React.FC<{
 
     return (
         <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Manual Keyboard Controls</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">{t('manual.keyboard.title')}</h3>
 
             {/* Single Key Section */}
             <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Single Key</h4>
+                <h4 className="text-sm font-medium text-gray-700 mb-3">{t('manual.keyboard.singleKey')}</h4>
                 <div className="space-y-3">
                     <label className="flex flex-col text-sm">
-                        <span className="text-gray-600 mb-1">Key (virtual key name or single char)</span>
+                        <span className="text-gray-600 mb-1">{t('manual.keyboard.keyLabel')}</span>
                         <input
                             type="text"
                             className="small-input"
@@ -63,21 +65,21 @@ export const ManualKeyboardControls: React.FC<{
                             disabled={disabled || !keyInput}
                             onClick={() => sendKeyDown(keyInput)}
                         >
-                            Key Down
+                            {t('manual.keyboard.keyDown')}
                         </button>
                         <button
                             className="btn-secondary"
                             disabled={disabled || !keyInput}
                             onClick={() => sendKeyUp(keyInput)}
                         >
-                            Key Up
+                            {t('manual.keyboard.keyUp')}
                         </button>
                         <button
                             className="btn-primary"
                             disabled={disabled || !keyInput}
                             onClick={() => { void keyPress(keyInput); }}
                         >
-                            Key Press
+                            {t('manual.keyboard.keyPress')}
                         </button>
                     </div>
                 </div>
@@ -85,10 +87,10 @@ export const ManualKeyboardControls: React.FC<{
 
             {/* Type Text Section */}
             <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Type Text</h4>
+                <h4 className="text-sm font-medium text-gray-700 mb-3">{t('manual.keyboard.typeText')}</h4>
                 <div className="space-y-3">
                     <label className="flex flex-col text-sm">
-                        <span className="text-gray-600 mb-1">Text to type (each character sent as key press)</span>
+                        <span className="text-gray-600 mb-1">{t('manual.keyboard.textToType')}</span>
                         <input
                             type="text"
                             className="small-input"
@@ -104,14 +106,14 @@ export const ManualKeyboardControls: React.FC<{
                             disabled={disabled || !textInput}
                             onClick={() => { void typeText(textInput); }}
                         >
-                            Type Text
+                            {t('manual.keyboard.typeText')}
                         </button>
                         <button
                             className="btn-secondary"
                             disabled={disabled || !textInput}
                             onClick={() => setTextInput('')}
                         >
-                            Clear
+                            {t('manual.keyboard.clear')}
                         </button>
                     </div>
                 </div>
@@ -119,4 +121,3 @@ export const ManualKeyboardControls: React.FC<{
         </div>
     );
 };
-

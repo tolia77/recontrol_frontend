@@ -5,8 +5,10 @@ import connectIcon from 'src/assets/img/icons/connect.svg';
 import dashboardIcon from 'src/assets/img/icons/dashboard.svg';
 import deviceIcon from 'src/assets/img/icons/device.svg';
 import settingsIcon from 'src/assets/img/icons/settings.svg';
+import { useTranslation, Trans } from 'react-i18next';
 
 function Index() {
+    const { t } = useTranslation('index');
     return (
         <main className="min-h-screen bg-background">
             {/* Hero */}
@@ -22,18 +24,17 @@ function Index() {
                     <div className="max-w-3xl text-center">
                         <img src={logoFull} alt="ReControl" className="mx-auto mb-8 h-16" />
                         <h1 className="text-4xl md:text-6xl font-extrabold text-primary tracking-tight mb-4">
-                            Remote device control, simplified
+                            {t('hero.headline')}
                         </h1>
                         <p className="text-body md:text-lg text-darkgray mb-8">
-                            Securely manage and control your devices from anywhere. Stream screens, send inputs,
-                            and run commands with confidence.
+                            {t('hero.sub')}
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                             <Link to="/login" className="button-primary inline-flex items-center justify-center px-6 py-2">
-                                Log in
+                                {t('hero.login')}
                             </Link>
                             <Link to="/signup" className="button-secondary inline-flex items-center justify-center px-6 py-2">
-                                Sign up
+                                {t('hero.signup')}
                             </Link>
                         </div>
                     </div>
@@ -43,38 +44,38 @@ function Index() {
             {/* Feature grid */}
             <section className="container mx-auto px-6 py-12">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <FeatureCard icon={connectIcon} title="Instant connect" text="Connect to devices securely with a single click." />
-                    <FeatureCard icon={dashboardIcon} title="Unified dashboard" text="Overview of all your devices and sessions." />
-                    <FeatureCard icon={deviceIcon} title="Live control" text="Stream screens, send keyboard and mouse input." />
-                    <FeatureCard icon={settingsIcon} title="Granular controls" text="Fine‑tune permissions and session settings." />
+                    <FeatureCard icon={connectIcon} title={t('features.gridTitle1')} text={t('features.gridText1')} />
+                    <FeatureCard icon={dashboardIcon} title={t('features.gridTitle2')} text={t('features.gridText2')} />
+                    <FeatureCard icon={deviceIcon} title={t('features.gridTitle3')} text={t('features.gridText3')} />
+                    <FeatureCard icon={settingsIcon} title={t('features.gridTitle4')} text={t('features.gridText4')} />
                 </div>
             </section>
 
             {/* How it works */}
             <section className="container mx-auto px-6 py-12">
-                <h2 className="text-2xl font-semibold text-primary mb-6 text-center">How it works</h2>
+                <h2 className="text-2xl font-semibold text-primary mb-6 text-center">{t('how.title')}</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <Step number={1} title="Create an account" text="Sign up and verify your email to get started." />
-                    <Step number={2} title="Add a device" text="Register your device and establish a secure link." />
-                    <Step number={3} title="Take control" text="Start a live session to view and control instantly." />
+                    <Step number={1} title={t('how.step1.title')} text={t('how.step1.text')} />
+                    <Step number={2} title={t('how.step2.title')} text={t('how.step2.text')} />
+                    <Step number={3} title={t('how.step3.title')} text={t('how.step3.text')} />
                 </div>
             </section>
 
             {/* CTA band */}
             <section className="bg-primary">
                 <div className="container mx-auto px-6 py-10 text-center text-white">
-                    <h3 className="text-2xl md:text-3xl font-semibold mb-2">Ready to take control?</h3>
-                    <p className="text-white/90 mb-6">Log in to continue or create a free account in seconds.</p>
+                    <h3 className="text-2xl md:text-3xl font-semibold mb-2">{t('cta.title')}</h3>
+                    <p className="text-white/90 mb-6">{t('cta.sub')}</p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                         <Link to="/login" className="inline-flex items-center justify-center bg-white text-primary px-6 py-2 rounded-lg min-h-[40px]">
-                            Log in
+                            {t('cta.login')}
                         </Link>
                         <Link to="/signup" className="inline-flex items-center justify-center bg-secondary text-white px-6 py-2 rounded-lg min-h-[40px]">
-                            Sign up
+                            {t('cta.signup')}
                         </Link>
                     </div>
                     <div className="mt-6 text-white/80 text-caption-small">
-                        Need help? <Link to="/help" className="underline text-white">Visit the Help & FAQ page</Link>
+                        <Trans ns="index" i18nKey="cta.help" components={{ helpLink: <Link to="/help" className="underline text-white" /> }} />
                     </div>
                 </div>
             </section>

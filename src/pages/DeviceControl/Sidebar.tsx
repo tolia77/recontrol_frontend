@@ -2,6 +2,7 @@ import React from 'react';
 import type {SidebarProps, AccordionSection} from './types.ts';
 import { ChevronLeftIcon } from './icons.tsx';
 import { AccordionItem } from './AccordionItem.tsx';
+import { useTranslation } from 'react-i18next';
 
 type PowerCommand =
   | 'power.shutdown'
@@ -11,18 +12,6 @@ type PowerCommand =
   | 'power.logOff'
   | 'power.lock';
 
-const POWER_OPTIONS: { key: PowerCommand; label: string }[] = [
-  { key: 'power.shutdown', label: 'Shutdown' },
-  { key: 'power.restart', label: 'Restart' },
-  { key: 'power.sleep', label: 'Sleep' },
-  { key: 'power.hibernate', label: 'Hibernate' },
-  { key: 'power.logOff', label: 'Log off' },
-  { key: 'power.lock', label: 'Lock' },
-];
-
-/**
- * Sidebar Navigation
- */
 export const Sidebar: React.FC<SidebarProps & { addAction?: (action: any) => void }> = ({
     activeMode,
     setActiveMode,
@@ -30,9 +19,19 @@ export const Sidebar: React.FC<SidebarProps & { addAction?: (action: any) => voi
     setOpenAccordion,
     addAction,
 }) => {
+     const { t } = useTranslation('deviceControl');
      const toggleAccordion = (item: AccordionSection) => {
          setOpenAccordion(openAccordion === item ? null : item);
      };
+
+     const POWER_OPTIONS: { key: PowerCommand; label: string }[] = [
+       { key: 'power.shutdown', label: t('manual.power.shutdown') },
+       { key: 'power.restart', label: t('manual.power.restart') },
+       { key: 'power.sleep', label: t('manual.power.sleep') },
+       { key: 'power.hibernate', label: t('manual.power.hibernate') },
+       { key: 'power.logOff', label: t('manual.power.logOff') },
+       { key: 'power.lock', label: t('manual.power.lock') },
+     ];
 
      return (
          <div className="w-64 bg-[#1E3A8A] text-white p-6 flex flex-col h-screen fixed left-0 top-0">
@@ -41,13 +40,13 @@ export const Sidebar: React.FC<SidebarProps & { addAction?: (action: any) => voi
                  <button className="p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-200">
                      <ChevronLeftIcon className="w-8 h-8" />
                  </button>
-                 <h2 className="text-xl font-semibold text-gray-200">Control</h2>
+                 <h2 className="text-xl font-semibold text-gray-200">{t('sidebar.control')}</h2>
              </div>
 
              {/* Mode Toggle */}
              <div className="mb-8">
                  <label className="text-xs text-[#8F8F8F] uppercase font-bold mb-2 block">
-                     Mode
+                     {t('sidebar.mode')}
                  </label>
                  <div className="flex bg-[#3B82F6] rounded-lg p-1">
                      <button
@@ -58,7 +57,7 @@ export const Sidebar: React.FC<SidebarProps & { addAction?: (action: any) => voi
                                  : "text-white/80 hover:text-white"
                          }`}
                      >
-                         Interactive
+                         {t('sidebar.interactive')}
                      </button>
                      <button
                          onClick={() => setActiveMode("manual")}
@@ -68,7 +67,7 @@ export const Sidebar: React.FC<SidebarProps & { addAction?: (action: any) => voi
                                  : "text-white/80 hover:text-white"
                          }`}
                      >
-                         Manual
+                         {t('sidebar.manual')}
                      </button>
                  </div>
              </div>
@@ -78,7 +77,7 @@ export const Sidebar: React.FC<SidebarProps & { addAction?: (action: any) => voi
                <nav className="flex-grow space-y-1">
                   {/* Power accordion */}
                   <AccordionItem
-                      title="Power"
+                      title={t('sidebar.power')}
                       isOpen={openAccordion === "power"}
                       onClick={() => toggleAccordion("power")}
                   />
@@ -106,12 +105,12 @@ export const Sidebar: React.FC<SidebarProps & { addAction?: (action: any) => voi
                       </div>
                   )}
                   <AccordionItem
-                      title="Terminal"
+                      title={t('sidebar.terminal')}
                       isOpen={openAccordion === "terminal"}
                       onClick={() => toggleAccordion("terminal")}
                   />
                   <AccordionItem
-                      title="Processes"
+                      title={t('sidebar.processes')}
                       isOpen={openAccordion === "processes"}
                       onClick={() => toggleAccordion("processes")}
                   />
@@ -121,7 +120,7 @@ export const Sidebar: React.FC<SidebarProps & { addAction?: (action: any) => voi
              {/* Sidebar Footer */}
              <div className="mt-auto">
                  <div className="flex items-center justify-between">
-                     <span className="text-sm text-gray-300">Device</span>
+                     <span className="text-sm text-gray-300">{t('sidebar.device')}</span>
                  </div>
              </div>
          </div>

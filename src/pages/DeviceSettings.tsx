@@ -4,8 +4,10 @@ import { useParams, useNavigate } from 'react-router';
 import { backendInstance } from 'src/services/backend/config.ts';
 import { getAccessToken } from 'src/utils/auth.ts';
 import type { Device, DeviceShare, PermissionsGroup, DeviceShareCreatePayload } from 'src/types/global';
+import { useTranslation } from 'react-i18next';
 
 const DeviceSettings: React.FC = () => {
+    const { t } = useTranslation('deviceSettings');
     const { deviceId } = useParams<{ deviceId: string }>();
     const navigate = useNavigate();
     const [device, setDevice] = useState<Device | null>(null);
@@ -53,7 +55,7 @@ const DeviceSettings: React.FC = () => {
                 name: response.data.name
             });
         } catch (err) {
-            setError('Failed to load device details');
+            setError(t('errors.loadDetails'));
         } finally {
             setLoading(false);
         }
@@ -91,9 +93,9 @@ const DeviceSettings: React.FC = () => {
                 headers: { Authorization: getAccessToken() }
             });
             setDevice(response.data);
-            alert('Device updated successfully');
+            alert(t('info.updated'));
         } catch (err) {
-            setError('Failed to update device');
+            setError(t('info.updateError'));
         }
     };
 
@@ -101,7 +103,7 @@ const DeviceSettings: React.FC = () => {
         e.preventDefault();
 
         if (!shareForm.userEmail) {
-            setError('Email is required');
+            setError(t('sharing.emailRequired'));
             return;
         }
 
@@ -115,7 +117,7 @@ const DeviceSettings: React.FC = () => {
 
         if (shareForm.createNewGroup) {
             if (!shareForm.newGroup.name.trim()) {
-                setError('Permission group name is required');
+                setError(t('sharing.nameRequired'));
                 return;
             }
             payload.permissions_group_attributes = {
@@ -153,44 +155,44 @@ const DeviceSettings: React.FC = () => {
             });
             setShowShareForm(false);
             loadShares();
-            alert('User invited successfully');
+            alert(t('sharing.userInvited'));
         } catch (err) {
-            setError('Failed to invite user');
+            setError(t('sharing.inviteError'));
         }
     };
 
     const handleDeleteShare = async (shareId: string) => {
-        if (confirm('Are you sure you want to remove this share?')) {
+        if (confirm(t('sharing.removeConfirm'))) {
             try {
                 await backendInstance.delete(`/device_shares/${shareId}`, {
                     headers: { Authorization: getAccessToken() }
                 });
                 loadShares();
             } catch (err) {
-                setError('Failed to remove share');
+                setError(t('sharing.removeError'));
             }
         }
     };
 
-    if (loading) return <div className="p-6">Loading...</div>;
+    if (loading) return <div className="p-6">{t('loading')}</div>;
     if (error) return <div className="p-6 text-red-500">{error}</div>;
-    if (!device) return <div className="p-6">Device not found</div>;
+    if (!device) return <div className="p-6">{t('notFound')}</div>;
 
     return (
         <div className="p-6 max-w-4xl mx-auto">
             <div className="mb-6">
-                <h1 className="text-2xl font-bold text-text">Device Settings</h1>
-                <p className="text-gray-600">Manage device details and sharing</p>
+                <h1 className="text-2xl font-bold text-text">{t('title')}</h1>
+                <p className="text-gray-600">{t('subtitle')}</p>
             </div>
 
             {/* Single page (no tabs) - Device Information */}
             <div className="bg-white rounded-lg shadow p-6 mb-6">
-                <h2 className="text-lg font-semibold mb-4">Device Information</h2>
+                <h2 className="text-lg font-semibold mb-4">{t('info.section')}</h2>
                 <form onSubmit={handleDeviceUpdate}>
                     <div className="grid grid-cols-1 gap-4 mb-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Device Name
+                                {t('info.nameLabel')}
                             </label>
                             <input
                                 type="text"
@@ -207,13 +209,13 @@ const DeviceSettings: React.FC = () => {
                             onClick={() => navigate('/devices')}
                             className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                         >
-                            Cancel
+                            {t('info.cancel')}
                         </button>
                         <button
                             type="submit"
                             className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
                         >
-                            Save Changes
+                            {t('info.save')}
                         </button>
                     </div>
                 </form>
@@ -223,12 +225,12 @@ const DeviceSettings: React.FC = () => {
             <div className="space-y-6">
                 <div className="bg-white rounded-lg shadow p-6">
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-lg font-semibold">Shared With</h2>
+                        <h2 className="text-lg font-semibold">{t('sharing.section')}</h2>
                         <button
                             onClick={() => setShowShareForm(!showShareForm)}
                             className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
                         >
-                            {showShareForm ? 'Cancel' : 'Invite User'}
+                            {showShareForm ? t('sharing.cancelInvite') : t('sharing.invite')}
                         </button>
                     </div>
 
@@ -237,7 +239,7 @@ const DeviceSettings: React.FC = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        User Email
+                                        {t('form.userEmail')}
                                     </label>
                                     <input
                                         type="email"
@@ -257,21 +259,21 @@ const DeviceSettings: React.FC = () => {
                                             onChange={(e) => setShareForm({ ...shareForm, createNewGroup: e.target.checked })}
                                             className="h-4 w-4"
                                         />
-                                        <span className="text-sm text-gray-700">Create new permissions group</span>
+                                        <span className="text-sm text-gray-700">{t('form.createNewGroup')}</span>
                                     </label>
                                 </div>
 
                                 {!shareForm.createNewGroup && (
                                     <div className="md:col-span-2">
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Permissions Group
+                                            {t('form.permissionsGroup')}
                                         </label>
                                         <select
                                             value={shareForm.permissionsGroupId}
                                             onChange={(e) => setShareForm({ ...shareForm, permissionsGroupId: e.target.value })}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                                         >
-                                            <option value="">Select permissions...</option>
+                                            <option value="">{t('form.selectPermissions')}</option>
                                             {permissionsGroups.map((group) => (
                                                 <option key={group.id} value={group.id}>
                                                     {group.name}
@@ -285,7 +287,7 @@ const DeviceSettings: React.FC = () => {
                                     <>
                                         <div className="md:col-span-2">
                                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                New Group Name
+                                                {t('form.newGroupName')}
                                             </label>
                                             <input
                                                 type="text"
@@ -297,12 +299,12 @@ const DeviceSettings: React.FC = () => {
                                         </div>
                                         <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
                                             {[
-                                                { key: 'see_screen', label: 'See screen' },
-                                                { key: 'see_system_info', label: 'See system info' },
-                                                { key: 'access_mouse', label: 'Access mouse' },
-                                                { key: 'access_keyboard', label: 'Access keyboard' },
-                                                { key: 'access_terminal', label: 'Access terminal' },
-                                                { key: 'manage_power', label: 'Manage power' },
+                                                { key: 'see_screen', label: t('form.perms.see_screen') },
+                                                { key: 'see_system_info', label: t('form.perms.see_system_info') },
+                                                { key: 'access_mouse', label: t('form.perms.access_mouse') },
+                                                { key: 'access_keyboard', label: t('form.perms.access_keyboard') },
+                                                { key: 'access_terminal', label: t('form.perms.access_terminal') },
+                                                { key: 'manage_power', label: t('form.perms.manage_power') },
                                             ].map((perm) => (
                                                 <label key={perm.key} className="inline-flex items-center space-x-2">
                                                     <input
@@ -325,7 +327,7 @@ const DeviceSettings: React.FC = () => {
 
                                 <div className="md:col-span-2">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Expires At
+                                        {t('form.expiresAt')}
                                     </label>
                                     <input
                                         type="datetime-local"
@@ -340,7 +342,7 @@ const DeviceSettings: React.FC = () => {
                                     type="submit"
                                     className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
                                 >
-                                    Send Invitation
+                                    {t('form.sendInvitation')}
                                 </button>
                             </div>
                         </form>
@@ -349,22 +351,22 @@ const DeviceSettings: React.FC = () => {
                     {/* Shares List */}
                     <div className="space-y-3">
                         {shares.length === 0 ? (
-                            <p className="text-gray-500 text-center py-4">No users have been shared with this device</p>
+                            <p className="text-gray-500 text-center py-4">{t('sharing.noShares')}</p>
                         ) : (
                             shares.map((share) => (
                                 <div key={share.id} className="flex justify-between items-center p-3 border border-gray-200 rounded-lg">
                                     <div>
                                         <p className="font-medium">{share.user?.username || share.user?.email}</p>
                                         <p className="text-sm text-gray-500">
-                                            Permissions: {share.permissions_group?.name || 'Default'}
-                                            {share.expires_at && ` • Expires: ${new Date(share.expires_at).toLocaleDateString()}`}
+                                            {t('sharing.permissions')}: {share.permissions_group?.name || t('sharing.defaultGroup')}
+                                            {share.expires_at && ` • ${t('sharing.expires')}: ${new Date(share.expires_at).toLocaleDateString()}`}
                                         </p>
                                     </div>
                                     <button
                                         onClick={() => handleDeleteShare(share.id)}
                                         className="px-3 py-1 text-red-600 hover:bg-red-50 rounded-md"
                                     >
-                                        Remove
+                                        {t('sharing.remove')}
                                     </button>
                                 </div>
                             ))
@@ -377,4 +379,3 @@ const DeviceSettings: React.FC = () => {
 };
 
 export default DeviceSettings;
-

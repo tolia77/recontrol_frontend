@@ -3,8 +3,10 @@ import logoFull from 'src/assets/img/logo-full.svg';
 import {Link, useNavigate} from "react-router";
 import {loginRequest} from "src/services/backend/authRequests.ts";
 import {saveTokens, saveUserId} from "src/utils/auth.ts";
+import { useTranslation, Trans } from 'react-i18next';
 
 function Login() {
+    const { t } = useTranslation('auth');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [errors, setErrors] = useState<string[] | null>(null);
@@ -18,9 +20,8 @@ function Login() {
             saveUserId(res.data.user_id)
             navigate("/dashboard")
         } catch (error: any) {
-            console.log(error)
-            if (error.response.status === 401) {
-                setErrors(["Invalid email or password."]);
+            if (error?.response?.status === 401) {
+                setErrors([t('login.errors.invalid')]);
             }
         }
     }
@@ -29,25 +30,25 @@ function Login() {
         <main className="min-h-screen flex items-center justify-center">
             <div className="flex flex-col items-center space-y-8">
                 <img src={logoFull} alt="logo"/>
-                <h1>Log in your account</h1>
+                <h1>{t('login.title')}</h1>
                 <form onSubmit={handleSubmit} className="space-y-4 min-w-[350px]">
                     {errors && errors.map(err =>
                         <p key={err} className="text-error text-body">{err}</p>
                     )}
                     <div>
-                        <label className="text-body-small" htmlFor="email">Email:</label>
+                        <label className="text-body-small" htmlFor="email">{t('login.email')}:</label>
                         <br/>
                         <input className="w-full" type="email" id="email" name="email" value={email}
                                onChange={(e) => setEmail(e.target.value)} required/>
                     </div>
                     <div>
-                        <label className="text-body-small" htmlFor="password">Password:</label>
+                        <label className="text-body-small" htmlFor="password">{t('login.password')}:</label>
                         <br/>
                         <input className="w-full" type="password" id="password" name="password" value={password}
                                onChange={(e) => setPassword(e.target.value)} required/>
                     </div>
-                    <button className="button-primary w-full" type="submit">Log In</button>
-                    <p>Don't have an account? <Link className="text-secondary" to={"/signup"}>Sign up</Link></p>
+                    <button className="button-primary w-full" type="submit">{t('login.submit')}</button>
+                    <p><Trans ns="auth" i18nKey="login.noAccount" components={{ signupLink: <Link className="text-secondary" to="/signup"/> }} /></p>
                 </form>
             </div>
         </main>

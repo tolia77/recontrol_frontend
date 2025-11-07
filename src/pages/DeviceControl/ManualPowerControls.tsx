@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 
 type PowerCommand =
     | 'power.shutdown'
@@ -8,19 +9,21 @@ type PowerCommand =
     | 'power.logOff'
     | 'power.lock';
 
-const POWER_COMMANDS: { command: PowerCommand; label: string; description: string; variant: 'danger' | 'warning' | 'info' }[] = [
-    { command: 'power.shutdown', label: 'Shutdown', description: 'Turn off the device', variant: 'danger' },
-    { command: 'power.restart', label: 'Restart', description: 'Reboot the device', variant: 'warning' },
-    { command: 'power.sleep', label: 'Sleep', description: 'Put device to sleep mode', variant: 'info' },
-    { command: 'power.hibernate', label: 'Hibernate', description: 'Hibernate the device', variant: 'info' },
-    { command: 'power.logOff', label: 'Log Off', description: 'Log off current user', variant: 'warning' },
-    { command: 'power.lock', label: 'Lock', description: 'Lock the device', variant: 'info' },
-];
-
 export const ManualPowerControls: React.FC<{
     disabled: boolean;
     addAction?: (action: any) => void;
 }> = ({ disabled, addAction }) => {
+    const { t } = useTranslation('deviceControl');
+
+    const POWER_COMMANDS: { command: PowerCommand; label: string; description: string; variant: 'danger' | 'warning' | 'info' }[] = [
+        { command: 'power.shutdown', label: t('manual.power.shutdown'), description: t('manual.power.shutdownDesc'), variant: 'danger' },
+        { command: 'power.restart', label: t('manual.power.restart'), description: t('manual.power.restartDesc'), variant: 'warning' },
+        { command: 'power.sleep', label: t('manual.power.sleep'), description: t('manual.power.sleepDesc'), variant: 'info' },
+        { command: 'power.hibernate', label: t('manual.power.hibernate'), description: t('manual.power.hibernateDesc'), variant: 'info' },
+        { command: 'power.logOff', label: t('manual.power.logOff'), description: t('manual.power.logOffDesc'), variant: 'warning' },
+        { command: 'power.lock', label: t('manual.power.lock'), description: t('manual.power.lockDesc'), variant: 'info' },
+    ];
+
     const sendPowerCommand = useCallback((command: PowerCommand) => {
         if (!addAction || disabled) return;
         addAction({
@@ -44,11 +47,11 @@ export const ManualPowerControls: React.FC<{
 
     return (
         <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Manual Power Controls</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">{t('manual.power.title')}</h3>
 
             <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
                 <p className="text-sm text-gray-600 mb-4">
-                    ⚠️ Warning: These actions will affect the remote device immediately
+                    ⚠️ {t('manual.power.warning')}
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -69,4 +72,3 @@ export const ManualPowerControls: React.FC<{
         </div>
     );
 };
-

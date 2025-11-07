@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface QuickActionsProps {
   disabled: boolean;
@@ -6,6 +7,7 @@ interface QuickActionsProps {
 }
 
 export const QuickActions: React.FC<QuickActionsProps> = ({ disabled, addAction }) => {
+  const { t } = useTranslation('deviceControl');
   return (
     <div className="quick-actions mt-6">
       <div className="action-buttons flex gap-4">
@@ -20,7 +22,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ disabled, addAction 
           }
           disabled={disabled}
         >
-          Start Screen Stream
+          {t('manual.quick.startStream')}
         </button>
         <button
           className="px-4 py-2 bg-[#3B82F6] text-white rounded-lg font-medium shadow hover:bg-[#1E3A8A] disabled:bg-[#D1D5DB] disabled:text-[#8F8F8F] disabled:cursor-not-allowed transition-colors"
@@ -33,10 +35,9 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ disabled, addAction 
           }
           disabled={disabled}
         >
-          Stop Screen Stream
+          {t('manual.quick.stopStream')}
         </button>
       </div>
     </div>
   );
 };
-
