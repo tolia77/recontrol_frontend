@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getUserId } from 'src/utils/auth.ts';
-import { getUserRequest, updateUserSelfRequest, type UserResponse, type UserUpdateSelf } from 'src/services/backend/usersRequests.ts';
+import { getUserRequest, updateUserSelfRequest } from 'src/services/backend/usersRequests.ts';
+import type { UserResponse } from 'src/services/backend/usersRequests.ts';
 import { useTranslation } from 'react-i18next';
 
 function UserSettings() {
@@ -23,7 +24,7 @@ function UserSettings() {
         setUser(res.data);
         setUsername(res.data.username);
         setEmail(res.data.email);
-      } catch {
+      } catch (e: any) {
         setErrors([t('errors.loadFailed')]);
       } finally {
         setLoading(false);
@@ -38,7 +39,7 @@ function UserSettings() {
     if (!userId) { return; }
     setSaving(true);
     try {
-      const payload: UserUpdateSelf = {};
+      const payload: any = {};
       if (username !== user?.username) payload.username = username;
       if (email !== user?.email) payload.email = email;
       if (password.length > 0) payload.password = password;
@@ -47,23 +48,22 @@ function UserSettings() {
       setUser(res.data);
       setPassword('');
       setSuccess(t('messages.saved'));
-    } catch (error: unknown) {
-      // Try to parse typical Rails validation errors
-      const axiosErr = error as { response?: { status?: number; data?: unknown } };
-      const status = axiosErr?.response?.status;
-      const resp = axiosErr?.response?.data as Record<string, unknown> | undefined;
-      if (status === 422 && resp && typeof resp === 'object') {
+    } catch (error: any) {
+      if (error?.response?.status === 422) {
+        const resp = error?.response?.data;
         const msgs: string[] = [];
-        Object.entries(resp).forEach(([key, value]) => {
-          const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
-          if (Array.isArray(value)) {
-            value.forEach(v => msgs.push(`${capitalizedKey} ${String(v)}`));
-          } else {
-            msgs.push(`${capitalizedKey} ${String(value)}`);
-          }
-        });
+        if (resp && typeof resp === 'object') {
+          Object.entries(resp).forEach(([key, value]) => {
+            const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
+            if (Array.isArray(value)) {
+              value.forEach(v => msgs.push(`${capitalizedKey} ${String(v)}`));
+            } else {
+              msgs.push(`${capitalizedKey} ${String(value)}`);
+            }
+          });
+        }
         setErrors(msgs.length ? msgs : [t('errors.saveFailed')]);
-      } else if (status === 403) {
+      } else if (error?.response?.status === 403) {
         setErrors([t('errors.forbidden')]);
       } else {
         setErrors([t('errors.saveFailed')]);

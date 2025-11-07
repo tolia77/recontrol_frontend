@@ -53,7 +53,7 @@ export interface DeviceShare {
 
 // New helper types for creating shares
 export interface PermissionsGroupAttributes {
-    name: string;
+    name?: string;
     see_screen?: boolean | null;
     see_system_info?: boolean | null;
     access_mouse?: boolean | null;

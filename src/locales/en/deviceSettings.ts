@@ -40,7 +40,14 @@ const deviceSettings = {
       access_keyboard: 'Access keyboard',
       access_terminal: 'Access terminal',
       manage_power: 'Manage power'
-    }
+    },
+    loadGroup: 'Load permissions group',
+    saveGroup: 'Save permissions group',
+    loadedGroup: 'Permissions loaded from group',
+    groupSaved: 'Permissions group saved',
+    groupSaveError: 'Failed to save permissions group',
+    cloneSuffix: '(copy)',
+    apply: 'Apply'
   },
   errors: {
     loadDetails: 'Failed to load device details'
@@ -49,4 +56,3 @@ const deviceSettings = {
   notFound: 'Device not found',
 };
 export default deviceSettings;
-

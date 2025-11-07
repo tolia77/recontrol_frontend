@@ -40,7 +40,14 @@ const deviceSettings = {
       access_keyboard: 'Керувати клавіатурою',
       access_terminal: 'Доступ до термінала',
       manage_power: 'Керування живленням'
-    }
+    },
+    loadGroup: 'Завантажити групу дозволів',
+    saveGroup: 'Зберегти групу дозволів',
+    loadedGroup: 'Дозволи завантажено з групи',
+    groupSaved: 'Групу дозволів збережено',
+    groupSaveError: 'Не вдалося зберегти групу дозволів',
+    cloneSuffix: '(копія)',
+    apply: 'Застосувати'
   },
   errors: {
     loadDetails: 'Не вдалося завантажити дані пристрою'
@@ -49,4 +56,3 @@ const deviceSettings = {
   notFound: 'Пристрій не знайдено',
 };
 export default deviceSettings;
-

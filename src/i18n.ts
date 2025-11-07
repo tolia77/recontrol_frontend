@@ -46,4 +46,4 @@ void i18n
     },
   });
 
-// Side-effect module: no export
+export default i18n;
