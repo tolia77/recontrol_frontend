@@ -24,6 +24,10 @@ function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                     <img src={devicesIcon} alt="Devices" />
                     <p>Devices</p>
                 </Link>
+                <Link to={"/help"} className="flex gap-1 h-[45px] items-center opacity-90 hover:opacity-100">
+                    <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-white/20 text-white">?</span>
+                    <p>Help</p>
+                </Link>
             </nav>
         </>
     );
@@ -31,7 +35,7 @@ function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     return (
         <>
             {/* Desktop sidebar */}
-            <aside className="hidden md:block w-[220px] h-full min-h-screen bg-primary">
+            <aside className="hidden md:block fixed top-0 left-0 z-40 w-[220px] h-screen bg-primary overflow-y-auto">
                 {NavContent}
             </aside>
 

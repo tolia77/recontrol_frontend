@@ -73,6 +73,9 @@ function Index() {
                             Sign up
                         </Link>
                     </div>
+                    <div className="mt-6 text-white/80 text-caption-small">
+                        Need help? <Link to="/help" className="underline text-white">Visit the Help & FAQ page</Link>
+                    </div>
                 </div>
             </section>
         </main>

@@ -8,7 +8,7 @@ function Layout() {
     return (
         <div className="flex min-h-screen">
             <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-            <main className="flex-1 min-w-0 w-full">
+            <main className="flex-1 min-w-0 w-full md:ml-[220px]">
                 {/* Mobile top bar */}
                 <div className="md:hidden flex items-center justify-between bg-primary text-white h-14 px-3">
                     <button
