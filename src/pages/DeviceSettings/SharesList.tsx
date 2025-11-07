@@ -1,7 +1,7 @@
 import React from 'react';
 import type { SharesListProps } from './types';
 
-export const SharesList: React.FC<SharesListProps> = ({ t, shares, onDelete }) => {
+export const SharesList: React.FC<SharesListProps> = ({ t, shares, onDelete, onEdit }) => {
   return (
     <div className="space-y-3">
       {shares.length === 0 ? (
@@ -16,12 +16,20 @@ export const SharesList: React.FC<SharesListProps> = ({ t, shares, onDelete }) =
                 {share.expires_at && ` • ${t('sharing.expires')}: ${new Date(share.expires_at).toLocaleDateString()}`}
               </p>
             </div>
-            <button
-              onClick={() => onDelete(share.id)}
-              className="px-3 py-1 text-red-600 hover:bg-red-50 rounded-md"
-            >
-              {t('sharing.remove')}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => onEdit(share)}
+                className="px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-md"
+              >
+                {t('sharing.edit')}
+              </button>
+              <button
+                onClick={() => onDelete(share.id)}
+                className="px-3 py-1 text-red-600 hover:bg-red-50 rounded-md"
+              >
+                {t('sharing.remove')}
+              </button>
+            </div>
           </div>
         ))
       )}

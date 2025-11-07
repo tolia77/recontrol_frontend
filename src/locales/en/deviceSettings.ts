@@ -23,7 +23,12 @@ const deviceSettings = {
     permissions: 'Permissions',
     expires: 'Expires',
     defaultGroup: 'Default',
-    remove: 'Remove'
+    remove: 'Remove',
+    edit: 'Edit',
+    editShare: 'Edit Share',
+    cancelEdit: 'Cancel',
+    saveChanges: 'Save Changes',
+    updateShareError: 'Failed to update share'
   },
   form: {
     userEmail: 'User Email',

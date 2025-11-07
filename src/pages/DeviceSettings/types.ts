@@ -40,9 +40,35 @@ export interface DeviceInfoFormProps {
   onCancel: () => void;
 }
 
+export interface EditShareFormState {
+  shareId: string;
+  permissionsGroupId: string;
+  expiresAt: string;
+  newGroup: {
+    name: string;
+    see_screen: boolean;
+    see_system_info: boolean;
+    access_mouse: boolean;
+    access_keyboard: boolean;
+    access_terminal: boolean;
+    manage_power: boolean;
+  };
+}
+
+export interface EditShareFormProps {
+  t: any;
+  editForm: EditShareFormState;
+  permissionsGroups: PermissionsGroup[];
+  onChange: (next: EditShareFormState) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  onLoadGroup: LoadGroupHandler;
+  onSaveGroup: SaveGroupHandler;
+  onCancel: () => void;
+}
+
 export interface SharesListProps {
   t: any;
   shares: any[]; // Using any to avoid extending global types in this file
   onDelete: (id: string) => void;
+  onEdit: (share: any) => void;
 }
-

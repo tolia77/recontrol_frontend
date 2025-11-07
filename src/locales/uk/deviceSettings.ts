@@ -23,7 +23,12 @@ const deviceSettings = {
     permissions: 'Дозволи',
     expires: 'Діє до',
     defaultGroup: 'За замовчуванням',
-    remove: 'Видалити'
+    remove: 'Видалити',
+    edit: 'Редагувати',
+    editShare: 'Редагувати доступ',
+    cancelEdit: 'Скасувати',
+    saveChanges: 'Зберегти зміни',
+    updateShareError: 'Не вдалося оновити доступ'
   },
   form: {
     userEmail: 'Ел. пошта користувача',

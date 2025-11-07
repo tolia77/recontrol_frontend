@@ -38,14 +38,14 @@ export const InviteShareForm: React.FC<InviteShareFormProps> = ({
           <button
             type="button"
             onClick={() => setShowLoadPanel(!showLoadPanel)}
-            className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+            className="px-2 py-1 border border-gray-300 rounded text-xs font-medium hover:bg-gray-50"
           >
             {t('form.loadGroup')}
           </button>
           <button
             type="button"
             onClick={() => setShowSavePanel(!showSavePanel)}
-            className="px-3 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700"
+            className="px-2 py-1 bg-gray-700 text-white rounded text-xs font-medium hover:bg-gray-600"
           >
             {t('form.saveGroup')}
           </button>

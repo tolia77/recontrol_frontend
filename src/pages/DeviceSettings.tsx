@@ -1,5 +1,5 @@
 // src/pages/DeviceSettings.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { backendInstance } from 'src/services/backend/config.ts';
 import { getAccessToken } from 'src/utils/auth.ts';
@@ -8,7 +8,8 @@ import { useTranslation } from 'react-i18next';
 import { DeviceInfoForm } from './DeviceSettings/DeviceInfoForm';
 import { InviteShareForm } from './DeviceSettings/InviteShareForm';
 import { SharesList } from './DeviceSettings/SharesList';
-import type { ShareFormState, DeviceInfoFormState } from './DeviceSettings/types';
+import { EditShareForm } from './DeviceSettings/EditShareForm';
+import type { ShareFormState, DeviceInfoFormState, EditShareFormState } from './DeviceSettings/types';
 
 const DeviceSettings: React.FC = () => {
     const { t } = useTranslation('deviceSettings');
@@ -38,6 +39,45 @@ const DeviceSettings: React.FC = () => {
     });
     const [permissionsGroups, setPermissionsGroups] = useState<PermissionsGroup[]>([]);
     const [showShareForm, setShowShareForm] = useState(false);
+    const [editForm, setEditForm] = useState<EditShareFormState | null>(null);
+    const [editOriginalGroup, setEditOriginalGroup] = useState<{ see_screen: boolean; see_system_info: boolean; access_mouse: boolean; access_keyboard: boolean; access_terminal: boolean; manage_power: boolean } | null>(null);
+
+    const loadDeviceData = useCallback(async () => {
+        try {
+            const response = await backendInstance.get(`/devices/${deviceId}`, {
+                headers: { Authorization: getAccessToken() }
+            });
+            setDevice(response.data);
+            setDeviceForm({ name: response.data.name });
+        } catch {
+            setError(t('errors.loadDetails'));
+        } finally {
+            setLoading(false);
+        }
+    }, [deviceId, t]);
+
+    const loadShares = useCallback(async () => {
+        try {
+            const response = await backendInstance.get('/device_shares', {
+                params: { device_id: deviceId },
+                headers: { Authorization: getAccessToken() }
+            });
+            setShares(response.data.items || []);
+        } catch {
+            console.error('Failed to load shares');
+        }
+    }, [deviceId]);
+
+    const loadPermissionsGroups = useCallback(async () => {
+        try {
+            const response = await backendInstance.get('/permissions_groups', {
+                headers: { Authorization: getAccessToken() }
+            });
+            setPermissionsGroups(response.data.items || []);
+        } catch {
+            console.error('Failed to load permissions groups');
+        }
+    }, []);
 
     useEffect(() => {
         if (deviceId) {
@@ -45,44 +85,7 @@ const DeviceSettings: React.FC = () => {
             loadShares();
             loadPermissionsGroups();
         }
-    }, [deviceId]);
-
-    const loadDeviceData = async () => {
-        try {
-            const response = await backendInstance.get(`/devices/${deviceId}`, {
-                headers: { Authorization: getAccessToken() }
-            });
-            setDevice(response.data);
-            setDeviceForm({ name: response.data.name });
-        } catch (err) {
-            setError(t('errors.loadDetails'));
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const loadShares = async () => {
-        try {
-            const response = await backendInstance.get('/device_shares', {
-                params: { device_id: deviceId },
-                headers: { Authorization: getAccessToken() }
-            });
-            setShares(response.data.items || []);
-        } catch (err) {
-            console.error('Failed to load shares:', err);
-        }
-    };
-
-    const loadPermissionsGroups = async () => {
-        try {
-            const response = await backendInstance.get('/permissions_groups', {
-                headers: { Authorization: getAccessToken() }
-            });
-            setPermissionsGroups(response.data.items || []);
-        } catch (err) {
-            console.error('Failed to load permissions groups:', err);
-        }
-    };
+    }, [deviceId, loadDeviceData, loadShares, loadPermissionsGroups]);
 
     const handleDeviceUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -94,7 +97,7 @@ const DeviceSettings: React.FC = () => {
             });
             setDevice(response.data);
             alert(t('info.updated'));
-        } catch (err) {
+        } catch {
             setError(t('info.updateError'));
         }
     };
@@ -143,7 +146,7 @@ const DeviceSettings: React.FC = () => {
             });
             await loadPermissionsGroups();
             alert(t('form.groupSaved'));
-        } catch (e) {
+        } catch {
             setError(t('form.groupSaveError'));
         }
     };
@@ -198,7 +201,7 @@ const DeviceSettings: React.FC = () => {
             setShowShareForm(false);
             loadShares();
             alert(t('sharing.userInvited'));
-        } catch (err) {
+        } catch {
             setError(t('sharing.inviteError'));
         }
     };
@@ -210,9 +213,76 @@ const DeviceSettings: React.FC = () => {
                     headers: { Authorization: getAccessToken() }
                 });
                 loadShares();
-            } catch (err) {
+            } catch {
                 setError(t('sharing.removeError'));
             }
+        }
+    };
+
+    const beginEditShare = (share: DeviceShare) => {
+        const originalPerms = {
+            see_screen: !!share.permissions_group?.see_screen,
+            see_system_info: !!share.permissions_group?.see_system_info,
+            access_mouse: !!share.permissions_group?.access_mouse,
+            access_keyboard: !!share.permissions_group?.access_keyboard,
+            access_terminal: !!share.permissions_group?.access_terminal,
+            manage_power: !!share.permissions_group?.manage_power,
+        };
+        setEditOriginalGroup(originalPerms);
+        setEditForm({
+            shareId: share.id,
+            permissionsGroupId: share.permissions_group?.id || '',
+            expiresAt: share.expires_at ? share.expires_at.substring(0, 16) : '',
+            newGroup: {
+                name: share.permissions_group?.name || '',
+                ...originalPerms
+            }
+        });
+        setShowShareForm(false);
+    };
+
+    const handleEditSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editForm) return;
+        type PatchPayload = Partial<DeviceShareCreatePayload> & { permissions_group_attributes?: { name?: string; see_screen?: boolean; see_system_info?: boolean; access_mouse?: boolean; access_keyboard?: boolean; access_terminal?: boolean; manage_power?: boolean } };
+        const payload: PatchPayload = {
+            expires_at: editForm.expiresAt || undefined,
+            device_id: deviceId!,
+        };
+
+        // Determine if permissions changed compared to original snapshot
+        const changed = editOriginalGroup && (
+            editOriginalGroup.see_screen !== editForm.newGroup.see_screen ||
+            editOriginalGroup.see_system_info !== editForm.newGroup.see_system_info ||
+            editOriginalGroup.access_mouse !== editForm.newGroup.access_mouse ||
+            editOriginalGroup.access_keyboard !== editForm.newGroup.access_keyboard ||
+            editOriginalGroup.access_terminal !== editForm.newGroup.access_terminal ||
+            editOriginalGroup.manage_power !== editForm.newGroup.manage_power
+        );
+
+        if (editForm.permissionsGroupId && !changed) {
+            // use existing group unchanged
+            payload.permissions_group_id = editForm.permissionsGroupId;
+        } else {
+            payload.permissions_group_attributes = {
+                name: editForm.newGroup.name || undefined,
+                see_screen: editForm.newGroup.see_screen,
+                see_system_info: editForm.newGroup.see_system_info,
+                access_mouse: editForm.newGroup.access_mouse,
+                access_keyboard: editForm.newGroup.access_keyboard,
+                access_terminal: editForm.newGroup.access_terminal,
+                manage_power: editForm.newGroup.manage_power,
+            };
+        }
+        try {
+            await backendInstance.patch(`/device_shares/${editForm.shareId}`, { device_share: payload }, {
+                headers: { Authorization: getAccessToken() }
+            });
+            setEditForm(null);
+            setEditOriginalGroup(null);
+            await loadShares();
+        } catch {
+            setError(t('sharing.updateShareError'));
         }
     };
 
@@ -259,7 +329,41 @@ const DeviceSettings: React.FC = () => {
                       />
                     )}
 
-                    <SharesList t={t} shares={shares} onDelete={handleDeleteShare} />
+                    {editForm && (
+                      <EditShareForm
+                        t={t}
+                        editForm={editForm}
+                        permissionsGroups={permissionsGroups}
+                        onChange={(next) => setEditForm(next)}
+                        onSubmit={handleEditSubmit}
+                        onLoadGroup={() => {
+                          if (!editForm.permissionsGroupId) { setError(t('form.selectPermissions')); return; }
+                          const group = permissionsGroups.find(g => g.id === editForm.permissionsGroupId);
+                          if (!group) return;
+                          const updatedPerms = {
+                            see_screen: !!group.see_screen,
+                            see_system_info: !!group.see_system_info,
+                            access_mouse: !!group.access_mouse,
+                            access_keyboard: !!group.access_keyboard,
+                            access_terminal: !!group.access_terminal,
+                            manage_power: !!group.manage_power,
+                          };
+                          setEditOriginalGroup(updatedPerms);
+                          setEditForm(prev => prev && ({
+                            ...prev,
+                            newGroup: {
+                              name: `${group.name} ${t('form.cloneSuffix')}`.trim(),
+                              ...updatedPerms
+                            }
+                          }));
+                          alert(t('form.loadedGroup'));
+                        }}
+                        onSaveGroup={handleSaveCurrentGroup}
+                        onCancel={() => { setEditForm(null); setEditOriginalGroup(null); }}
+                      />
+                    )}
+
+                    <SharesList t={t} shares={shares} onDelete={handleDeleteShare} onEdit={beginEditShare} />
                 </div>
             </div>
         </div>
