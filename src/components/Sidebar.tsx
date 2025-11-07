@@ -3,6 +3,7 @@ import {Link} from "react-router";
 import logo from "src/assets/img/logo-full-white-text.svg"
 import dashboardIcon from "src/assets/img/icons/dashboard.svg"
 import devicesIcon from "src/assets/img/icons/device.svg"
+import { useTranslation } from 'react-i18next';
 
 type SidebarProps = {
     isOpen?: boolean;
@@ -10,6 +11,9 @@ type SidebarProps = {
 };
 
 function Sidebar({ isOpen = false, onClose }: SidebarProps) {
+    const { i18n, t } = useTranslation(['common']);
+    const changeLanguage = (lng: string) => { void i18n.changeLanguage(lng); };
+
     const NavContent = (
         <>
             <Link to={"/dashboard"}>
@@ -17,18 +21,33 @@ function Sidebar({ isOpen = false, onClose }: SidebarProps) {
             </Link>
             <nav className="space-y-[5px] text-white pl-[10px] mt-[30px]">
                 <Link to={"/dashboard"} className="flex gap-1 h-[45px] items-center">
-                    <img src={dashboardIcon} alt="Dashboard" />
-                    <p>Dashboard</p>
+                    <img src={dashboardIcon} alt={t('nav.dashboard')} />
+                    <p>{t('nav.dashboard')}</p>
                 </Link>
                 <Link to={"/devices"} className="flex gap-1 h-[45px] items-center">
-                    <img src={devicesIcon} alt="Devices" />
-                    <p>Devices</p>
+                    <img src={devicesIcon} alt={t('nav.devices')} />
+                    <p>{t('nav.devices')}</p>
                 </Link>
                 <Link to={"/help"} className="flex gap-1 h-[45px] items-center opacity-90 hover:opacity-100">
                     <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-white/20 text-white">?</span>
-                    <p>Help</p>
+                    <p>{t('nav.help')}</p>
                 </Link>
             </nav>
+            <div className="pl-[10px] mt-6 text-white">
+                <label className="block text-xs uppercase tracking-wide opacity-70 mb-1">{t('lang.switch_label')}</label>
+                <div className="flex gap-2">
+                    <button
+                        type="button"
+                        onClick={() => changeLanguage('en')}
+                        className={`px-2 py-1 rounded text-xs border ${i18n.resolvedLanguage === 'en' ? 'bg-white text-primary' : 'border-white/30 bg-white/10'}`}
+                    >{t('lang.english')}</button>
+                    <button
+                        type="button"
+                        onClick={() => changeLanguage('uk')}
+                        className={`px-2 py-1 rounded text-xs border ${i18n.resolvedLanguage === 'uk' ? 'bg-white text-primary' : 'border-white/30 bg-white/10'}`}
+                    >{t('lang.ukrainian')}</button>
+                </div>
+            </div>
         </>
     );
 
