@@ -10,6 +10,7 @@ import { InviteShareForm } from './DeviceSettings/InviteShareForm';
 import { SharesList } from './DeviceSettings/SharesList';
 import { EditShareForm } from './DeviceSettings/EditShareForm';
 import type { ShareFormState, DeviceInfoFormState, EditShareFormState } from './DeviceSettings/types';
+import type { Device, DeviceShare, PermissionsGroup, DeviceShareCreatePayload } from 'src/types/global';
 
 const DeviceSettings: React.FC = () => {
     const { t } = useTranslation('deviceSettings');

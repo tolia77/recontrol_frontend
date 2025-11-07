@@ -1,6 +1,6 @@
 import { backendInstance } from "src/services/backend/config.ts";
 import { getAccessToken } from "src/utils/auth.ts";
-import type { DeviceShare, DeviceShareCreatePayload } from "src/types/global";
+import type { DeviceShare, DeviceShareCreatePayload, PermissionsGroupAttributes } from "src/types/global";
 
 export async function listDeviceSharesRequest(deviceId: string) {
   return await backendInstance.get<{ items: DeviceShare[] }>("/device_shares", {
@@ -21,9 +21,8 @@ export async function deleteDeviceShareRequest(shareId: string) {
   });
 }
 
-export async function updateDeviceShareRequest(shareId: string, payload: Partial<DeviceShareCreatePayload> & { permissions_group_attributes?: any }) {
+export async function updateDeviceShareRequest(shareId: string, payload: Partial<DeviceShareCreatePayload> & { permissions_group_attributes?: PermissionsGroupAttributes }) {
   return await backendInstance.patch(`/device_shares/${shareId}`, { device_share: payload }, {
     headers: { Authorization: getAccessToken() }
   });
 }
-

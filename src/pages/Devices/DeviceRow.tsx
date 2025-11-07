@@ -63,7 +63,7 @@ const DeviceRow: React.FC<{ device: Device; onDeleted?: (id: string) => void }> 
                     <button
                         onClick={async () => {
                             if (confirm(t('table.deleteConfirm'))) {
-                                try { await deleteDeviceRequest(device.id); onDeleted && onDeleted(device.id); } catch { alert(t('table.deleteError')); }
+                                try { await deleteDeviceRequest(device.id); if (onDeleted) { onDeleted(device.id); } } catch { alert(t('table.deleteError')); }
                             }
                         }}
                         className="box-border pl-3 flex h-[35px] items-center gap-2 rounded-lg bg-red-600 text-sm font-medium text-white px-2"
