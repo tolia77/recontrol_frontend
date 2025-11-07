@@ -3,10 +3,9 @@ import {LinkIcon, SettingsIcon} from '../../components/icons/Icons.tsx';
 import type {Device} from "src/types/global";
 import {useNavigate} from "react-router";
 import { useTranslation } from 'react-i18next';
-import { deleteDeviceRequest } from "src/services/backend/devicesRequests.ts";
 
 
-const DeviceRow: React.FC<{ device: Device; onDeleted?: (id: string) => void }> = ({device, onDeleted}) => {
+const DeviceRow: React.FC<{ device: Device }> = ({device}) => {
     const { t } = useTranslation('devices');
     const status = (device.status ?? '').toString().toLowerCase();
     const statusLabel = status === 'active' ? t('table.statusActive') : t('table.statusInactive');
@@ -59,16 +58,6 @@ const DeviceRow: React.FC<{ device: Device; onDeleted?: (id: string) => void }> 
                             width={32}
                             height={32}
                         />
-                    </button>
-                    <button
-                        onClick={async () => {
-                            if (confirm(t('table.deleteConfirm'))) {
-                                try { await deleteDeviceRequest(device.id); if (onDeleted) { onDeleted(device.id); } } catch { alert(t('table.deleteError')); }
-                            }
-                        }}
-                        className="box-border pl-3 flex h-[35px] items-center gap-2 rounded-lg bg-red-600 text-sm font-medium text-white px-2"
-                    >
-                        {t('table.delete')}
                     </button>
                 </div>
             </td>

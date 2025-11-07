@@ -1,27 +1,35 @@
 // src/pages/DeviceSettings.tsx
-import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router';
-import { getDeviceRequest, updateDeviceRequest, deleteDeviceRequest } from 'src/services/backend/devicesRequests.ts';
-import { listDeviceSharesRequest, createDeviceShareRequest, deleteDeviceShareRequest, updateDeviceShareRequest } from 'src/services/backend/deviceSharesRequests.ts';
-import { listPermissionsGroupsRequest, createPermissionsGroupRequest } from 'src/services/backend/permissionsGroupsRequests.ts';
-import { useTranslation } from 'react-i18next';
-import { DeviceInfoForm } from './DeviceSettings/DeviceInfoForm';
-import { InviteShareForm } from './DeviceSettings/InviteShareForm';
-import { SharesList } from './DeviceSettings/SharesList';
-import { EditShareForm } from './DeviceSettings/EditShareForm';
-import type { ShareFormState, DeviceInfoFormState, EditShareFormState } from './DeviceSettings/types';
-import type { Device, DeviceShare, PermissionsGroup, DeviceShareCreatePayload } from 'src/types/global';
+import React, {useState, useEffect, useCallback} from 'react';
+import {useParams, useNavigate} from 'react-router';
+import {getDeviceRequest, updateDeviceRequest, deleteDeviceRequest} from 'src/services/backend/devicesRequests.ts';
+import {
+    listDeviceSharesRequest,
+    createDeviceShareRequest,
+    deleteDeviceShareRequest,
+    updateDeviceShareRequest
+} from 'src/services/backend/deviceSharesRequests.ts';
+import {
+    listPermissionsGroupsRequest,
+    createPermissionsGroupRequest
+} from 'src/services/backend/permissionsGroupsRequests.ts';
+import {useTranslation} from 'react-i18next';
+import {DeviceInfoForm} from './DeviceSettings/DeviceInfoForm';
+import {InviteShareForm} from './DeviceSettings/InviteShareForm';
+import {SharesList} from './DeviceSettings/SharesList';
+import {EditShareForm} from './DeviceSettings/EditShareForm';
+import type {ShareFormState, DeviceInfoFormState, EditShareFormState} from './DeviceSettings/types';
+import type {Device, DeviceShare, PermissionsGroup, DeviceShareCreatePayload} from 'src/types/global';
 
 const DeviceSettings: React.FC = () => {
-    const { t } = useTranslation('deviceSettings');
-    const { deviceId } = useParams<{ deviceId: string }>();
+    const {t} = useTranslation('deviceSettings');
+    const {deviceId} = useParams<{ deviceId: string }>();
     const navigate = useNavigate();
     const [device, setDevice] = useState<Device | null>(null);
     const [shares, setShares] = useState<DeviceShare[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string>('');
 
-    const [deviceForm, setDeviceForm] = useState<DeviceInfoFormState>({ name: '' });
+    const [deviceForm, setDeviceForm] = useState<DeviceInfoFormState>({name: ''});
 
     // New shareForm state without checkbox, always show new group editor
     const [shareForm, setShareForm] = useState<ShareFormState>({
@@ -41,13 +49,20 @@ const DeviceSettings: React.FC = () => {
     const [permissionsGroups, setPermissionsGroups] = useState<PermissionsGroup[]>([]);
     const [showShareForm, setShowShareForm] = useState(false);
     const [editForm, setEditForm] = useState<EditShareFormState | null>(null);
-    const [editOriginalGroup, setEditOriginalGroup] = useState<{ see_screen: boolean; see_system_info: boolean; access_mouse: boolean; access_keyboard: boolean; access_terminal: boolean; manage_power: boolean } | null>(null);
+    const [editOriginalGroup, setEditOriginalGroup] = useState<{
+        see_screen: boolean;
+        see_system_info: boolean;
+        access_mouse: boolean;
+        access_keyboard: boolean;
+        access_terminal: boolean;
+        manage_power: boolean
+    } | null>(null);
 
     const loadDeviceData = useCallback(async () => {
         try {
             const response = await getDeviceRequest(deviceId!);
             setDevice(response.data);
-            setDeviceForm({ name: response.data.name });
+            setDeviceForm({name: response.data.name});
         } catch {
             setError(t('errors.loadDetails'));
         } finally {
@@ -84,7 +99,7 @@ const DeviceSettings: React.FC = () => {
     const handleDeviceUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const response = await updateDeviceRequest(deviceId!, { name: deviceForm.name });
+            const response = await updateDeviceRequest(deviceId!, {name: deviceForm.name});
             setDevice(response.data);
             alert(t('info.updated'));
         } catch {
@@ -115,7 +130,15 @@ const DeviceSettings: React.FC = () => {
     };
 
     const handleSaveCurrentGroup = async () => {
-        const { name, see_screen, see_system_info, access_mouse, access_keyboard, access_terminal, manage_power } = shareForm.newGroup;
+        const {
+            name,
+            see_screen,
+            see_system_info,
+            access_mouse,
+            access_keyboard,
+            access_terminal,
+            manage_power
+        } = shareForm.newGroup;
         if (!name.trim()) {
             setError(t('sharing.nameRequired'));
             return;
@@ -220,7 +243,17 @@ const DeviceSettings: React.FC = () => {
     const handleEditSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!editForm) return;
-        type PatchPayload = Partial<DeviceShareCreatePayload> & { permissions_group_attributes?: { name?: string; see_screen?: boolean; see_system_info?: boolean; access_mouse?: boolean; access_keyboard?: boolean; access_terminal?: boolean; manage_power?: boolean } };
+        type PatchPayload = Partial<DeviceShareCreatePayload> & {
+            permissions_group_attributes?: {
+                name?: string;
+                see_screen?: boolean;
+                see_system_info?: boolean;
+                access_mouse?: boolean;
+                access_keyboard?: boolean;
+                access_terminal?: boolean;
+                manage_power?: boolean
+            }
+        };
         const payload: PatchPayload = {
             expires_at: editForm.expiresAt || undefined,
             device_id: deviceId!,
@@ -265,22 +298,14 @@ const DeviceSettings: React.FC = () => {
             <div className="mb-6">
                 <h1 className="text-2xl font-bold text-text">{t('title')}</h1>
                 <p className="text-gray-600">{t('subtitle')}</p>
-                <button
-                  onClick={async () => {
-                    if (confirm(t('info.deleteConfirm'))) {
-                      try { await deleteDeviceRequest(deviceId!); navigate('/devices'); } catch { alert(t('info.deleteError')); }
-                    }
-                  }}
-                  className="mt-2 px-3 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700"
-                >{t('info.deleteDevice')}</button>
             </div>
 
             <DeviceInfoForm
-              t={t}
-              deviceForm={deviceForm}
-              onChange={setDeviceForm}
-              onSubmit={handleDeviceUpdate}
-              onCancel={() => navigate('/devices')}
+                t={t}
+                deviceForm={deviceForm}
+                onChange={setDeviceForm}
+                onSubmit={handleDeviceUpdate}
+                onCancel={() => navigate('/devices')}
             />
 
             <div className="space-y-6">
@@ -296,53 +321,72 @@ const DeviceSettings: React.FC = () => {
                     </div>
 
                     {showShareForm && (
-                      <InviteShareForm
-                        t={t}
-                        shareForm={shareForm}
-                        permissionsGroups={permissionsGroups}
-                        onChange={setShareForm}
-                        onSubmit={handleShareSubmit}
-                        onLoadGroup={handleLoadGroupIntoEditor}
-                        onSaveGroup={handleSaveCurrentGroup}
-                      />
+                        <InviteShareForm
+                            t={t}
+                            shareForm={shareForm}
+                            permissionsGroups={permissionsGroups}
+                            onChange={setShareForm}
+                            onSubmit={handleShareSubmit}
+                            onLoadGroup={handleLoadGroupIntoEditor}
+                            onSaveGroup={handleSaveCurrentGroup}
+                        />
                     )}
 
                     {editForm && (
-                      <EditShareForm
-                        t={t}
-                        editForm={editForm}
-                        permissionsGroups={permissionsGroups}
-                        onChange={(next) => setEditForm(next)}
-                        onSubmit={handleEditSubmit}
-                        onLoadGroup={() => {
-                          if (!editForm.permissionsGroupId) { setError(t('form.selectPermissions')); return; }
-                          const group = permissionsGroups.find(g => g.id === editForm.permissionsGroupId);
-                          if (!group) return;
-                          const updatedPerms = {
-                            see_screen: !!group.see_screen,
-                            see_system_info: !!group.see_system_info,
-                            access_mouse: !!group.access_mouse,
-                            access_keyboard: !!group.access_keyboard,
-                            access_terminal: !!group.access_terminal,
-                            manage_power: !!group.manage_power,
-                          };
-                          setEditOriginalGroup(updatedPerms);
-                          setEditForm(prev => prev && ({
-                            ...prev,
-                            newGroup: {
-                              name: `${group.name} ${t('form.cloneSuffix')}`.trim(),
-                              ...updatedPerms
-                            }
-                          }));
-                          alert(t('form.loadedGroup'));
-                        }}
-                        onSaveGroup={handleSaveCurrentGroup}
-                        onCancel={() => { setEditForm(null); setEditOriginalGroup(null); }}
-                      />
+                        <EditShareForm
+                            t={t}
+                            editForm={editForm}
+                            permissionsGroups={permissionsGroups}
+                            onChange={(next) => setEditForm(next)}
+                            onSubmit={handleEditSubmit}
+                            onLoadGroup={() => {
+                                if (!editForm.permissionsGroupId) {
+                                    setError(t('form.selectPermissions'));
+                                    return;
+                                }
+                                const group = permissionsGroups.find(g => g.id === editForm.permissionsGroupId);
+                                if (!group) return;
+                                const updatedPerms = {
+                                    see_screen: !!group.see_screen,
+                                    see_system_info: !!group.see_system_info,
+                                    access_mouse: !!group.access_mouse,
+                                    access_keyboard: !!group.access_keyboard,
+                                    access_terminal: !!group.access_terminal,
+                                    manage_power: !!group.manage_power,
+                                };
+                                setEditOriginalGroup(updatedPerms);
+                                setEditForm(prev => prev && ({
+                                    ...prev,
+                                    newGroup: {
+                                        name: `${group.name} ${t('form.cloneSuffix')}`.trim(),
+                                        ...updatedPerms
+                                    }
+                                }));
+                                alert(t('form.loadedGroup'));
+                            }}
+                            onSaveGroup={handleSaveCurrentGroup}
+                            onCancel={() => {
+                                setEditForm(null);
+                                setEditOriginalGroup(null);
+                            }}
+                        />
                     )}
 
-                    <SharesList t={t} shares={shares} onDelete={handleDeleteShare} onEdit={beginEditShare} />
+                    <SharesList t={t} shares={shares} onDelete={handleDeleteShare} onEdit={beginEditShare}/>
                 </div>
+                <button
+                    onClick={async () => {
+                        if (confirm(t('info.deleteConfirm'))) {
+                            try {
+                                await deleteDeviceRequest(deviceId!);
+                                navigate('/devices');
+                            } catch {
+                                alert(t('info.deleteError'));
+                            }
+                        }
+                    }}
+                    className="mt-2 px-3 py-1 rounded bg-error text-white hover:bg-red-700"
+                >{t('info.deleteDevice')}</button>
             </div>
         </div>
     );
