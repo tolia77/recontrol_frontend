@@ -1,9 +1,9 @@
 // src/pages/DeviceSettings.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { backendInstance } from 'src/services/backend/config.ts';
-import { getAccessToken } from 'src/utils/auth.ts';
-import type { Device, DeviceShare, PermissionsGroup, DeviceShareCreatePayload } from 'src/types/global';
+import { getDeviceRequest, updateDeviceRequest, deleteDeviceRequest } from 'src/services/backend/devicesRequests.ts';
+import { listDeviceSharesRequest, createDeviceShareRequest, deleteDeviceShareRequest, updateDeviceShareRequest } from 'src/services/backend/deviceSharesRequests.ts';
+import { listPermissionsGroupsRequest, createPermissionsGroupRequest } from 'src/services/backend/permissionsGroupsRequests.ts';
 import { useTranslation } from 'react-i18next';
 import { DeviceInfoForm } from './DeviceSettings/DeviceInfoForm';
 import { InviteShareForm } from './DeviceSettings/InviteShareForm';
@@ -44,9 +44,7 @@ const DeviceSettings: React.FC = () => {
 
     const loadDeviceData = useCallback(async () => {
         try {
-            const response = await backendInstance.get(`/devices/${deviceId}`, {
-                headers: { Authorization: getAccessToken() }
-            });
+            const response = await getDeviceRequest(deviceId!);
             setDevice(response.data);
             setDeviceForm({ name: response.data.name });
         } catch {
@@ -58,10 +56,7 @@ const DeviceSettings: React.FC = () => {
 
     const loadShares = useCallback(async () => {
         try {
-            const response = await backendInstance.get('/device_shares', {
-                params: { device_id: deviceId },
-                headers: { Authorization: getAccessToken() }
-            });
+            const response = await listDeviceSharesRequest(deviceId!);
             setShares(response.data.items || []);
         } catch {
             console.error('Failed to load shares');
@@ -70,9 +65,7 @@ const DeviceSettings: React.FC = () => {
 
     const loadPermissionsGroups = useCallback(async () => {
         try {
-            const response = await backendInstance.get('/permissions_groups', {
-                headers: { Authorization: getAccessToken() }
-            });
+            const response = await listPermissionsGroupsRequest();
             setPermissionsGroups(response.data.items || []);
         } catch {
             console.error('Failed to load permissions groups');
@@ -90,11 +83,7 @@ const DeviceSettings: React.FC = () => {
     const handleDeviceUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const response = await backendInstance.patch(`/devices/${deviceId}`, {
-                device: { name: deviceForm.name }
-            }, {
-                headers: { Authorization: getAccessToken() }
-            });
+            const response = await updateDeviceRequest(deviceId!, { name: deviceForm.name });
             setDevice(response.data);
             alert(t('info.updated'));
         } catch {
@@ -131,18 +120,14 @@ const DeviceSettings: React.FC = () => {
             return;
         }
         try {
-            await backendInstance.post('/permissions_groups', {
-                permissions_group: {
-                    name: name.trim(),
-                    see_screen,
-                    see_system_info,
-                    access_mouse,
-                    access_keyboard,
-                    access_terminal,
-                    manage_power,
-                }
-            }, {
-                headers: { Authorization: getAccessToken() }
+            await createPermissionsGroupRequest({
+                name: name.trim(),
+                see_screen,
+                see_system_info,
+                access_mouse,
+                access_keyboard,
+                access_terminal,
+                manage_power,
             });
             await loadPermissionsGroups();
             alert(t('form.groupSaved'));
@@ -153,22 +138,18 @@ const DeviceSettings: React.FC = () => {
 
     const handleShareSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
         if (!shareForm.userEmail) {
             setError(t('sharing.emailRequired'));
             return;
         }
-
         const payload: DeviceShareCreatePayload = {
             device_id: deviceId!,
             user_email: shareForm.userEmail || undefined,
             expires_at: shareForm.expiresAt || undefined
         };
-
         if (shareForm.permissionsGroupId) {
             payload.permissions_group_id = shareForm.permissionsGroupId;
         } else {
-            // Send inline permissions without requiring a name
             payload.permissions_group_attributes = {
                 see_screen: shareForm.newGroup.see_screen,
                 see_system_info: shareForm.newGroup.see_system_info,
@@ -178,12 +159,8 @@ const DeviceSettings: React.FC = () => {
                 manage_power: shareForm.newGroup.manage_power
             };
         }
-
         try {
-            await backendInstance.post('/device_shares', { device_share: payload }, {
-                headers: { Authorization: getAccessToken() }
-            });
-
+            await createDeviceShareRequest(payload);
             setShareForm({
                 userEmail: '',
                 permissionsGroupId: '',
@@ -209,9 +186,7 @@ const DeviceSettings: React.FC = () => {
     const handleDeleteShare = async (shareId: string) => {
         if (confirm(t('sharing.removeConfirm'))) {
             try {
-                await backendInstance.delete(`/device_shares/${shareId}`, {
-                    headers: { Authorization: getAccessToken() }
-                });
+                await deleteDeviceShareRequest(shareId);
                 loadShares();
             } catch {
                 setError(t('sharing.removeError'));
@@ -249,8 +224,6 @@ const DeviceSettings: React.FC = () => {
             expires_at: editForm.expiresAt || undefined,
             device_id: deviceId!,
         };
-
-        // Determine if permissions changed compared to original snapshot
         const changed = editOriginalGroup && (
             editOriginalGroup.see_screen !== editForm.newGroup.see_screen ||
             editOriginalGroup.see_system_info !== editForm.newGroup.see_system_info ||
@@ -259,9 +232,7 @@ const DeviceSettings: React.FC = () => {
             editOriginalGroup.access_terminal !== editForm.newGroup.access_terminal ||
             editOriginalGroup.manage_power !== editForm.newGroup.manage_power
         );
-
         if (editForm.permissionsGroupId && !changed) {
-            // use existing group unchanged
             payload.permissions_group_id = editForm.permissionsGroupId;
         } else {
             payload.permissions_group_attributes = {
@@ -275,9 +246,7 @@ const DeviceSettings: React.FC = () => {
             };
         }
         try {
-            await backendInstance.patch(`/device_shares/${editForm.shareId}`, { device_share: payload }, {
-                headers: { Authorization: getAccessToken() }
-            });
+            await updateDeviceShareRequest(editForm.shareId, payload);
             setEditForm(null);
             setEditOriginalGroup(null);
             await loadShares();
@@ -295,6 +264,14 @@ const DeviceSettings: React.FC = () => {
             <div className="mb-6">
                 <h1 className="text-2xl font-bold text-text">{t('title')}</h1>
                 <p className="text-gray-600">{t('subtitle')}</p>
+                <button
+                  onClick={async () => {
+                    if (confirm(t('info.deleteConfirm'))) {
+                      try { await deleteDeviceRequest(deviceId!); navigate('/devices'); } catch { alert(t('info.deleteError')); }
+                    }
+                  }}
+                  className="mt-2 px-3 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700"
+                >{t('info.deleteDevice')}</button>
             </div>
 
             <DeviceInfoForm

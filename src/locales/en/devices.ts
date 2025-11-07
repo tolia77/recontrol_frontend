@@ -11,8 +11,10 @@ const devices = {
     never: 'Never',
     unknown: 'Unknown',
     connect: 'Connect',
-    settings: 'Settings'
+    settings: 'Settings',
+    delete: 'Delete',
+    deleteConfirm: 'Delete this device?',
+    deleteError: 'Failed to delete device'
   }
 };
 export default devices;
-

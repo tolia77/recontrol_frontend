@@ -12,10 +12,13 @@ function Devices() {
             setDevices(res.data.devices);
         })
     }, []);
+    const handleDeviceDeleted = (id: string) => {
+        setDevices(prev => prev.filter(d => d.id !== id));
+    };
     return (
         <div className="ml-5 mr-5 lg:ml-20 lg:mr-10 mt-6">
             <h1 className="mb-6">{t('title')}</h1>
-            <DevicesTable devices={devices}/>
+            <DevicesTable devices={devices} onDeviceDeleted={handleDeviceDeleted} />
         </div>
     );
 }

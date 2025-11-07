@@ -7,9 +7,10 @@ import { useTranslation } from 'react-i18next';
 // --- DEVICE TABLE COMPONENT ---
 interface DeviceTableProps {
     devices: Device[];
+    onDeviceDeleted?: (id: string) => void;
 }
 
-const DeviceTable: React.FC<DeviceTableProps> = ({devices}) => {
+const DeviceTable: React.FC<DeviceTableProps> = ({devices, onDeviceDeleted}) => {
     const { t } = useTranslation('devices');
     return (
         <div className="overflow-x-auto rounded-xl border border-lightgray bg-white shadow-sm">
@@ -41,7 +42,7 @@ const DeviceTable: React.FC<DeviceTableProps> = ({devices}) => {
                 </thead>
                 <tbody>
                 {devices.map((device) => (
-                    <DeviceRow key={device.id} device={device}/>
+                    <DeviceRow key={device.id} device={device} onDeleted={onDeviceDeleted} />
                 ))}
                 </tbody>
             </table>

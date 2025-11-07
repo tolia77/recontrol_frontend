@@ -7,7 +7,10 @@ const deviceSettings = {
     cancel: 'Cancel',
     save: 'Save Changes',
     updated: 'Device updated successfully',
-    updateError: 'Failed to update device'
+    updateError: 'Failed to update device',
+    deleteDevice: 'Delete Device',
+    deleteConfirm: 'Delete this device? This cannot be undone.',
+    deleteError: 'Failed to delete device'
   },
   sharing: {
     section: 'Shared With',

@@ -3,7 +3,7 @@ import {uuidv4} from "src/utils/uuid.ts";
 import {Sidebar} from "src/pages/DeviceControl/Sidebar.tsx";
 import {MainContent} from "src/pages/DeviceControl/MainContent.tsx";
 import {getAccessToken, getRefreshToken, saveTokens} from "src/utils/auth.ts";
-import axios from "axios";
+import { refreshTokenRequest } from "src/services/backend/authRequests.ts";
 import type {AccordionSection, Mode} from "src/pages/DeviceControl/types.ts";
 
 interface Message {
@@ -38,22 +38,14 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                 console.warn("No refresh token available");
                 return null;
             }
-
-            const res = await axios.post(
-                `${import.meta.env.VITE_BACKEND_URL}/auth/refresh`,
-                {},
-                {headers: {"Refresh-Token": refreshToken}}
-            );
-
+            const res = await refreshTokenRequest();
             const tokens = res.data ?? {};
-            const newAccess = tokens.access_token;
-            const newRefresh = tokens.refresh_token;
-
+            const newAccess = tokens.access_token || tokens.access || tokens.token;
+            const newRefresh = tokens.refresh_token || tokens.refresh;
             if (newAccess) {
                 saveTokens(newAccess, newRefresh ?? null);
             }
-
-            return newAccess;
+            return newAccess ?? null;
         } catch (err) {
             console.error("Token refresh failed", err);
             return null;

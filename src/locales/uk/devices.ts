@@ -11,8 +11,10 @@ const devices = {
     never: 'Ніколи',
     unknown: 'Невідомо',
     connect: 'Підключити',
-    settings: 'Налаштування'
+    settings: 'Налаштування',
+    delete: 'Видалити',
+    deleteConfirm: 'Видалити цей пристрій?',
+    deleteError: 'Не вдалося видалити пристрій'
   }
 };
 export default devices;
-
