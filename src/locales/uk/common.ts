@@ -7,9 +7,9 @@ const common = {
   nav: {
     dashboard: 'Панель',
     devices: 'Пристрої',
-    help: 'Допомога'
+    help: 'Допомога',
+    settings: 'Налаштування'
   }
 };
 
 export default common;
-

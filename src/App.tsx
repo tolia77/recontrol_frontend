@@ -8,6 +8,7 @@ import Dashboard from "src/pages/Dashboard.tsx";
 import Devices from "src/pages/Devices/Devices.tsx";
 import DeviceSettings from "src/pages/DeviceSettings.tsx";
 import Help from "src/pages/Help.tsx";
+import UserSettings from "src/pages/UserSettings.tsx";
 
 function App() {
     return (
@@ -22,6 +23,7 @@ function App() {
                         <Route path="/dashboard" element={<Dashboard/>}/>
                         <Route path="/devices" element={<Devices/>}/>
                         <Route path="/devices/:deviceId/settings" element={<DeviceSettings />} />
+                        <Route path="/settings" element={<UserSettings/>} />
                         <Route path="/help" element={<Help/>} />
                     </Route>
 
