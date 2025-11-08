@@ -539,3 +539,22 @@ p {
     opacity: 0.5;
     cursor: not-allowed;
 }
+
+.btn-danger {
+    padding: 0.375rem 0.75rem;
+    background: var(--color-error);
+    color: #fff;
+    border: 1px solid var(--color-error);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-danger:hover:not(:disabled) {
+    opacity: 0.9;
+}
+
+.btn-danger:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

@@ -323,6 +323,8 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
 
     const killProcess = (pid: number) => {
         if (!connected || !pid) return;
+        // optimistic remove
+        setProcesses(prev => prev.filter(p => p.Pid !== pid));
         sendSingleAction({ type: 'terminal.killProcess', payload: { pid } });
     };
 
