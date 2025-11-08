@@ -1,6 +1,6 @@
-import React, { useCallback, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { ProcessesModal } from './components/ProcessesModal.tsx';
+import React, {useCallback, useState} from 'react';
+import {useTranslation} from 'react-i18next';
+import {ProcessesModal} from './components/ProcessesModal.tsx';
 
 export const ManualTerminalControls: React.FC<{
     disabled: boolean;
@@ -10,8 +10,16 @@ export const ManualTerminalControls: React.FC<{
     processesLoading?: boolean;
     requestListProcesses?: () => void;
     killProcess?: (pid: number) => void;
-}> = ({ disabled, addAction, results = [], processes = [], processesLoading = false, requestListProcesses, killProcess }) => {
-    const { t } = useTranslation('deviceControl');
+}> = ({
+          disabled,
+          addAction,
+          results = [],
+          processes = [],
+          processesLoading = false,
+          requestListProcesses,
+          killProcess
+      }) => {
+    const {t} = useTranslation('deviceControl');
     // Command execution state
     const [cmdInput, setCmdInput] = useState<string>('');
     const [cmdTimeout, setCmdTimeout] = useState<number>(5000);
@@ -62,7 +70,7 @@ export const ManualTerminalControls: React.FC<{
         if (killProcess) {
             killProcess(pid);
         } else {
-            send('terminal.killProcess', { pid });
+            send('terminal.killProcess', {pid});
         }
     }, [pidToKill, send, killProcess]);
 
@@ -81,7 +89,7 @@ export const ManualTerminalControls: React.FC<{
 
     const setCwd = useCallback(() => {
         if (!newCwd.trim()) return;
-        send('terminal.setCwd', { path: newCwd });
+        send('terminal.setCwd', {path: newCwd});
     }, [newCwd, send]);
 
     // System info
@@ -118,236 +126,243 @@ export const ManualTerminalControls: React.FC<{
 
     const killAndRemove = useCallback((pid: number) => {
         if (killProcess) killProcess(pid);
-        // UI will auto-update when backend confirms; if desired, optimistic remove can be added here
+        // UI will auto-update when backend confirms; optimistic removal handled by parent too
     }, [killProcess]);
 
     return (
         <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">{t('manual.terminal.title')}</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">{t('manual.terminal.title')}</h3>
 
-            {/* Output Panel */}
-            <div className="border border-gray-200 rounded-lg p-3 bg-white">
-                <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-600">{t('manual.terminal.output')}</span>
-                    {latest && (
-                        <span className={`text-xs px-2 py-0.5 rounded ${latest.status === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                            {latest.status}
-                        </span>
-                    )}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+                {/* Left: All controls */}
+                <div className="space-y-6">
+                    {/* Command Execution Section */}
+                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <h4 className="text-sm font-medium text-gray-700 mb-3">{t('manual.terminal.commandExec')}</h4>
+
+                        {/* CMD Execute */}
+                        <div className="space-y-3 mb-4 pb-4 border-b border-gray-200">
+                            <label className="flex flex-col text-sm">
+                                <span className="text-gray-600 mb-1">{t('manual.terminal.cmdCommand')}</span>
+                                <input
+                                    type="text"
+                                    className="small-input"
+                                    value={cmdInput}
+                                    onChange={(e) => setCmdInput(e.target.value)}
+                                    disabled={disabled}
+                                    placeholder="dir C:\\"
+                                    onKeyDown={(e) => e.key === 'Enter' && executeCmd()}
+                                />
+                            </label>
+                            <div className="flex items-end gap-3">
+                                <label className="flex flex-col text-sm flex-1">
+                                    <span className="text-gray-600 mb-1">{t('manual.terminal.timeoutMs')}</span>
+                                    <input
+                                        type="number"
+                                        className="small-input"
+                                        value={cmdTimeout}
+                                        onChange={(e) => setCmdTimeout(Number(e.target.value))}
+                                        disabled={disabled}
+                                        min={0}
+                                    />
+                                </label>
+                                <button
+                                    className="btn-primary"
+                                    disabled={disabled || !cmdInput.trim()}
+                                    onClick={executeCmd}
+                                >
+                                    {t('manual.terminal.execCmd')}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* PowerShell Execute */}
+                        <div className="space-y-3">
+                            <label className="flex flex-col text-sm">
+                                <span className="text-gray-600 mb-1">{t('manual.terminal.psCommand')}</span>
+                                <input
+                                    type="text"
+                                    className="small-input"
+                                    value={psInput}
+                                    onChange={(e) => setPsInput(e.target.value)}
+                                    disabled={disabled}
+                                    placeholder="Get-Process | Select -First 5"
+                                    onKeyDown={(e) => e.key === 'Enter' && executePowerShell()}
+                                />
+                            </label>
+                            <div className="flex items-end gap-3">
+                                <label className="flex flex-col text-sm flex-1">
+                                    <span className="text-gray-600 mb-1">{t('manual.terminal.timeoutMs')}</span>
+                                    <input
+                                        type="number"
+                                        className="small-input"
+                                        value={psTimeout}
+                                        onChange={(e) => setPsTimeout(Number(e.target.value))}
+                                        disabled={disabled}
+                                        min={0}
+                                    />
+                                </label>
+                                <button
+                                    className="btn-primary"
+                                    disabled={disabled || !psInput.trim()}
+                                    onClick={executePowerShell}
+                                >
+                                    {t('manual.terminal.execPs')}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="mt-3">
+                            <button
+                                className="btn-secondary"
+                                disabled={disabled}
+                                onClick={abortCommand}
+                            >
+                                {t('manual.terminal.abort')}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Process Management Section */}
+                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <h4 className="text-sm font-medium text-gray-700 mb-3">{t('manual.terminal.processMgmt')}</h4>
+
+                        <div className="space-y-3 mb-4 pb-4 border-b border-gray-200">
+                            <button
+                                className="btn-primary w-full"
+                                disabled={disabled}
+                                onClick={openProcModal}
+                            >
+                                {t('manual.terminal.listProcesses')}
+                            </button>
+                        </div>
+
+                        <div className="space-y-3 mb-4 pb-4 border-b border-gray-200">
+                            <label className="flex flex-col text-sm">
+                                <span className="text-gray-600 mb-1">{t('manual.terminal.killPid')}</span>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        className="small-input flex-1"
+                                        value={pidToKill}
+                                        onChange={(e) => setPidToKill(e.target.value)}
+                                        disabled={disabled}
+                                        placeholder="1234"
+                                    />
+                                    <button
+                                        className="btn-danger"
+                                        disabled={disabled || !pidToKill.trim()}
+                                        onClick={killProcessInline}
+                                    >
+                                        {t('manual.terminal.kill')}
+                                    </button>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div className="space-y-3">
+                            <label className="flex flex-col text-sm">
+                                <span className="text-gray-600 mb-1">{t('manual.terminal.startProcess')}</span>
+                                <input
+                                    type="text"
+                                    className="small-input"
+                                    value={processPath}
+                                    onChange={(e) => setProcessPath(e.target.value)}
+                                    disabled={disabled}
+                                    placeholder={t('manual.terminal.startProcessPlaceholder')}
+                                />
+                            </label>
+                            <label className="flex flex-col text-sm">
+                                <span className="text-gray-600 mb-1">{t('manual.terminal.argsOptional')}</span>
+                                <input
+                                    type="text"
+                                    className="small-input"
+                                    value={processArgs}
+                                    onChange={(e) => setProcessArgs(e.target.value)}
+                                    disabled={disabled}
+                                    placeholder={t('manual.terminal.filePlaceholder')}
+                                />
+                            </label>
+                            <button
+                                className="btn-primary w-full"
+                                disabled={disabled || !processPath.trim()}
+                                onClick={startProcess}
+                            >
+                                {t('manual.terminal.startProcess')}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Directory & System Info Section */}
+                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                        <h4 className="text-sm font-medium text-gray-700 mb-3">{t('manual.terminal.directoryInfo')}</h4>
+
+                        <div className="space-y-3 mb-4 pb-4 border-gray-200">
+                            <div className="flex gap-2">
+                                <button
+                                    className="btn-secondary flex-1"
+                                    disabled={disabled}
+                                    onClick={getCwd}
+                                >
+                                    {t('manual.terminal.getCwd')}
+                                </button>
+                            </div>
+                            <label className="flex flex-col text-sm">
+                                <span className="text-gray-600 mb-1">{t('manual.terminal.setCwdLabel')}</span>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        className="small-input flex-1"
+                                        value={newCwd}
+                                        onChange={(e) => setNewCwd(e.target.value)}
+                                        disabled={disabled}
+                                        placeholder="C:\\Users\\Public"
+                                    />
+                                    <button
+                                        className="btn-secondary"
+                                        disabled={disabled || !newCwd.trim()}
+                                        onClick={setCwd}
+                                    >
+                                        {t('manual.terminal.setBtn')}
+                                    </button>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div className="flex gap-2">
+                            <button
+                                className="btn-secondary flex-1"
+                                disabled={disabled}
+                                onClick={whoAmI}
+                            >
+                                {t('manual.terminal.whoAmI')}
+                            </button>
+                            <button
+                                className="btn-secondary flex-1"
+                                disabled={disabled}
+                                onClick={getUptime}
+                            >
+                                {t('manual.terminal.getUptime')}
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <pre className="text-xs leading-5 whitespace-pre-wrap break-words max-h-64 overflow-auto bg-gray-50 p-2 rounded">
+
+                {/* Right: Output panel */}
+                <div className="border border-gray-200 rounded-lg p-3 bg-white min-h-[320px]">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-gray-600">{t('manual.terminal.output')}</span>
+                        {latest && (
+                            <span
+                                className={`text-xs px-2 py-0.5 rounded ${latest.status === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                {latest.status}
+                            </span>
+                        )}
+                    </div>
+                    <pre
+                        className="text-xs leading-5 whitespace-pre-wrap break-words max-h-[520px] h-[520px] overflow-auto bg-gray-50 p-2 rounded">
 {latest ? latest.result : t('manual.terminal.outputEmpty')}
-                </pre>
-            </div>
-
-            {/* Command Execution Section */}
-            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">{t('manual.terminal.commandExec')}</h4>
-
-                {/* CMD Execute */}
-                <div className="space-y-3 mb-4 pb-4 border-b border-gray-200">
-                    <label className="flex flex-col text-sm">
-                        <span className="text-gray-600 mb-1">{t('manual.terminal.cmdCommand')}</span>
-                        <input
-                            type="text"
-                            className="small-input"
-                            value={cmdInput}
-                            onChange={(e) => setCmdInput(e.target.value)}
-                            disabled={disabled}
-                            placeholder="dir C:\\"
-                            onKeyDown={(e) => e.key === 'Enter' && executeCmd()}
-                        />
-                    </label>
-                    <div className="flex items-end gap-3">
-                        <label className="flex flex-col text-sm flex-1">
-                            <span className="text-gray-600 mb-1">{t('manual.terminal.timeoutMs')}</span>
-                            <input
-                                type="number"
-                                className="small-input"
-                                value={cmdTimeout}
-                                onChange={(e) => setCmdTimeout(Number(e.target.value))}
-                                disabled={disabled}
-                                min={0}
-                            />
-                        </label>
-                        <button
-                            className="btn-primary"
-                            disabled={disabled || !cmdInput.trim()}
-                            onClick={executeCmd}
-                        >
-                            {t('manual.terminal.execCmd')}
-                        </button>
-                    </div>
-                </div>
-
-                {/* PowerShell Execute */}
-                <div className="space-y-3">
-                    <label className="flex flex-col text-sm">
-                        <span className="text-gray-600 mb-1">{t('manual.terminal.psCommand')}</span>
-                        <input
-                            type="text"
-                            className="small-input"
-                            value={psInput}
-                            onChange={(e) => setPsInput(e.target.value)}
-                            disabled={disabled}
-                            placeholder="Get-Process | Select -First 5"
-                            onKeyDown={(e) => e.key === 'Enter' && executePowerShell()}
-                        />
-                    </label>
-                    <div className="flex items-end gap-3">
-                        <label className="flex flex-col text-sm flex-1">
-                            <span className="text-gray-600 mb-1">{t('manual.terminal.timeoutMs')}</span>
-                            <input
-                                type="number"
-                                className="small-input"
-                                value={psTimeout}
-                                onChange={(e) => setPsTimeout(Number(e.target.value))}
-                                disabled={disabled}
-                                min={0}
-                            />
-                        </label>
-                        <button
-                            className="btn-primary"
-                            disabled={disabled || !psInput.trim()}
-                            onClick={executePowerShell}
-                        >
-                            {t('manual.terminal.execPs')}
-                        </button>
-                    </div>
-                </div>
-
-                <div className="mt-3">
-                    <button
-                        className="btn-secondary"
-                        disabled={disabled}
-                        onClick={abortCommand}
-                    >
-                        {t('manual.terminal.abort')}
-                    </button>
-                </div>
-            </div>
-
-            {/* Process Management Section */}
-            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">{t('manual.terminal.processMgmt')}</h4>
-
-                <div className="space-y-3 mb-4 pb-4 border-b border-gray-200">
-                    <button
-                        className="btn-primary w-full"
-                        disabled={disabled}
-                        onClick={openProcModal}
-                    >
-                        {t('manual.terminal.listProcesses')}
-                    </button>
-                </div>
-
-                <div className="space-y-3 mb-4 pb-4 border-b border-gray-200">
-                    <label className="flex flex-col text-sm">
-                        <span className="text-gray-600 mb-1">{t('manual.terminal.killPid')}</span>
-                        <div className="flex gap-2">
-                            <input
-                                type="text"
-                                className="small-input flex-1"
-                                value={pidToKill}
-                                onChange={(e) => setPidToKill(e.target.value)}
-                                disabled={disabled}
-                                placeholder="1234"
-                            />
-                            <button
-                                className="btn-secondary"
-                                disabled={disabled || !pidToKill.trim()}
-                                onClick={killProcessInline}
-                            >
-                                {t('manual.terminal.kill')}
-                            </button>
-                        </div>
-                    </label>
-                </div>
-
-                <div className="space-y-3">
-                    <label className="flex flex-col text-sm">
-                        <span className="text-gray-600 mb-1">{t('manual.terminal.startProcess')}</span>
-                        <input
-                            type="text"
-                            className="small-input"
-                            value={processPath}
-                            onChange={(e) => setProcessPath(e.target.value)}
-                            disabled={disabled}
-                            placeholder={t('manual.terminal.startProcessPlaceholder')}
-                        />
-                    </label>
-                    <label className="flex flex-col text-sm">
-                        <span className="text-gray-600 mb-1">{t('manual.terminal.argsOptional')}</span>
-                        <input
-                            type="text"
-                            className="small-input"
-                            value={processArgs}
-                            onChange={(e) => setProcessArgs(e.target.value)}
-                            disabled={disabled}
-                            placeholder={t('manual.terminal.filePlaceholder')}
-                        />
-                    </label>
-                    <button
-                        className="btn-primary w-full"
-                        disabled={disabled || !processPath.trim()}
-                        onClick={startProcess}
-                    >
-                        {t('manual.terminal.startProcess')}
-                    </button>
-                </div>
-            </div>
-
-            {/* Directory & System Info Section */}
-            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">{t('manual.terminal.directoryInfo')}</h4>
-
-                <div className="space-y-3 mb-4 pb-4 border-gray-200">
-                    <div className="flex gap-2">
-                        <button
-                            className="btn-secondary flex-1"
-                            disabled={disabled}
-                            onClick={getCwd}
-                        >
-                            {t('manual.terminal.getCwd')}
-                        </button>
-                    </div>
-                    <label className="flex flex-col text-sm">
-                        <span className="text-gray-600 mb-1">{t('manual.terminal.setCwdLabel')}</span>
-                        <div className="flex gap-2">
-                            <input
-                                type="text"
-                                className="small-input flex-1"
-                                value={newCwd}
-                                onChange={(e) => setNewCwd(e.target.value)}
-                                disabled={disabled}
-                                placeholder="C:\\Users\\Public"
-                            />
-                            <button
-                                className="btn-secondary"
-                                disabled={disabled || !newCwd.trim()}
-                                onClick={setCwd}
-                            >
-                                {t('manual.terminal.setBtn')}
-                            </button>
-                        </div>
-                    </label>
-                </div>
-
-                <div className="flex gap-2">
-                    <button
-                        className="btn-secondary flex-1"
-                        disabled={disabled}
-                        onClick={whoAmI}
-                    >
-                        {t('manual.terminal.whoAmI')}
-                    </button>
-                    <button
-                        className="btn-secondary flex-1"
-                        disabled={disabled}
-                        onClick={getUptime}
-                    >
-                        {t('manual.terminal.getUptime')}
-                    </button>
+                    </pre>
                 </div>
             </div>
 

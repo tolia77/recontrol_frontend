@@ -1,6 +1,7 @@
 import React, {useState, useMemo, useCallback} from 'react';
 import {useTranslation} from 'react-i18next';
 import type {ProcessInfo} from '../types.ts';
+import {RefreshIcon, CloseIcon} from '../icons.tsx';
 
 interface ProcessesModalProps {
   open: boolean;
@@ -125,8 +126,12 @@ export const ProcessesModal: React.FC<ProcessesModalProps> = ({
           <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between gap-2">
             <h5 className="text-base font-semibold">{t('manual.terminal.processesModal.title')}</h5>
             <div className="flex gap-2 items-center">
-              <button className="btn-primary" onClick={onRefresh} disabled={loading}>{t('manual.terminal.processesModal.refresh')}</button>
-              <button className="btn-secondary" onClick={onClose}>{t('manual.terminal.processesModal.close')}</button>
+              <button title={t('manual.terminal.processesModal.refresh')} className="btn-secondary p-2 flex items-center justify-center" onClick={onRefresh} disabled={loading}>
+                <RefreshIcon className="w-4 h-4" />
+              </button>
+              <button title={t('manual.terminal.processesModal.close')} className="btn-secondary p-2 flex items-center justify-center" onClick={onClose}>
+                <CloseIcon className="w-4 h-4" />
+              </button>
             </div>
           </div>
           <div className="p-0">

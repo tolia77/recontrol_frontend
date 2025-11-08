@@ -96,7 +96,8 @@ const deviceControl = {
         cpuTime: 'CPU Time',
         startTime: 'Start Time',
         actions: 'Actions',
-        refresh: 'Refresh'
+        refresh: 'Refresh',
+        headerTooltip: 'Process management actions'
       }
     },
     quick: {

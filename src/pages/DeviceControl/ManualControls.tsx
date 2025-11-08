@@ -21,7 +21,7 @@ export const ManualControls: React.FC<{
 
     return (
         <div className="flex-1 bg-[#F3F4F6] p-8 flex flex-col items-center">
-            <div className="w-full max-w-2xl bg-white rounded-lg border border-gray-200 shadow-sm">
+            <div className="w-4xl bg-white rounded-lg border border-gray-200 shadow-sm">
                 {/* Section Tabs */}
                 <div className="border-b border-gray-200">
                     <div className="flex">
