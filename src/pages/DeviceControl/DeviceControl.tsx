@@ -6,12 +6,6 @@ import {getAccessToken, getRefreshToken, saveTokens} from "src/utils/auth.ts";
 import {refreshTokenRequest} from "src/services/backend/authRequests.ts";
 import type {AccordionSection, Mode, FrameBatch, FrameRegion} from "src/pages/DeviceControl/types.ts";
 
-interface Message {
-    from: string;
-    command: string;
-    payload: Record<string, unknown>;
-}
-
 interface CommandWebSocketProps {
     wsUrl: string;
 }
@@ -21,7 +15,7 @@ interface InnerMessage {
     command?: string;
     payload?: Record<string, unknown> & { regions?: Array<{ image: string; isFull?: boolean; x?: number; y?: number; width?: number; height?: number }> };
     status?: string;
-    result?: string;
+    result?: string | number | boolean | null | Record<string, unknown> | Array<unknown>;
 }
 
 export function DeviceControl({wsUrl}: CommandWebSocketProps) {
@@ -126,6 +120,21 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                     return;
                 }
 
+                const stringifyResult = (val: unknown): string => {
+                    try {
+                        if (val === null || val === undefined) return String(val);
+                        if (typeof val === 'string') return val;
+                        if (typeof val === 'object') return JSON.stringify(val, null, 2);
+                        return String(val);
+                    } catch {
+                        try {
+                            return String(val);
+                        } catch {
+                            return '';
+                        }
+                    }
+                };
+
                 const handleInnerMessage = (inner: unknown) => {
                     try {
                         if (!inner || typeof inner !== 'object') return;
@@ -152,9 +161,11 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                             }
                         }
 
-                        if (msg.status && typeof msg.result === 'string' && msg.id) {
+                        // terminal & misc results
+                        if (msg.status && msg.id && Object.prototype.hasOwnProperty.call(msg, 'result')) {
+                            const resultStr = stringifyResult(msg.result);
                             setTerminalResults(prev => {
-                                const next = [...prev, {id: msg.id!, status: msg.status!, result: msg.result!}];
+                                const next = [...prev, {id: msg.id as string, status: msg.status as string, result: resultStr}];
                                 return next.slice(-100);
                             });
                         }
