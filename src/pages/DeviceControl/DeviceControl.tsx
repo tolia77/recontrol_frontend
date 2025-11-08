@@ -3,7 +3,7 @@ import {uuidv4} from "src/utils/uuid.ts";
 import {Sidebar} from "src/pages/DeviceControl/Sidebar.tsx";
 import {MainContent} from "src/pages/DeviceControl/MainContent.tsx";
 import {getAccessToken, getRefreshToken, saveTokens} from "src/utils/auth.ts";
-import { refreshTokenRequest } from "src/services/backend/authRequests.ts";
+import {refreshTokenRequest} from "src/services/backend/authRequests.ts";
 import type {AccordionSection, Mode, FrameBatch, FrameRegion} from "src/pages/DeviceControl/types.ts";
 
 interface Message {
@@ -40,8 +40,8 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
             }
             const res = await refreshTokenRequest();
             const tokens = res.data ?? {};
-            const newAccess = tokens.access_token || tokens.access || tokens.token;
-            const newRefresh = tokens.refresh_token || tokens.refresh;
+            const newAccess = tokens.access_token
+            const newRefresh = tokens.refresh_token
             if (newAccess) {
                 saveTokens(newAccess, newRefresh ?? null);
             }
@@ -54,10 +54,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
 
     const connectWebSocket = async (deviceIdParam?: string | null) => {
         const idToUse = (deviceIdParam ?? lastDeviceIdRef.current ?? deviceId) || "";
-        if (!idToUse) {
-            console.warn("Cannot connect: deviceId is missing.");
-            return;
-        }
+
         // Persist last known device id for future reconnects
         lastDeviceIdRef.current = idToUse;
 
@@ -71,14 +68,10 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
             reconnectTimeout.current = null;
         }
 
-        let token = getAccessToken();
+        const token = getAccessToken();
         if (!token) {
-            console.log("No access token, attempting refresh before connect...");
-            token = await refreshAccessToken();
-            if (!token) {
-                console.error("No valid token available for WebSocket connection");
-                return;
-            }
+            console.error("No valid token available for WebSocket connection");
+            return;
         }
 
         const urlWithToken = `${wsUrl}?access_token=${encodeURIComponent(token)}&device_id=${encodeURIComponent(idToUse)}`;
@@ -128,11 +121,16 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                 const handleInnerMessage = (inner: unknown) => {
                     try {
                         if (!inner || typeof inner !== 'object') return;
-                        const msg = inner as Partial<Message> & { command?: string; payload?: any; status?: string; result?: string; id?: string };
+                        const msg = inner as Partial<Message> & {
+                            command?: string;
+                            payload?: any;
+                            status?: string;
+                            result?: string;
+                            id?: string
+                        };
                         const cmd = msg.command;
                         const payload = msg.payload ?? {};
 
-                        // Screen frame batch handling
                         if (cmd === "screen.frame_batch") {
                             const regionsRaw = Array.isArray((payload as any)?.regions) ? ((payload as any).regions as any[]) : [];
                             if (regionsRaw.length) {
@@ -144,7 +142,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                                     width: Number(r.width) || 0,
                                     height: Number(r.height) || 0,
                                 }));
-                                const batch: FrameBatch = { id: uuidv4(), regions };
+                                const batch: FrameBatch = {id: uuidv4(), regions};
                                 setFrames((prev) => {
                                     const next = [...prev, batch];
                                     return next.slice(-60);
@@ -152,11 +150,9 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                             }
                         }
 
-                        // Terminal command result messages (presence of status & result & id)
                         if (msg.status && typeof msg.result === 'string' && msg.id) {
                             setTerminalResults(prev => {
-                                const next = [...prev, { id: msg.id!, status: msg.status!, result: msg.result! }];
-                                // keep last 100
+                                const next = [...prev, {id: msg.id!, status: msg.status!, result: msg.result!}];
                                 return next.slice(-100);
                             });
                         }
@@ -165,13 +161,6 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                     }
                 };
 
-                // Support both shapes:
-                // 1) { message: { command, payload } }
-                if (data.message) {
-                    handleInnerMessage(data.message);
-                    return;
-                }
-                // 2) ActionCable style: { command: "message", data: "{...}" }
                 if (data.command === "message" && typeof data.data === "string") {
                     try {
                         const inner = JSON.parse(data.data);
@@ -219,13 +208,8 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         console.log("Attempting WebSocket reconnection (auth)...");
         isHandlingAuthReconnect.current = true;
 
-        // Ensure the old socket is closed before reconnecting
         if (wsRef.current && wsRef.current.readyState < 2) {
-            try {
-                wsRef.current.close(4001, "Reauth - closing old socket");
-            } catch {
-                // ignore close error
-            }
+            wsRef.current.close(4001, "Reauth - closing old socket");
         }
 
         const newToken = await refreshAccessToken();

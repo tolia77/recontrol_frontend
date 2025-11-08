@@ -5,18 +5,18 @@ import {buttonName, pressedButtonsFromMask, normalizeWheelToClicks, mapButtonToB
 import {mapToVirtualKey} from './utils/keyboard.ts';
 import {ScreenCanvas} from './ScreenCanvas.tsx';
 import {QuickActions} from './QuickActions.tsx';
-import { ManualControls } from './ManualControls.tsx';
+import {ManualControls} from './ManualControls.tsx';
 
 /**
  * Main Content Area with region-based frame compositing
  */
 export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive' | 'manual' }> = ({
-    disabled,
-    addAction,
-    frames = [],
-    activeMode,
-    terminalResults,
-}) => {
+                                                                                                       disabled,
+                                                                                                       addAction,
+                                                                                                       frames = [],
+                                                                                                       activeMode,
+                                                                                                       terminalResults,
+                                                                                                   }) => {
     // region-based frames: latest batch
     const latestBatch: FrameBatch | null = frames.length ? frames[frames.length - 1] : null;
 
@@ -26,8 +26,8 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
     const overlayRef = useRef<HTMLDivElement | null>(null);
 
     // natural size from first full frame region encountered
-    const [naturalSize, setNaturalSize] = useState<{w: number; h: number} | null>(null);
-    const lastCoordsRef = useRef<{x: number; y: number} | null>(null);
+    const [naturalSize, setNaturalSize] = useState<{ w: number; h: number } | null>(null);
+    const lastCoordsRef = useRef<{ x: number; y: number } | null>(null);
     const lastMoveSentAtRef = useRef<number>(0);
 
     // Derive natural size when a full region appears for the first time (only in interactive mode)
@@ -37,7 +37,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
         if (!naturalSize) {
             const fullRegion = latestBatch.regions.find(r => r.isFull && r.width > 0 && r.height > 0);
             if (fullRegion) {
-                setNaturalSize({ w: fullRegion.width, h: fullRegion.height });
+                setNaturalSize({w: fullRegion.width, h: fullRegion.height});
             } else {
                 // Fallback: infer extents from current batch if possible
                 let maxRight = 0;
@@ -49,7 +49,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                     if (bottom > maxBottom) maxBottom = bottom;
                 }
                 if (maxRight > 0 && maxBottom > 0) {
-                    setNaturalSize({ w: maxRight, h: maxBottom });
+                    setNaturalSize({w: maxRight, h: maxBottom});
                 }
             }
         }
@@ -127,30 +127,30 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
         if (typeof addAction === 'function' && !disabled) {
             try {
                 if (name === 'pointerdown') {
-                    lastCoordsRef.current = { x: Math.round(coords.x), y: Math.round(coords.y) };
+                    lastCoordsRef.current = {x: Math.round(coords.x), y: Math.round(coords.y)};
                     addAction({
                         id: crypto.randomUUID(),
                         type: 'mouse.down',
-                        payload: { Button: mapButtonToBackend(btn) },
+                        payload: {Button: mapButtonToBackend(btn)},
                     });
                 } else if (name === 'pointerup') {
                     addAction({
                         id: crypto.randomUUID(),
                         type: 'mouse.up',
-                        payload: { Button: mapButtonToBackend(btn) },
+                        payload: {Button: mapButtonToBackend(btn)},
                     });
                     lastCoordsRef.current = null;
                 } else if (name === 'pointermove') {
                     const curX = Math.round(coords.x);
                     const curY = Math.round(coords.y);
-                    lastCoordsRef.current = { x: curX, y: curY };
+                    lastCoordsRef.current = {x: curX, y: curY};
                     const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
                     if (now - lastMoveSentAtRef.current < 100) return; // throttle
                     lastMoveSentAtRef.current = now;
                     addAction({
                         id: crypto.randomUUID(),
                         type: 'mouse.move',
-                        payload: { X: curX, Y: curY },
+                        payload: {X: curX, Y: curY},
                     });
                 }
             } catch (err) {
@@ -163,9 +163,9 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
         if (activeMode !== 'interactive') return;
         e.preventDefault();
         const vk = mapToVirtualKey(e);
-        console.log('[keyboard] keyDown', { key: e.key, code: e.code, vk });
+        console.log('[keyboard] keyDown', {key: e.key, code: e.code, vk});
         if (typeof addAction === 'function' && !disabled && vk) {
-            addAction({ id: crypto.randomUUID(), type: 'keyboard.keyDown', payload: { Key: vk } });
+            addAction({id: crypto.randomUUID(), type: 'keyboard.keyDown', payload: {Key: vk}});
         }
     }, [activeMode, addAction, disabled]);
 
@@ -173,23 +173,38 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
         if (activeMode !== 'interactive') return;
         e.preventDefault();
         const vk = mapToVirtualKey(e);
-        console.log('[keyboard] keyUp', { key: e.key, code: e.code, vk });
+        console.log('[keyboard] keyUp', {key: e.key, code: e.code, vk});
         if (typeof addAction === 'function' && !disabled && vk) {
-            addAction({ id: crypto.randomUUID(), type: 'keyboard.keyUp', payload: { Key: vk } });
+            addAction({id: crypto.randomUUID(), type: 'keyboard.keyUp', payload: {Key: vk}});
         }
     }, [activeMode, addAction, disabled]);
 
     const handlePointerDown = useCallback((e: React.PointerEvent) => {
         if (activeMode !== 'interactive') return;
         e.preventDefault();
-        try { (e.target as Element).setPointerCapture(e.pointerId); } catch (err) { console.warn(err); }
+        try {
+            (e.target as Element).setPointerCapture(e.pointerId);
+        } catch (err) {
+            console.warn(err);
+        }
         overlayRef.current?.focus();
         handlePointerEvent(e, 'pointerdown');
     }, [activeMode, handlePointerEvent]);
 
-    const handlePointerMove = useCallback((e: React.PointerEvent) => { handlePointerEvent(e, 'pointermove'); }, [handlePointerEvent]);
-    const handlePointerUp = useCallback((e: React.PointerEvent) => { try { (e.target as Element).releasePointerCapture(e.pointerId); } catch (err) { console.warn(err); } handlePointerEvent(e, 'pointerup'); }, [handlePointerEvent]);
-    const handlePointerCancel = useCallback((e: React.PointerEvent) => { handlePointerEvent(e, 'pointercancel'); }, [handlePointerEvent]);
+    const handlePointerMove = useCallback((e: React.PointerEvent) => {
+        handlePointerEvent(e, 'pointermove');
+    }, [handlePointerEvent]);
+    const handlePointerUp = useCallback((e: React.PointerEvent) => {
+        try {
+            (e.target as Element).releasePointerCapture(e.pointerId);
+        } catch (err) {
+            console.warn(err);
+        }
+        handlePointerEvent(e, 'pointerup');
+    }, [handlePointerEvent]);
+    const handlePointerCancel = useCallback((e: React.PointerEvent) => {
+        handlePointerEvent(e, 'pointercancel');
+    }, [handlePointerEvent]);
 
     const handleWheel = useCallback((e: React.WheelEvent) => {
         if (activeMode !== 'interactive') return;
@@ -198,9 +213,21 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
         const coords = getRealCoordsFromClient(e.clientX, e.clientY);
         if (!coords) return;
         const clicks = normalizeWheelToClicks(e.deltaY, e.deltaMode);
-        console.log('[screen-canvas] wheel', { deltaX: e.deltaX, deltaY: e.deltaY, deltaMode: e.deltaMode, clicks, x: Math.round(coords.x), y: Math.round(coords.y), debug: coords.debug });
+        console.log('[screen-canvas] wheel', {
+            deltaX: e.deltaX,
+            deltaY: e.deltaY,
+            deltaMode: e.deltaMode,
+            clicks,
+            x: Math.round(coords.x),
+            y: Math.round(coords.y),
+            debug: coords.debug
+        });
         if (typeof addAction === 'function' && !disabled && clicks !== 0) {
-            try { addAction({ id: crypto.randomUUID(), type: 'mouse.scroll', payload: { Clicks: clicks } }); } catch (err) { console.warn('Failed to send mouse.scroll', err); }
+            try {
+                addAction({id: crypto.randomUUID(), type: 'mouse.scroll', payload: {Clicks: clicks}});
+            } catch (err) {
+                console.warn('Failed to send mouse.scroll', err);
+            }
         }
     }, [activeMode, getRealCoordsFromClient, addAction, disabled]);
 
@@ -210,7 +237,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
     return (
         <div className="flex-1 bg-[#F3F4F6] p-8 flex flex-col items-center">
             {activeMode === 'manual' ? (
-                <ManualControls disabled={disabled} addAction={addAction} results={terminalResults} />
+                <ManualControls disabled={disabled} addAction={addAction} results={terminalResults}/>
             ) : (
                 <ScreenCanvas
                     latestBatch={latestBatch}
@@ -229,7 +256,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                     disabled={disabled || !naturalSize}
                 />
             )}
-            <QuickActions disabled={disabled} addAction={addAction} />
+            <QuickActions disabled={disabled} addAction={addAction}/>
         </div>
     );
 };
