@@ -16,6 +16,14 @@ interface CommandWebSocketProps {
     wsUrl: string;
 }
 
+interface InnerMessage {
+    id?: string;
+    command?: string;
+    payload?: Record<string, unknown> & { regions?: Array<{ image: string; isFull?: boolean; x?: number; y?: number; width?: number; height?: number }> };
+    status?: string;
+    result?: string;
+}
+
 export function DeviceControl({wsUrl}: CommandWebSocketProps) {
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -121,18 +129,12 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                 const handleInnerMessage = (inner: unknown) => {
                     try {
                         if (!inner || typeof inner !== 'object') return;
-                        const msg = inner as Partial<Message> & {
-                            command?: string;
-                            payload?: any;
-                            status?: string;
-                            result?: string;
-                            id?: string
-                        };
+                        const msg = inner as InnerMessage;
                         const cmd = msg.command;
                         const payload = msg.payload ?? {};
 
                         if (cmd === "screen.frame_batch") {
-                            const regionsRaw = Array.isArray((payload as any)?.regions) ? ((payload as any).regions as any[]) : [];
+                            const regionsRaw = Array.isArray(payload.regions) ? payload.regions : [];
                             if (regionsRaw.length) {
                                 const regions: FrameRegion[] = regionsRaw.map((r) => ({
                                     image: r.image,
@@ -161,6 +163,13 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                     }
                 };
 
+                // ActionCable-style direct message envelope
+                if (data && typeof data.message === 'object' && data.message !== null) {
+                    handleInnerMessage(data.message);
+                    return;
+                }
+
+                // ActionCable-style wrapper where our payload is inside `data` string
                 if (data.command === "message" && typeof data.data === "string") {
                     try {
                         const inner = JSON.parse(data.data);
