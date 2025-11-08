@@ -1,5 +1,6 @@
 const ACCESS_TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
+const USER_ROLE_KEY = "user_role";
 
 export function saveTokens(accessToken: string | null, refreshToken: string | null) {
     if (accessToken === null) {
@@ -37,12 +38,26 @@ export function getUserId(): string | null {
     return userId && userId.length > 0 ? userId : null;
 }
 
+export function saveUserRole(role: string | null) {
+    if (!role) {
+        localStorage.removeItem(USER_ROLE_KEY);
+    } else {
+        localStorage.setItem(USER_ROLE_KEY, role);
+    }
+}
+
+export function getUserRole(): string | null {
+    const r = localStorage.getItem(USER_ROLE_KEY);
+    return r && r.length > 0 ? r : null;
+}
+
 export default {
     saveTokens,
     getAccessToken,
     getRefreshToken,
     clearTokens,
     saveUserId,
-    getUserId
+    getUserId,
+    saveUserRole,
+    getUserRole
 };
-

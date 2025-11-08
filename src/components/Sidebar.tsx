@@ -5,6 +5,7 @@ import dashboardIcon from "src/assets/img/icons/dashboard.svg"
 import devicesIcon from "src/assets/img/icons/device.svg"
 import settingsIcon from "src/assets/img/icons/settings.svg"
 import { useTranslation } from 'react-i18next';
+import { getUserRole } from 'src/utils/auth.ts';
 
 type SidebarProps = {
     isOpen?: boolean;
@@ -14,6 +15,7 @@ type SidebarProps = {
 function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     const { i18n, t } = useTranslation(['common']);
     const changeLanguage = (lng: string) => { void i18n.changeLanguage(lng); };
+    const role = getUserRole();
 
     const NavContent = (
         <>
@@ -33,6 +35,12 @@ function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                     <img src={settingsIcon} alt={t('nav.settings')} />
                     <p>{t('nav.settings')}</p>
                 </Link>
+                {role === 'admin' && (
+                  <Link to={"/admin/users"} className="flex gap-1 h-[45px] items-center">
+                    <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-white/20 text-white">U</span>
+                    <p>{t('nav.users')}</p>
+                  </Link>
+                )}
                 <Link to={"/help"} className="flex gap-1 h-[45px] items-center opacity-90 hover:opacity-100">
                     <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-white/20 text-white">?</span>
                     <p>{t('nav.help')}</p>

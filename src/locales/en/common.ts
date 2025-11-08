@@ -8,7 +8,8 @@ const common = {
     dashboard: 'Dashboard',
     devices: 'Devices',
     help: 'Help',
-    settings: 'Settings'
+    settings: 'Settings',
+    users: 'Users'
   },
   dashboard: {
     title: 'Dashboard',

@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import logoFull from 'src/assets/img/logo-full.svg';
 import {Link, useNavigate} from "react-router";
 import {loginRequest} from "src/services/backend/authRequests.ts";
-import {saveTokens, saveUserId} from "src/utils/auth.ts";
+import {saveTokens, saveUserId, saveUserRole} from "src/utils/auth.ts";
 import { useTranslation, Trans } from 'react-i18next';
 
 function Login() {
@@ -18,9 +18,13 @@ function Login() {
             const res = await loginRequest(email, password)
             saveTokens(res.data.access_token, res.data.refresh_token);
             saveUserId(res.data.user_id)
+            // attempt to find role field from response shape
+            const role = res.data.role || null;
+            saveUserRole(role);
             navigate("/dashboard")
-        } catch (error: any) {
-            if (error?.response?.status === 401) {
+        } catch (error: unknown) {
+            const err = error as { response?: { status?: number } } | undefined;
+            if (err?.response?.status === 401) {
                 setErrors([t('login.errors.invalid')]);
             }
         }

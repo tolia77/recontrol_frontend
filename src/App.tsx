@@ -9,6 +9,7 @@ import Devices from "src/pages/Devices/Devices.tsx";
 import DeviceSettings from "src/pages/DeviceSettings.tsx";
 import Help from "src/pages/Help.tsx";
 import UserSettings from "src/pages/UserSettings.tsx";
+import AdminUsers from "src/pages/AdminUsers.tsx";
 
 function App() {
     return (
@@ -25,6 +26,7 @@ function App() {
                         <Route path="/devices/:deviceId/settings" element={<DeviceSettings />} />
                         <Route path="/settings" element={<UserSettings/>} />
                         <Route path="/help" element={<Help/>} />
+                        <Route path="/admin/users" element={<AdminUsers/>}/>
                     </Route>
 
                     {/* Auth and utilities */}

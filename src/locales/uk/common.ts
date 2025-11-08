@@ -8,7 +8,8 @@ const common = {
     dashboard: 'Панель',
     devices: 'Пристрої',
     help: 'Допомога',
-    settings: 'Налаштування'
+    settings: 'Налаштування',
+    users: 'Користувачі'
   },
   dashboard: {
     title: 'Панель',
