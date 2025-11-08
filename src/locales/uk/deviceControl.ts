@@ -82,7 +82,22 @@ const deviceControl = {
       setCwdLabel: 'Встановити каталог',
       setBtn: 'Встановити',
       whoAmI: 'Хто я',
-      getUptime: 'Час роботи системи'
+      getUptime: 'Час роботи системи',
+      output: 'Вивід',
+      outputEmpty: 'Поки що немає виводу',
+      processesModal: {
+        title: 'Процеси',
+        close: 'Закрити',
+        loading: 'Завантаження процесів...',
+        empty: 'Процесів не знайдено',
+        pid: 'PID',
+        name: 'Назва',
+        memory: 'Пам’ять',
+        cpuTime: 'Час CPU',
+        startTime: 'Час запуску',
+        actions: 'Дії',
+        refresh: 'Оновити'
+      }
     },
     quick: {
       startStream: 'Почати трансляцію екрана',
@@ -91,4 +106,3 @@ const deviceControl = {
   }
 };
 export default deviceControl;
-

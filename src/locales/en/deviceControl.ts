@@ -82,7 +82,22 @@ const deviceControl = {
       setCwdLabel: 'Set Current Directory',
       setBtn: 'Set',
       whoAmI: 'Who Am I',
-      getUptime: 'Get Uptime'
+      getUptime: 'Get Uptime',
+      output: 'Output',
+      outputEmpty: 'No output yet',
+      processesModal: {
+        title: 'Processes',
+        close: 'Close',
+        loading: 'Loading processes...',
+        empty: 'No processes found',
+        pid: 'PID',
+        name: 'Name',
+        memory: 'Memory',
+        cpuTime: 'CPU Time',
+        startTime: 'Start Time',
+        actions: 'Actions',
+        refresh: 'Refresh'
+      }
     },
     quick: {
       startStream: 'Start Screen Stream',
@@ -91,4 +106,3 @@ const deviceControl = {
   }
 };
 export default deviceControl;
-

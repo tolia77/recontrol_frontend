@@ -11,7 +11,11 @@ export const ManualControls: React.FC<{
     disabled: boolean;
     addAction?: (action: any) => void;
     results?: { id: string; status: string; result: string }[];
-}> = ({ disabled, addAction, results }) => {
+    processes?: { Pid: number; Name: string; MemoryMB?: number; CpuTime?: string; StartTime?: string }[];
+    processesLoading?: boolean;
+    requestListProcesses?: () => void;
+    killProcess?: (pid: number) => void;
+}> = ({ disabled, addAction, results, processes, processesLoading, requestListProcesses, killProcess }) => {
     const { t } = useTranslation('deviceControl');
     const [activeSection, setActiveSection] = useState<ManualSection>('mouse');
 
@@ -76,7 +80,7 @@ export const ManualControls: React.FC<{
                         <ManualPowerControls disabled={disabled} addAction={addAction} />
                     )}
                     {activeSection === 'terminal' && (
-                        <ManualTerminalControls disabled={disabled} addAction={addAction} results={results} />
+                        <ManualTerminalControls disabled={disabled} addAction={addAction} results={results} processes={processes} processesLoading={processesLoading} requestListProcesses={requestListProcesses} killProcess={killProcess} />
                     )}
                 </div>
             </div>

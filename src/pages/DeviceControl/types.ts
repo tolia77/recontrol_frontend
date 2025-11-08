@@ -40,9 +40,21 @@ export interface FrameBatch {
     regions: FrameRegion[];
 }
 
+export interface ProcessInfo {
+    Pid: number;
+    Name: string;
+    MemoryMB?: number;
+    CpuTime?: string;
+    StartTime?: string;
+}
+
 export interface MainContentProps {
     disabled: boolean;
     addAction: (action: CommandAction) => void;
     frames?: FrameBatch[]; // stream of region batches
     terminalResults?: { id: string; status: string; result: string }[]; // recent terminal command outputs
+    processes?: ProcessInfo[];
+    processesLoading?: boolean;
+    requestListProcesses?: () => void;
+    killProcess?: (pid: number) => void;
 }

@@ -23,6 +23,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
     const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isHandlingAuthReconnect = useRef(false);
     const lastDeviceIdRef = useRef<string | null>(null);
+    const pendingCommandsRef = useRef<Map<string, string>>(new Map());
 
     const [connected, setConnected] = useState(false);
     const [deviceId, setDeviceId] = useState("");
@@ -32,6 +33,8 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
 
     const [frames, setFrames] = useState<FrameBatch[]>([]);
     const [terminalResults, setTerminalResults] = useState<{ id: string; status: string; result: string }[]>([]);
+    const [processes, setProcesses] = useState<{ Pid: number; Name: string; MemoryMB?: number; CpuTime?: string; StartTime?: string }[]>([]);
+    const [processesLoading, setProcessesLoading] = useState(false);
 
     const refreshAccessToken = async (): Promise<string | null> => {
         try {
@@ -141,6 +144,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                         const msg = inner as InnerMessage;
                         const cmd = msg.command;
                         const payload = msg.payload ?? {};
+                        const originalCmd = msg.id ? pendingCommandsRef.current.get(msg.id) : undefined;
 
                         if (cmd === "screen.frame_batch") {
                             const regionsRaw = Array.isArray(payload.regions) ? payload.regions : [];
@@ -168,6 +172,21 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                                 const next = [...prev, {id: msg.id as string, status: msg.status as string, result: resultStr}];
                                 return next.slice(-100);
                             });
+                            // detect processes list by original command id mapping
+                            const isProc = (r: unknown): r is { Pid: number; Name: string; MemoryMB?: number; CpuTime?: string; StartTime?: string } => {
+                                return !!r && typeof r === 'object' && 'Pid' in (r as Record<string, unknown>) && 'Name' in (r as Record<string, unknown>);
+                            };
+                            if (originalCmd === 'terminal.listProcesses') {
+                                if (Array.isArray(msg.result)) {
+                                    const proc = msg.result.filter(isProc);
+                                    setProcesses(proc);
+                                } else {
+                                    setProcesses([]);
+                                }
+                                setProcessesLoading(false);
+                                // cleanup mapping for this id
+                                pendingCommandsRef.current.delete(msg.id);
+                            }
                         }
                     } catch (e) {
                         console.warn("Failed to process inner message", e);
@@ -285,7 +304,26 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
             command: action.type,
             payload: action.payload ?? {},
         };
+        // track pending by id to map responses to original command
+        pendingCommandsRef.current.set(msg.id, msg.command);
+        // keep map from growing unbounded: trim occasionally
+        if (pendingCommandsRef.current.size > 200) {
+            const firstKey = pendingCommandsRef.current.keys().next().value as string | undefined;
+            if (firstKey) pendingCommandsRef.current.delete(firstKey);
+        }
         sendMessagePayload(msg);
+    };
+
+    const requestListProcesses = () => {
+        if (!connected) return;
+        setProcessesLoading(true);
+        setProcesses([]);
+        sendSingleAction({ type: 'terminal.listProcesses' });
+    };
+
+    const killProcess = (pid: number) => {
+        if (!connected || !pid) return;
+        sendSingleAction({ type: 'terminal.killProcess', payload: { pid } });
     };
 
     return (
@@ -304,6 +342,10 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                     frames={frames}
                     activeMode={activeMode}
                     terminalResults={terminalResults}
+                    processes={processes}
+                    processesLoading={processesLoading}
+                    requestListProcesses={requestListProcesses}
+                    killProcess={killProcess}
                 />
             </main>
         </div>

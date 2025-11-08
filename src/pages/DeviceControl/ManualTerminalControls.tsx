@@ -1,11 +1,16 @@
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ProcessesModal } from './components/ProcessesModal.tsx';
 
 export const ManualTerminalControls: React.FC<{
     disabled: boolean;
-    addAction?: (action: any) => void;
+    addAction?: (action: { id: string; type: string; payload?: Record<string, unknown> }) => void;
     results?: { id: string; status: string; result: string }[];
-}> = ({ disabled, addAction, results = [] }) => {
+    processes?: { Pid: number; Name: string; MemoryMB?: number; CpuTime?: string; StartTime?: string }[];
+    processesLoading?: boolean;
+    requestListProcesses?: () => void;
+    killProcess?: (pid: number) => void;
+}> = ({ disabled, addAction, results = [], processes = [], processesLoading = false, requestListProcesses, killProcess }) => {
     const { t } = useTranslation('deviceControl');
     // Command execution state
     const [cmdInput, setCmdInput] = useState<string>('');
@@ -21,7 +26,10 @@ export const ManualTerminalControls: React.FC<{
     // Directory state
     const [newCwd, setNewCwd] = useState<string>('');
 
-    const send = useCallback((type: string, payload: Record<string, any>) => {
+    // Modal state
+    const [showProcModal, setShowProcModal] = useState<boolean>(false);
+
+    const send = useCallback((type: string, payload: Record<string, unknown>) => {
         if (!addAction || disabled) return;
         addAction({
             id: crypto.randomUUID(),
@@ -47,16 +55,16 @@ export const ManualTerminalControls: React.FC<{
         });
     }, [psInput, psTimeout, send]);
 
-    // Process management
-    const listProcesses = useCallback(() => {
-        send('terminal.listProcesses', {});
-    }, [send]);
-
-    const killProcess = useCallback(() => {
+    // Process management (inline PID kill)
+    const killProcessInline = useCallback(() => {
         const pid = parseInt(pidToKill, 10);
         if (isNaN(pid)) return;
-        send('terminal.killProcess', { pid });
-    }, [pidToKill, send]);
+        if (killProcess) {
+            killProcess(pid);
+        } else {
+            send('terminal.killProcess', { pid });
+        }
+    }, [pidToKill, send, killProcess]);
 
     const startProcess = useCallback(() => {
         if (!processPath.trim()) return;
@@ -93,6 +101,26 @@ export const ManualTerminalControls: React.FC<{
     // Latest result (show last item)
     const latest = results.length ? results[results.length - 1] : undefined;
 
+    const openProcModal = useCallback(() => {
+        setShowProcModal(true);
+        if (requestListProcesses) {
+            requestListProcesses();
+        } else {
+            send('terminal.listProcesses', {});
+        }
+    }, [requestListProcesses, send]);
+
+    const closeProcModal = useCallback(() => setShowProcModal(false), []);
+
+    const refreshProcesses = useCallback(() => {
+        if (requestListProcesses) requestListProcesses();
+    }, [requestListProcesses]);
+
+    const killAndRemove = useCallback((pid: number) => {
+        if (killProcess) killProcess(pid);
+        // UI will auto-update when backend confirms; if desired, optimistic remove can be added here
+    }, [killProcess]);
+
     return (
         <div className="space-y-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">{t('manual.terminal.title')}</h3>
@@ -126,7 +154,7 @@ export const ManualTerminalControls: React.FC<{
                             value={cmdInput}
                             onChange={(e) => setCmdInput(e.target.value)}
                             disabled={disabled}
-                            placeholder="dir C:\\\\"
+                            placeholder="dir C:\\"
                             onKeyDown={(e) => e.key === 'Enter' && executeCmd()}
                         />
                     </label>
@@ -207,7 +235,7 @@ export const ManualTerminalControls: React.FC<{
                     <button
                         className="btn-primary w-full"
                         disabled={disabled}
-                        onClick={listProcesses}
+                        onClick={openProcModal}
                     >
                         {t('manual.terminal.listProcesses')}
                     </button>
@@ -228,7 +256,7 @@ export const ManualTerminalControls: React.FC<{
                             <button
                                 className="btn-secondary"
                                 disabled={disabled || !pidToKill.trim()}
-                                onClick={killProcess}
+                                onClick={killProcessInline}
                             >
                                 {t('manual.terminal.kill')}
                             </button>
@@ -322,6 +350,16 @@ export const ManualTerminalControls: React.FC<{
                     </button>
                 </div>
             </div>
+
+            {/* Processes Modal */}
+            <ProcessesModal
+                open={showProcModal}
+                onClose={closeProcModal}
+                processes={processes || []}
+                loading={!!processesLoading}
+                onRefresh={refreshProcesses}
+                onKill={killAndRemove}
+            />
         </div>
     );
 };
