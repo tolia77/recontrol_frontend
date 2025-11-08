@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { getUserId } from 'src/utils/auth.ts';
+import { getUserId, clearTokens, saveUserRole, saveUserId } from 'src/utils/auth.ts';
 import { getUserRequest, updateUserSelfRequest } from 'src/services/backend/usersRequests.ts';
+import { logoutRequest } from 'src/services/backend/authRequests.ts';
 import type { UserResponse } from 'src/services/backend/usersRequests.ts';
 import { useTranslation } from 'react-i18next';
 
@@ -9,6 +10,7 @@ function UserSettings() {
   const userId = getUserId();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [logoutLoading, setLogoutLoading] = useState(false);
   const [user, setUser] = useState<UserResponse | null>(null);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -24,7 +26,7 @@ function UserSettings() {
         setUser(res.data);
         setUsername(res.data.username);
         setEmail(res.data.email);
-      } catch (e: any) {
+      } catch (err) {
         setErrors([t('errors.loadFailed')]);
       } finally {
         setLoading(false);
@@ -39,7 +41,7 @@ function UserSettings() {
     if (!userId) { return; }
     setSaving(true);
     try {
-      const payload: any = {};
+      const payload: { username?: string; email?: string; password?: string } = {};
       if (username !== user?.username) payload.username = username;
       if (email !== user?.email) payload.email = email;
       if (password.length > 0) payload.password = password;
@@ -48,12 +50,13 @@ function UserSettings() {
       setUser(res.data);
       setPassword('');
       setSuccess(t('messages.saved'));
-    } catch (error: any) {
-      if (error?.response?.status === 422) {
-        const resp = error?.response?.data;
+    } catch (error) {
+      const resp = (error as { response?: { status?: number; data?: unknown } }).response;
+      if (resp?.status === 422) {
+        const data = resp.data;
         const msgs: string[] = [];
-        if (resp && typeof resp === 'object') {
-          Object.entries(resp).forEach(([key, value]) => {
+        if (data && typeof data === 'object') {
+          Object.entries(data as Record<string, unknown>).forEach(([key, value]) => {
             const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
             if (Array.isArray(value)) {
               value.forEach(v => msgs.push(`${capitalizedKey} ${String(v)}`));
@@ -63,13 +66,27 @@ function UserSettings() {
           });
         }
         setErrors(msgs.length ? msgs : [t('errors.saveFailed')]);
-      } else if (error?.response?.status === 403) {
+      } else if (resp?.status === 403) {
         setErrors([t('errors.forbidden')]);
       } else {
         setErrors([t('errors.saveFailed')]);
       }
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleLogout() {
+    setLogoutLoading(true);
+    try {
+      await logoutRequest();
+    } catch {
+      // ignore error; proceed with local cleanup
+    } finally {
+      clearTokens();
+      saveUserRole(null);
+      saveUserId('');
+      window.location.replace('/login');
     }
   }
 
@@ -126,6 +143,9 @@ function UserSettings() {
         </div>
         <button type="submit" className="button-primary" disabled={saving}>{saving ? t('buttons.saving') : t('buttons.save')}</button>
       </form>
+      <button type="button" onClick={handleLogout} disabled={logoutLoading} className="btn-danger w-full mt-8">
+        {logoutLoading ? '…' : t('userSettings:buttons.logout')}
+      </button>
     </div>
   );
 }

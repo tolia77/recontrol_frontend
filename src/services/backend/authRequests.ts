@@ -26,3 +26,12 @@ export async function refreshTokenRequest() {
     })
 
 }
+
+export async function logoutRequest() {
+    return await backendInstance.post("/auth/logout", {}, {
+        headers: {
+            Authorization: getAccessToken(),
+            "Refresh-Token": getRefreshToken()
+        }
+    });
+}

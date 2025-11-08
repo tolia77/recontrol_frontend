@@ -10,7 +10,8 @@ const userSettings = {
   },
   buttons: {
     save: 'Зберегти зміни',
-    saving: 'Збереження…'
+    saving: 'Збереження…',
+    logout: 'Вийти'
   },
   messages: {
     saved: 'Налаштування збережено.'
@@ -23,4 +24,3 @@ const userSettings = {
   }
 };
 export default userSettings;
-
