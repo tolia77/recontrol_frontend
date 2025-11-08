@@ -1,13 +1,13 @@
 import React from 'react';
+import type {FrameBatch} from './types.ts';
 
-type Frame = { id: string; image: string };
 interface ScreenCanvasProps {
-  latestFrame: Frame | null;
-  // Accept both object and callback refs; compatible with useRef<HTMLX | null>
+  latestBatch: FrameBatch | null;
   containerRef: React.Ref<HTMLDivElement>;
-  imgRef: React.Ref<HTMLImageElement>;
+  canvasRef: React.Ref<HTMLCanvasElement>;
   overlayRef: React.Ref<HTMLDivElement>;
-  onImageLoad: () => void;
+  width: number; // natural width of full frame
+  height: number; // natural height of full frame
   onPointerDown: (e: React.PointerEvent) => void;
   onPointerMove: (e: React.PointerEvent) => void;
   onPointerUp: (e: React.PointerEvent) => void;
@@ -15,14 +15,16 @@ interface ScreenCanvasProps {
   onWheel: (e: React.WheelEvent) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   onKeyUp: (e: React.KeyboardEvent) => void;
+  disabled?: boolean;
 }
 
 export const ScreenCanvas: React.FC<ScreenCanvasProps> = ({
-  latestFrame,
+  latestBatch,
   containerRef,
-  imgRef,
+  canvasRef,
   overlayRef,
-  onImageLoad,
+  width,
+  height,
   onPointerDown,
   onPointerMove,
   onPointerUp,
@@ -30,7 +32,10 @@ export const ScreenCanvas: React.FC<ScreenCanvasProps> = ({
   onWheel,
   onKeyDown,
   onKeyUp,
+  disabled,
 }) => {
+  const aspectRatio = width && height ? `${width}/${height}` : '16/9';
+
   return (
     <div className="canvas-container w-full" style={{ maxWidth: 1280 }}>
       <div
@@ -39,7 +44,7 @@ export const ScreenCanvas: React.FC<ScreenCanvasProps> = ({
         style={{
           position: 'relative',
           width: '100%',
-          aspectRatio: '16/9',
+          aspectRatio,
           background: '#111827',
           overflow: 'hidden',
           display: 'flex',
@@ -49,13 +54,12 @@ export const ScreenCanvas: React.FC<ScreenCanvasProps> = ({
           boxShadow: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
         }}
       >
-        {latestFrame ? (
+        {width && height ? (
           <>
-            <img
-              ref={imgRef}
-              src={`data:image/jpeg;base64,${latestFrame.image}`}
-              alt="screen-frame"
-              onLoad={onImageLoad}
+            <canvas
+              ref={canvasRef}
+              width={width}
+              height={height}
               style={{
                 position: 'absolute',
                 top: 0,
@@ -65,20 +69,21 @@ export const ScreenCanvas: React.FC<ScreenCanvasProps> = ({
                 objectFit: 'contain',
                 zIndex: 1,
                 pointerEvents: 'none',
+                background: '#000',
               }}
             />
             <div
               ref={overlayRef}
               className="overlay pointer-events-auto"
-              onPointerDown={onPointerDown}
-              onPointerMove={onPointerMove}
-              onPointerUp={onPointerUp}
-              onPointerCancel={onPointerCancel}
-              onWheel={onWheel}
+              onPointerDown={disabled ? undefined : onPointerDown}
+              onPointerMove={disabled ? undefined : onPointerMove}
+              onPointerUp={disabled ? undefined : onPointerUp}
+              onPointerCancel={disabled ? undefined : onPointerCancel}
+              onWheel={disabled ? undefined : onWheel}
               onContextMenu={(e) => { e.preventDefault(); }}
               tabIndex={0}
-              onKeyDown={onKeyDown}
-              onKeyUp={onKeyUp}
+              onKeyDown={disabled ? undefined : onKeyDown}
+              onKeyUp={disabled ? undefined : onKeyUp}
               style={{
                 position: 'absolute',
                 top: 0,
@@ -87,15 +92,13 @@ export const ScreenCanvas: React.FC<ScreenCanvasProps> = ({
                 height: '100%',
                 zIndex: 10,
                 background: 'transparent',
+                outline: 'none',
               }}
             />
           </>
         ) : (
-          <div
-            className="canvas-content"
-            style={{ position: 'relative', zIndex: 3, color: '#D1D5DB' }}
-          >
-            <span className="canvas-text text-lg font-medium">Interactive Canvas Area</span>
+          <div style={{ position: 'relative', zIndex: 3, color: '#D1D5DB' }}>
+            <span className="text-lg font-medium">Waiting for first full frame...</span>
           </div>
         )}
       </div>

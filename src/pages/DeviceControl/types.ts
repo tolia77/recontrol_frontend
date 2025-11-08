@@ -18,13 +18,30 @@ export interface SidebarProps {
     setOpenAccordion: (item: AccordionSection | null) => void;
 }
 
-export interface Frame {
+// Command action contract used for sending backend commands
+export interface CommandAction {
     id: string;
-    image: string;
+    type: string;
+    payload: Record<string, unknown>;
+}
+
+// New region based screen streaming types
+export interface FrameRegion {
+    image: string; // base64 JPEG/PNG without data URL prefix
+    isFull?: boolean; // true if this region represents a full frame (initial)
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
+export interface FrameBatch {
+    id: string;
+    regions: FrameRegion[];
 }
 
 export interface MainContentProps {
     disabled: boolean;
-    addAction: (action: any) => void;
-    frames?: Frame[];
+    addAction: (action: CommandAction) => void;
+    frames?: FrameBatch[]; // stream of region batches
 }

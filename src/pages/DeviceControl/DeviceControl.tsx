@@ -4,12 +4,12 @@ import {Sidebar} from "src/pages/DeviceControl/Sidebar.tsx";
 import {MainContent} from "src/pages/DeviceControl/MainContent.tsx";
 import {getAccessToken, getRefreshToken, saveTokens} from "src/utils/auth.ts";
 import { refreshTokenRequest } from "src/services/backend/authRequests.ts";
-import type {AccordionSection, Mode} from "src/pages/DeviceControl/types.ts";
+import type {AccordionSection, Mode, FrameBatch, FrameRegion} from "src/pages/DeviceControl/types.ts";
 
 interface Message {
     from: string;
     command: string;
-    payload: Record<string, any>;
+    payload: Record<string, unknown>;
 }
 
 interface CommandWebSocketProps {
@@ -24,12 +24,11 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
 
     const [connected, setConnected] = useState(false);
     const [deviceId, setDeviceId] = useState("");
-    const [isConnecting, setIsConnecting] = useState(false);
 
     const [activeMode, setActiveMode] = useState<Mode>("interactive");
     const [openAccordion, setOpenAccordion] = useState<AccordionSection | null>(null);
 
-    const [frames, setFrames] = useState<{ id: string; image: string }[]>([]);
+    const [frames, setFrames] = useState<FrameBatch[]>([]);
 
     const refreshAccessToken = async (): Promise<string | null> => {
         try {
@@ -66,8 +65,6 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
             return;
         }
 
-        setIsConnecting(true);
-
         if (reconnectTimeout.current) {
             clearTimeout(reconnectTimeout.current);
             reconnectTimeout.current = null;
@@ -79,7 +76,6 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
             token = await refreshAccessToken();
             if (!token) {
                 console.error("No valid token available for WebSocket connection");
-                setIsConnecting(false);
                 return;
             }
         }
@@ -91,7 +87,6 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         ws.onopen = () => {
             console.log("WebSocket connected");
             setConnected(true);
-            setIsConnecting(false);
             isHandlingAuthReconnect.current = false;
 
             if (reconnectTimeout.current) {
@@ -129,27 +124,51 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                     return;
                 }
 
-                if (data.message) {
-                    // inspect incoming message command for screen images first
+                const handleInnerMessage = (inner: unknown) => {
                     try {
-                        const msg = data.message as Message & any;
+                        if (!inner || typeof inner !== 'object') return;
+                        const msg = inner as Partial<Message> & { command?: string; payload?: any };
                         const cmd = msg.command;
+                        if (!cmd) return;
                         const payload = msg.payload ?? {};
-
-                        if (cmd === "screen.frame") {
-                            // payload expected to have { image: "<base64 jpg>" }
-                            const imgBase64 = payload.image ?? (typeof payload === "string" ? payload : undefined);
-                            if (imgBase64) {
-                                // store only latest frame to avoid accumulating previous images
-                                setFrames([{id: uuidv4(), image: imgBase64}]);
+                        if (cmd === "screen.frame_batch") {
+                            const regionsRaw = Array.isArray((payload as any)?.regions) ? ((payload as any).regions as any[]) : [];
+                            if (regionsRaw.length) {
+                                const regions: FrameRegion[] = regionsRaw.map((r) => ({
+                                    image: r.image,
+                                    isFull: !!r.isFull,
+                                    x: Number(r.x) || 0,
+                                    y: Number(r.y) || 0,
+                                    width: Number(r.width) || 0,
+                                    height: Number(r.height) || 0,
+                                }));
+                                const batch: FrameBatch = { id: uuidv4(), regions };
+                                setFrames((prev) => {
+                                    const next = [...prev, batch];
+                                    return next.slice(-60);
+                                });
                             }
-                            return;
                         }
                     } catch (e) {
-                        console.warn("Failed to process screen image message", e);
+                        console.warn("Failed to process screen frame batch", e);
                     }
+                };
 
-                    // Removed setMessages call
+                // Support both shapes:
+                // 1) { message: { command, payload } }
+                if (data.message) {
+                    handleInnerMessage(data.message);
+                    return;
+                }
+                // 2) ActionCable style: { command: "message", data: "{...}" }
+                if (data.command === "message" && typeof data.data === "string") {
+                    try {
+                        const inner = JSON.parse(data.data);
+                        handleInnerMessage(inner);
+                    } catch (e) {
+                        console.warn("Failed parsing inner data for message", e);
+                    }
+                    return;
                 }
             } catch (err) {
                 console.error("Failed to parse WS message:", err);
@@ -159,14 +178,13 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         ws.onclose = async (event) => {
             console.log("WebSocket closed", event.code, event.reason);
             setConnected(false);
-            setIsConnecting(false);
 
             if (isHandlingAuthReconnect.current) {
                 console.log("Auth reconnect in progress, skipping default onclose logic.");
                 return;
             }
 
-            if (event.code === 4001 || event.reason.includes("unauthorized")) {
+            if (event.code === 4001 || (event.reason || "").includes("unauthorized")) {
                 console.warn("WebSocket closed due to auth, attempting token refresh...");
                 await handleReconnection();
                 return;
@@ -194,7 +212,9 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         if (wsRef.current && wsRef.current.readyState < 2) {
             try {
                 wsRef.current.close(4001, "Reauth - closing old socket");
-            } catch {}
+            } catch {
+                // ignore close error
+            }
         }
 
         const newToken = await refreshAccessToken();
@@ -203,7 +223,6 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         } else {
             console.error("Unable to refresh token, user may need to re-login.");
             isHandlingAuthReconnect.current = false;
-            setIsConnecting(false);
         }
     };
 
@@ -230,7 +249,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const sendMessagePayload = (payloadObj: any) => {
+    const sendMessagePayload = (payloadObj: unknown) => {
         if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
             console.warn("Cannot send message, WebSocket is not open.");
             return;
@@ -245,7 +264,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         );
     };
 
-    const sendSingleAction = (action: any) => {
+    const sendSingleAction = (action: { id?: string; type: string; payload?: Record<string, unknown> }) => {
         const msg = {
             id: action.id ?? uuidv4(),
             command: action.type,
@@ -254,25 +273,20 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         sendMessagePayload(msg);
     };
 
-    // New UI rendering
     return (
         <div className="command-websocket flex h-screen w-full font-sans antialiased bg-[#F3F4F6]">
             <Sidebar
                 activeMode={activeMode}
-                // The setActiveMode prop is still needed by the Sidebar component
                 setActiveMode={setActiveMode}
                 openAccordion={openAccordion}
                 setOpenAccordion={setOpenAccordion}
                 addAction={sendSingleAction}
             />
-            {/* Main content area with margin-left to account for the sidebar width */}
             <main className="flex-1 ml-64">
                 <MainContent
                     disabled={!connected}
-                    // Pass sendSingleAction as the addAction prop
                     addAction={sendSingleAction}
                     frames={frames}
-                    // NEW
                     activeMode={activeMode}
                 />
             </main>

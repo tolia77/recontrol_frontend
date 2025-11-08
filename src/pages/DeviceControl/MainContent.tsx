@@ -1,5 +1,5 @@
-import React, {useRef, useState, useCallback} from 'react';
-import type {MainContentProps} from './types.ts';
+import React, {useRef, useState, useCallback, useEffect} from 'react';
+import type {MainContentProps, FrameBatch, FrameRegion} from './types.ts';
 import {computeRealImageCoords} from './utils/coords.ts';
 import {buttonName, pressedButtonsFromMask, normalizeWheelToClicks, mapButtonToBackend} from './utils/mouse.ts';
 import {mapToVirtualKey} from './utils/keyboard.ts';
@@ -8,64 +8,112 @@ import {QuickActions} from './QuickActions.tsx';
 import { ManualControls } from './ManualControls.tsx';
 
 /**
- * Main Content Area
+ * Main Content Area with region-based frame compositing
  */
 export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive' | 'manual' }> = ({
-                                                            disabled,
-                                                            addAction,
-                                                            frames = [],
-                                                            activeMode,
-                                                        }) => {
-    // Manual mode rendering
-    if (activeMode === 'manual') {
-        return <ManualControls disabled={disabled} addAction={addAction} />;
-    }
+    disabled,
+    addAction,
+    frames = [],
+    activeMode,
+}) => {
+    // region-based frames: latest batch
+    const latestBatch: FrameBatch | null = frames.length ? frames[frames.length - 1] : null;
 
-    // Interactive mode (existing)
-    // get latest full-frame (jpg) if any
-    const latestFrame = frames && frames.length ? frames[frames.length - 1] : null;
-
-    // Refs and state for pointer handling and image natural size
+    // canvas & overlay refs
     const containerRef = useRef<HTMLDivElement | null>(null);
-    const imgRef = useRef<HTMLImageElement | null>(null);
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const overlayRef = useRef<HTMLDivElement | null>(null);
+
+    // natural size from first full frame region encountered
     const [naturalSize, setNaturalSize] = useState<{w: number; h: number} | null>(null);
     const lastCoordsRef = useRef<{x: number; y: number} | null>(null);
-    const overlayRef = useRef<HTMLDivElement | null>(null);
-    // NEW: throttle mouse move sending (100 ms)
     const lastMoveSentAtRef = useRef<number>(0);
 
-    const onImageLoad = useCallback(() => {
-        const img = imgRef.current;
-        if (img) {
-            setNaturalSize({w: img.naturalWidth, h: img.naturalHeight});
+    // Derive natural size when a full region appears for the first time (only in interactive mode)
+    useEffect(() => {
+        if (activeMode !== 'interactive') return;
+        if (!latestBatch) return;
+        if (!naturalSize) {
+            const fullRegion = latestBatch.regions.find(r => r.isFull && r.width > 0 && r.height > 0);
+            if (fullRegion) {
+                setNaturalSize({ w: fullRegion.width, h: fullRegion.height });
+            } else {
+                // Fallback: infer extents from current batch if possible
+                let maxRight = 0;
+                let maxBottom = 0;
+                for (const r of latestBatch.regions) {
+                    const right = (r.x || 0) + (r.width || 0);
+                    const bottom = (r.y || 0) + (r.height || 0);
+                    if (right > maxRight) maxRight = right;
+                    if (bottom > maxBottom) maxBottom = bottom;
+                }
+                if (maxRight > 0 && maxBottom > 0) {
+                    setNaturalSize({ w: maxRight, h: maxBottom });
+                }
+            }
         }
-    }, []);
+    }, [activeMode, latestBatch, naturalSize]);
+
+    // Composite regions onto the canvas whenever a new batch arrives (only in interactive mode)
+    useEffect(() => {
+        if (activeMode !== 'interactive') return;
+        if (!latestBatch || !naturalSize) return;
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Ensure canvas size matches natural size
+        if (canvas.width !== naturalSize.w || canvas.height !== naturalSize.h) {
+            canvas.width = naturalSize.w;
+            canvas.height = naturalSize.h;
+        }
+
+        // Draw each region
+        latestBatch.regions.forEach((region: FrameRegion) => {
+            try {
+                if (!region.image) return;
+                const img = new Image();
+                img.onload = () => {
+                    // If full frame flag, optionally clear before drawing full frame
+                    if (region.isFull) {
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    }
+                    ctx.drawImage(img, region.x, region.y, region.width, region.height);
+                };
+                img.onerror = (e) => {
+                    console.warn('Failed to load region image', e);
+                };
+                img.src = `data:image/jpeg;base64,${region.image}`;
+            } catch (err) {
+                console.warn('Error drawing region', err);
+            }
+        });
+    }, [activeMode, latestBatch, naturalSize]);
 
     const getRealCoordsFromClient = useCallback((clientX: number, clientY: number) => {
         const container = containerRef.current;
-        const img = imgRef.current;
-        if (!container || !img) return null;
+        const canvas = canvasRef.current;
+        if (!container || !canvas || !naturalSize) return null;
 
         const rect = container.getBoundingClientRect();
-        const nW = img.naturalWidth || naturalSize?.w || 1;
-        const nH = img.naturalHeight || naturalSize?.h || 1;
+        const nW = naturalSize.w;
+        const nH = naturalSize.h;
 
         return computeRealImageCoords(rect, nW, nH, clientX, clientY);
     }, [naturalSize]);
 
     const handlePointerEvent = useCallback((e: React.PointerEvent, name: string) => {
-        // do not stop default UX unless necessary; we still want to report events
+        if (activeMode !== 'interactive') return;
         e.preventDefault?.();
         const coords = getRealCoordsFromClient(e.clientX, e.clientY);
         if (!coords) return;
 
-        // e.button indicates the button associated with this event (for down/up)
-        // e.buttons is a mask of all currently pressed buttons
-        const btn = typeof e.button === 'number' ? e.button : undefined;
+        const btn = e.button;
         const btnName = buttonName(btn);
         const pressed = pressedButtonsFromMask(e.buttons);
 
-        console.log(`[screen-image] ${name}`, {
+        console.log(`[screen-canvas] ${name}`, {
             button: btn,
             buttonName: btnName,
             pressedButtonsMask: e.buttons,
@@ -75,172 +123,111 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
             debug: coords.debug,
         });
 
-        // Send commands to backend via addAction for down, up and move
         if (typeof addAction === 'function' && !disabled) {
             try {
                 if (name === 'pointerdown') {
-                    // set last coords so subsequent moves have a reference
                     lastCoordsRef.current = { x: Math.round(coords.x), y: Math.round(coords.y) };
                     addAction({
                         id: crypto.randomUUID(),
                         type: 'mouse.down',
-                        payload: {
-                            Button: mapButtonToBackend(btn),
-                        },
+                        payload: { Button: mapButtonToBackend(btn) },
                     });
                 } else if (name === 'pointerup') {
                     addAction({
                         id: crypto.randomUUID(),
                         type: 'mouse.up',
-                        payload: {
-                            Button: mapButtonToBackend(btn),
-                        },
+                        payload: { Button: mapButtonToBackend(btn) },
                     });
-                    // clear tracking on up
                     lastCoordsRef.current = null;
                 } else if (name === 'pointermove') {
-                    // compute absolute coordinates on the real image and send them
                     const curX = Math.round(coords.x);
                     const curY = Math.round(coords.y);
-                    // update last coords for potential other use
                     lastCoordsRef.current = { x: curX, y: curY };
-
-                    // NEW: throttle move events - send only if last send was >= 100 ms ago
                     const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-                    if (now - lastMoveSentAtRef.current < 100) {
-                        // skip sending this move due to throttle
-                        return;
-                    }
+                    if (now - lastMoveSentAtRef.current < 100) return; // throttle
                     lastMoveSentAtRef.current = now;
-
                     addAction({
                         id: crypto.randomUUID(),
                         type: 'mouse.move',
-                        payload: {
-                            // send absolute coordinates (integers)
-                            X: curX,
-                            Y: curY,
-                        },
+                        payload: { X: curX, Y: curY },
                     });
                 }
             } catch (err) {
                 console.warn('Failed to send mouse action', err);
             }
         }
-    }, [getRealCoordsFromClient, buttonName, pressedButtonsFromMask, addAction, disabled]);
+    }, [activeMode, getRealCoordsFromClient, addAction, disabled]);
 
-    // NEW: keyboard handlers
     const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-        // prevent browser shortcuts while controlling remote device
+        if (activeMode !== 'interactive') return;
         e.preventDefault();
         const vk = mapToVirtualKey(e);
         console.log('[keyboard] keyDown', { key: e.key, code: e.code, vk });
-
         if (typeof addAction === 'function' && !disabled && vk) {
-            addAction({
-                id: crypto.randomUUID(),
-                type: 'keyboard.keyDown',
-                payload: { Key: vk },
-            });
+            addAction({ id: crypto.randomUUID(), type: 'keyboard.keyDown', payload: { Key: vk } });
         }
-    }, [addAction, disabled, mapToVirtualKey]);
+    }, [activeMode, addAction, disabled]);
 
     const handleKeyUp = useCallback((e: React.KeyboardEvent) => {
+        if (activeMode !== 'interactive') return;
         e.preventDefault();
         const vk = mapToVirtualKey(e);
         console.log('[keyboard] keyUp', { key: e.key, code: e.code, vk });
-
         if (typeof addAction === 'function' && !disabled && vk) {
-            addAction({
-                id: crypto.randomUUID(),
-                type: 'keyboard.keyUp',
-                payload: { Key: vk },
-            });
+            addAction({ id: crypto.randomUUID(), type: 'keyboard.keyUp', payload: { Key: vk } });
         }
-    }, [addAction, disabled, mapToVirtualKey]);
+    }, [activeMode, addAction, disabled]);
 
     const handlePointerDown = useCallback((e: React.PointerEvent) => {
-        // prevent default immediately (helps block native context menu on some browsers)
+        if (activeMode !== 'interactive') return;
         e.preventDefault();
-        // ensure we keep receiving pointer events
-        try {
-            (e.target as Element).setPointerCapture(e.pointerId);
-        } catch (err) {
-            console.warn(err)
-        }
-        // NEW: focus overlay to capture subsequent keyboard events
+        try { (e.target as Element).setPointerCapture(e.pointerId); } catch (err) { console.warn(err); }
         overlayRef.current?.focus();
         handlePointerEvent(e, 'pointerdown');
-    }, [handlePointerEvent]);
+    }, [activeMode, handlePointerEvent]);
 
-    const handlePointerMove = useCallback((e: React.PointerEvent) => {
-        handlePointerEvent(e, 'pointermove');
-    }, [handlePointerEvent]);
-
-    const handlePointerUp = useCallback((e: React.PointerEvent) => {
-        try {
-            (e.target as Element).releasePointerCapture(e.pointerId);
-        } catch (err) {
-            console.warn(err)
-        }
-        handlePointerEvent(e, 'pointerup');
-    }, [handlePointerEvent]);
-
-    const handlePointerCancel = useCallback((e: React.PointerEvent) => {
-        handlePointerEvent(e, 'pointercancel');
-    }, [handlePointerEvent]);
+    const handlePointerMove = useCallback((e: React.PointerEvent) => { handlePointerEvent(e, 'pointermove'); }, [handlePointerEvent]);
+    const handlePointerUp = useCallback((e: React.PointerEvent) => { try { (e.target as Element).releasePointerCapture(e.pointerId); } catch (err) { console.warn(err); } handlePointerEvent(e, 'pointerup'); }, [handlePointerEvent]);
+    const handlePointerCancel = useCallback((e: React.PointerEvent) => { handlePointerEvent(e, 'pointercancel'); }, [handlePointerEvent]);
 
     const handleWheel = useCallback((e: React.WheelEvent) => {
+        if (activeMode !== 'interactive') return;
         e.preventDefault();
         e.stopPropagation?.();
-
         const coords = getRealCoordsFromClient(e.clientX, e.clientY);
         if (!coords) return;
-
         const clicks = normalizeWheelToClicks(e.deltaY, e.deltaMode);
-
-        console.log('[screen-image] wheel', {
-            deltaX: e.deltaX,
-            deltaY: e.deltaY,
-            deltaMode: e.deltaMode,
-            clicks,
-            x: Math.round(coords.x),
-            y: Math.round(coords.y),
-            debug: coords.debug,
-        });
-
-        // send mouse.scroll action to backend
+        console.log('[screen-canvas] wheel', { deltaX: e.deltaX, deltaY: e.deltaY, deltaMode: e.deltaMode, clicks, x: Math.round(coords.x), y: Math.round(coords.y), debug: coords.debug });
         if (typeof addAction === 'function' && !disabled && clicks !== 0) {
-            try {
-                addAction({
-                    id: crypto.randomUUID(),
-                    type: 'mouse.scroll',
-                    payload: {
-                        Clicks: clicks,
-                    },
-                });
-            } catch (err) {
-                console.warn('Failed to send mouse.scroll action', err);
-            }
+            try { addAction({ id: crypto.randomUUID(), type: 'mouse.scroll', payload: { Clicks: clicks } }); } catch (err) { console.warn('Failed to send mouse.scroll', err); }
         }
-    }, [getRealCoordsFromClient, addAction, disabled]);
+    }, [activeMode, getRealCoordsFromClient, addAction, disabled]);
+
+    const width = naturalSize?.w || 0;
+    const height = naturalSize?.h || 0;
 
     return (
         <div className="flex-1 bg-[#F3F4F6] p-8 flex flex-col items-center">
-            <ScreenCanvas
-                latestFrame={latestFrame}
-                containerRef={containerRef}
-                imgRef={imgRef}
-                overlayRef={overlayRef}
-                onImageLoad={onImageLoad}
-                onPointerDown={handlePointerDown}
-                onPointerMove={handlePointerMove}
-                onPointerUp={handlePointerUp}
-                onPointerCancel={handlePointerCancel}
-                onWheel={handleWheel}
-                onKeyDown={handleKeyDown}
-                onKeyUp={handleKeyUp}
-            />
+            {activeMode === 'manual' ? (
+                <ManualControls disabled={disabled} addAction={addAction} />
+            ) : (
+                <ScreenCanvas
+                    latestBatch={latestBatch}
+                    containerRef={containerRef}
+                    canvasRef={canvasRef}
+                    overlayRef={overlayRef}
+                    width={width}
+                    height={height}
+                    onPointerDown={handlePointerDown}
+                    onPointerMove={handlePointerMove}
+                    onPointerUp={handlePointerUp}
+                    onPointerCancel={handlePointerCancel}
+                    onWheel={handleWheel}
+                    onKeyDown={handleKeyDown}
+                    onKeyUp={handleKeyUp}
+                    disabled={disabled || !naturalSize}
+                />
+            )}
             <QuickActions disabled={disabled} addAction={addAction} />
         </div>
     );
