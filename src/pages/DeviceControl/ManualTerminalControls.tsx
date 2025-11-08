@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next';
 export const ManualTerminalControls: React.FC<{
     disabled: boolean;
     addAction?: (action: any) => void;
-}> = ({ disabled, addAction }) => {
+    results?: { id: string; status: string; result: string }[];
+}> = ({ disabled, addAction, results = [] }) => {
     const { t } = useTranslation('deviceControl');
     // Command execution state
     const [cmdInput, setCmdInput] = useState<string>('');
@@ -89,9 +90,27 @@ export const ManualTerminalControls: React.FC<{
         send('terminal.abort', {});
     }, [send]);
 
+    // Latest result (show last item)
+    const latest = results.length ? results[results.length - 1] : undefined;
+
     return (
         <div className="space-y-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">{t('manual.terminal.title')}</h3>
+
+            {/* Output Panel */}
+            <div className="border border-gray-200 rounded-lg p-3 bg-white">
+                <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-gray-600">{t('manual.terminal.output')}</span>
+                    {latest && (
+                        <span className={`text-xs px-2 py-0.5 rounded ${latest.status === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                            {latest.status}
+                        </span>
+                    )}
+                </div>
+                <pre className="text-xs leading-5 whitespace-pre-wrap break-words max-h-64 overflow-auto bg-gray-50 p-2 rounded">
+{latest ? latest.result : t('manual.terminal.outputEmpty')}
+                </pre>
+            </div>
 
             {/* Command Execution Section */}
             <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">

@@ -10,7 +10,8 @@ type ManualSection = 'mouse' | 'keyboard' | 'power' | 'terminal';
 export const ManualControls: React.FC<{
     disabled: boolean;
     addAction?: (action: any) => void;
-}> = ({ disabled, addAction }) => {
+    results?: { id: string; status: string; result: string }[];
+}> = ({ disabled, addAction, results }) => {
     const { t } = useTranslation('deviceControl');
     const [activeSection, setActiveSection] = useState<ManualSection>('mouse');
 
@@ -75,7 +76,7 @@ export const ManualControls: React.FC<{
                         <ManualPowerControls disabled={disabled} addAction={addAction} />
                     )}
                     {activeSection === 'terminal' && (
-                        <ManualTerminalControls disabled={disabled} addAction={addAction} />
+                        <ManualTerminalControls disabled={disabled} addAction={addAction} results={results} />
                     )}
                 </div>
             </div>

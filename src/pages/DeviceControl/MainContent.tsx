@@ -15,6 +15,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
     addAction,
     frames = [],
     activeMode,
+    terminalResults,
 }) => {
     // region-based frames: latest batch
     const latestBatch: FrameBatch | null = frames.length ? frames[frames.length - 1] : null;
@@ -209,7 +210,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
     return (
         <div className="flex-1 bg-[#F3F4F6] p-8 flex flex-col items-center">
             {activeMode === 'manual' ? (
-                <ManualControls disabled={disabled} addAction={addAction} />
+                <ManualControls disabled={disabled} addAction={addAction} results={terminalResults} />
             ) : (
                 <ScreenCanvas
                     latestBatch={latestBatch}

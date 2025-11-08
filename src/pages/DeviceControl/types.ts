@@ -44,4 +44,5 @@ export interface MainContentProps {
     disabled: boolean;
     addAction: (action: CommandAction) => void;
     frames?: FrameBatch[]; // stream of region batches
+    terminalResults?: { id: string; status: string; result: string }[]; // recent terminal command outputs
 }

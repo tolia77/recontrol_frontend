@@ -29,6 +29,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
     const [openAccordion, setOpenAccordion] = useState<AccordionSection | null>(null);
 
     const [frames, setFrames] = useState<FrameBatch[]>([]);
+    const [terminalResults, setTerminalResults] = useState<{ id: string; status: string; result: string }[]>([]);
 
     const refreshAccessToken = async (): Promise<string | null> => {
         try {
@@ -127,10 +128,11 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                 const handleInnerMessage = (inner: unknown) => {
                     try {
                         if (!inner || typeof inner !== 'object') return;
-                        const msg = inner as Partial<Message> & { command?: string; payload?: any };
+                        const msg = inner as Partial<Message> & { command?: string; payload?: any; status?: string; result?: string; id?: string };
                         const cmd = msg.command;
-                        if (!cmd) return;
                         const payload = msg.payload ?? {};
+
+                        // Screen frame batch handling
                         if (cmd === "screen.frame_batch") {
                             const regionsRaw = Array.isArray((payload as any)?.regions) ? ((payload as any).regions as any[]) : [];
                             if (regionsRaw.length) {
@@ -149,8 +151,17 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                                 });
                             }
                         }
+
+                        // Terminal command result messages (presence of status & result & id)
+                        if (msg.status && typeof msg.result === 'string' && msg.id) {
+                            setTerminalResults(prev => {
+                                const next = [...prev, { id: msg.id!, status: msg.status!, result: msg.result! }];
+                                // keep last 100
+                                return next.slice(-100);
+                            });
+                        }
                     } catch (e) {
-                        console.warn("Failed to process screen frame batch", e);
+                        console.warn("Failed to process inner message", e);
                     }
                 };
 
@@ -288,6 +299,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                     addAction={sendSingleAction}
                     frames={frames}
                     activeMode={activeMode}
+                    terminalResults={terminalResults}
                 />
             </main>
         </div>
