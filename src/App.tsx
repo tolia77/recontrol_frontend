@@ -25,9 +25,9 @@ function App() {
                         <Route path="/devices" element={<Devices/>}/>
                         <Route path="/devices/:deviceId/settings" element={<DeviceSettings />} />
                         <Route path="/settings" element={<UserSettings/>} />
-                        <Route path="/help" element={<Help/>} />
                         <Route path="/admin/users" element={<AdminUsers/>}/>
                     </Route>
+                    <Route path="/help" element={<Help/>} />
 
                     {/* Auth and utilities */}
                     <Route path="/login" element={<Login/>}/>

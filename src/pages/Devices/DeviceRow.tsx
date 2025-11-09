@@ -2,11 +2,11 @@ import React from 'react';
 import {LinkIcon, SettingsIcon} from '../../components/icons/Icons.tsx';
 import type {Device} from "src/types/global";
 import {useNavigate} from "react-router";
-import { useTranslation } from 'react-i18next';
+import {useTranslation} from 'react-i18next';
 
 
 const DeviceRow: React.FC<{ device: Device }> = ({device}) => {
-    const { t } = useTranslation('devices');
+    const {t} = useTranslation('devices');
     const status = (device.status ?? '').toString().toLowerCase();
     const statusLabel = status === 'active' ? t('table.statusActive') : t('table.statusInactive');
     const statusBg = status === 'active' ? 'bg-accent' : 'bg-gray-300'; // adapt classes as needed
@@ -41,14 +41,15 @@ const DeviceRow: React.FC<{ device: Device }> = ({device}) => {
                         onClick={() => {
                             navigate(`/device-control?device_id=${encodeURIComponent(device.id)}`);
                         }}
-                        className="box-border pl-3 flex h-[35px] w-[135px] items-center gap-2 rounded-lg bg-primary text-sm font-medium text-white"
+                        className="box-border pl-3 flex h-[35px] w-[135px] items-center gap-2 rounded-lg bg-primary text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-70"
+                        disabled={status !== 'active'}
                     >
                         <LinkIcon className="h-6 w-6"/>
                         {t('table.connect')}
                     </button>
                     <button
                         onClick={() => navigate(`/devices/${device.id}/settings`)}
-                        className="bg-none p-0"
+                        className="bg-none p-0 hover:cursor-pointer hover:opacity-80"
                         aria-label={t('table.settings')}
                     >
                         <SettingsIcon
