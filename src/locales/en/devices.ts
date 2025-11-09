@@ -15,6 +15,19 @@ const devices = {
     delete: 'Delete',
     deleteConfirm: 'Delete this device?',
     deleteError: 'Failed to delete device'
+  },
+  filters: {
+    nameLabel: 'Search name',
+    namePlaceholder: 'Type to search...',
+    ownerLabel: 'Owner',
+    ownerAny: 'Any',
+    ownerMe: 'You',
+    ownerShared: 'Shared',
+    statusLabel: 'Status',
+    statusAny: 'Any',
+    lastFrom: 'Last seen from',
+    lastTo: 'Last seen to',
+    clear: 'Clear filters'
   }
 };
 export default devices;

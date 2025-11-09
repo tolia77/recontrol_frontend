@@ -15,6 +15,19 @@ const devices = {
     delete: 'Видалити',
     deleteConfirm: 'Видалити цей пристрій?',
     deleteError: 'Не вдалося видалити пристрій'
+  },
+  filters: {
+    nameLabel: 'Пошук назви',
+    namePlaceholder: 'Введіть для пошуку...',
+    ownerLabel: 'Власник',
+    ownerAny: 'Будь-який',
+    ownerMe: 'Ви',
+    ownerShared: 'Спільний',
+    statusLabel: 'Статус',
+    statusAny: 'Будь-який',
+    lastFrom: 'Остання активність від',
+    lastTo: 'Остання активність до',
+    clear: 'Скинути фільтри'
   }
 };
 export default devices;
