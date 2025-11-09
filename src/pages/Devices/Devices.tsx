@@ -39,12 +39,7 @@ function Devices() {
         });
     };
 
-    // initial load
-    useEffect(() => {
-        fetchDevices();
-    }, []);
-
-    // apply filters with debounce on change
+    // apply filters with debounce on change (runs once on mount as well)
     useEffect(() => {
         if (debounceRef.current) {
             clearTimeout(debounceRef.current);
