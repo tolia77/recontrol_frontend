@@ -102,7 +102,8 @@ const deviceControl = {
     quick: {
       startStream: 'Почати трансляцію екрана',
       stopStream: 'Зупинити трансляцію екрана'
-    }
+    },
+    noPermission: 'У вас немає дозволу на використання цього розділу'
   }
 };
 export default deviceControl;

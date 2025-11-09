@@ -5,6 +5,8 @@ import {MainContent} from "src/pages/DeviceControl/MainContent.tsx";
 import {getAccessToken, getRefreshToken, saveTokens} from "src/utils/auth.ts";
 import {refreshTokenRequest} from "src/services/backend/authRequests.ts";
 import type {AccordionSection, Mode, FrameBatch, FrameRegion} from "src/pages/DeviceControl/types.ts";
+import { getMyDeviceSharesForDeviceRequest } from "src/services/backend/deviceSharesRequests.ts";
+import type { DeviceShare } from "src/types/global";
 
 interface CommandWebSocketProps {
     wsUrl: string;
@@ -16,6 +18,19 @@ interface InnerMessage {
     payload?: Record<string, unknown> & { regions?: Array<{ image: string; isFull?: boolean; x?: number; y?: number; width?: number; height?: number }> };
     status?: string;
     result?: string | number | boolean | null | Record<string, unknown> | Array<unknown>;
+}
+
+// Derived permissions interface for easier gating
+interface DevicePermissions {
+    see_screen: boolean;
+    see_system_info: boolean;
+    access_mouse: boolean;
+    access_keyboard: boolean;
+    access_terminal: boolean;
+    manage_power: boolean;
+    // convenience compound flags
+    any_input: boolean; // mouse or keyboard
+    any_screen: boolean; // currently same as see_screen
 }
 
 export function DeviceControl({wsUrl}: CommandWebSocketProps) {
@@ -35,6 +50,52 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
     const [terminalResults, setTerminalResults] = useState<{ id: string; status: string; result: string }[]>([]);
     const [processes, setProcesses] = useState<{ Pid: number; Name: string; MemoryMB?: number; CpuTime?: string; StartTime?: string }[]>([]);
     const [processesLoading, setProcessesLoading] = useState(false);
+
+    // permissions state
+    const [permissionsLoading, setPermissionsLoading] = useState(false);
+    const [permissions, setPermissions] = useState<DevicePermissions | null>(null);
+
+    const buildPermissions = (share: DeviceShare | null): DevicePermissions => {
+        const pg = share?.permissions_group;
+        const ownDefaults: DevicePermissions = {
+            see_screen: true,
+            see_system_info: true,
+            access_mouse: true,
+            access_keyboard: true,
+            access_terminal: true,
+            manage_power: true,
+            any_input: true,
+            any_screen: true,
+        };
+        if (!pg) return ownDefaults;
+        return {
+            see_screen: !!pg.see_screen,
+            see_system_info: !!pg.see_system_info,
+            access_mouse: !!pg.access_mouse,
+            access_keyboard: !!pg.access_keyboard,
+            access_terminal: !!pg.access_terminal,
+            manage_power: !!pg.manage_power,
+            any_input: !!pg.access_mouse || !!pg.access_keyboard,
+            any_screen: !!pg.see_screen,
+        };
+    };
+
+    const fetchPermissions = async (devId: string) => {
+        if (!devId) return;
+        setPermissionsLoading(true);
+        try {
+            const res = await getMyDeviceSharesForDeviceRequest(devId);
+            // items may be empty (owner) or contain share(s). Choose first relevant.
+            const share = res.data.items && res.data.items.length ? res.data.items[0] : null;
+            setPermissions(buildPermissions(share));
+        } catch (e) {
+            console.warn('Failed to load device permissions', e);
+            // fallback to full permissions if request fails (could also choose to deny)
+            setPermissions(buildPermissions(null));
+        } finally {
+            setPermissionsLoading(false);
+        }
+    };
 
     const refreshAccessToken = async (): Promise<string | null> => {
         try {
@@ -147,6 +208,10 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                         const originalCmd = msg.id ? pendingCommandsRef.current.get(msg.id) : undefined;
 
                         if (cmd === "screen.frame_batch") {
+                            // If user lacks screen permission, ignore incoming frames
+                            if (permissions && !permissions.see_screen) {
+                                return;
+                            }
                             const regionsRaw = Array.isArray(payload.regions) ? payload.regions : [];
                             if (regionsRaw.length) {
                                 const regions: FrameRegion[] = regionsRaw.map((r) => ({
@@ -278,10 +343,24 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         if (paramDeviceId) {
             setDeviceId(paramDeviceId);
             lastDeviceIdRef.current = paramDeviceId;
+            void fetchPermissions(paramDeviceId);
             connectWebSocket(paramDeviceId);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // gating logic for outgoing commands based on permissions
+    const canSend = (type: string): boolean => {
+        if (!permissions) return false; // still loading, disallow
+        // screen start/stop allow only if see_screen
+        if (type.startsWith('screen.')) return permissions.see_screen;
+        if (type.startsWith('mouse.')) return permissions.access_mouse;
+        if (type.startsWith('keyboard.')) return permissions.access_keyboard;
+        if (type.startsWith('terminal.')) return permissions.access_terminal;
+        if (type.startsWith('power.')) return permissions.manage_power;
+        // default allow
+        return true;
+    };
 
     const sendMessagePayload = (payloadObj: unknown) => {
         if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
@@ -299,14 +378,16 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
     };
 
     const sendSingleAction = (action: { id?: string; type: string; payload?: Record<string, unknown> }) => {
+        if (!canSend(action.type)) {
+            console.warn(`Blocked command '${action.type}' due to insufficient permissions`);
+            return;
+        }
         const msg = {
             id: action.id ?? uuidv4(),
             command: action.type,
             payload: action.payload ?? {},
         };
-        // track pending by id to map responses to original command
         pendingCommandsRef.current.set(msg.id, msg.command);
-        // keep map from growing unbounded: trim occasionally
         if (pendingCommandsRef.current.size > 200) {
             const firstKey = pendingCommandsRef.current.keys().next().value as string | undefined;
             if (firstKey) pendingCommandsRef.current.delete(firstKey);
@@ -316,6 +397,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
 
     const requestListProcesses = () => {
         if (!connected) return;
+        if (!permissions?.access_terminal) return; // gate
         setProcessesLoading(true);
         setProcesses([]);
         sendSingleAction({ type: 'terminal.listProcesses' });
@@ -323,10 +405,12 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
 
     const killProcess = (pid: number) => {
         if (!connected || !pid) return;
-        // optimistic remove
+        if (!permissions?.access_terminal) return; // gate
         setProcesses(prev => prev.filter(p => p.Pid !== pid));
         sendSingleAction({ type: 'terminal.killProcess', payload: { pid } });
     };
+
+    const overallDisabled = !connected || permissionsLoading || !permissions;
 
     return (
         <div className="command-websocket flex h-screen w-full font-sans antialiased bg-[#F3F4F6]">
@@ -336,10 +420,11 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                 openAccordion={openAccordion}
                 setOpenAccordion={setOpenAccordion}
                 addAction={sendSingleAction}
+                // could pass permissions for conditional UI (future)
             />
             <main className="flex-1 ml-64">
                 <MainContent
-                    disabled={!connected}
+                    disabled={overallDisabled}
                     addAction={sendSingleAction}
                     frames={frames}
                     activeMode={activeMode}
@@ -348,7 +433,9 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                     processesLoading={processesLoading}
                     requestListProcesses={requestListProcesses}
                     killProcess={killProcess}
+                    permissions={permissions || undefined}
                 />
+                {/* Removed inline quick actions; handled inside MainContent with permissions gating */}
             </main>
         </div>
     );

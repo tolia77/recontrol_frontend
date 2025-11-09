@@ -103,7 +103,8 @@ const deviceControl = {
     quick: {
       startStream: 'Start Screen Stream',
       stopStream: 'Stop Screen Stream'
-    }
+    },
+    noPermission: "You don't have permission to use this section"
   }
 };
 export default deviceControl;

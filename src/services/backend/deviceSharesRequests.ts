@@ -26,3 +26,11 @@ export async function updateDeviceShareRequest(shareId: string, payload: Partial
     headers: { Authorization: getAccessToken() }
   });
 }
+
+// New: fetch current user's shares (me) for a specific device
+export async function getMyDeviceSharesForDeviceRequest(deviceId: string) {
+  return await backendInstance.get<{ items: DeviceShare[] }>("/device_shares/me", {
+    params: { device_id: deviceId },
+    headers: { Authorization: getAccessToken() }
+  });
+}

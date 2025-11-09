@@ -20,6 +20,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                                                                                                        processesLoading,
                                                                                                        requestListProcesses,
                                                                                                        killProcess,
+                                                                                                       permissions,
                                                                                                    }) => {
     // region-based frames: latest batch
     const latestBatch: FrameBatch | null = frames.length ? frames[frames.length - 1] : null;
@@ -34,7 +35,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
     const lastCoordsRef = useRef<{ x: number; y: number } | null>(null);
     const lastMoveSentAtRef = useRef<number>(0);
 
-    // Derive natural size when a full region appears for the first time (only in interactive mode)
+    // Derived natural size when a full region appears for the first time (only in interactive mode)
     useEffect(() => {
         if (activeMode !== 'interactive') return;
         if (!latestBatch) return;
@@ -108,8 +109,14 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
         return computeRealImageCoords(rect, nW, nH, clientX, clientY);
     }, [naturalSize]);
 
+    // Helper: check permission for mouse/keyboard/scroll events
+    const hasMouse = !!permissions?.access_mouse;
+    const hasKeyboard = !!permissions?.access_keyboard;
+
     const handlePointerEvent = useCallback((e: React.PointerEvent, name: string) => {
         if (activeMode !== 'interactive') return;
+        // Disallow pointer actions without mouse permission
+        if (!hasMouse) return;
         e.preventDefault?.();
         const coords = getRealCoordsFromClient(e.clientX, e.clientY);
         if (!coords) return;
@@ -161,30 +168,34 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                 console.warn('Failed to send mouse action', err);
             }
         }
-    }, [activeMode, getRealCoordsFromClient, addAction, disabled]);
+    }, [activeMode, getRealCoordsFromClient, addAction, disabled, hasMouse]);
 
     const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
         if (activeMode !== 'interactive') return;
+        // Disallow keyboard without permission
+        if (!hasKeyboard) return;
         e.preventDefault();
         const vk = mapToVirtualKey(e);
         console.log('[keyboard] keyDown', {key: e.key, code: e.code, vk});
         if (typeof addAction === 'function' && !disabled && vk) {
             addAction({id: crypto.randomUUID(), type: 'keyboard.keyDown', payload: {Key: vk}});
         }
-    }, [activeMode, addAction, disabled]);
+    }, [activeMode, addAction, disabled, hasKeyboard]);
 
     const handleKeyUp = useCallback((e: React.KeyboardEvent) => {
         if (activeMode !== 'interactive') return;
+        if (!hasKeyboard) return;
         e.preventDefault();
         const vk = mapToVirtualKey(e);
         console.log('[keyboard] keyUp', {key: e.key, code: e.code, vk});
         if (typeof addAction === 'function' && !disabled && vk) {
             addAction({id: crypto.randomUUID(), type: 'keyboard.keyUp', payload: {Key: vk}});
         }
-    }, [activeMode, addAction, disabled]);
+    }, [activeMode, addAction, disabled, hasKeyboard]);
 
     const handlePointerDown = useCallback((e: React.PointerEvent) => {
         if (activeMode !== 'interactive') return;
+        if (!hasMouse) return;
         e.preventDefault();
         try {
             (e.target as Element).setPointerCapture(e.pointerId);
@@ -193,7 +204,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
         }
         overlayRef.current?.focus();
         handlePointerEvent(e, 'pointerdown');
-    }, [activeMode, handlePointerEvent]);
+    }, [activeMode, handlePointerEvent, hasMouse]);
 
     const handlePointerMove = useCallback((e: React.PointerEvent) => {
         handlePointerEvent(e, 'pointermove');
@@ -212,6 +223,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
 
     const handleWheel = useCallback((e: React.WheelEvent) => {
         if (activeMode !== 'interactive') return;
+        if (!hasMouse) return;
         e.preventDefault();
         e.stopPropagation?.();
         const coords = getRealCoordsFromClient(e.clientX, e.clientY);
@@ -233,7 +245,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                 console.warn('Failed to send mouse.scroll', err);
             }
         }
-    }, [activeMode, getRealCoordsFromClient, addAction, disabled]);
+    }, [activeMode, getRealCoordsFromClient, addAction, disabled, hasMouse]);
 
     const width = naturalSize?.w || 0;
     const height = naturalSize?.h || 0;
@@ -241,7 +253,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
     return (
         <div className="flex-1 bg-[#F3F4F6] p-8 flex flex-col items-center">
             {activeMode === 'manual' ? (
-                <ManualControls disabled={disabled} addAction={addAction} results={terminalResults} processes={processes} processesLoading={processesLoading} requestListProcesses={requestListProcesses} killProcess={killProcess}/>
+                <ManualControls disabled={disabled} addAction={addAction} results={terminalResults} processes={processes} processesLoading={processesLoading} requestListProcesses={requestListProcesses} killProcess={killProcess} permissions={permissions}/>
             ) : (
                 <ScreenCanvas
                     latestBatch={latestBatch}
@@ -260,7 +272,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                     disabled={disabled || !naturalSize}
                 />
             )}
-            <QuickActions disabled={disabled} addAction={addAction}/>
+            {permissions?.see_screen && <QuickActions disabled={disabled} addAction={addAction}/>}
         </div>
     );
 };

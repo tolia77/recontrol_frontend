@@ -22,7 +22,7 @@ export interface SidebarProps {
 export interface CommandAction {
     id: string;
     type: string;
-    payload: Record<string, unknown>;
+    payload?: Record<string, unknown>;
 }
 
 // New region based screen streaming types
@@ -48,6 +48,16 @@ export interface ProcessInfo {
     StartTime?: string;
 }
 
+// Permissions subset (duplicated shape to avoid circular import). Optional flags if provided.
+export interface PermissionsSubset {
+    see_screen?: boolean;
+    see_system_info?: boolean;
+    access_mouse?: boolean;
+    access_keyboard?: boolean;
+    access_terminal?: boolean;
+    manage_power?: boolean;
+}
+
 export interface MainContentProps {
     disabled: boolean;
     addAction: (action: CommandAction) => void;
@@ -57,4 +67,5 @@ export interface MainContentProps {
     processesLoading?: boolean;
     requestListProcesses?: () => void;
     killProcess?: (pid: number) => void;
+    permissions?: PermissionsSubset; // new
 }

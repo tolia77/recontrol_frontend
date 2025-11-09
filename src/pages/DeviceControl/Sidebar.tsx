@@ -104,16 +104,6 @@ export const Sidebar: React.FC<SidebarProps & { addAction?: (action: any) => voi
                           ))}
                       </div>
                   )}
-                  <AccordionItem
-                      title={t('sidebar.terminal')}
-                      isOpen={openAccordion === "terminal"}
-                      onClick={() => toggleAccordion("terminal")}
-                  />
-                  <AccordionItem
-                      title={t('sidebar.processes')}
-                      isOpen={openAccordion === "processes"}
-                      onClick={() => toggleAccordion("processes")}
-                  />
                </nav>
              )}
 
