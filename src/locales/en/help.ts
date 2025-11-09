@@ -18,11 +18,11 @@ const help = {
         },
         {
           q: 'How do I create an account?',
-          a: 'Click Sign up on the landing page or use the button above, then follow the steps to verify your email.'
+          a: 'Click Sign up on the landing page or use the button above to create an account.'
         },
         {
           q: 'Do I need to install anything on my device?',
-          a: 'Yes, you will register your device using the agent provided in the devices section of the app. Instructions are shown when adding a device.'
+          a: 'Yes — you need to download our desktop application using the link in the Devices section (link will be provided).'
         }
       ]
     },
@@ -31,7 +31,7 @@ const help = {
       items: [
         {
           q: 'How do I add a new device?',
-          a: 'Go to Devices, click Add device (or the plus button), and follow the instructions to link your device with a one-time code.'
+          a: 'Download our application (link) and log in to your account. Your device will be automatically connected.'
         },
         {
           q: 'What does the device status mean?',
@@ -56,12 +56,12 @@ const help = {
       title: 'Account & Security',
       items: [
         {
-          q: 'I forgot my password—what do I do?',
-          a: 'On the Log in page, click “Forgot password?” and follow the instructions to reset it.'
+          q: 'How do I change my email or password?',
+          a: 'Open your profile from the sidebar (Profile tab) and update your credentials there.'
         },
         {
-          q: 'How do I change my email or password?',
-          a: 'Open your profile or account settings (top right avatar) and update your credentials.'
+          q: 'How do I share a device with someone?',
+          a: 'Open the device settings, choose "Share", and enter the email address of the user you want to share with. You can assign permissions and expiration.'
         }
       ]
     },
