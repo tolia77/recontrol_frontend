@@ -27,7 +27,8 @@ const devices = {
     statusAny: 'Any',
     lastFrom: 'Last seen from',
     lastTo: 'Last seen to',
-    clear: 'Clear filters'
+    clear: 'Clear filters',
+    loading: 'Loading devices...'
   }
 };
 export default devices;

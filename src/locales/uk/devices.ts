@@ -27,7 +27,8 @@ const devices = {
     statusAny: 'Будь-який',
     lastFrom: 'Остання активність від',
     lastTo: 'Остання активність до',
-    clear: 'Скинути фільтри'
+    clear: 'Скинути фільтри',
+    loading: 'Завантаження пристроїв...'
   }
 };
 export default devices;

@@ -8,6 +8,8 @@ import { useTranslation } from 'react-i18next';
 function Devices() {
     const { t } = useTranslation('devices');
     const [devices, setDevices] = useState<Device[]>([]);
+    const [loading, setLoading] = useState(false); // new loading state
+    const requestIdRef = useRef(0); // track latest request to avoid race conditions
 
     // filter state
     const [name, setName] = useState('');
@@ -20,10 +22,20 @@ function Devices() {
     const debounceRef = useRef<number | null>(null);
 
     const fetchDevices = (params?: GetMyDevicesParams) => {
+        const currentId = ++requestIdRef.current;
+        setLoading(true);
         getMyDevicesRequest(params).then(res => {
-            setDevices(res.data.devices);
+            if (currentId === requestIdRef.current) {
+                setDevices(res.data.devices);
+            }
         }).catch(() => {
-            setDevices([]);
+            if (currentId === requestIdRef.current) {
+                setDevices([]);
+            }
+        }).finally(() => {
+            if (currentId === requestIdRef.current) {
+                setLoading(false);
+            }
         });
     };
 
@@ -131,7 +143,13 @@ function Devices() {
                     >{t('filters.clear')}</button>
                 </div>
             </div>
-            <DevicesTable devices={devices} />
+            {loading ? (
+                <div className="flex w-full justify-center py-10" aria-live="polite">
+                    <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" aria-label={t('filters.loading')}></div>
+                </div>
+            ) : (
+                <DevicesTable devices={devices} />
+            )}
         </div>
     );
 }
