@@ -18,6 +18,8 @@ export const Sidebar: React.FC<SidebarProps & { addAction?: (action: any) => voi
     openAccordion,
     setOpenAccordion,
     addAction,
+    permissions,
+    disabled,
 }) => {
      const { t } = useTranslation('deviceControl');
      const toggleAccordion = (item: AccordionSection) => {
@@ -72,6 +74,28 @@ export const Sidebar: React.FC<SidebarProps & { addAction?: (action: any) => voi
                  </div>
              </div>
 
+             {/* Quick screen actions moved here; only show in interactive mode */}
+             {activeMode === 'interactive' && permissions?.see_screen && (
+               <div className="mb-6">
+                 <div className="flex gap-3">
+                   <button
+                     className="flex-1 px-3 py-2 bg-[#3B82F6] text-white rounded-lg text-sm font-medium shadow hover:bg-[#1E3A8A] disabled:bg-[#D1D5DB] disabled:text-[#8F8F8F] disabled:cursor-not-allowed transition-colors"
+                     disabled={disabled}
+                     onClick={() => addAction && addAction({ id: typeof crypto !== 'undefined' && (crypto as any).randomUUID ? (crypto as any).randomUUID() : `${Date.now()}-${Math.random()}`, type: 'screen.start', payload: {} })}
+                   >
+                     {t('manual.quick.startStream')}
+                   </button>
+                   <button
+                     className="flex-1 px-3 py-2 bg-[#3B82F6] text-white rounded-lg text-sm font-medium shadow hover:bg-[#1E3A8A] disabled:bg-[#D1D5DB] disabled:text-[#8F8F8F] disabled:cursor-not-allowed transition-colors"
+                     disabled={disabled}
+                     onClick={() => addAction && addAction({ id: typeof crypto !== 'undefined' && (crypto as any).randomUUID ? (crypto as any).randomUUID() : `${Date.now()}-${Math.random()}`, type: 'screen.stop', payload: {} })}
+                   >
+                     {t('manual.quick.stopStream')}
+                   </button>
+                 </div>
+               </div>
+             )}
+
              {/* Navigation Links (Accordion) - HIDDEN in Manual mode */}
              {activeMode !== 'manual' && (
                <nav className="flex-grow space-y-1">
@@ -115,4 +139,4 @@ export const Sidebar: React.FC<SidebarProps & { addAction?: (action: any) => voi
              </div>
          </div>
      );
- };
+ }

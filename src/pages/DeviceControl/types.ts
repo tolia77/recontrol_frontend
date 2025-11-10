@@ -16,6 +16,9 @@ export interface SidebarProps {
     setActiveMode: (mode: Mode) => void;
     openAccordion: AccordionSection | null;
     setOpenAccordion: (item: AccordionSection | null) => void;
+    // new optional props for moving quick actions
+    permissions?: PermissionsSubset;
+    disabled?: boolean;
 }
 
 // Command action contract used for sending backend commands

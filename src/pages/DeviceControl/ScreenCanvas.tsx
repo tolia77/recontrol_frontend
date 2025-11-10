@@ -50,7 +50,6 @@ export const ScreenCanvas: React.FC<ScreenCanvasProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          borderRadius: '0.75rem',
           boxShadow: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
         }}
       >

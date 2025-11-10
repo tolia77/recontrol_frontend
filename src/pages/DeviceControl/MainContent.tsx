@@ -4,7 +4,6 @@ import {computeRealImageCoords} from './utils/coords.ts';
 import {buttonName, pressedButtonsFromMask, normalizeWheelToClicks, mapButtonToBackend} from './utils/mouse.ts';
 import {mapToVirtualKey} from './utils/keyboard.ts';
 import {ScreenCanvas} from './ScreenCanvas.tsx';
-import {QuickActions} from './QuickActions.tsx';
 import {ManualControls} from './ManualControls.tsx';
 
 /**
@@ -251,9 +250,12 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
     const height = naturalSize?.h || 0;
 
     return (
-        <div className="flex-1 bg-[#F3F4F6] p-8 flex flex-col items-center">
+        <div className="flex-1 bg-[#F3F4F6] p-2 flex flex-col items-center">
             {activeMode === 'manual' ? (
-                <ManualControls disabled={disabled} addAction={addAction} results={terminalResults} processes={processes} processesLoading={processesLoading} requestListProcesses={requestListProcesses} killProcess={killProcess} permissions={permissions}/>
+                <ManualControls disabled={disabled} addAction={addAction} results={terminalResults}
+                                processes={processes} processesLoading={processesLoading}
+                                requestListProcesses={requestListProcesses} killProcess={killProcess}
+                                permissions={permissions}/>
             ) : (
                 <ScreenCanvas
                     latestBatch={latestBatch}
@@ -272,7 +274,6 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                     disabled={disabled || !naturalSize}
                 />
             )}
-            {permissions?.see_screen && <QuickActions disabled={disabled} addAction={addAction}/>}
         </div>
     );
 };

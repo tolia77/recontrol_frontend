@@ -2,10 +2,11 @@ import React, {useState, useEffect, useRef} from "react";
 import {uuidv4} from "src/utils/uuid.ts";
 import {Sidebar} from "src/pages/DeviceControl/Sidebar.tsx";
 import {MainContent} from "src/pages/DeviceControl/MainContent.tsx";
-import {getAccessToken, getRefreshToken, saveTokens} from "src/utils/auth.ts";
+import {getAccessToken, getRefreshToken, saveTokens, getUserId} from "src/utils/auth.ts";
 import {refreshTokenRequest} from "src/services/backend/authRequests.ts";
 import type {AccordionSection, Mode, FrameBatch, FrameRegion} from "src/pages/DeviceControl/types.ts";
 import { getMyDeviceSharesForDeviceRequest } from "src/services/backend/deviceSharesRequests.ts";
+import { getDeviceRequest } from "src/services/backend/devicesRequests.ts";
 import type { DeviceShare } from "src/types/global";
 
 interface CommandWebSocketProps {
@@ -54,6 +55,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
     // permissions state
     const [permissionsLoading, setPermissionsLoading] = useState(false);
     const [permissions, setPermissions] = useState<DevicePermissions | null>(null);
+    const [isOwner, setIsOwner] = useState<boolean>(false);
 
     const buildPermissions = (share: DeviceShare | null): DevicePermissions => {
         const pg = share?.permissions_group;
@@ -80,17 +82,19 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         };
     };
 
-    const fetchPermissions = async (devId: string) => {
+    const fetchPermissions = async (devId: string, ownerOverride: boolean) => {
         if (!devId) return;
         setPermissionsLoading(true);
         try {
+            if (ownerOverride) {
+                setPermissions(buildPermissions(null)); // full access
+                return;
+            }
             const res = await getMyDeviceSharesForDeviceRequest(devId);
-            // items may be empty (owner) or contain share(s). Choose first relevant.
             const share = res.data.items && res.data.items.length ? res.data.items[0] : null;
             setPermissions(buildPermissions(share));
         } catch (e) {
             console.warn('Failed to load device permissions', e);
-            // fallback to full permissions if request fails (could also choose to deny)
             setPermissions(buildPermissions(null));
         } finally {
             setPermissionsLoading(false);
@@ -338,27 +342,42 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
     }, []);
 
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const paramDeviceId = params.get("device_id");
-        if (paramDeviceId) {
+        const init = async () => {
+            const params = new URLSearchParams(window.location.search);
+            const paramDeviceId = params.get("device_id");
+            if (!paramDeviceId) return;
             setDeviceId(paramDeviceId);
             lastDeviceIdRef.current = paramDeviceId;
-            void fetchPermissions(paramDeviceId);
+            // Determine ownership first
+            try {
+                const deviceRes = await getDeviceRequest(paramDeviceId);
+                const deviceUserId = deviceRes.data?.user?.id;
+                const currentUserId = getUserId();
+                const owner = deviceUserId && currentUserId && String(deviceUserId) === String(currentUserId);
+                setIsOwner(!!owner);
+                await fetchPermissions(paramDeviceId, !!owner);
+            } catch (e) {
+                console.warn('Failed to fetch device info for ownership', e);
+                // fallback assume not owner but grant full to avoid lockout
+                setIsOwner(false);
+                await fetchPermissions(paramDeviceId, false);
+            }
+            // Connect after permissions resolved
             connectWebSocket(paramDeviceId);
-        }
+        };
+        void init();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // gating logic for outgoing commands based on permissions
     const canSend = (type: string): boolean => {
-        if (!permissions) return false; // still loading, disallow
-        // screen start/stop allow only if see_screen
+        if (!permissions) return false; // still loading
+        if (isOwner) return true; // owners bypass all restrictions
         if (type.startsWith('screen.')) return permissions.see_screen;
         if (type.startsWith('mouse.')) return permissions.access_mouse;
         if (type.startsWith('keyboard.')) return permissions.access_keyboard;
         if (type.startsWith('terminal.')) return permissions.access_terminal;
         if (type.startsWith('power.')) return permissions.manage_power;
-        // default allow
         return true;
     };
 
@@ -420,6 +439,8 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                 openAccordion={openAccordion}
                 setOpenAccordion={setOpenAccordion}
                 addAction={sendSingleAction}
+                permissions={permissions || undefined}
+                disabled={overallDisabled}
                 // could pass permissions for conditional UI (future)
             />
             <main className="flex-1 ml-64">
@@ -435,7 +456,6 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                     killProcess={killProcess}
                     permissions={permissions || undefined}
                 />
-                {/* Removed inline quick actions; handled inside MainContent with permissions gating */}
             </main>
         </div>
     );
