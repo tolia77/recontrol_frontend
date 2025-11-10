@@ -443,7 +443,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                 disabled={overallDisabled}
                 // could pass permissions for conditional UI (future)
             />
-            <main className="flex-1 ml-64">
+            <main className={`flex-1 ml-64 ${activeMode === 'interactive' ? 'overflow-hidden' : ''}`}>
                 <MainContent
                     disabled={overallDisabled}
                     addAction={sendSingleAction}
