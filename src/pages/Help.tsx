@@ -1,15 +1,20 @@
-import React from 'react';
 import { Link } from 'react-router';
 import { useTranslation, Trans } from 'react-i18next';
+import { Button } from 'src/components/ui/Button';
+
+interface FAQItem {
+  q: string;
+  a: string;
+}
 
 function Help() {
   const { t } = useTranslation('help');
 
-  const groups: Array<{ key: string; title: string; items: { q: string; a: string }[] }> = [
-    { key: 'getting_started', title: t('groups.getting_started.title'), items: t('groups.getting_started.items', { returnObjects: true }) as unknown as { q: string; a: string }[] },
-    { key: 'devices', title: t('groups.devices.title'), items: t('groups.devices.items', { returnObjects: true }) as unknown as { q: string; a: string }[] },
-    { key: 'sessions', title: t('groups.sessions.title'), items: t('groups.sessions.items', { returnObjects: true }) as unknown as { q: string; a: string }[] },
-    { key: 'account', title: t('groups.account.title'), items: t('groups.account.items', { returnObjects: true }) as unknown as { q: string; a: string }[] },
+  const groups: Array<{ key: string; title: string; items: FAQItem[] }> = [
+    { key: 'getting_started', title: t('groups.getting_started.title'), items: t('groups.getting_started.items', { returnObjects: true }) as FAQItem[] },
+    { key: 'devices', title: t('groups.devices.title'), items: t('groups.devices.items', { returnObjects: true }) as FAQItem[] },
+    { key: 'sessions', title: t('groups.sessions.title'), items: t('groups.sessions.items', { returnObjects: true }) as FAQItem[] },
+    { key: 'account', title: t('groups.account.title'), items: t('groups.account.items', { returnObjects: true }) as FAQItem[] },
   ];
 
   return (
@@ -22,7 +27,9 @@ function Help() {
           <div className="absolute -bottom-20 -right-20 h-64 w-64 rounded-full bg-accent/20 blur-3xl" />
         </div>
         <div className="container mx-auto px-6 py-10">
-          <h1 className="text-3xl md:text-4xl font-extrabold text-primary tracking-tight mb-2">{t('header.title')}</h1>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-primary tracking-tight mb-2">
+            {t('header.title')}
+          </h1>
           <p className="text-darkgray">
             <Trans
               ns="help"
@@ -36,8 +43,12 @@ function Help() {
       {/* Quick links */}
       <section className="container mx-auto px-6">
         <div className="flex flex-wrap gap-3">
-          <Link to="/login" className="button-secondary inline-flex items-center justify-center">{t('actions.login')}</Link>
-          <Link to="/signup" className="button-primary inline-flex items-center justify-center">{t('actions.signup')}</Link>
+          <Link to="/login">
+            <Button variant="secondary">{t('actions.login')}</Button>
+          </Link>
+          <Link to="/signup">
+            <Button>{t('actions.signup')}</Button>
+          </Link>
         </div>
       </section>
 
@@ -51,12 +62,24 @@ function Help() {
           </div>
 
           <aside className="lg:col-span-1">
-            <div className="p-5 rounded-xl border border-lightgray bg-white/90 backdrop-blur-sm shadow-sm">
+            <div className="p-5 rounded-xl border border-lightgray bg-white/90 backdrop-blur-sm shadow-sm sticky top-6">
               <h3 className="font-semibold mb-2">{t('groups.more_help.title')}</h3>
               <p className="text-caption-small text-darkgray mb-4">{t('groups.more_help.description')}</p>
               <div className="space-y-2">
-                <a className="block text-secondary underline" href="#" onClick={(e)=>e.preventDefault()}>{t('groups.more_help.docs_link')}</a>
-                <a className="block text-secondary underline" href="#" onClick={(e)=>e.preventDefault()}>{t('groups.more_help.community_link')}</a>
+                <a
+                  className="block text-secondary hover:underline"
+                  href="#"
+                  onClick={(e) => e.preventDefault()}
+                >
+                  {t('groups.more_help.docs_link')}
+                </a>
+                <a
+                  className="block text-secondary hover:underline"
+                  href="#"
+                  onClick={(e) => e.preventDefault()}
+                >
+                  {t('groups.more_help.community_link')}
+                </a>
               </div>
             </div>
           </aside>
@@ -66,16 +89,23 @@ function Help() {
   );
 }
 
-function FAQGroup({ title, faqs }: { title: string; faqs: { q: string; a: string }[] }) {
+interface FAQGroupProps {
+  title: string;
+  faqs: FAQItem[];
+}
+
+function FAQGroup({ title, faqs }: FAQGroupProps) {
   return (
     <div className="mb-6">
       <h2 className="text-2xl font-semibold text-primary mb-3">{title}</h2>
       <div className="divide-y divide-lightgray rounded-xl border border-lightgray bg-white overflow-hidden">
         {faqs.map((item, idx) => (
-          <details key={idx} className="group open:shadow-none">
-            <summary className="cursor-pointer list-none p-4 flex items-center justify-between hover:bg-background/60">
+          <details key={idx} className="group">
+            <summary className="cursor-pointer list-none p-4 flex items-center justify-between hover:bg-background/60 transition-colors">
               <span className="font-medium">{item.q}</span>
-              <span className="ml-4 h-6 w-6 inline-flex items-center justify-center rounded-full bg-tertiary text-primary">+</span>
+              <span className="ml-4 h-6 w-6 inline-flex items-center justify-center rounded-full bg-tertiary text-primary group-open:rotate-45 transition-transform">
+                +
+              </span>
             </summary>
             <div className="p-4 pt-0 text-darkgray text-body-small">{item.a}</div>
           </details>

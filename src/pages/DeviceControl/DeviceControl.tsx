@@ -1,13 +1,13 @@
-import React, {useState, useEffect, useRef} from "react";
-import {uuidv4} from "src/utils/uuid.ts";
-import {Sidebar} from "src/pages/DeviceControl/Sidebar.tsx";
-import {MainContent} from "src/pages/DeviceControl/MainContent.tsx";
-import {getAccessToken, getRefreshToken, saveTokens, getUserId} from "src/utils/auth.ts";
-import {refreshTokenRequest} from "src/services/backend/authRequests.ts";
-import type {AccordionSection, Mode, FrameBatch, FrameRegion} from "src/pages/DeviceControl/types.ts";
-import { getMyDeviceSharesForDeviceRequest } from "src/services/backend/deviceSharesRequests.ts";
-import { getDeviceRequest } from "src/services/backend/devicesRequests.ts";
-import type { DeviceShare } from "src/types/global";
+import { useState, useEffect, useRef } from 'react';
+import { generateUUID } from 'src/utils/uuid';
+import { Sidebar } from 'src/pages/DeviceControl/Sidebar';
+import { MainContent } from 'src/pages/DeviceControl/MainContent';
+import { getAccessToken, getRefreshToken, saveTokens, getUserId } from 'src/utils/auth';
+import { refreshTokenRequest } from 'src/services/backend/authRequests';
+import type { AccordionSection, Mode, FrameBatch, FrameRegion, CommandAction } from 'src/pages/DeviceControl/types';
+import { getMyDeviceSharesForDeviceRequest } from 'src/services/backend/deviceSharesRequests';
+import { getDeviceRequest } from 'src/services/backend/devicesRequests';
+import type { DeviceShare } from 'src/types/global';
 
 interface CommandWebSocketProps {
     wsUrl: string;
@@ -226,7 +226,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                                     width: Number(r.width) || 0,
                                     height: Number(r.height) || 0,
                                 }));
-                                const batch: FrameBatch = {id: uuidv4(), regions};
+                                const batch: FrameBatch = {id: generateUUID(), regions};
                                 setFrames((prev) => {
                                     const next = [...prev, batch];
                                     return next.slice(-60);
@@ -402,7 +402,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
             return;
         }
         const msg = {
-            id: action.id ?? uuidv4(),
+            id: action.id ?? generateUUID(),
             command: action.type,
             payload: action.payload ?? {},
         };

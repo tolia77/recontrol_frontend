@@ -1,13 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { getUserId, clearTokens, saveUserRole, saveUserId } from 'src/utils/auth.ts';
-import { getUserRequest, updateUserSelfRequest } from 'src/services/backend/usersRequests.ts';
-import { logoutRequest } from 'src/services/backend/authRequests.ts';
-import type { UserResponse } from 'src/services/backend/usersRequests.ts';
+import { useEffect, useState } from 'react';
+import { getUserId, clearAuth } from 'src/utils/auth';
+import { getUserRequest, updateUserSelfRequest } from 'src/services/backend/usersRequests';
+import { logoutRequest } from 'src/services/backend/authRequests';
+import type { UserResponse } from 'src/services/backend/usersRequests';
 import { useTranslation } from 'react-i18next';
+import { useToast } from 'src/components/ui/Toast';
+import { Button } from 'src/components/ui/Button';
+import { LoadingOverlay } from 'src/components/ui/Spinner';
 
 function UserSettings() {
   const { t } = useTranslation('userSettings');
+  const toast = useToast();
   const userId = getUserId();
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
@@ -15,30 +20,31 @@ function UserSettings() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState<string[]>([]);
-  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
-      if (!userId) { setLoading(false); return; }
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
       try {
         const res = await getUserRequest(userId);
         setUser(res.data);
         setUsername(res.data.username);
         setEmail(res.data.email);
-      } catch (err) {
-        setErrors([t('errors.loadFailed')]);
+      } catch {
+        toast.error(t('errors.loadFailed'));
       } finally {
         setLoading(false);
       }
     }
     void load();
-  }, [userId, t]);
+  }, [userId, t, toast]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setErrors([]); setSuccess(null);
-    if (!userId) { return; }
+    if (!userId) return;
+
     setSaving(true);
     try {
       const payload: { username?: string; email?: string; password?: string } = {};
@@ -49,7 +55,7 @@ function UserSettings() {
       const res = await updateUserSelfRequest(userId, payload);
       setUser(res.data);
       setPassword('');
-      setSuccess(t('messages.saved'));
+      toast.success(t('messages.saved'));
     } catch (error) {
       const resp = (error as { response?: { status?: number; data?: unknown } }).response;
       if (resp?.status === 422) {
@@ -65,11 +71,11 @@ function UserSettings() {
             }
           });
         }
-        setErrors(msgs.length ? msgs : [t('errors.saveFailed')]);
+        toast.error(msgs.length ? msgs.join(', ') : t('errors.saveFailed'));
       } else if (resp?.status === 403) {
-        setErrors([t('errors.forbidden')]);
+        toast.error(t('errors.forbidden'));
       } else {
-        setErrors([t('errors.saveFailed')]);
+        toast.error(t('errors.saveFailed'));
       }
     } finally {
       setSaving(false);
@@ -83,69 +89,84 @@ function UserSettings() {
     } catch {
       // ignore error; proceed with local cleanup
     } finally {
-      clearTokens();
-      saveUserRole(null);
-      saveUserId('');
+      clearAuth();
       window.location.replace('/login');
     }
   }
 
   if (loading) {
-    return <div className="p-6"><p>{t('loading')}</p></div>;
+    return <LoadingOverlay message={t('loading')} />;
   }
 
   if (!userId) {
-    return <div className="p-6"><p>{t('errors.notLoggedIn')}</p></div>;
+    return (
+      <div className="p-6">
+        <p>{t('errors.notLoggedIn')}</p>
+      </div>
+    );
   }
 
   return (
     <div className="p-6 max-w-xl">
       <h1 className="text-2xl font-semibold mb-4">{t('title')}</h1>
+      
       <form onSubmit={handleSubmit} className="space-y-4">
-        {errors.length > 0 && (
-          <div className="space-y-1">
-            {errors.map(err => <p key={err} className="text-error text-sm">{err}</p>)}
-          </div>
-        )}
-        {success && <p className="text-green-600 text-sm">{success}</p>}
         <div>
-          <label className="text-body-small" htmlFor="username">{t('fields.username')}</label>
+          <label className="text-sm font-medium text-text" htmlFor="username">
+            {t('fields.username')}
+          </label>
           <input
             id="username"
             type="text"
-            className="w-full"
+            className="w-full mt-1"
             value={username}
             onChange={e => setUsername(e.target.value)}
             required
           />
         </div>
+
         <div>
-          <label className="text-body-small" htmlFor="email">{t('fields.email')}</label>
+          <label className="text-sm font-medium text-text" htmlFor="email">
+            {t('fields.email')}
+          </label>
           <input
             id="email"
             type="email"
-            className="w-full"
+            className="w-full mt-1"
             value={email}
             onChange={e => setEmail(e.target.value)}
             required
           />
         </div>
+
         <div>
-          <label className="text-body-small" htmlFor="password">{t('fields.password')} <span className="opacity-60">({t('fields.passwordHelp')})</span></label>
+          <label className="text-sm font-medium text-text" htmlFor="password">
+            {t('fields.password')}{' '}
+            <span className="opacity-60">({t('fields.passwordHelp')})</span>
+          </label>
           <input
             id="password"
             type="password"
-            className="w-full"
+            className="w-full mt-1"
             value={password}
             onChange={e => setPassword(e.target.value)}
             placeholder={t('fields.passwordPlaceholder')}
           />
         </div>
-        <button type="submit" className="button-primary" disabled={saving}>{saving ? t('buttons.saving') : t('buttons.save')}</button>
+
+        <Button type="submit" loading={saving}>
+          {saving ? t('buttons.saving') : t('buttons.save')}
+        </Button>
       </form>
-      <button type="button" onClick={handleLogout} disabled={logoutLoading} className="btn-danger w-full mt-8">
-        {logoutLoading ? '…' : t('userSettings:buttons.logout')}
-      </button>
+
+      <Button
+        variant="danger"
+        onClick={handleLogout}
+        loading={logoutLoading}
+        className="w-full mt-8"
+      >
+        {t('buttons.logout')}
+      </Button>
     </div>
   );
 }

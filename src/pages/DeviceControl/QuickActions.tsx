@@ -1,21 +1,22 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { generateUUID } from 'src/utils/uuid';
+import { Button } from 'src/components/ui/Button';
 
 interface QuickActionsProps {
   disabled: boolean;
   addAction: (action: { id: string; type: string; payload: Record<string, unknown> }) => void;
 }
 
-export const QuickActions: React.FC<QuickActionsProps> = ({ disabled, addAction }) => {
+export function QuickActions({ disabled, addAction }: QuickActionsProps) {
   const { t } = useTranslation('deviceControl');
+
   return (
     <div className="quick-actions mt-6">
       <div className="action-buttons flex gap-4">
-        <button
-          className="px-4 py-2 bg-[#3B82F6] text-white rounded-lg font-medium shadow hover:bg-[#1E3A8A] disabled:bg-[#D1D5DB] disabled:text-[#8F8F8F] disabled:cursor-not-allowed transition-colors"
+        <Button
           onClick={() =>
             addAction({
-              id: crypto.randomUUID(),
+              id: generateUUID(),
               type: 'screen.start',
               payload: {},
             })
@@ -23,12 +24,11 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ disabled, addAction 
           disabled={disabled}
         >
           {t('manual.quick.startStream')}
-        </button>
-        <button
-          className="px-4 py-2 bg-[#3B82F6] text-white rounded-lg font-medium shadow hover:bg-[#1E3A8A] disabled:bg-[#D1D5DB] disabled:text-[#8F8F8F] disabled:cursor-not-allowed transition-colors"
+        </Button>
+        <Button
           onClick={() =>
             addAction({
-              id: crypto.randomUUID(),
+              id: generateUUID(),
               type: 'screen.stop',
               payload: {},
             })
@@ -36,8 +36,8 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ disabled, addAction 
           disabled={disabled}
         >
           {t('manual.quick.stopStream')}
-        </button>
+        </Button>
       </div>
     </div>
   );
-};
+}
