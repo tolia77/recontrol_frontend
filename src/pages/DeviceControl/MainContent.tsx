@@ -1,19 +1,17 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
-import type { MainContentProps, FrameBatch, FrameRegion } from './types';
+import { useRef, useCallback } from 'react';
+import type { MainContentProps } from './types';
 import { computeRealImageCoords } from './utils/coords';
 import { buttonName, pressedButtonsFromMask, normalizeWheelToClicks, mapButtonToBackend } from './utils/mouse';
 import { mapToVirtualKey } from './utils/keyboard';
-import { ScreenCanvas } from './ScreenCanvas';
 import { ManualControls } from './ManualControls';
 import { generateUUID } from 'src/utils/uuid';
 
 /**
- * Main Content Area with region-based frame compositing
+ * Main Content Area with WebRTC video stream
  */
 export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive' | 'manual' }> = ({
                                                                                                        disabled,
                                                                                                        addAction,
-                                                                                                       frames = [],
                                                                                                        activeMode,
                                                                                                        terminalResults,
                                                                                                        processes,
@@ -21,93 +19,29 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                                                                                                        requestListProcesses,
                                                                                                        killProcess,
                                                                                                        permissions,
+                                                                                                       videoRef,
+                                                                                                       webRtcConnected,
                                                                                                    }) => {
-    // region-based frames: latest batch
-    const latestBatch: FrameBatch | null = frames.length ? frames[frames.length - 1] : null;
-
-    // canvas & overlay refs
-    const containerRef = useRef<HTMLDivElement | null>(null);
-    const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    // overlay & container refs
     const overlayRef = useRef<HTMLDivElement | null>(null);
+    const videoContainerRef = useRef<HTMLDivElement | null>(null);
 
-    // natural size from first full frame region encountered
-    const [naturalSize, setNaturalSize] = useState<{ w: number; h: number } | null>(null);
     const lastCoordsRef = useRef<{ x: number; y: number } | null>(null);
     const lastMoveSentAtRef = useRef<number>(0);
 
-    // Derived natural size when a full region appears for the first time (only in interactive mode)
-    useEffect(() => {
-        if (activeMode !== 'interactive') return;
-        if (!latestBatch) return;
-        if (!naturalSize) {
-            const fullRegion = latestBatch.regions.find(r => r.isFull && r.width > 0 && r.height > 0);
-            if (fullRegion) {
-                setNaturalSize({w: fullRegion.width, h: fullRegion.height});
-            } else {
-                // Fallback: infer extents from current batch if possible
-                let maxRight = 0;
-                let maxBottom = 0;
-                for (const r of latestBatch.regions) {
-                    const right = (r.x || 0) + (r.width || 0);
-                    const bottom = (r.y || 0) + (r.height || 0);
-                    if (right > maxRight) maxRight = right;
-                    if (bottom > maxBottom) maxBottom = bottom;
-                }
-                if (maxRight > 0 && maxBottom > 0) {
-                    setNaturalSize({w: maxRight, h: maxBottom});
-                }
-            }
-        }
-    }, [activeMode, latestBatch, naturalSize]);
-
-    // Composite regions onto the canvas whenever a new batch arrives (only in interactive mode)
-    useEffect(() => {
-        if (activeMode !== 'interactive') return;
-        if (!latestBatch || !naturalSize) return;
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        // Ensure canvas size matches natural size
-        if (canvas.width !== naturalSize.w || canvas.height !== naturalSize.h) {
-            canvas.width = naturalSize.w;
-            canvas.height = naturalSize.h;
-        }
-
-        // Draw each region
-        latestBatch.regions.forEach((region: FrameRegion) => {
-            try {
-                if (!region.image) return;
-                const img = new Image();
-                img.onload = () => {
-                    // If full frame flag, optionally clear before drawing full frame
-                    if (region.isFull) {
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    }
-                    ctx.drawImage(img, region.x, region.y, region.width, region.height);
-                };
-                img.onerror = (e) => {
-                    console.warn('Failed to load region image', e);
-                };
-                img.src = `data:image/jpeg;base64,${region.image}`;
-            } catch (err) {
-                console.warn('Error drawing region', err);
-            }
-        });
-    }, [activeMode, latestBatch, naturalSize]);
-
     const getRealCoordsFromClient = useCallback((clientX: number, clientY: number) => {
-        const container = containerRef.current;
-        const canvas = canvasRef.current;
-        if (!container || !canvas || !naturalSize) return null;
-
-        const rect = container.getBoundingClientRect();
-        const nW = naturalSize.w;
-        const nH = naturalSize.h;
-
-        return computeRealImageCoords(rect, nW, nH, clientX, clientY);
-    }, [naturalSize]);
+        if (videoRef?.current) {
+            const video = videoRef.current;
+            const container = videoContainerRef.current;
+            if (!container) return null;
+            const nW = video.videoWidth;
+            const nH = video.videoHeight;
+            if (!nW || !nH) return null;
+            const rect = container.getBoundingClientRect();
+            return computeRealImageCoords(rect, nW, nH, clientX, clientY);
+        }
+        return null;
+    }, [videoRef]);
 
     // Helper: check permission for mouse/keyboard/scroll events
     const hasMouse = !!permissions?.access_mouse;
@@ -247,9 +181,6 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
         }
     }, [activeMode, getRealCoordsFromClient, addAction, disabled, hasMouse]);
 
-    const width = naturalSize?.w || 0;
-    const height = naturalSize?.h || 0;
-
     return (
         <div className="flex-1 bg-[#F3F4F6] p-2 flex flex-col items-center">
             {activeMode === 'manual' ? (
@@ -257,23 +188,88 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                                 processes={processes} processesLoading={processesLoading}
                                 requestListProcesses={requestListProcesses} killProcess={killProcess}
                                 permissions={permissions}/>
+            ) : webRtcConnected && videoRef ? (
+                <div className="canvas-container w-full" style={{ maxWidth: 1280 }}>
+                    <div
+                        ref={videoContainerRef}
+                        className="canvas-placeholder"
+                        style={{
+                            position: 'relative',
+                            width: '100%',
+                            aspectRatio: (videoRef.current?.videoWidth && videoRef.current?.videoHeight)
+                                ? `${videoRef.current.videoWidth}/${videoRef.current.videoHeight}`
+                                : '16/9',
+                            background: '#111827',
+                            overflow: 'hidden',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
+                        }}
+                    >
+                        <video
+                            ref={videoRef}
+                            autoPlay
+                            playsInline
+                            muted
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'contain',
+                                zIndex: 1,
+                                pointerEvents: 'none',
+                                background: '#000',
+                            }}
+                        />
+                        <div
+                            ref={overlayRef}
+                            className="overlay pointer-events-auto"
+                            onPointerDown={disabled ? undefined : handlePointerDown}
+                            onPointerMove={disabled ? undefined : handlePointerMove}
+                            onPointerUp={disabled ? undefined : handlePointerUp}
+                            onPointerCancel={disabled ? undefined : handlePointerCancel}
+                            onWheel={disabled ? undefined : handleWheel}
+                            onContextMenu={(e) => { e.preventDefault(); }}
+                            tabIndex={0}
+                            onKeyDown={disabled ? undefined : handleKeyDown}
+                            onKeyUp={disabled ? undefined : handleKeyUp}
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                height: '100%',
+                                zIndex: 10,
+                                background: 'transparent',
+                                outline: 'none',
+                            }}
+                        />
+                    </div>
+                </div>
             ) : (
-                <ScreenCanvas
-                    latestBatch={latestBatch}
-                    containerRef={containerRef}
-                    canvasRef={canvasRef}
-                    overlayRef={overlayRef}
-                    width={width}
-                    height={height}
-                    onPointerDown={handlePointerDown}
-                    onPointerMove={handlePointerMove}
-                    onPointerUp={handlePointerUp}
-                    onPointerCancel={handlePointerCancel}
-                    onWheel={handleWheel}
-                    onKeyDown={handleKeyDown}
-                    onKeyUp={handleKeyUp}
-                    disabled={disabled || !naturalSize}
-                />
+                <div className="canvas-container w-full" style={{ maxWidth: 1280 }}>
+                    <div
+                        className="canvas-placeholder"
+                        style={{
+                            position: 'relative',
+                            width: '100%',
+                            aspectRatio: '16/9',
+                            background: '#111827',
+                            overflow: 'hidden',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
+                        }}
+                    >
+                        <div style={{ position: 'relative', zIndex: 3, color: '#D1D5DB' }}>
+                            <span className="text-lg font-medium">Waiting for WebRTC connection...</span>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

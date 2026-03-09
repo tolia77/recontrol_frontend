@@ -1,13 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { generateUUID } from 'src/utils/uuid';
 import { Sidebar } from 'src/pages/DeviceControl/Sidebar';
 import { MainContent } from 'src/pages/DeviceControl/MainContent';
 import { getAccessToken, getRefreshToken, saveTokens, getUserId } from 'src/utils/auth';
 import { refreshTokenRequest } from 'src/services/backend/authRequests';
-import type { AccordionSection, Mode, FrameBatch, FrameRegion, CommandAction } from 'src/pages/DeviceControl/types';
+import type { AccordionSection, Mode, CommandAction } from 'src/pages/DeviceControl/types';
 import { getMyDeviceSharesForDeviceRequest } from 'src/services/backend/deviceSharesRequests';
 import { getDeviceRequest } from 'src/services/backend/devicesRequests';
 import type { DeviceShare } from 'src/types/global';
+import { useWebRtc } from './hooks/useWebRtc';
 
 interface CommandWebSocketProps {
     wsUrl: string;
@@ -16,7 +17,7 @@ interface CommandWebSocketProps {
 interface InnerMessage {
     id?: string;
     command?: string;
-    payload?: Record<string, unknown> & { regions?: Array<{ image: string; isFull?: boolean; x?: number; y?: number; width?: number; height?: number }> };
+    payload?: Record<string, unknown>;
     status?: string;
     result?: string | number | boolean | null | Record<string, unknown> | Array<unknown>;
 }
@@ -47,7 +48,6 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
     const [activeMode, setActiveMode] = useState<Mode>("interactive");
     const [openAccordion, setOpenAccordion] = useState<AccordionSection | null>(null);
 
-    const [frames, setFrames] = useState<FrameBatch[]>([]);
     const [terminalResults, setTerminalResults] = useState<{ id: string; status: string; result: string }[]>([]);
     const [processes, setProcesses] = useState<{ Pid: number; Name: string; MemoryMB?: number; CpuTime?: string; StartTime?: string }[]>([]);
     const [processesLoading, setProcessesLoading] = useState(false);
@@ -211,27 +211,10 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                         const payload = msg.payload ?? {};
                         const originalCmd = msg.id ? pendingCommandsRef.current.get(msg.id) : undefined;
 
-                        if (cmd === "screen.frame_batch") {
-                            // If user lacks screen permission, ignore incoming frames
-                            if (permissions && !permissions.see_screen) {
-                                return;
-                            }
-                            const regionsRaw = Array.isArray(payload.regions) ? payload.regions : [];
-                            if (regionsRaw.length) {
-                                const regions: FrameRegion[] = regionsRaw.map((r) => ({
-                                    image: r.image,
-                                    isFull: !!r.isFull,
-                                    x: Number(r.x) || 0,
-                                    y: Number(r.y) || 0,
-                                    width: Number(r.width) || 0,
-                                    height: Number(r.height) || 0,
-                                }));
-                                const batch: FrameBatch = {id: generateUUID(), regions};
-                                setFrames((prev) => {
-                                    const next = [...prev, batch];
-                                    return next.slice(-60);
-                                });
-                            }
+                        // WebRTC signaling
+                        if (cmd === 'webrtc.answer' || cmd === 'webrtc.ice_candidate') {
+                            handleSignalingMessage(cmd, payload);
+                            return;
                         }
 
                         // terminal & misc results
@@ -396,6 +379,12 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         );
     };
 
+    const sendWebRtcSignal = useCallback((command: string, payload: Record<string, unknown>) => {
+        sendMessagePayload({ command, payload });
+    }, []);
+
+    const { videoRef, startWebRtc, stopWebRtc, handleSignalingMessage, isConnected: webRtcConnected } = useWebRtc({ sendMessage: sendWebRtcSignal });
+
     const sendSingleAction = (action: { id?: string; type: string; payload?: Record<string, unknown> }) => {
         if (!canSend(action.type)) {
             console.warn(`Blocked command '${action.type}' due to insufficient permissions`);
@@ -441,13 +430,13 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                 addAction={sendSingleAction}
                 permissions={permissions || undefined}
                 disabled={overallDisabled}
-                // could pass permissions for conditional UI (future)
+                onStartStream={startWebRtc}
+                onStopStream={stopWebRtc}
             />
             <main className={`flex-1 ml-64 ${activeMode === 'interactive' ? 'overflow-hidden' : ''}`}>
                 <MainContent
                     disabled={overallDisabled}
                     addAction={sendSingleAction}
-                    frames={frames}
                     activeMode={activeMode}
                     terminalResults={terminalResults}
                     processes={processes}
@@ -455,6 +444,8 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                     requestListProcesses={requestListProcesses}
                     killProcess={killProcess}
                     permissions={permissions || undefined}
+                    videoRef={videoRef}
+                    webRtcConnected={webRtcConnected}
                 />
             </main>
         </div>

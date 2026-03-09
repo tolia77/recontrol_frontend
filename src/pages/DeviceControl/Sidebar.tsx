@@ -14,6 +14,8 @@ type PowerCommand =
 
 interface ExtendedSidebarProps extends SidebarProps {
   addAction?: (action: CommandAction) => void;
+  onStartStream?: () => void;
+  onStopStream?: () => void;
 }
 
 export function Sidebar({
@@ -24,6 +26,8 @@ export function Sidebar({
   addAction,
   permissions,
   disabled,
+  onStartStream,
+  onStopStream,
 }: ExtendedSidebarProps) {
   const { t } = useTranslation('deviceControl');
 
@@ -98,14 +102,14 @@ export function Sidebar({
             <button
               className="flex-1 px-3 py-2 bg-secondary text-white rounded-lg text-sm font-medium shadow hover:bg-primary disabled:bg-lightgray disabled:text-darkgray disabled:cursor-not-allowed transition-colors"
               disabled={disabled}
-              onClick={() => sendAction('screen.start')}
+              onClick={() => onStartStream ? onStartStream() : sendAction('screen.start')}
             >
               {t('manual.quick.startStream')}
             </button>
             <button
               className="flex-1 px-3 py-2 bg-secondary text-white rounded-lg text-sm font-medium shadow hover:bg-primary disabled:bg-lightgray disabled:text-darkgray disabled:cursor-not-allowed transition-colors"
               disabled={disabled}
-              onClick={() => sendAction('screen.stop')}
+              onClick={() => onStopStream ? onStopStream() : sendAction('screen.stop')}
             >
               {t('manual.quick.stopStream')}
             </button>

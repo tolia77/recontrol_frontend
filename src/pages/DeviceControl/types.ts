@@ -71,4 +71,6 @@ export interface MainContentProps {
     requestListProcesses?: () => void;
     killProcess?: (pid: number) => void;
     permissions?: PermissionsSubset; // new
+    videoRef?: React.RefObject<HTMLVideoElement | null>;
+    webRtcConnected?: boolean;
 }
