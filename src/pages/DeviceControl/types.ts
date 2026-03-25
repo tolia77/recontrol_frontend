@@ -1,5 +1,8 @@
+import type { WebRtcConnectionState } from './hooks/useWebRtc';
+
 export type Mode = 'interactive' | 'manual';
 export type AccordionSection = 'power' | 'terminal' | 'processes';
+export type ScalingMode = 'fit' | '1:1';
 
 export interface IconProps {
     className?: string;
@@ -19,6 +22,7 @@ export interface SidebarProps {
     // new optional props for moving quick actions
     permissions?: PermissionsSubset;
     disabled?: boolean;
+    connectionState?: WebRtcConnectionState;
 }
 
 // Command action contract used for sending backend commands
@@ -70,7 +74,9 @@ export interface MainContentProps {
     processesLoading?: boolean;
     requestListProcesses?: () => void;
     killProcess?: (pid: number) => void;
-    permissions?: PermissionsSubset; // new
+    permissions?: PermissionsSubset;
     videoRef?: React.RefObject<HTMLVideoElement | null>;
-    webRtcConnected?: boolean;
+    connectionState: WebRtcConnectionState;
+    hasReceivedFrame: boolean;
+    retryWebRtc: () => void;
 }

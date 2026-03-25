@@ -1,4 +1,5 @@
 import type { SidebarProps, AccordionSection, CommandAction } from './types';
+import type { WebRtcConnectionState } from './hooks/useWebRtc';
 import { ChevronLeftIcon } from './icons';
 import { AccordionItem } from './AccordionItem';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +17,7 @@ interface ExtendedSidebarProps extends SidebarProps {
   addAction?: (action: CommandAction) => void;
   onStartStream?: () => void;
   onStopStream?: () => void;
+  connectionState?: WebRtcConnectionState;
 }
 
 export function Sidebar({
@@ -28,6 +30,7 @@ export function Sidebar({
   disabled,
   onStartStream,
   onStopStream,
+  connectionState,
 }: ExtendedSidebarProps) {
   const { t } = useTranslation('deviceControl');
 
@@ -55,6 +58,9 @@ export function Sidebar({
       payload: {},
     });
   };
+
+  const isStreamActive = connectionState === 'connected' || connectionState === 'connecting' || connectionState === 'reconnecting';
+  const isStreamBusy = connectionState === 'connecting' || connectionState === 'reconnecting';
 
   return (
     <div className="w-64 bg-primary text-white p-6 flex flex-col h-screen fixed left-0 top-0">
@@ -99,20 +105,23 @@ export function Sidebar({
       {activeMode === 'interactive' && permissions?.see_screen && (
         <div className="mb-6">
           <div className="flex gap-3">
-            <button
-              className="flex-1 px-3 py-2 bg-secondary text-white rounded-lg text-sm font-medium shadow hover:bg-primary disabled:bg-lightgray disabled:text-darkgray disabled:cursor-not-allowed transition-colors"
-              disabled={disabled}
-              onClick={() => onStartStream ? onStartStream() : sendAction('screen.start')}
-            >
-              {t('manual.quick.startStream')}
-            </button>
-            <button
-              className="flex-1 px-3 py-2 bg-secondary text-white rounded-lg text-sm font-medium shadow hover:bg-primary disabled:bg-lightgray disabled:text-darkgray disabled:cursor-not-allowed transition-colors"
-              disabled={disabled}
-              onClick={() => onStopStream ? onStopStream() : sendAction('screen.stop')}
-            >
-              {t('manual.quick.stopStream')}
-            </button>
+            {!isStreamActive ? (
+              <button
+                className="flex-1 px-3 py-2 bg-secondary text-white rounded-lg text-sm font-medium shadow hover:bg-primary disabled:bg-lightgray disabled:text-darkgray disabled:cursor-not-allowed transition-colors"
+                disabled={disabled}
+                onClick={() => onStartStream ? onStartStream() : sendAction('screen.start')}
+              >
+                {t('manual.quick.startStream')}
+              </button>
+            ) : (
+              <button
+                className="flex-1 px-3 py-2 bg-secondary text-white rounded-lg text-sm font-medium shadow hover:bg-primary disabled:bg-lightgray disabled:text-darkgray disabled:cursor-not-allowed transition-colors"
+                disabled={disabled || isStreamBusy}
+                onClick={() => onStopStream ? onStopStream() : sendAction('screen.stop')}
+              >
+                {isStreamBusy ? 'Connecting...' : t('manual.quick.stopStream')}
+              </button>
+            )}
           </div>
         </div>
       )}

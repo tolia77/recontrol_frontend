@@ -380,7 +380,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         sendMessagePayload({ command, payload });
     }, []);
 
-    const { videoRef, startWebRtc, stopWebRtc, handleSignalingMessage, isConnected: webRtcConnected } = useWebRtc({ sendMessage: sendWebRtcSignal });
+    const { videoRef, startWebRtc, stopWebRtc, retryWebRtc, handleSignalingMessage, connectionState, hasReceivedFrame } = useWebRtc({ sendMessage: sendWebRtcSignal });
 
     const sendSingleAction = (action: { id?: string; type: string; payload?: Record<string, unknown> }) => {
         if (!canSend(action.type)) {
@@ -429,6 +429,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                 disabled={overallDisabled}
                 onStartStream={startWebRtc}
                 onStopStream={stopWebRtc}
+                connectionState={connectionState}
             />
             <main className={`flex-1 ml-64 ${activeMode === 'interactive' ? 'overflow-hidden' : ''}`}>
                 <MainContent
@@ -442,7 +443,9 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                     killProcess={killProcess}
                     permissions={permissions || undefined}
                     videoRef={videoRef}
-                    webRtcConnected={webRtcConnected}
+                    connectionState={connectionState}
+                    hasReceivedFrame={hasReceivedFrame}
+                    retryWebRtc={retryWebRtc}
                 />
             </main>
         </div>
