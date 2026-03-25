@@ -2,8 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { generateUUID } from 'src/utils/uuid';
 import { Sidebar } from 'src/pages/DeviceControl/Sidebar';
 import { MainContent } from 'src/pages/DeviceControl/MainContent';
-import { getAccessToken, getRefreshToken, saveTokens, getUserId } from 'src/utils/auth';
-import { refreshTokenRequest } from 'src/services/backend/authRequests';
+import { getAccessToken, getUserId } from 'src/utils/auth';
+import { refreshAccessTokenOnce } from 'src/services/backend/config';
 import type { AccordionSection, Mode, CommandAction } from 'src/pages/DeviceControl/types';
 import { getMyDeviceSharesForDeviceRequest } from 'src/services/backend/deviceSharesRequests';
 import { getDeviceRequest } from 'src/services/backend/devicesRequests';
@@ -102,24 +102,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
     };
 
     const refreshAccessToken = async (): Promise<string | null> => {
-        try {
-            const refreshToken = getRefreshToken();
-            if (!refreshToken) {
-                console.warn("No refresh token available");
-                return null;
-            }
-            const res = await refreshTokenRequest();
-            const tokens = res.data ?? {};
-            const newAccess = tokens.access_token
-            const newRefresh = tokens.refresh_token
-            if (newAccess) {
-                saveTokens(newAccess, newRefresh ?? null);
-            }
-            return newAccess ?? null;
-        } catch (err) {
-            console.error("Token refresh failed", err);
-            return null;
-        }
+        return refreshAccessTokenOnce();
     };
 
     const connectWebSocket = async (deviceIdParam?: string | null) => {
@@ -214,6 +197,20 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                         // WebRTC signaling
                         if (cmd === 'webrtc.answer' || cmd === 'webrtc.ice_candidate') {
                             handleSignalingMessage(cmd, payload);
+                            return;
+                        }
+
+                        // streaming terminal output chunks
+                        if (cmd === 'terminal.output') {
+                            const chunk = (payload as Record<string, unknown>).data as string;
+                            const sessionId = (payload as Record<string, unknown>).sessionId as string;
+                            const stream = (payload as Record<string, unknown>).stream as string || 'stdout';
+                            if (chunk) {
+                                setTerminalResults(prev => {
+                                    const next = [...prev, {id: sessionId || 'stream', status: stream, result: chunk}];
+                                    return next.slice(-100);
+                                });
+                            }
                             return;
                         }
 
