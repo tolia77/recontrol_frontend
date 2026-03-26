@@ -1,15 +1,5 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import { getRefreshToken } from 'src/utils/auth';
-
-interface RefreshTokenResponse {
-  access?: string;
-  access_token?: string;
-  accessToken?: string;
-  token?: string;
-  refresh?: string;
-  refresh_token?: string;
-  refreshToken?: string;
-}
+import { getRefreshToken, saveTokens } from 'src/utils/auth';
 
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
@@ -23,6 +13,43 @@ export const backendInstance = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL
 });
 
+// ── Refresh mutex ──────────────────────────────────────────────────────────
+// Prevents concurrent refresh calls from racing and cascade-revoking sessions.
+let refreshPromise: Promise<string | null> | null = null;
+
+export async function refreshAccessTokenOnce(): Promise<string | null> {
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    try {
+      const refreshToken = getRefreshToken();
+      if (!refreshToken) return null;
+
+      const res = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/auth/refresh`,
+        {},
+        { headers: { 'Refresh-Token': refreshToken } }
+      );
+
+      const tokens = res.data ?? {};
+      const newAccess: string | undefined = tokens.access_token;
+      const newRefresh: string | undefined = tokens.refresh_token;
+
+      if (newAccess) {
+        saveTokens(newAccess, newRefresh ?? null);
+      }
+      return newAccess ?? null;
+    } catch {
+      return null;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
+
+// ── Response interceptor ───────────────────────────────────────────────────
 backendInstance.interceptors.response.use(
   response => response,
   async (error: AxiosError<ErrorResponseData>) => {
@@ -33,36 +60,13 @@ backendInstance.interceptors.response.use(
     if (status === 401 && messageText === 'Unauthorized' && originalRequest && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      try {
-        const refreshRes = await axios.post<RefreshTokenResponse>(
-          `${import.meta.env.VITE_BACKEND_URL}/auth/refresh`,
-          {},
-          {
-            headers: {
-              'Refresh-Token': getRefreshToken()
-            }
-          }
-        );
-
-        const tokens = refreshRes.data ?? {};
-        const newAccess = tokens.access || tokens.access_token || tokens.accessToken || tokens.token;
-        const newRefresh = tokens.refresh || tokens.refresh_token || tokens.refreshToken;
-
-        if (newAccess) {
-          localStorage.setItem('access_token', newAccess);
-        }
-        if (newRefresh) {
-          localStorage.setItem('refresh_token', newRefresh);
-        }
-
-        if (newAccess) {
-          originalRequest.headers.Authorization = newAccess;
-        }
-
+      const newAccess = await refreshAccessTokenOnce();
+      if (newAccess) {
+        originalRequest.headers.Authorization = newAccess;
         return backendInstance(originalRequest);
-      } catch (refreshError) {
-        return Promise.reject(error);
       }
+
+      return Promise.reject(error);
     }
 
     return Promise.reject(error);
