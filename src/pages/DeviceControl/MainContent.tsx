@@ -4,7 +4,7 @@ import { computeRealImageCoords } from './utils/coords';
 import { buttonName, pressedButtonsFromMask, normalizeWheelToClicks, mapButtonToBackend } from './utils/mouse';
 import { mapToVirtualKey } from './utils/keyboard';
 import { ManualControls } from './ManualControls';
-import { StreamControls } from './components/StreamControls';
+
 import { generateUUID } from 'src/utils/uuid';
 
 /**
@@ -314,15 +314,6 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
             return (
                 <div className="canvas-container w-full" style={{ maxWidth: 1280 }}>
                     {renderVideoStream(true)}
-                    <div className="flex justify-center mt-2">
-                        <StreamControls
-                            addAction={addAction}
-                            scalingMode={scalingMode}
-                            onScalingModeChange={setScalingMode}
-                            containerRef={videoContainerRef}
-                            disabled={disabled}
-                        />
-                    </div>
                 </div>
             );
         }
