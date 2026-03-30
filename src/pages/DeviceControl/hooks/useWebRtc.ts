@@ -15,6 +15,7 @@ export interface UseWebRtcReturn {
   handleSignalingMessage: (command: string, payload: Record<string, unknown>) => void;
   connectionState: WebRtcConnectionState;
   hasReceivedFrame: boolean;
+  desktopStats: { framesSkipped: number; isIdle: boolean } | null;
 }
 
 const ICE_SERVERS: RTCIceServer[] = [
@@ -31,6 +32,7 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
 
   const [connectionState, setConnectionState] = useState<WebRtcConnectionState>('idle');
   const [hasReceivedFrame, setHasReceivedFrame] = useState(false);
+  const [desktopStats, setDesktopStats] = useState<{ framesSkipped: number; isIdle: boolean } | null>(null);
 
   // Reconnect tracking refs
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -59,6 +61,7 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
       pc.onicecandidate = null;
       pc.ontrack = null;
       pc.onconnectionstatechange = null;
+      pc.ondatachannel = null;
       pc.close();
       pcRef.current = null;
     }
@@ -128,6 +131,17 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
       transceiver.setCodecPreferences([...h264Codecs, ...vp8Codecs, ...otherCodecs]);
     }
 
+    pc.ondatachannel = (event) => {
+      if (event.channel.label === 'stats') {
+        event.channel.onmessage = (msg) => {
+          try {
+            const data = JSON.parse(msg.data);
+            setDesktopStats({ framesSkipped: data.skipped, isIdle: data.idle });
+          } catch { /* ignore parse errors */ }
+        };
+      }
+    };
+
     pc.createOffer().then((offer) => {
       return pc.setLocalDescription(offer).then(() => {
         sendMessage('webrtc.offer', { sdp: offer.sdp });
@@ -184,6 +198,7 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     reconnectStartRef.current = 0;
     retryCountRef.current = 0;
     setHasReceivedFrame(false);
+    setDesktopStats(null);
     setConnectionState('connecting');
     createPeerConnection();
   }, [createPeerConnection, clearReconnectTimer]);
@@ -198,6 +213,7 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     cleanupPeerConnection();
     setConnectionState('idle');
     setHasReceivedFrame(false);
+    setDesktopStats(null);
   }, [sendMessage, cleanupPeerConnection, clearReconnectTimer]);
 
   const retryWebRtc = useCallback(() => {
@@ -265,5 +281,6 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     handleSignalingMessage,
     connectionState,
     hasReceivedFrame,
+    desktopStats,
   };
 }

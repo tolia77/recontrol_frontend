@@ -4,11 +4,14 @@ export interface StreamStats {
     codec: string;
     fps: number;
     resolution: string;
+    framesSkipped?: number;
+    isIdle?: boolean;
 }
 
 export function useStreamStats(
     pcRef: React.RefObject<RTCPeerConnection | null>,
     enabled: boolean,
+    desktopStats?: { framesSkipped: number; isIdle: boolean } | null,
 ): StreamStats | null {
     const [stats, setStats] = useState<StreamStats | null>(null);
 
@@ -40,6 +43,8 @@ export function useStreamStats(
                             resolution: stat.frameWidth && stat.frameHeight
                                 ? `${stat.frameWidth}x${stat.frameHeight}`
                                 : 'unknown',
+                            framesSkipped: desktopStats?.framesSkipped,
+                            isIdle: desktopStats?.isIdle,
                         });
                     }
                 });
@@ -49,7 +54,7 @@ export function useStreamStats(
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [pcRef, enabled]);
+    }, [pcRef, enabled, desktopStats]);
 
     return stats;
 }
