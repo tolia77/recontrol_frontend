@@ -28,7 +28,7 @@ export interface SidebarProps {
 
 // Command action contract used for sending backend commands
 export interface CommandAction {
-    id: string;
+    id?: string;
     type: string;
     payload?: Record<string, unknown>;
 }

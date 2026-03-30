@@ -393,15 +393,17 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
             console.warn(`Blocked command '${action.type}' due to insufficient permissions`);
             return;
         }
-        const msg = {
-            id: action.id ?? generateUUID(),
+        const msg: Record<string, unknown> = {
             command: action.type,
             payload: action.payload ?? {},
         };
-        pendingCommandsRef.current.set(msg.id, msg.command);
-        if (pendingCommandsRef.current.size > 200) {
-            const firstKey = pendingCommandsRef.current.keys().next().value as string | undefined;
-            if (firstKey) pendingCommandsRef.current.delete(firstKey);
+        if (action.id) {
+            msg.id = action.id;
+            pendingCommandsRef.current.set(action.id, action.type);
+            if (pendingCommandsRef.current.size > 200) {
+                const firstKey = pendingCommandsRef.current.keys().next().value as string | undefined;
+                if (firstKey) pendingCommandsRef.current.delete(firstKey);
+            }
         }
         sendMessagePayload(msg);
     };

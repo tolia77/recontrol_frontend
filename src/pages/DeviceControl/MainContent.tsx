@@ -83,13 +83,11 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                 if (name === 'pointerdown') {
                     lastCoordsRef.current = {x: Math.round(coords.x), y: Math.round(coords.y)};
                     addAction({
-                        id: generateUUID(),
                         type: 'mouse.down',
                         payload: {Button: mapButtonToBackend(btn)},
                     });
                 } else if (name === 'pointerup') {
                     addAction({
-                        id: generateUUID(),
                         type: 'mouse.up',
                         payload: {Button: mapButtonToBackend(btn)},
                     });
@@ -102,7 +100,6 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                     if (now - lastMoveSentAtRef.current < 100) return; // throttle
                     lastMoveSentAtRef.current = now;
                     addAction({
-                        id: generateUUID(),
                         type: 'mouse.move',
                         payload: {X: curX, Y: curY},
                     });
@@ -121,7 +118,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
         const vk = mapToVirtualKey(e);
         console.log('[keyboard] keyDown', {key: e.key, code: e.code, vk});
         if (typeof addAction === 'function' && !disabled && vk) {
-            addAction({id: generateUUID(), type: 'keyboard.keyDown', payload: {Key: vk}});
+            addAction({type: 'keyboard.keyDown', payload: {Key: vk}});
         }
     }, [activeMode, addAction, disabled, hasKeyboard]);
 
@@ -132,7 +129,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
         const vk = mapToVirtualKey(e);
         console.log('[keyboard] keyUp', {key: e.key, code: e.code, vk});
         if (typeof addAction === 'function' && !disabled && vk) {
-            addAction({id: generateUUID(), type: 'keyboard.keyUp', payload: {Key: vk}});
+            addAction({type: 'keyboard.keyUp', payload: {Key: vk}});
         }
     }, [activeMode, addAction, disabled, hasKeyboard]);
 
@@ -183,7 +180,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
         });
         if (typeof addAction === 'function' && !disabled && clicks !== 0) {
             try {
-                addAction({id: generateUUID(), type: 'mouse.scroll', payload: {Clicks: clicks}});
+                addAction({type: 'mouse.scroll', payload: {Clicks: clicks}});
             } catch (err) {
                 console.warn('Failed to send mouse.scroll', err);
             }
