@@ -8,6 +8,7 @@ interface UseWebRtcOptions {
 
 export interface UseWebRtcReturn {
   videoRef: React.RefObject<HTMLVideoElement | null>;
+  pcRef: React.RefObject<RTCPeerConnection | null>;
   startWebRtc: () => void;
   stopWebRtc: () => void;
   retryWebRtc: () => void;
@@ -84,10 +85,11 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     };
 
     pc.ontrack = (event) => {
-      if (event.streams[0]) {
-        streamRef.current = event.streams[0];
-        attachStream();
-      }
+      // SIPSorcery may not include MSID in SDP, so event.streams can be empty.
+      // Fall back to creating a MediaStream from the track directly.
+      const stream = event.streams[0] ?? new MediaStream([event.track]);
+      streamRef.current = stream;
+      attachStream();
     };
 
     pc.onconnectionstatechange = () => {
@@ -113,7 +115,18 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     };
 
     // Add a recvonly transceiver to receive video from the desktop client
-    pc.addTransceiver('video', { direction: 'recvonly' });
+    const transceiver = pc.addTransceiver('video', { direction: 'recvonly' });
+
+    // Prefer H.264 codec, VP8 fallback, preserve RTX/RED/FEC
+    const capabilities = RTCRtpReceiver.getCapabilities('video');
+    if (capabilities) {
+      const h264Codecs = capabilities.codecs.filter(c => c.mimeType === 'video/H264');
+      const vp8Codecs = capabilities.codecs.filter(c => c.mimeType === 'video/VP8');
+      const otherCodecs = capabilities.codecs.filter(c =>
+        c.mimeType !== 'video/H264' && c.mimeType !== 'video/VP8'
+      );
+      transceiver.setCodecPreferences([...h264Codecs, ...vp8Codecs, ...otherCodecs]);
+    }
 
     pc.createOffer().then((offer) => {
       return pc.setLocalDescription(offer).then(() => {
@@ -245,6 +258,7 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
 
   return {
     videoRef,
+    pcRef,
     startWebRtc,
     stopWebRtc,
     retryWebRtc,
