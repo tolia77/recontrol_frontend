@@ -7,7 +7,9 @@ const deviceControl = {
     power: 'Power',
     terminal: 'Terminal',
     processes: 'Processes',
-    device: 'Device'
+    device: 'Device',
+    showStats: 'Stats',
+    hideStats: 'Stats'
   },
   manual: {
     tabs: {

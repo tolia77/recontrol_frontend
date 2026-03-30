@@ -4,6 +4,7 @@ import { computeRealImageCoords } from './utils/coords';
 import { buttonName, pressedButtonsFromMask, normalizeWheelToClicks, mapButtonToBackend } from './utils/mouse';
 import { mapToVirtualKey } from './utils/keyboard';
 import { ManualControls } from './ManualControls';
+import { StreamStatsOverlay } from './components/StreamStatsOverlay';
 
 import { generateUUID } from 'src/utils/uuid';
 
@@ -24,6 +25,8 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                                                                                                        connectionState,
                                                                                                        hasReceivedFrame,
                                                                                                        retryWebRtc,
+                                                                                                       streamStats,
+                                                                                                       showStats,
                                                                                                    }) => {
     // overlay & container refs
     const overlayRef = useRef<HTMLDivElement | null>(null);
@@ -223,6 +226,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                     background: '#000',
                 }}
             />
+            <StreamStatsOverlay stats={streamStats ?? null} visible={!!showStats} />
             {showOverlay && (
                 <div
                     ref={overlayRef}

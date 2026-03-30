@@ -1,4 +1,5 @@
 import type { WebRtcConnectionState } from './hooks/useWebRtc';
+import type { StreamStats } from './hooks/useStreamStats';
 
 export type Mode = 'interactive' | 'manual';
 export type AccordionSection = 'power' | 'terminal' | 'processes';
@@ -79,4 +80,6 @@ export interface MainContentProps {
     connectionState: WebRtcConnectionState;
     hasReceivedFrame: boolean;
     retryWebRtc: () => void;
+    streamStats?: StreamStats | null;
+    showStats?: boolean;
 }

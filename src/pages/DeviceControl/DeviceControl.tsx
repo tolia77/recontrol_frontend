@@ -9,6 +9,7 @@ import { getMyDeviceSharesForDeviceRequest } from 'src/services/backend/deviceSh
 import { getDeviceRequest } from 'src/services/backend/devicesRequests';
 import type { DeviceShare } from 'src/types/global';
 import { useWebRtc } from './hooks/useWebRtc';
+import { useStreamStats } from './hooks/useStreamStats';
 
 interface CommandWebSocketProps {
     wsUrl: string;
@@ -51,6 +52,10 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
     const [terminalResults, setTerminalResults] = useState<{ id: string; status: string; result: string }[]>([]);
     const [processes, setProcesses] = useState<{ Pid: number; Name: string; MemoryMB?: number; CpuTime?: string; StartTime?: string }[]>([]);
     const [processesLoading, setProcessesLoading] = useState(false);
+
+    // stream stats and FPS state
+    const [showStats, setShowStats] = useState(false);
+    const [currentFps, setCurrentFps] = useState(24);
 
     // permissions state
     const [permissionsLoading, setPermissionsLoading] = useState(false);
@@ -380,7 +385,8 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         sendMessagePayload({ command, payload });
     }, []);
 
-    const { videoRef, startWebRtc, stopWebRtc, retryWebRtc, handleSignalingMessage, connectionState, hasReceivedFrame } = useWebRtc({ sendMessage: sendWebRtcSignal });
+    const { videoRef, pcRef, startWebRtc, stopWebRtc, retryWebRtc, handleSignalingMessage, connectionState, hasReceivedFrame } = useWebRtc({ sendMessage: sendWebRtcSignal });
+    const streamStats = useStreamStats(pcRef, showStats && connectionState === 'connected');
 
     const sendSingleAction = (action: { id?: string; type: string; payload?: Record<string, unknown> }) => {
         if (!canSend(action.type)) {
@@ -398,6 +404,11 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
             if (firstKey) pendingCommandsRef.current.delete(firstKey);
         }
         sendMessagePayload(msg);
+    };
+
+    const handleFpsChange = (fps: number) => {
+        setCurrentFps(fps);
+        sendSingleAction({ id: generateUUID(), type: 'webrtc.set_fps', payload: { fps } });
     };
 
     const requestListProcesses = () => {
@@ -430,6 +441,10 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                 onStartStream={startWebRtc}
                 onStopStream={stopWebRtc}
                 connectionState={connectionState}
+                showStats={showStats}
+                onToggleStats={() => setShowStats(s => !s)}
+                currentFps={currentFps}
+                onFpsChange={handleFpsChange}
             />
             <main className={`flex-1 ml-64 ${activeMode === 'interactive' ? 'overflow-hidden' : ''}`}>
                 <MainContent
@@ -446,6 +461,8 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                     connectionState={connectionState}
                     hasReceivedFrame={hasReceivedFrame}
                     retryWebRtc={retryWebRtc}
+                    streamStats={streamStats}
+                    showStats={showStats}
                 />
             </main>
         </div>

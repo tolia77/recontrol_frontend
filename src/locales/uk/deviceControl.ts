@@ -7,7 +7,9 @@ const deviceControl = {
     power: 'Живлення',
     terminal: 'Термінал',
     processes: 'Процеси',
-    device: 'Пристрій'
+    device: 'Пристрій',
+    showStats: 'Статистика',
+    hideStats: 'Статистика'
   },
   manual: {
     tabs: {

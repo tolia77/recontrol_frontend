@@ -2,6 +2,7 @@ import type { SidebarProps, AccordionSection, CommandAction } from './types';
 import type { WebRtcConnectionState } from './hooks/useWebRtc';
 import { ChevronLeftIcon } from './icons';
 import { AccordionItem } from './AccordionItem';
+import { FpsControls } from './components/FpsControls';
 import { useTranslation } from 'react-i18next';
 import { generateUUID } from 'src/utils/uuid';
 
@@ -18,6 +19,10 @@ interface ExtendedSidebarProps extends SidebarProps {
   onStartStream?: () => void;
   onStopStream?: () => void;
   connectionState?: WebRtcConnectionState;
+  showStats?: boolean;
+  onToggleStats?: () => void;
+  currentFps?: number;
+  onFpsChange?: (fps: number) => void;
 }
 
 export function Sidebar({
@@ -31,6 +36,10 @@ export function Sidebar({
   onStartStream,
   onStopStream,
   connectionState,
+  showStats,
+  onToggleStats,
+  currentFps,
+  onFpsChange,
 }: ExtendedSidebarProps) {
   const { t } = useTranslation('deviceControl');
 
@@ -123,6 +132,26 @@ export function Sidebar({
               </button>
             )}
           </div>
+          {/* FPS controls and stats toggle - only when stream is active */}
+          {isStreamActive && !isStreamBusy && (
+            <div className="mt-3 flex items-center justify-between">
+              {onFpsChange && currentFps != null && (
+                <FpsControls currentFps={currentFps} onFpsChange={onFpsChange} disabled={disabled} />
+              )}
+              {onToggleStats && (
+                <button
+                  onClick={onToggleStats}
+                  className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
+                    showStats
+                      ? 'bg-indigo-500 text-white'
+                      : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                  }`}
+                >
+                  {showStats ? t('sidebar.hideStats') : t('sidebar.showStats')}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
 
