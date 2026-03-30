@@ -385,8 +385,8 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         sendMessagePayload({ command, payload });
     }, []);
 
-    const { videoRef, pcRef, startWebRtc, stopWebRtc, retryWebRtc, handleSignalingMessage, connectionState, hasReceivedFrame } = useWebRtc({ sendMessage: sendWebRtcSignal });
-    const streamStats = useStreamStats(pcRef, showStats && connectionState === 'connected');
+    const { videoRef, pcRef, startWebRtc, stopWebRtc, retryWebRtc, handleSignalingMessage, connectionState, hasReceivedFrame, desktopStats } = useWebRtc({ sendMessage: sendWebRtcSignal });
+    const streamStats = useStreamStats(pcRef, showStats && connectionState === 'connected', desktopStats);
 
     const sendSingleAction = (action: { id?: string; type: string; payload?: Record<string, unknown> }) => {
         if (!canSend(action.type)) {
