@@ -15,7 +15,7 @@ export interface UseWebRtcReturn {
   handleSignalingMessage: (command: string, payload: Record<string, unknown>) => void;
   connectionState: WebRtcConnectionState;
   hasReceivedFrame: boolean;
-  desktopStats: { framesSkipped: number; isIdle: boolean } | null;
+  desktopStats: { framesSkipped: number } | null;
 }
 
 const ICE_SERVERS: RTCIceServer[] = [
@@ -32,7 +32,7 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
 
   const [connectionState, setConnectionState] = useState<WebRtcConnectionState>('idle');
   const [hasReceivedFrame, setHasReceivedFrame] = useState(false);
-  const [desktopStats, setDesktopStats] = useState<{ framesSkipped: number; isIdle: boolean } | null>(null);
+  const [desktopStats, setDesktopStats] = useState<{ framesSkipped: number } | null>(null);
 
   // Reconnect tracking refs
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -136,7 +136,7 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
         event.channel.onmessage = (msg) => {
           try {
             const data = JSON.parse(msg.data);
-            setDesktopStats({ framesSkipped: data.skipped, isIdle: data.idle });
+            setDesktopStats({ framesSkipped: data.skipped });
           } catch { /* ignore parse errors */ }
         };
       }

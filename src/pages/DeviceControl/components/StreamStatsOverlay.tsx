@@ -29,7 +29,6 @@ export function StreamStatsOverlay({ stats, visible }: StreamStatsOverlayProps) 
             <div>FPS: {Math.round(stats.fps)}</div>
             <div>Res: {stats.resolution}</div>
             <div>Skipped: {stats.framesSkipped != null ? stats.framesSkipped : '-'}</div>
-            <div>Status: {stats.isIdle != null ? (stats.isIdle ? 'Idle' : 'Active') : '-'}</div>
         </div>
     );
 }
