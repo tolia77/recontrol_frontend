@@ -9,7 +9,8 @@ const deviceControl = {
     processes: 'Процеси',
     device: 'Пристрій',
     showStats: 'Статистика',
-    hideStats: 'Статистика'
+    hideStats: 'Статистика',
+    resolution: 'Роздільність'
   },
   manual: {
     tabs: {

@@ -9,7 +9,8 @@ const deviceControl = {
     processes: 'Processes',
     device: 'Device',
     showStats: 'Stats',
-    hideStats: 'Stats'
+    hideStats: 'Stats',
+    resolution: 'Res'
   },
   manual: {
     tabs: {
