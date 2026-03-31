@@ -26,6 +26,7 @@ export function StreamStatsOverlay({ stats, visible }: StreamStatsOverlayProps) 
             }}
         >
             <div>Codec: {stats.codec}</div>
+            <div>Encoder: {stats.encoder ?? '-'}</div>
             <div>FPS: {Math.round(stats.fps)}</div>
             <div>Res: {stats.resolution}</div>
             <div>Skipped: {stats.framesSkipped != null ? stats.framesSkipped : '-'}</div>

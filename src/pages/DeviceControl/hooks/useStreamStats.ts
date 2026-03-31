@@ -5,12 +5,13 @@ export interface StreamStats {
     fps: number;
     resolution: string;
     framesSkipped?: number;
+    encoder?: string;
 }
 
 export function useStreamStats(
     pcRef: React.RefObject<RTCPeerConnection | null>,
     enabled: boolean,
-    desktopStats?: { framesSkipped: number } | null,
+    desktopStats?: { framesSkipped: number; encoder?: string } | null,
 ): StreamStats | null {
     const [stats, setStats] = useState<StreamStats | null>(null);
 
@@ -43,6 +44,7 @@ export function useStreamStats(
                                 ? `${stat.frameWidth}x${stat.frameHeight}`
                                 : 'unknown',
                             framesSkipped: desktopStats?.framesSkipped,
+                            encoder: desktopStats?.encoder,
                         });
                     }
                 });
