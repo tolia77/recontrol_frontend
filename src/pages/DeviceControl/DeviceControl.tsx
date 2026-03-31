@@ -56,6 +56,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
     // stream stats and FPS state
     const [showStats, setShowStats] = useState(false);
     const [currentFps, setCurrentFps] = useState(24);
+    const [currentResolution, setCurrentResolution] = useState(1080);
 
     // permissions state
     const [permissionsLoading, setPermissionsLoading] = useState(false);
@@ -413,6 +414,11 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         sendSingleAction({ id: generateUUID(), type: 'webrtc.set_fps', payload: { fps } });
     };
 
+    const handleResolutionChange = (resolution: number) => {
+        setCurrentResolution(resolution);
+        sendSingleAction({ id: generateUUID(), type: 'webrtc.set_resolution', payload: { resolution } });
+    };
+
     const requestListProcesses = () => {
         if (!connected) return;
         if (!permissions?.access_terminal) return; // gate
@@ -447,6 +453,8 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                 onToggleStats={() => setShowStats(s => !s)}
                 currentFps={currentFps}
                 onFpsChange={handleFpsChange}
+                currentResolution={currentResolution}
+                onResolutionChange={handleResolutionChange}
             />
             <main className={`flex-1 ml-64 ${activeMode === 'interactive' ? 'overflow-hidden' : ''}`}>
                 <MainContent

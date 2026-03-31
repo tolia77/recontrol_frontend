@@ -3,6 +3,7 @@ import type { WebRtcConnectionState } from './hooks/useWebRtc';
 import { ChevronLeftIcon } from './icons';
 import { AccordionItem } from './AccordionItem';
 import { FpsControls } from './components/FpsControls';
+import { ResolutionControl } from './components/ResolutionControl';
 import { useTranslation } from 'react-i18next';
 import { generateUUID } from 'src/utils/uuid';
 
@@ -23,6 +24,8 @@ interface ExtendedSidebarProps extends SidebarProps {
   onToggleStats?: () => void;
   currentFps?: number;
   onFpsChange?: (fps: number) => void;
+  currentResolution?: number;
+  onResolutionChange?: (resolution: number) => void;
 }
 
 export function Sidebar({
@@ -40,6 +43,8 @@ export function Sidebar({
   onToggleStats,
   currentFps,
   onFpsChange,
+  currentResolution,
+  onResolutionChange,
 }: ExtendedSidebarProps) {
   const { t } = useTranslation('deviceControl');
 
@@ -132,24 +137,35 @@ export function Sidebar({
               </button>
             )}
           </div>
-          {/* FPS controls and stats toggle - only when stream is active */}
+          {/* Stream controls - only when stream is active */}
           {isStreamActive && !isStreamBusy && (
-            <div className="mt-3 flex items-center justify-between">
-              {onFpsChange && currentFps != null && (
-                <FpsControls currentFps={currentFps} onFpsChange={onFpsChange} disabled={disabled} />
-              )}
-              {onToggleStats && (
-                <button
-                  onClick={onToggleStats}
-                  className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
-                    showStats
-                      ? 'bg-indigo-500 text-white'
-                      : 'bg-white/10 text-gray-300 hover:bg-white/20'
-                  }`}
-                >
-                  {showStats ? t('sidebar.hideStats') : t('sidebar.showStats')}
-                </button>
-              )}
+            <div className="mt-3 space-y-2">
+              <div className="flex items-center justify-between">
+                {onResolutionChange && currentResolution != null && (
+                  <ResolutionControl
+                    currentResolution={currentResolution}
+                    onResolutionChange={onResolutionChange}
+                    disabled={disabled}
+                  />
+                )}
+                {onToggleStats && (
+                  <button
+                    onClick={onToggleStats}
+                    className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
+                      showStats
+                        ? 'bg-indigo-500 text-white'
+                        : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                    }`}
+                  >
+                    {showStats ? t('sidebar.hideStats') : t('sidebar.showStats')}
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center justify-between">
+                {onFpsChange && currentFps != null && (
+                  <FpsControls currentFps={currentFps} onFpsChange={onFpsChange} disabled={disabled} />
+                )}
+              </div>
             </div>
           )}
         </div>
