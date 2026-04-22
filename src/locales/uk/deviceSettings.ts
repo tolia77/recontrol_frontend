@@ -10,7 +10,8 @@ const deviceSettings = {
     updateError: 'Не вдалося оновити пристрій',
     deleteDevice: 'Видалити пристрій',
     deleteConfirm: 'Видалити цей пристрій? Це неможливо скасувати.',
-    deleteError: 'Не вдалося видалити пристрій'
+    deleteError: 'Не вдалося видалити пристрій',
+    deleted: 'Пристрій успішно видалено'
   },
   sharing: {
     section: 'Спільний доступ',
