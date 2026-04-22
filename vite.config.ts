@@ -16,6 +16,6 @@ export default defineConfig({
     ],
     server: {
         port: 5175,
-        allowedHosts: ["dev5175.kokhan.me"]
+        allowedHosts: ["port5175.kokhan.me"]
     },
 })
