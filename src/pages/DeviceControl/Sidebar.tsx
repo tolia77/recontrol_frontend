@@ -5,6 +5,7 @@ import { AccordionItem } from './AccordionItem';
 import { FpsControls } from './components/FpsControls';
 import { ResolutionControl } from './components/ResolutionControl';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 import { generateUUID } from 'src/utils/uuid';
 
 type PowerCommand =
@@ -26,6 +27,7 @@ interface ExtendedSidebarProps extends SidebarProps {
   onFpsChange?: (fps: number) => void;
   currentResolution?: number;
   onResolutionChange?: (resolution: number) => void;
+  deviceName?: string;
 }
 
 export function Sidebar({
@@ -45,8 +47,10 @@ export function Sidebar({
   onFpsChange,
   currentResolution,
   onResolutionChange,
+  deviceName,
 }: ExtendedSidebarProps) {
   const { t } = useTranslation('deviceControl');
+  const navigate = useNavigate();
 
   const toggleAccordion = (item: AccordionSection) => {
     setOpenAccordion(openAccordion === item ? null : item);
@@ -80,7 +84,10 @@ export function Sidebar({
     <div className="w-64 bg-primary text-white p-6 flex flex-col h-screen fixed left-0 top-0">
       {/* Sidebar Header */}
       <div className="flex items-center gap-3 mb-8">
-        <button className="p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-200">
+        <button
+          onClick={() => navigate('/devices')}
+          className="p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors duration-200 cursor-pointer"
+        >
           <ChevronLeftIcon className="w-8 h-8" />
         </button>
         <h2 className="text-xl font-semibold text-gray-200">{t('sidebar.control')}</h2>
@@ -198,7 +205,9 @@ export function Sidebar({
       {/* Sidebar Footer */}
       <div className="mt-auto">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-300">{t('sidebar.device')}</span>
+          <span className="text-sm text-gray-300 truncate" title={deviceName}>
+            {deviceName || t('sidebar.device')}
+          </span>
         </div>
       </div>
     </div>

@@ -45,6 +45,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
 
     const [connected, setConnected] = useState(false);
     const [deviceId, setDeviceId] = useState("");
+    const [deviceName, setDeviceName] = useState<string>("");
 
     const [activeMode, setActiveMode] = useState<Mode>("interactive");
     const [openAccordion, setOpenAccordion] = useState<AccordionSection | null>(null);
@@ -341,6 +342,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                 const currentUserId = getUserId();
                 const owner = deviceUserId && currentUserId && String(deviceUserId) === String(currentUserId);
                 setIsOwner(!!owner);
+                if (deviceRes.data?.name) setDeviceName(deviceRes.data.name);
                 await fetchPermissions(paramDeviceId, !!owner);
             } catch (e) {
                 console.warn('Failed to fetch device info for ownership', e);
@@ -446,6 +448,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                 addAction={sendSingleAction}
                 permissions={permissions || undefined}
                 disabled={overallDisabled}
+                deviceName={deviceName}
                 onStartStream={startWebRtc}
                 onStopStream={stopWebRtc}
                 connectionState={connectionState}
