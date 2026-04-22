@@ -94,7 +94,8 @@ const DeviceSettings = () => {
       loadShares();
       loadPermissionsGroups();
     }
-  }, [deviceId, loadDeviceData, loadShares, loadPermissionsGroups]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deviceId]);
 
   const handleDeviceUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
