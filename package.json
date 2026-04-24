@@ -14,6 +14,7 @@
   "dependencies": {
     "@rails/actioncable": "^8.1.0",
     "@tailwindcss/vite": "^4.1.15",
+    "@tanstack/react-virtual": "^3.13.24",
     "axios": "^1.12.2",
     "express": "^5.1.0",
     "i18next": "^25.6.1",
