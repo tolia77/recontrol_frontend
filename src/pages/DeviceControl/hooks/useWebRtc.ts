@@ -1,4 +1,5 @@
 import { useRef, useCallback, useState, useEffect } from 'react';
+import { FilesChannelClient, FilesDataChannel } from '../services/files';
 
 export type WebRtcConnectionState = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'failed';
 
@@ -16,6 +17,9 @@ export interface UseWebRtcReturn {
   connectionState: WebRtcConnectionState;
   hasReceivedFrame: boolean;
   desktopStats: { framesSkipped: number; encoder?: string } | null;
+  filesCtlRef: React.RefObject<RTCDataChannel | null>;
+  filesDataRef: React.RefObject<RTCDataChannel | null>;
+  filesClientRef: React.RefObject<FilesChannelClient | null>;
 }
 
 const ICE_SERVERS: RTCIceServer[] = [
@@ -29,6 +33,13 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+
+  // files-ctl / files-data channels (created on this peer as offerer, BEFORE createOffer,
+  // so they appear in the initial SDP offer's single SCTP m-section -- zero renegotiation).
+  const filesCtlRef = useRef<RTCDataChannel | null>(null);
+  const filesDataRef = useRef<RTCDataChannel | null>(null);
+  const filesClientRef = useRef<FilesChannelClient | null>(null);
+  const filesDataChannelRef = useRef<FilesDataChannel | null>(null);
 
   const [connectionState, setConnectionState] = useState<WebRtcConnectionState>('idle');
   const [hasReceivedFrame, setHasReceivedFrame] = useState(false);
@@ -56,6 +67,18 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
   }, []);
 
   const cleanupPeerConnection = useCallback(() => {
+    // Dispose file-channel wrappers BEFORE closing the RTCPeerConnection. Per
+    // 09-SPIKE-FINDINGS Spike C, dc.close() from this side does not propagate
+    // to the SIPSorcery peer -- so we rely on pc.close() below to drive the
+    // teardown. Here we only detach listeners and reject pending requests.
+    filesClientRef.current?.dispose();
+    filesClientRef.current = null;
+    filesDataChannelRef.current?.dispose();
+    filesDataChannelRef.current = null;
+    filesCtlRef.current = null;
+    filesDataRef.current = null;
+    delete (window as unknown as { __filesCtl?: FilesChannelClient }).__filesCtl;
+
     const pc = pcRef.current;
     if (pc) {
       pc.onicecandidate = null;
@@ -141,6 +164,52 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
         };
       }
     };
+
+    // Create the two file-transfer data channels BEFORE createOffer so they
+    // appear in the initial SDP offer's single SCTP m-section (per
+    // 09-RESEARCH.md Pattern 2 and 09-CONTEXT.md -- frontend-as-offerer).
+    //
+    // The { ordered: true } init option is authoritative because the browser's
+    // RTCDataChannelInit round-trips cleanly through DCEP. The desktop side
+    // NEVER calls createDataChannel for files-ctl/files-data; it consumes them
+    // via pc.ondatachannel. This design intentionally routes around SIPSorcery
+    // issue #701 regardless of whether 09-SPIKE-FINDINGS.md marked Spike A as
+    // VERIFIED or UNVERIFIED. Do not add desktop-side createDataChannel calls
+    // for these labels without rechecking Spike A.
+    try {
+      const filesCtl = pc.createDataChannel('files-ctl', { ordered: true });
+      filesCtlRef.current = filesCtl;
+      filesCtl.addEventListener('open', () => {
+        console.log('[files-ctl] open');
+        filesClientRef.current = new FilesChannelClient(filesCtl);
+        // Expose on window so Plan 09-05's browser-console demo can call
+        // window.__filesCtl.request('files.list', { path: '...' }).
+        (window as unknown as { __filesCtl?: FilesChannelClient }).__filesCtl = filesClientRef.current;
+      });
+      filesCtl.addEventListener('close', () => {
+        console.log('[files-ctl] closed');
+        filesClientRef.current?.dispose();
+        filesClientRef.current = null;
+        delete (window as unknown as { __filesCtl?: FilesChannelClient }).__filesCtl;
+      });
+
+      const filesData = pc.createDataChannel('files-data', { ordered: true });
+      filesData.binaryType = 'arraybuffer';
+      filesDataRef.current = filesData;
+      filesData.addEventListener('open', () => {
+        console.log('[files-data] open');
+        filesDataChannelRef.current = new FilesDataChannel(filesData);
+      });
+      filesData.addEventListener('close', () => {
+        console.log('[files-data] closed');
+        filesDataChannelRef.current?.dispose();
+        filesDataChannelRef.current = null;
+      });
+    } catch (err) {
+      // Defensive: should never happen in a fresh RTCPeerConnection, but if it
+      // does, log and continue so the primary video flow is not blocked.
+      console.error('[files-ctl/data] createDataChannel failed, video will still work:', err);
+    }
 
     pc.createOffer().then((offer) => {
       return pc.setLocalDescription(offer).then(() => {
@@ -282,5 +351,8 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     connectionState,
     hasReceivedFrame,
     desktopStats,
+    filesCtlRef,
+    filesDataRef,
+    filesClientRef,
   };
 }
