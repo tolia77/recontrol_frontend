@@ -31,7 +31,7 @@ import {
   createRunUpload,
   createRunDownload,
 } from '../../services/transfer';
-import type { TransferItem } from '../../services/transfer';
+import type { DownloadTransfer, TransferItem } from '../../services/transfer';
 import {
   detectSeparator,
   isAncestor,
@@ -140,6 +140,15 @@ export function FileManagerPanel({
     toastRef.current = toast;
   }, [toast]);
 
+  // Plan 11-06: panel-level reference to the currently active
+  // DownloadTransfer (or null when no download is in flight). The
+  // download runner sets this via the onActiveChange dep right after
+  // registerDownload() and clears it back to null at every terminal exit.
+  // The 1 s stall interval (below) reads `activeDownloadRef.current
+  // .lastChunkAtMs` to flip the row state to 'stalled' / 'active'. Holding
+  // a ref (not state) keeps the queue+runner stable across re-renders.
+  const activeDownloadRef = useRef<DownloadTransfer | null>(null);
+
   const queueRef = useRef<TransferQueue | null>(null);
   if (queueRef.current === null) {
     queueRef.current = new TransferQueue(
@@ -153,6 +162,9 @@ export function FileManagerPanel({
         getFilesClient: () => filesClientRef.current,
         getFilesDataChannel: () => filesDataChannelRef.current,
         onSuccess: (name) => toastRef.current.info(`Downloaded ${name}`),
+        onActiveChange: (active) => {
+          activeDownloadRef.current = active;
+        },
       }),
     );
   }
@@ -228,6 +240,14 @@ export function FileManagerPanel({
   // the file is still > 100 MiB.
   const [pendingDownloadWarn, setPendingDownloadWarn] =
     useState<FileEntry | null>(null);
+  // ----- Plan 11-06: disconnect banner state -----
+  // CONTEXT-locked verbatim copy: "Disconnected during transfer. Reconnect
+  // and try again." Set when channel.status transitions OUT of 'open' while
+  // a transfer is active; cleared when the user clicks the X dismiss button
+  // OR when a new transfer starts (queue.activeId becomes non-null).
+  const [disconnectBanner, setDisconnectBanner] = useState<string | null>(
+    null,
+  );
   const rootRef = useRef<HTMLDivElement>(null);
 
   // When roots arrive for the first time and we don't have a currentPath yet,
@@ -843,6 +863,132 @@ export function FileManagerPanel({
     initialFocusedRef.current = true;
   }, [channel.status]);
 
+  // ----- Plan 11-06: disconnect listener -----
+  // SINGLE SOURCE OF TRUTH = useFilesChannel().status. We do NOT spin up
+  // a parallel pc-state listener; that would risk racing the existing
+  // state machine. On every render, compare the previous status to the
+  // current; on a transition OUT of 'open' while there is an active
+  // transfer, cancel it (state -> 'disconnected') and surface the literal
+  // banner. Queued items stay queued (CONTEXT-locked: the user must
+  // manually re-trigger from the source folder).
+  const prevStatusRef = useRef(channel.status);
+  useEffect(() => {
+    const prev = prevStatusRef.current;
+    const curr = channel.status;
+    prevStatusRef.current = curr;
+    if (prev === 'open' && curr !== 'open') {
+      const snap = queue.getSnapshot();
+      const active = snap.items.find((i) => i.id === snap.activeId);
+      if (active) {
+        // queue.cancelById flips state to 'cancelling' (or removes a
+        // 'queued' item); follow up with the 'disconnected' patch so the
+        // row's terminal state is unambiguous and renders the red bar.
+        queue.cancelById(active.id);
+        queue.updateItem(active.id, {
+          state: 'disconnected',
+          error: {
+            code: 'CHANNEL_NOT_OPEN',
+            message: 'Disconnected during transfer.',
+          },
+          completedAt: Date.now(),
+        });
+      }
+      setDisconnectBanner(
+        'Disconnected during transfer. Reconnect and try again.',
+      );
+    }
+  }, [channel.status, queue]);
+
+  // ----- Plan 11-06: auto-clear banner when a new transfer starts -----
+  // Subscribes to queue snapshots; whenever activeId becomes non-null the
+  // banner clears implicitly. Manual dismiss (X button) is the other clear
+  // path. Both are CONTEXT-locked.
+  useEffect(() => {
+    return queue.subscribe((snap) => {
+      if (snap.activeId !== null) {
+        setDisconnectBanner((prev) => (prev !== null ? null : prev));
+      }
+    });
+  }, [queue]);
+
+  // ----- Plan 11-06: 1 s stall interval (download + upload recovery) -----
+  // Downloads: read activeDownloadRef.current.lastChunkAtMs against
+  // Date.now(); flip to 'stalled' past 10 s, back to 'active' when bytes
+  // resume. Uploads: the desktop pushes STALLED via the separate event
+  // listener below. Recovery from 'stalled' for uploads is detected here
+  // by tracking bytesSoFar deltas across ticks (a delta > 0 means bytes
+  // are flowing again).
+  const prevBytesRef = useRef<{ id: string | null; bytes: number }>({
+    id: null,
+    bytes: 0,
+  });
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      const snap = queue.getSnapshot();
+      const active = snap.items.find((i) => i.id === snap.activeId);
+      if (!active) {
+        prevBytesRef.current = { id: null, bytes: 0 };
+        return;
+      }
+
+      if (active.direction === 'download') {
+        const t = activeDownloadRef.current;
+        if (!t) return;
+        const ageMs = Date.now() - t.lastChunkAtMs;
+        if (ageMs > 10_000 && active.state === 'active') {
+          queue.updateItem(active.id, { state: 'stalled' });
+        } else if (ageMs <= 10_000 && active.state === 'stalled') {
+          queue.updateItem(active.id, { state: 'active' });
+        }
+        return;
+      }
+
+      // Upload: stall detection itself is push-driven (desktop's
+      // StallMonitor). RECOVERY from 'stalled' is local: when bytesSoFar
+      // moves between ticks AND the row is currently 'stalled', flip back
+      // to 'active'. Track previous bytesSoFar in a ref keyed by item.id
+      // so a fresh active-id resets the baseline cleanly.
+      if (active.direction === 'upload') {
+        const prev = prevBytesRef.current;
+        if (prev.id !== active.id) {
+          prevBytesRef.current = { id: active.id, bytes: active.bytesSoFar };
+          return;
+        }
+        if (
+          active.bytesSoFar > prev.bytes &&
+          active.state === 'stalled'
+        ) {
+          queue.updateItem(active.id, { state: 'active' });
+        }
+        prevBytesRef.current = { id: active.id, bytes: active.bytesSoFar };
+      }
+    }, 1_000);
+    return () => window.clearInterval(id);
+  }, [queue]);
+
+  // ----- Plan 11-06: upload-side STALLED event subscription -----
+  // The upload runner is busy in its chunk loop and does NOT subscribe to
+  // files-ctl events. The panel takes over: any STALLED event whose
+  // transferId matches the active UPLOAD item flips that row to 'stalled'.
+  // Downloads handle their own STALLED inside runDownload (Task 2A).
+  useEffect(() => {
+    const client = channel.filesClient;
+    if (!client) return;
+    const off = client.onEvent('files.transfer.error', (payload) => {
+      const p = payload as {
+        transferId: number;
+        error: { code: string };
+      };
+      if (!p || p.error?.code !== 'STALLED') return;
+      const snap = queue.getSnapshot();
+      const item = snap.items.find((i) => i.transferId === p.transferId);
+      if (!item || item.direction !== 'upload') return;
+      if (item.state !== 'active') return;
+      queue.updateItem(item.id, { state: 'stalled' });
+    });
+    return off;
+  }, [channel.filesClient, queue]);
+
   // Handle channel-closed placeholder.
   if (channel.status === 'closed' || channel.status === 'failed') {
     return (
@@ -932,7 +1078,11 @@ export function FileManagerPanel({
           selectionCount={selection.state.selected.size}
           selectionSize={selection.selectedSize}
         />
-        <TransferQueuePanel queue={queue} />
+        <TransferQueuePanel
+          queue={queue}
+          disconnectMessage={disconnectBanner}
+          onDismissDisconnect={() => setDisconnectBanner(null)}
+        />
         {dragActive && <DropZoneOverlay />}
       </div>
       <ContextMenu state={contextMenu} onClose={handleContextMenuClose} />

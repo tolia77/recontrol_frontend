@@ -68,6 +68,14 @@ export interface CreateRunDownloadDeps {
   /** UI hook: fires the success toast `Downloaded {name}` when the file
    *  lands in the user's Downloads folder. */
   onSuccess: (name: string) => void;
+  /**
+   * Plan 11-06: invoked with the active <see cref="DownloadTransfer"/>
+   * instance for the duration of an in-flight download (right after start();
+   * registerDownload), and again with `null` when the transfer reaches a
+   * terminal state. The panel uses this to read `lastChunkAtMs` from a 1 s
+   * setInterval and flip the row state to 'stalled' / 'active' accordingly.
+   */
+  onActiveChange?: (active: DownloadTransfer | null) => void;
 }
 
 /**
@@ -123,6 +131,11 @@ export function createRunDownload(deps: CreateRunDownloadDeps): RunDownloadFn {
     );
     transfer.start();
     filesData.registerDownload(begin.transferId, transfer);
+    // Plan 11-06: surface the active transfer to the panel so the stall
+    // interval can read transfer.lastChunkAtMs. Cleared at every terminal
+    // exit below (after the router is unregistered) so a stale reference
+    // never lingers across runs.
+    deps.onActiveChange?.(transfer);
 
     // -------- 3. Race: complete | error | cancel --------
     type Winner =
@@ -139,13 +152,27 @@ export function createRunDownload(deps: CreateRunDownloadDeps): RunDownloadFn {
         }
       });
     });
+    // Plan 11-06: STALLED is non-fatal. The desktop pushes
+    // files.transfer.error with code:'STALLED' for receivers idle > 10s, but
+    // the transfer is still alive (bytes may resume). We surface it as a row
+    // state ('stalled') WITHOUT resolving the error promise, so the runner
+    // keeps awaiting the real terminal event (complete | non-STALLED error |
+    // cancel). The state flip back to 'active' is handled by the panel's
+    // download stall interval (FileManagerPanel) when DownloadTransfer's
+    // lastChunkAtMs starts updating again.
     const errorPromise = new Promise<Winner>((resolve) => {
       const off = filesClient.onEvent('files.transfer.error', (payload) => {
         const p = payload as ErrorPayload;
-        if (p && p.transferId === begin.transferId) {
-          off();
-          resolve({ kind: 'error', payload: p });
+        if (!p || p.transferId !== begin.transferId) return;
+        if (p.error.code === 'STALLED') {
+          // Non-fatal: surface as row state; do NOT off() / resolve. Another
+          // STALLED can fire later (separate stall episode) and we want to
+          // keep listening through the lifetime of the transfer.
+          queue.updateItem(item.id, { state: 'stalled' });
+          return;
         }
+        off();
+        resolve({ kind: 'error', payload: p });
       });
     });
     const cancelPromise = (async (): Promise<Winner> => {
@@ -169,6 +196,11 @@ export function createRunDownload(deps: CreateRunDownloadDeps): RunDownloadFn {
     // Always unregister from the chunk router so post-terminal chunks are
     // silently dropped (cancel-race coverage on the data channel).
     filesData.unregisterDownload(begin.transferId);
+    // Plan 11-06: clear the panel's active-transfer reference at terminal
+    // exit. Done BEFORE the per-winner branches return so every code path
+    // below already sees a null active reference (the panel's stall
+    // interval becomes a no-op for this transferId immediately).
+    deps.onActiveChange?.(null);
 
     if (winner.kind === 'complete') {
       // Cancel-discard contract one more time: cancel may have arrived between

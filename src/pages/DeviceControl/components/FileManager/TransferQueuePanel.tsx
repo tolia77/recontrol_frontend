@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTransferQueue } from '../../hooks/useTransferQueue';
 import type {
   TransferItem,
@@ -16,6 +16,20 @@ import {
 
 interface TransferQueuePanelProps {
   queue: TransferQueue;
+  /**
+   * Plan 11-06: disconnect banner copy supplied by FileManagerPanel when
+   * useFilesChannel().status transitions out of 'open' while a transfer is
+   * active. CONTEXT-locked literal: "Disconnected during transfer.
+   * Reconnect and try again." Null when no banner should render.
+   */
+  disconnectMessage: string | null;
+  /**
+   * Invoked when the user clicks the X on the disconnect banner. The panel
+   * clears its banner state; the banner ALSO auto-clears when a new transfer
+   * starts (queue snapshot.activeId becomes non-null) -- both clear paths
+   * are owned by FileManagerPanel.
+   */
+  onDismissDisconnect: () => void;
 }
 
 /**
@@ -35,7 +49,11 @@ interface TransferQueuePanelProps {
  * not own queue lifecycle. {@link FileManagerPanel} constructs the queue once
  * via useRef and threads it down.
  */
-export function TransferQueuePanel({ queue }: TransferQueuePanelProps) {
+export function TransferQueuePanel({
+  queue,
+  disconnectMessage,
+  onDismissDisconnect,
+}: TransferQueuePanelProps) {
   const snapshot = useTransferQueue(queue);
   const [collapsed, setCollapsed] = useState(true);
 
@@ -88,6 +106,24 @@ export function TransferQueuePanel({ queue }: TransferQueuePanelProps) {
       </div>
       {expanded && (
         <div className="max-h-[180px] overflow-auto px-2 pb-2 space-y-1">
+          {/* Plan 11-06: disconnect banner. Renders ABOVE the row list when
+              FileManagerPanel detects a status transition out of 'open' while
+              a transfer is active. CONTEXT-locked verbatim copy comes from
+              the panel; this component is purely presentational. */}
+          {disconnectMessage && (
+            <div className="flex items-center justify-between gap-2 px-3 py-2 bg-error/10 border border-error rounded text-sm text-error">
+              <span>{disconnectMessage}</span>
+              <button
+                type="button"
+                onClick={onDismissDisconnect}
+                title="Dismiss"
+                aria-label="Dismiss disconnect banner"
+                className="p-0.5 rounded hover:bg-background"
+              >
+                <XIcon className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
           {snapshot.items.length === 0 && (
             <p className="text-xs text-darkgray px-2 py-1">No transfers yet.</p>
           )}
@@ -114,10 +150,25 @@ function TransferRow({ item, onCancel }: TransferRowProps) {
     item.size > 0 ? Math.min(100, Math.floor((item.bytesSoFar / item.size) * 100)) : 0;
   const Icon = item.direction === 'upload' ? UploadIcon : DownloadIcon;
   const isActive = item.state === 'active' || item.state === 'stalled';
+  const isStalled = item.state === 'stalled';
   const canCancel =
     item.state === 'queued' ||
     item.state === 'active' ||
     item.state === 'stalled';
+
+  // Plan 11-06: Wait dismissal is component-local UI state (NOT persisted,
+  // NOT crossing the wire). Hides the inline Wait+Cancel buttons until the
+  // row leaves the 'stalled' state, at which point the flag clears and the
+  // buttons rearm for any future stall episode. The intent is "I acknowledge
+  // the stall and I'd like to keep waiting" -- the transfer stays in the
+  // 'stalled' state until bytes resume (panel-level interval flips it back
+  // to 'active') OR another stall episode fires (this same flag arms again
+  // because the current episode never ended without a state transition).
+  const [waitDismissed, setWaitDismissed] = useState(false);
+  useEffect(() => {
+    if (!isStalled) setWaitDismissed(false);
+  }, [isStalled]);
+  const showStallButtons = isStalled && !waitDismissed;
 
   // State-coloured progress fill (CONTEXT-locked):
   //   queued    -> grey   (bg-darkgray)
@@ -156,16 +207,41 @@ function TransferRow({ item, onCancel }: TransferRowProps) {
             {stateLabel(item.state)}
           </span>
         </div>
-        {canCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            title="Cancel transfer"
-            aria-label={`Cancel ${item.name}`}
-            className="p-0.5 rounded hover:bg-tertiary"
-          >
-            <XIcon className="w-3.5 h-3.5" />
-          </button>
+        {/* Plan 11-06: stalled rows surface Wait + Cancel inline (replacing
+            the X-icon-only treatment). Wait hides the buttons via local
+            state until the next state transition; Cancel uses the standard
+            queue.cancelById path that the X-icon also drives. */}
+        {showStallButtons ? (
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => setWaitDismissed(true)}
+              aria-label={`Keep waiting for ${item.name}`}
+              className="px-2 py-0.5 text-xs border border-lightgray rounded hover:bg-tertiary"
+            >
+              Wait
+            </button>
+            <button
+              type="button"
+              onClick={onCancel}
+              aria-label={`Cancel ${item.name}`}
+              className="px-2 py-0.5 text-xs border border-error text-error rounded hover:bg-error/10"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          canCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              title="Cancel transfer"
+              aria-label={`Cancel ${item.name}`}
+              className="p-0.5 rounded hover:bg-tertiary"
+            >
+              <XIcon className="w-3.5 h-3.5" />
+            </button>
+          )
         )}
       </div>
       <div className="mt-1 flex items-center gap-2 text-xs text-darkgray">
