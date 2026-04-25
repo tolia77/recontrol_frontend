@@ -12,9 +12,8 @@ import { useEffect, useRef } from 'react';
  * blocking reason beats silent suppression. The Download menu item stays
  * enabled so the user can re-trigger and see the modal again.
  *
- * Capability detection (NOT user-agent sniffing) lives at the call site in
- * FileManagerPanel. The verifier explicitly greps for navigator.userAgent
- * across DeviceControl/ and would fail this plan if any UA-sniff slipped in.
+ * Capability detection (NOT UA sniffing) lives at the call site in
+ * FileManagerPanel via `typeof window.showSaveFilePicker === 'function'`.
  */
 interface DownloadBlockedDialogProps {
   open: boolean;

@@ -7,6 +7,7 @@ import { useFileManagerSelection } from '../../hooks/useFileManagerSelection';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import type { FileEntry } from '../../services/files';
 import type {
+  ContextMenuItem,
   ContextMenuState,
   FileManagerState,
   SortColumn,
@@ -24,7 +25,12 @@ import { FolderPickerModal } from './FolderPickerModal';
 import { TransferQueuePanel } from './TransferQueuePanel';
 import { DropZoneOverlay } from './DropZoneOverlay';
 import { LargeFileWarningDialog } from './LargeFileWarningDialog';
-import { TransferQueue, createRunUpload } from '../../services/transfer';
+import { DownloadBlockedDialog } from './DownloadBlockedDialog';
+import {
+  TransferQueue,
+  createRunUpload,
+  createRunDownload,
+} from '../../services/transfer';
 import type { TransferItem } from '../../services/transfer';
 import {
   detectSeparator,
@@ -111,7 +117,28 @@ export function FileManagerPanel({
   useEffect(() => {
     channelRequestRef.current = channel.request;
   }, [channel.request]);
+  // Plan 11-05: live-ref bridges for the download runner. filesClient +
+  // filesDataChannel both flip null/non-null across reconnects; the runner
+  // reads them at invocation time so the queue (constructed once via useRef)
+  // does not need to be reconstructed on channel-state changes.
+  const filesClientRef = useRef(channel.filesClient);
+  useEffect(() => {
+    filesClientRef.current = channel.filesClient;
+  }, [channel.filesClient]);
+  const filesDataChannelRef = useRef(channel.filesDataChannel);
+  useEffect(() => {
+    filesDataChannelRef.current = channel.filesDataChannel;
+  }, [channel.filesDataChannel]);
   const filesDataRef = channel.filesDataRef;
+
+  const toast = useToast();
+  // Stable ref so createRunDownload's onSuccess closure stays valid across
+  // toast-hook identity changes (the hook is reference-stable in practice but
+  // ref-bridging is the pattern used throughout this panel for reconnects).
+  const toastRef = useRef(toast);
+  useEffect(() => {
+    toastRef.current = toast;
+  }, [toast]);
 
   const queueRef = useRef<TransferQueue | null>(null);
   if (queueRef.current === null) {
@@ -121,17 +148,12 @@ export function FileManagerPanel({
         getRequest: () => channelRequestRef.current,
         getFile: (id) => filesByItemIdRef.current.get(id) ?? null,
       }),
-      // Plan 11-05 will wire the real download runner.
-      async (item, queue) => {
-        queue.updateItem(item.id, {
-          state: 'failed',
-          error: {
-            code: 'CLIENT_ERROR',
-            message: 'Download runner not yet wired (Plan 11-05).',
-          },
-          completedAt: Date.now(),
-        });
-      },
+      createRunDownload({
+        getRequest: () => channelRequestRef.current,
+        getFilesClient: () => filesClientRef.current,
+        getFilesDataChannel: () => filesDataChannelRef.current,
+        onSuccess: (name) => toastRef.current.info(`Downloaded ${name}`),
+      }),
     );
   }
   const queue = queueRef.current;
@@ -193,8 +215,20 @@ export function FileManagerPanel({
     files: File[];
     index: number;
   } | null>(null);
+  // ----- Plan 11-05: download flow state -----
+  // downloadBlocked renders the non-Chromium >100 MiB modal (no Try Anyway
+  // escape hatch -- discoverability of the blocking reason beats silent
+  // suppression; CONTEXT-locked).
+  const [downloadBlocked, setDownloadBlocked] = useState<{
+    name: string;
+    size: number;
+  } | null>(null);
+  // pendingDownloadWarn renders the LargeFileWarningDialog (reused from Plan
+  // 11-04) for Chromium browsers that DO have showSaveFilePicker but where
+  // the file is still > 100 MiB.
+  const [pendingDownloadWarn, setPendingDownloadWarn] =
+    useState<FileEntry | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
-  const toast = useToast();
 
   // When roots arrive for the first time and we don't have a currentPath yet,
   // leave currentPath null (empty-state prompt); the user must click a root.
@@ -393,16 +427,71 @@ export function FileManagerPanel({
   // ----- Selection state (shared between listing + keyboard handler + status) -----
   const selection = useFileManagerSelection(visibleEntries);
 
+  // ----- Plan 11-05: download trigger + capability gate + warning gate -----
+  // enqueueDownload mints a download TransferItem and pushes it onto the queue.
+  // The runner closes over channel deps via the live-ref bridges set up at the
+  // top of this component.
+  const enqueueDownload = useCallback(
+    (entry: FileEntry) => {
+      if (!state.currentPath) return; // file rows imply we're inside a folder
+      const id =
+        typeof crypto !== 'undefined' && 'randomUUID' in crypto
+          ? crypto.randomUUID()
+          : `download-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const item: TransferItem = {
+        id,
+        transferId: null,
+        direction: 'download',
+        name: entry.name,
+        parentPath: state.currentPath,
+        size: entry.sizeBytes,
+        bytesSoFar: 0,
+        state: 'queued',
+        enqueuedAt: Date.now(),
+      };
+      queue.enqueue(item);
+    },
+    [state.currentPath, queue],
+  );
+
+  // triggerDownload is the SINGLE chokepoint for download invocation. Capability
+  // detection (NOT user-agent sniffing -- CONTEXT-locked) lives here:
+  //   - showSaveFilePicker function present + size > 100 MiB -> reuse the
+  //     LargeFileWarningDialog from Plan 11-04 with direction='download'.
+  //   - showSaveFilePicker function MISSING + size > 100 MiB -> open the
+  //     DownloadBlockedDialog with verbatim CONTEXT-locked copy.
+  //   - Otherwise enqueue immediately.
+  // 100 MiB cutoff via `size > 100 * 1024 * 1024` matches Plan 11-04's upload
+  // threshold; the dialog renders the figure as decimal MB (Math.round / 1e6).
+  const triggerDownload = useCallback(
+    (entry: FileEntry) => {
+      if (entry.isDirectory) return; // DOWNLOAD-02
+      if (entry.sizeBytes > LARGE_FILE_THRESHOLD) {
+        const hasFsa =
+          typeof (window as { showSaveFilePicker?: unknown })
+            .showSaveFilePicker === 'function';
+        if (!hasFsa) {
+          setDownloadBlocked({ name: entry.name, size: entry.sizeBytes });
+          return;
+        }
+        setPendingDownloadWarn(entry);
+        return;
+      }
+      enqueueDownload(entry);
+    },
+    [enqueueDownload],
+  );
+
   // ----- Activation: Enter on focused row OR double-click on a row -----
   const handleActivate = useCallback(
     (entry: FileEntry) => {
       if (entry.isDirectory) {
         setCurrentPath(entry.path);
       } else {
-        toast.info('File downloads arrive in Phase 11.');
+        triggerDownload(entry);
       }
     },
-    [setCurrentPath, toast],
+    [setCurrentPath, triggerDownload],
   );
 
   // ----- Navigate up: Backspace OR Alt+ArrowLeft -----
@@ -654,38 +743,47 @@ export function FileManagerPanel({
         const idx = visibleEntries.findIndex((v) => v.path === entry.path);
         if (idx >= 0) selection.selectOnly(idx);
       }
-      setContextMenu({
-        x: e.clientX,
-        y: e.clientY,
-        items: [
-          {
-            label: 'Rename',
-            onSelect: () => {
-              // Rename targets the single selected row; selectOnly above
-              // ensured the right-clicked row is the selection.
-              const target = entry.path;
-              setNewFolderPending(false);
-              setRenamingPath(target);
+      // Plan 11-05: prepend a "Download" item ABOVE Rename for FILE rows only.
+      // Folder rows hide the Download item entirely (DOWNLOAD-02). The menu
+      // shape from Plan 10-04/10-05 (Rename / sep / Delete / Move / Copy) is
+      // preserved for both branches.
+      const baseItems: ContextMenuItem[] = [
+        {
+          label: 'Rename',
+          onSelect: () => {
+            const target = entry.path;
+            setNewFolderPending(false);
+            setRenamingPath(target);
+          },
+        },
+        { separator: true, label: '', onSelect: () => {} },
+        {
+          label: 'Delete',
+          danger: true,
+          onSelect: () => {
+            void handleRequestDelete();
+          },
+        },
+        {
+          label: 'Move to…',
+          onSelect: handleMoveTo,
+        },
+        {
+          label: 'Copy to…',
+          onSelect: handleCopyTo,
+        },
+      ];
+      const items: ContextMenuItem[] = entry.isDirectory
+        ? baseItems
+        : [
+            {
+              label: 'Download',
+              onSelect: () => triggerDownload(entry),
             },
-          },
-          { separator: true, label: '', onSelect: () => {} },
-          {
-            label: 'Delete',
-            danger: true,
-            onSelect: () => {
-              void handleRequestDelete();
-            },
-          },
-          {
-            label: 'Move to…',
-            onSelect: handleMoveTo,
-          },
-          {
-            label: 'Copy to…',
-            onSelect: handleCopyTo,
-          },
-        ],
-      });
+            { separator: true, label: '', onSelect: () => {} },
+            ...baseItems,
+          ];
+      setContextMenu({ x: e.clientX, y: e.clientY, items });
     },
     [
       selection,
@@ -693,6 +791,7 @@ export function FileManagerPanel({
       handleRequestDelete,
       handleMoveTo,
       handleCopyTo,
+      triggerDownload,
     ],
   );
 
@@ -921,6 +1020,23 @@ export function FileManagerPanel({
         direction="upload"
         onConfirm={handleWarningConfirm}
         onCancel={handleWarningCancel}
+      />
+      <DownloadBlockedDialog
+        open={downloadBlocked !== null}
+        fileName={downloadBlocked?.name ?? ''}
+        sizeBytes={downloadBlocked?.size ?? 0}
+        onClose={() => setDownloadBlocked(null)}
+      />
+      <LargeFileWarningDialog
+        open={pendingDownloadWarn !== null}
+        fileName={pendingDownloadWarn?.name ?? ''}
+        sizeBytes={pendingDownloadWarn?.sizeBytes ?? 0}
+        direction="download"
+        onConfirm={() => {
+          if (pendingDownloadWarn) enqueueDownload(pendingDownloadWarn);
+          setPendingDownloadWarn(null);
+        }}
+        onCancel={() => setPendingDownloadWarn(null)}
       />
     </div>
   );
