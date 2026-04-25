@@ -21,6 +21,8 @@ import { FileManagerEmptyAllowlist } from './FileManagerEmptyAllowlist';
 import { ContextMenu } from './ContextMenu';
 import { ConfirmDialog } from './ConfirmDialog';
 import { FolderPickerModal } from './FolderPickerModal';
+import { TransferQueuePanel } from './TransferQueuePanel';
+import { TransferQueue } from '../../services/transfer';
 import {
   detectSeparator,
   isAncestor,
@@ -75,6 +77,40 @@ export function FileManagerPanel({
   setShowHidden,
 }: FileManagerPanelProps) {
   const rootsResult = useFilesRoots(channel);
+
+  // ----- Plan 11-03: transfer queue (stub runners) -----
+  // Constructed once per panel mount via useRef so the queue's listeners and
+  // in-flight state survive re-renders. A panel close + reopen creates a new
+  // queue -- "queue survives panel close" is CONTEXT-deferred to phase 12.
+  // Stub runners land items in 'failed' immediately so the panel surface is
+  // exercisable end-to-end before plan 11-04 / 11-05 wire real runners.
+  const queueRef = useRef<TransferQueue | null>(null);
+  if (queueRef.current === null) {
+    queueRef.current = new TransferQueue(
+      async (item, queue) => {
+        queue.updateItem(item.id, {
+          state: 'failed',
+          error: {
+            code: 'CLIENT_ERROR',
+            message: 'Upload runner not yet wired (Plan 11-04).',
+          },
+          completedAt: Date.now(),
+        });
+      },
+      async (item, queue) => {
+        queue.updateItem(item.id, {
+          state: 'failed',
+          error: {
+            code: 'CLIENT_ERROR',
+            message: 'Download runner not yet wired (Plan 11-05).',
+          },
+          completedAt: Date.now(),
+        });
+      },
+    );
+  }
+  const queue = queueRef.current;
+
   const [refreshKey, setRefreshKey] = useState(0);
   const [visibleEntries, setVisibleEntries] = useState<FileEntry[]>([]);
   const [newFolderPending, setNewFolderPending] = useState(false);
@@ -601,6 +637,7 @@ export function FileManagerPanel({
           selectionCount={selection.state.selected.size}
           selectionSize={selection.selectedSize}
         />
+        <TransferQueuePanel queue={queue} />
       </div>
       <ContextMenu state={contextMenu} onClose={handleContextMenuClose} />
       <ConfirmDialog
