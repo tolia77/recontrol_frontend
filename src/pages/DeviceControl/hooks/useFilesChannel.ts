@@ -18,6 +18,12 @@ export type FilesChannelRequest = <TPayload, TResult>(
 export interface UseFilesChannel {
   status: FilesChannelStatus;
   request: FilesChannelRequest | null;
+  /**
+   * Live ref to the binary data channel. Plan 11-04+ runners read this at
+   * invocation time so reconnects pick up the new channel without panel-side
+   * rewiring. May be null while the channel is closed; callers must guard.
+   */
+  filesDataRef: UseWebRtcReturn['filesDataRef'];
 }
 
 /**
@@ -37,6 +43,7 @@ export interface UseFilesChannel {
 export function useFilesChannel(
   filesClientRef: UseWebRtcReturn['filesClientRef'],
   connectionState: UseWebRtcReturn['connectionState'],
+  filesDataRef: UseWebRtcReturn['filesDataRef'],
 ): UseFilesChannel {
   const [status, setStatus] = useState<FilesChannelStatus>('closed');
 
@@ -76,5 +83,6 @@ export function useFilesChannel(
   return {
     status,
     request: status === 'open' ? request : null,
+    filesDataRef,
   };
 }

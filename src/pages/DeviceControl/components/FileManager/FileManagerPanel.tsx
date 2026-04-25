@@ -22,7 +22,10 @@ import { ContextMenu } from './ContextMenu';
 import { ConfirmDialog } from './ConfirmDialog';
 import { FolderPickerModal } from './FolderPickerModal';
 import { TransferQueuePanel } from './TransferQueuePanel';
-import { TransferQueue } from '../../services/transfer';
+import { DropZoneOverlay } from './DropZoneOverlay';
+import { LargeFileWarningDialog } from './LargeFileWarningDialog';
+import { TransferQueue, createRunUpload } from '../../services/transfer';
+import type { TransferItem } from '../../services/transfer';
 import {
   detectSeparator,
   isAncestor,
@@ -30,6 +33,12 @@ import {
   parentPath,
 } from './utils/pathUtils';
 import { mapFilesErrorToMessage } from './utils/errors';
+
+/**
+ * 100 MiB upload-warning threshold (TRANSFER-06). The CONTEXT-locked check is
+ * binary MiB; the dialog displays decimal MB for user-facing copy.
+ */
+const LARGE_FILE_THRESHOLD = 100 * 1024 * 1024;
 
 interface FileManagerPanelProps {
   /** Used for storage keying in parent hooks; included for completeness. */
@@ -78,25 +87,41 @@ export function FileManagerPanel({
 }: FileManagerPanelProps) {
   const rootsResult = useFilesRoots(channel);
 
-  // ----- Plan 11-03: transfer queue (stub runners) -----
-  // Constructed once per panel mount via useRef so the queue's listeners and
-  // in-flight state survive re-renders. A panel close + reopen creates a new
-  // queue -- "queue survives panel close" is CONTEXT-deferred to phase 12.
-  // Stub runners land items in 'failed' immediately so the panel surface is
-  // exercisable end-to-end before plan 11-04 / 11-05 wire real runners.
+  // ----- Plan 11-04: transfer queue (real upload runner; download stub) -----
+  //
+  // The queue is constructed once per panel mount via useRef so its listeners
+  // and in-flight state survive re-renders. A panel close + reopen creates a
+  // fresh queue -- "queue survives panel close" is CONTEXT-deferred to phase
+  // 12. Plan 11-05 will replace the download stub.
+  //
+  // Live-ref bridges: channel.request and filesDataRef can flip null/non-null
+  // across reconnects, so we route them through refs the runner reads at
+  // invocation time. This matches the desktop-side deferred-accessor closure
+  // pattern from plan 11-02 (CommandDispatcher) and avoids reconstructing the
+  // queue on every channel-state change.
+  //
+  // filesByItemIdRef holds the source File objects keyed by TransferItem.id.
+  // It is intentionally NOT a field on TransferItem -- retaining a File
+  // reference inside completed-history would prevent the GC from reclaiming
+  // the underlying blob bytes (RESEARCH anti-pattern). The cleanup effect
+  // below subscribes to queue snapshots and drops files for ids that have
+  // been pruned from history.
+  const filesByItemIdRef = useRef<Map<string, File>>(new Map());
+  const channelRequestRef = useRef(channel.request);
+  useEffect(() => {
+    channelRequestRef.current = channel.request;
+  }, [channel.request]);
+  const filesDataRef = channel.filesDataRef;
+
   const queueRef = useRef<TransferQueue | null>(null);
   if (queueRef.current === null) {
     queueRef.current = new TransferQueue(
-      async (item, queue) => {
-        queue.updateItem(item.id, {
-          state: 'failed',
-          error: {
-            code: 'CLIENT_ERROR',
-            message: 'Upload runner not yet wired (Plan 11-04).',
-          },
-          completedAt: Date.now(),
-        });
-      },
+      createRunUpload({
+        filesDataRef,
+        getRequest: () => channelRequestRef.current,
+        getFile: (id) => filesByItemIdRef.current.get(id) ?? null,
+      }),
+      // Plan 11-05 will wire the real download runner.
       async (item, queue) => {
         queue.updateItem(item.id, {
           state: 'failed',
@@ -110,6 +135,18 @@ export function FileManagerPanel({
     );
   }
   const queue = queueRef.current;
+
+  // Drop the panel-side File reference when the queue prunes its TransferItem
+  // out of history (HISTORY_LIMIT eviction). Without this, the Map would
+  // retain File refs indefinitely and prevent GC on the underlying blob.
+  useEffect(() => {
+    return queue.subscribe((snap) => {
+      const liveIds = new Set(snap.items.map((i) => i.id));
+      for (const id of filesByItemIdRef.current.keys()) {
+        if (!liveIds.has(id)) filesByItemIdRef.current.delete(id);
+      }
+    });
+  }, [queue]);
 
   const [refreshKey, setRefreshKey] = useState(0);
   const [visibleEntries, setVisibleEntries] = useState<FileEntry[]>([]);
@@ -141,6 +178,21 @@ export function FileManagerPanel({
   // Cancel buttons stay disabled and Esc / overlay-click cancellation are
   // suppressed while wire calls are still resolving.
   const [isOperating, setIsOperating] = useState(false);
+  // ----- Plan 11-04: upload flow state -----
+  // dragActive renders the DropZoneOverlay; dragDepthRef counts dragenter /
+  // dragleave events so internal panel boundaries (toolbar / breadcrumb /
+  // listing rows) do NOT flicker the overlay (Pitfall 6).
+  const [dragActive, setDragActive] = useState(false);
+  const dragDepthRef = useRef(0);
+  const rightColumnRef = useRef<HTMLDivElement>(null);
+  // Sequential 100 MiB warning queue for a drop / upload-pick batch. Each
+  // dropped file walks through this state machine: small files enqueue
+  // immediately and advance the index; large files render the dialog and
+  // wait for Confirm / Cancel before advancing.
+  const [pendingWarn, setPendingWarn] = useState<{
+    files: File[];
+    index: number;
+  } | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const toast = useToast();
 
@@ -197,6 +249,146 @@ export function FileManagerPanel({
     },
     [setCurrentPath],
   );
+
+  // ----- Plan 11-04: enqueue + 100 MiB warning gate -----
+  // enqueueFile mints a TransferItem and stores the source File in the panel-
+  // owned Map. The runner reads the File via getFile at chunk-loop time.
+  const enqueueFile = useCallback(
+    (file: File) => {
+      if (!state.currentPath) return;
+      const id =
+        typeof crypto !== 'undefined' && 'randomUUID' in crypto
+          ? crypto.randomUUID()
+          : `upload-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      filesByItemIdRef.current.set(id, file);
+      const item: TransferItem = {
+        id,
+        transferId: null,
+        direction: 'upload',
+        name: file.name,
+        parentPath: state.currentPath,
+        size: file.size,
+        bytesSoFar: 0,
+        state: 'queued',
+        enqueuedAt: Date.now(),
+      };
+      queue.enqueue(item);
+    },
+    [state.currentPath, queue],
+  );
+
+  // handleUploadFiles is the single entry point for both drop + Upload-button
+  // flows. It seeds the sequential warning state machine with the batch.
+  const handleUploadFiles = useCallback((files: File[]) => {
+    if (files.length === 0) return;
+    setPendingWarn({ files, index: 0 });
+  }, []);
+
+  // Sequential warning processor: walks the batch one file at a time. Small
+  // files (<= 100 MiB) enqueue immediately and advance the index. Large files
+  // park here and let the dialog drive the next state transition via Confirm
+  // (enqueue + advance) or Cancel (skip + advance).
+  useEffect(() => {
+    if (!pendingWarn) return;
+    const { files, index } = pendingWarn;
+    if (index >= files.length) {
+      setPendingWarn(null);
+      return;
+    }
+    const f = files[index];
+    if (f.size <= LARGE_FILE_THRESHOLD) {
+      enqueueFile(f);
+      setPendingWarn({ files, index: index + 1 });
+    }
+    // else: dialog renders below; user clicks Confirm or Cancel to advance.
+  }, [pendingWarn, enqueueFile]);
+
+  const handleWarningConfirm = useCallback(() => {
+    setPendingWarn((prev) => {
+      if (!prev) return prev;
+      enqueueFile(prev.files[prev.index]);
+      return { files: prev.files, index: prev.index + 1 };
+    });
+  }, [enqueueFile]);
+
+  const handleWarningCancel = useCallback(() => {
+    setPendingWarn((prev) => {
+      if (!prev) return prev;
+      // Skip this file (no enqueue) and advance.
+      return { files: prev.files, index: prev.index + 1 };
+    });
+  }, []);
+
+  // ----- Plan 11-04: drag-and-drop handlers attached to the right column -----
+  // The handlers attach to rightColumnRef (NOT the panel root) so the sidebar
+  // stays unobscured by the overlay. preventDefault on dragenter + dragover is
+  // REQUIRED for the drop event to fire (W3C drag-drop anti-pattern). The
+  // depth counter prevents the overlay from flickering as drag events bubble
+  // through nested children inside the right column (Pitfall 6).
+  useEffect(() => {
+    const el = rightColumnRef.current;
+    if (!el) return;
+
+    const hasFiles = (e: DragEvent): boolean =>
+      Array.from(e.dataTransfer?.types ?? []).includes('Files');
+
+    const onEnter = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      dragDepthRef.current += 1;
+      if (dragDepthRef.current === 1) setDragActive(true);
+    };
+    const onOver = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+    };
+    const onLeave = () => {
+      dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
+      if (dragDepthRef.current === 0) setDragActive(false);
+    };
+    const onDrop = (e: DragEvent) => {
+      e.preventDefault();
+      dragDepthRef.current = 0;
+      setDragActive(false);
+
+      if (!state.currentPath) {
+        toast.info('Navigate to a folder first.');
+        return;
+      }
+      // Folder detection (Pitfall 5: webkitGetAsEntry returns null for non-
+      // file items, so filter kind === 'file' BEFORE calling it).
+      const items = Array.from(e.dataTransfer?.items ?? []);
+      const entries = items
+        .filter((i) => i.kind === 'file')
+        .map((i) => {
+          const item = i as DataTransferItem & {
+            webkitGetAsEntry?: () => FileSystemEntry | null;
+          };
+          return item.webkitGetAsEntry?.() ?? null;
+        })
+        .filter((entry): entry is FileSystemEntry => entry !== null);
+
+      if (entries.some((entry) => entry.isDirectory)) {
+        toast.info("Folder upload isn't supported yet.");
+        return;
+      }
+
+      const files = Array.from(e.dataTransfer?.files ?? []);
+      if (files.length > 0) handleUploadFiles(files);
+    };
+
+    el.addEventListener('dragenter', onEnter);
+    el.addEventListener('dragover', onOver);
+    el.addEventListener('dragleave', onLeave);
+    el.addEventListener('drop', onDrop);
+    return () => {
+      el.removeEventListener('dragenter', onEnter);
+      el.removeEventListener('dragover', onOver);
+      el.removeEventListener('dragleave', onLeave);
+      el.removeEventListener('drop', onDrop);
+    };
+  }, [state.currentPath, toast, handleUploadFiles]);
 
   // ----- Selection state (shared between listing + keyboard handler + status) -----
   const selection = useFileManagerSelection(visibleEntries);
@@ -592,7 +784,10 @@ export function FileManagerPanel({
         currentPath={state.currentPath}
         onSelectRoot={handleSelectRoot}
       />
-      <div className="flex-1 flex flex-col min-w-0 min-h-0">
+      <div
+        ref={rightColumnRef}
+        className="flex-1 flex flex-col min-w-0 min-h-0 relative"
+      >
         <FileManagerToolbar
           showHidden={state.showHidden}
           onToggleShowHidden={setShowHidden}
@@ -606,9 +801,7 @@ export function FileManagerPanel({
           }}
           onMoveTo={handleMoveTo}
           onCopyTo={handleCopyTo}
-          onUploadFiles={() => {
-            /* Plan 11-04 Task 2 wires the real handler. */
-          }}
+          onUploadFiles={handleUploadFiles}
         />
         <FileManagerBreadcrumb
           currentPath={state.currentPath}
@@ -641,6 +834,7 @@ export function FileManagerPanel({
           selectionSize={selection.selectedSize}
         />
         <TransferQueuePanel queue={queue} />
+        {dragActive && <DropZoneOverlay />}
       </div>
       <ContextMenu state={contextMenu} onClose={handleContextMenuClose} />
       <ConfirmDialog
@@ -707,6 +901,26 @@ export function FileManagerPanel({
         onCancel={() => {
           if (!isOperating) setPicker(null);
         }}
+      />
+      <LargeFileWarningDialog
+        open={
+          !!pendingWarn &&
+          pendingWarn.index < pendingWarn.files.length &&
+          pendingWarn.files[pendingWarn.index].size > LARGE_FILE_THRESHOLD
+        }
+        fileName={
+          pendingWarn && pendingWarn.index < pendingWarn.files.length
+            ? pendingWarn.files[pendingWarn.index].name
+            : ''
+        }
+        sizeBytes={
+          pendingWarn && pendingWarn.index < pendingWarn.files.length
+            ? pendingWarn.files[pendingWarn.index].size
+            : 0
+        }
+        direction="upload"
+        onConfirm={handleWarningConfirm}
+        onCancel={handleWarningCancel}
       />
     </div>
   );
