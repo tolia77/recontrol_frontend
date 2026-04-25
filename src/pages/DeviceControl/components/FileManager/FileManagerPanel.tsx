@@ -606,6 +606,9 @@ export function FileManagerPanel({
           }}
           onMoveTo={handleMoveTo}
           onCopyTo={handleCopyTo}
+          onUploadFiles={() => {
+            /* Plan 11-04 Task 2 wires the real handler. */
+          }}
         />
         <FileManagerBreadcrumb
           currentPath={state.currentPath}

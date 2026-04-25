@@ -1,0 +1,55 @@
+import { ConfirmDialog } from './ConfirmDialog';
+
+/**
+ * Per-file >100 MiB warning gate (TRANSFER-06).
+ *
+ * Shown sequentially BEFORE enqueueing each large file. The panel walks the
+ * dropped/picked batch one entry at a time; small files (<= 100 MiB) skip the
+ * dialog and enqueue directly. Cancel removes the file from upload candidates
+ * (no enqueue, no state-failed entry); Confirm flips the per-file approval
+ * and the panel proceeds to enqueue.
+ *
+ * Display unit: decimal MB (size / 1_000_000) per CONTEXT discretion -- matches
+ * the user's mental model (1 MB = 1 million bytes in marketing copy). The
+ * underlying threshold check is binary MiB (`size > 100 * 1024 * 1024`).
+ *
+ * Reuses the existing ConfirmDialog primitive with `dangerous={false}` so the
+ * primary button is the safe-coloured Confirm and Esc does not terminate the
+ * sequential walk through the batch.
+ */
+interface LargeFileWarningDialogProps {
+  open: boolean;
+  fileName: string;
+  sizeBytes: number;
+  direction: 'upload' | 'download';
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+export function LargeFileWarningDialog({
+  open,
+  fileName,
+  sizeBytes,
+  direction,
+  onConfirm,
+  onCancel,
+}: LargeFileWarningDialogProps) {
+  const sizeMb = Math.round(sizeBytes / 1_000_000);
+  const action = direction === 'upload' ? 'Upload' : 'Download';
+  return (
+    <ConfirmDialog
+      open={open}
+      title={`Large file ${direction}`}
+      body={
+        <p>
+          This file is {sizeMb} MB ({fileName}). {action} anyway?
+        </p>
+      }
+      confirmLabel={action}
+      cancelLabel="Cancel"
+      dangerous={false}
+      onConfirm={onConfirm}
+      onCancel={onCancel}
+    />
+  );
+}
