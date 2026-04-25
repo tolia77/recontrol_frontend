@@ -1,6 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useToast } from 'src/components/ui';
 import type { UseFilesChannel } from '../../hooks/useFilesChannel';
 import { useFilesRoots } from '../../hooks/useFilesRoots';
+import { useFileManagerSelection } from '../../hooks/useFileManagerSelection';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
+import type { FileEntry } from '../../services/files';
 import type { FileManagerState, SortColumn, SortState } from './types';
 import { FileManagerToolbar } from './FileManagerToolbar';
 import { FileManagerBreadcrumb } from './FileManagerBreadcrumb';
@@ -8,7 +12,7 @@ import { FileManagerSidebar } from './FileManagerSidebar';
 import { FileManagerListing } from './FileManagerListing';
 import { FileManagerStatusBar } from './FileManagerStatusBar';
 import { FileManagerEmptyAllowlist } from './FileManagerEmptyAllowlist';
-import { isAncestor } from './utils/pathUtils';
+import { detectSeparator, isAncestor, parentPath } from './utils/pathUtils';
 
 interface FileManagerPanelProps {
   /** Used for storage keying in parent hooks; included for completeness. */
@@ -22,9 +26,14 @@ interface FileManagerPanelProps {
 
 /**
  * Top-level orchestrator for the file-manager UI. Composes the toolbar,
- * breadcrumb, sidebar, listing, and status bar. Handles disconnected and
- * empty-allowlist states at the panel level so sub-components don't need to
- * each branch on them.
+ * breadcrumb, sidebar, listing, and status bar; owns the selection +
+ * keyboard-shortcut hooks so all sub-components share the same state.
+ *
+ * Focus contract: the panel root is `tabIndex={0}` and gets focused on mount
+ * so F5 / arrow keys / Esc work without an extra click. The keyboard handler
+ * inside `useKeyboardShortcuts` short-circuits when focus isn't inside the
+ * panel root, so the interactive video overlay (which uses the same
+ * tabIndex+onKeyDown pattern) never has its keystrokes hijacked.
  */
 export function FileManagerPanel({
   deviceId: _deviceId,
@@ -35,8 +44,10 @@ export function FileManagerPanel({
   setShowHidden,
 }: FileManagerPanelProps) {
   const rootsResult = useFilesRoots(channel);
-  const [visibleCount, setVisibleCount] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [visibleEntries, setVisibleEntries] = useState<FileEntry[]>([]);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const toast = useToast();
 
   // When roots arrive for the first time and we don't have a currentPath yet,
   // leave currentPath null (empty-state prompt); the user must click a root.
@@ -53,7 +64,6 @@ export function FileManagerPanel({
     if (!stillReachable) {
       setCurrentPath(null);
     }
-    // Intentionally depend on roots identity + currentPath
   }, [rootsResult.roots, state.currentPath, setCurrentPath]);
 
   // Figure out which root the current path lives under so the breadcrumb knows
@@ -93,10 +103,81 @@ export function FileManagerPanel({
     [setCurrentPath],
   );
 
+  // ----- Selection state (shared between listing + keyboard handler + status) -----
+  const selection = useFileManagerSelection(visibleEntries);
+
+  // ----- Activation: Enter on focused row OR double-click on a row -----
+  const handleActivate = useCallback(
+    (entry: FileEntry) => {
+      if (entry.isDirectory) {
+        setCurrentPath(entry.path);
+      } else {
+        toast.info('File downloads arrive in Phase 11.');
+      }
+    },
+    [setCurrentPath, toast],
+  );
+
+  // ----- Navigate up: Backspace OR Alt+ArrowLeft -----
+  const handleNavigateUp = useCallback(() => {
+    if (!state.currentPath || !activeRootPath) return;
+    if (state.currentPath === activeRootPath) return; // already at root of allowlisted root
+    const sep = detectSeparator(activeRootPath);
+    const parent = parentPath(state.currentPath, sep);
+    if (parent === null) return;
+    // Clamp at the active root: never navigate above an allowlisted root.
+    if (
+      parent === activeRootPath ||
+      isAncestor(activeRootPath, parent)
+    ) {
+      setCurrentPath(parent);
+    } else {
+      // Parent would be outside the allowlisted root -- snap to the root.
+      setCurrentPath(activeRootPath);
+    }
+  }, [state.currentPath, activeRootPath, setCurrentPath]);
+
+  // ----- Rename / Delete stubs (plan 10-04 / 10-05 implement) -----
+  const handleRequestRename = useCallback(() => {
+    console.log('[file-manager] rename: wired in plan 10-04');
+  }, []);
+  const handleRequestDelete = useCallback(() => {
+    console.log('[file-manager] delete: wired in plan 10-05');
+  }, []);
+
+  // ----- Keyboard handler (focus-guarded) -----
+  const keyboard = useKeyboardShortcuts({
+    rootRef,
+    enabled: channel.status === 'open',
+    entries: visibleEntries,
+    selection,
+    onRefresh: handleRefresh,
+    onNavigateUp: handleNavigateUp,
+    onActivate: handleActivate,
+    onRequestRename: handleRequestRename,
+    onRequestDelete: handleRequestDelete,
+  });
+
+  // Auto-focus the panel root on mount so F5 / arrows / Esc work without
+  // requiring the user to click first. Only focus once -- subsequent focus
+  // changes are user-driven.
+  const initialFocusedRef = useRef(false);
+  useEffect(() => {
+    if (initialFocusedRef.current) return;
+    if (channel.status !== 'open') return;
+    if (!rootRef.current) return;
+    rootRef.current.focus();
+    initialFocusedRef.current = true;
+  }, [channel.status]);
+
   // Handle channel-closed placeholder.
   if (channel.status === 'closed' || channel.status === 'failed') {
     return (
-      <div className="flex h-full w-full bg-background text-text items-center justify-center p-8 text-center text-darkgray text-sm">
+      <div
+        ref={rootRef}
+        tabIndex={0}
+        className="outline-none flex h-full w-full bg-background text-text items-center justify-center p-8 text-center text-darkgray text-sm"
+      >
         Files channel disconnected -- reconnect the stream.
       </div>
     );
@@ -105,14 +186,23 @@ export function FileManagerPanel({
   // Handle empty-allowlist state.
   if (rootsResult.isEmpty) {
     return (
-      <div className="flex h-full w-full bg-background text-text">
+      <div
+        ref={rootRef}
+        tabIndex={0}
+        className="outline-none flex h-full w-full bg-background text-text"
+      >
         <FileManagerEmptyAllowlist />
       </div>
     );
   }
 
   return (
-    <div className="flex h-full w-full bg-background text-text">
+    <div
+      ref={rootRef}
+      tabIndex={0}
+      onKeyDown={keyboard.onKeyDown}
+      className="outline-none flex h-full w-full bg-background text-text"
+    >
       <FileManagerSidebar
         roots={rootsResult.roots}
         isLoading={rootsResult.isLoading}
@@ -138,12 +228,15 @@ export function FileManagerPanel({
           sort={state.sort}
           onToggleSort={handleToggleSort}
           refreshKey={refreshKey}
-          onVisibleCountChange={setVisibleCount}
+          showHidden={state.showHidden}
+          selection={selection}
+          onVisibleEntriesChange={setVisibleEntries}
+          onActivate={handleActivate}
         />
         <FileManagerStatusBar
-          totalCount={visibleCount}
-          selectionCount={0}
-          selectionSize={0}
+          totalCount={visibleEntries.length}
+          selectionCount={selection.state.selected.size}
+          selectionSize={selection.selectedSize}
         />
       </div>
     </div>

@@ -21,7 +21,8 @@ export function FileManagerStatusBar({
       {hasSelection ? (
         <span>
           {selectionCount} item{selectionCount === 1 ? '' : 's'} selected
-          {selectionSize > 0 ? ` — ${formatBytes(selectionSize)}` : ''}
+          {' — '}
+          {formatBytes(selectionSize)}
         </span>
       ) : (
         <span>

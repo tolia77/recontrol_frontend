@@ -26,7 +26,7 @@ export function FileManagerToolbar({
         type="button"
         onClick={onRefresh}
         disabled={disabled}
-        title="Refresh"
+        title="Refresh (F5)"
         className="p-1.5 rounded hover:bg-tertiary disabled:opacity-50 disabled:cursor-not-allowed text-text transition-colors"
       >
         <RefreshIcon className="w-4 h-4" />

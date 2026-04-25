@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { MouseEvent } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { FileEntry, FilesListResponse } from '../../services/files';
 import { FilesChannelError } from '../../services/files';
 import { useToast } from 'src/components/ui';
 import type { UseFilesChannel } from '../../hooks/useFilesChannel';
+import type { useFileManagerSelection } from '../../hooks/useFileManagerSelection';
 import type { SortColumn, SortState } from './types';
 import { ROW_HEIGHT_PX, FileManagerRow } from './FileManagerRow';
 import { compareEntries } from './utils/sort';
@@ -15,12 +17,19 @@ interface FileManagerListingProps {
   onToggleSort: (col: SortColumn) => void;
   /** Bump to force a re-fetch of the current path without changing it. */
   refreshKey: number;
+  /** When false, entries with isHidden=true are filtered out of the listing. */
+  showHidden: boolean;
+  /** Selection state owned by the panel; same instance shared with keyboard handler. */
+  selection: ReturnType<typeof useFileManagerSelection>;
   /**
-   * Called with the count of visible entries so the status bar can render
-   * "{N} items". Parent owns the status bar because selection state
-   * (plan 10-03) also drives it.
+   * Bubbles the post-filter, post-sort entries to the panel so that the
+   * keyboard handler and status bar see the SAME visible array as the
+   * listing. Identity changes here trigger selection invalidation in the
+   * selection hook (Pitfall 5).
    */
-  onVisibleCountChange: (count: number) => void;
+  onVisibleEntriesChange: (entries: FileEntry[]) => void;
+  /** Called when a file/folder row is double-clicked or activated by Enter. */
+  onActivate: (entry: FileEntry) => void;
 }
 
 type ListingState =
@@ -42,8 +51,14 @@ function errorMessageFor(err: FilesChannelError): string {
 }
 
 /**
- * Virtualized 4-column (Name / Size / Modified / Type) listing with
- * sticky header and a monotonic request-id guard against stale responses.
+ * Virtualized 4-column (Name / Size / Modified / Type) listing with sticky
+ * header, monotonic request-id guard against stale responses, and Windows-
+ * Explorer-style click-selection (single / shift-range / ctrl-toggle).
+ *
+ * Selection state lives in the panel (so keyboard shortcuts share it); the
+ * listing only consumes it. Activation (double-click / Enter) is also routed
+ * up to the panel so folder navigation and the file-stub toast both happen
+ * in one place.
  */
 export function FileManagerListing({
   channel,
@@ -51,7 +66,10 @@ export function FileManagerListing({
   sort,
   onToggleSort,
   refreshKey,
-  onVisibleCountChange,
+  showHidden,
+  selection,
+  onVisibleEntriesChange,
+  onActivate,
 }: FileManagerListingProps) {
   const [state, setState] = useState<ListingState>({ kind: 'idle' });
   const toast = useToast();
@@ -66,8 +84,8 @@ export function FileManagerListing({
     }
   }, [channel.request]);
 
-  // Fire a new files.list every time path or refreshKey changes (sort is
-  // client-side -- no round-trip needed).
+  // Fire a new files.list every time path or refreshKey changes (sort + hidden
+  // filter are client-side -- no round-trip needed).
   useEffect(() => {
     const request = channel.request;
     if (!request || !path) {
@@ -92,35 +110,52 @@ export function FileManagerListing({
       });
   }, [channel.request, path, refreshKey, toast]);
 
-  const sortedEntries = useMemo<FileEntry[]>(() => {
+  // Apply the show-hidden filter BEFORE sorting (NAV-14; isHidden guaranteed
+  // by plan 10-01).
+  const visibleEntries = useMemo<FileEntry[]>(() => {
     if (state.kind !== 'ready') return [];
-    const copy = [...state.entries];
+    const filtered = showHidden
+      ? state.entries
+      : state.entries.filter((e) => !e.isHidden);
+    const copy = [...filtered];
     copy.sort((a, b) => compareEntries(a, b, sort));
     return copy;
-  }, [state, sort]);
+  }, [state, sort, showHidden]);
 
-  // Report visible count to the parent so StatusBar can render "{N} items".
+  // Bubble visible entries up to the panel so keyboard handler and status
+  // bar see the same array. Array identity changes here drive selection
+  // invalidation in useFileManagerSelection.
   useEffect(() => {
-    onVisibleCountChange(sortedEntries.length);
-  }, [sortedEntries.length, onVisibleCountChange]);
-
-  const [focusedPath, setFocusedPath] = useState<string | null>(null);
-  useEffect(() => {
-    // Clear focus when path changes
-    setFocusedPath(null);
-  }, [path]);
+    onVisibleEntriesChange(visibleEntries);
+  }, [visibleEntries, onVisibleEntriesChange]);
 
   const parentRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
-    count: sortedEntries.length,
+    count: visibleEntries.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => ROW_HEIGHT_PX,
     overscan: 10,
   });
 
-  const handleRowClick = useCallback((p: string) => {
-    setFocusedPath(p);
-  }, []);
+  const handleRowClick = useCallback(
+    (index: number, e: MouseEvent<HTMLDivElement>) => {
+      if (e.shiftKey) {
+        selection.extendTo(index);
+      } else if (e.ctrlKey || e.metaKey) {
+        selection.toggle(index);
+      } else {
+        selection.selectOnly(index);
+      }
+    },
+    [selection],
+  );
+
+  const handleRowDoubleClick = useCallback(
+    (entry: FileEntry) => {
+      onActivate(entry);
+    },
+    [onActivate],
+  );
 
   const sortIndicator = (col: SortColumn) => {
     if (sort.column !== col) return null;
@@ -144,6 +179,9 @@ export function FileManagerListing({
       {sortIndicator(col)}
     </button>
   );
+
+  const focusedIndex = selection.state.focusedIndex;
+  const selectedPaths = selection.state.selected;
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
@@ -171,16 +209,17 @@ export function FileManagerListing({
         {state.kind === 'error' && (
           <div className="p-4 text-sm text-error">{state.message}</div>
         )}
-        {state.kind === 'ready' && sortedEntries.length === 0 && (
+        {state.kind === 'ready' && visibleEntries.length === 0 && (
           <div className="p-4 text-sm text-darkgray">This folder is empty.</div>
         )}
-        {state.kind === 'ready' && sortedEntries.length > 0 && (
+        {state.kind === 'ready' && visibleEntries.length > 0 && (
           <div
             style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}
           >
             {virtualizer.getVirtualItems().map((virtualRow) => {
-              const entry = sortedEntries[virtualRow.index];
+              const entry = visibleEntries[virtualRow.index];
               if (!entry) return null;
+              const index = virtualRow.index;
               return (
                 <div
                   key={entry.path}
@@ -195,8 +234,11 @@ export function FileManagerListing({
                 >
                   <FileManagerRow
                     entry={entry}
-                    isFocused={focusedPath === entry.path}
-                    onClick={() => handleRowClick(entry.path)}
+                    index={index}
+                    isSelected={selectedPaths.has(entry.path)}
+                    isFocused={focusedIndex === index}
+                    onClick={(e) => handleRowClick(index, e)}
+                    onDoubleClick={() => handleRowDoubleClick(entry)}
                   />
                 </div>
               );
