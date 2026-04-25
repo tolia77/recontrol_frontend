@@ -10,6 +10,9 @@ import { getDeviceRequest } from 'src/services/backend/devicesRequests';
 import type { DeviceShare } from 'src/types/global';
 import { useWebRtc } from './hooks/useWebRtc';
 import { useStreamStats } from './hooks/useStreamStats';
+import { useFilesChannel } from './hooks/useFilesChannel';
+import { useFileManagerState } from './hooks/useFileManagerState';
+import { FileManagerPanel } from './components/FileManager/FileManagerPanel';
 
 interface CommandWebSocketProps {
     wsUrl: string;
@@ -388,8 +391,19 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         sendMessagePayload({ command, payload });
     }, []);
 
-    const { videoRef, pcRef, startWebRtc, stopWebRtc, retryWebRtc, handleSignalingMessage, connectionState, hasReceivedFrame, desktopStats } = useWebRtc({ sendMessage: sendWebRtcSignal });
+    const { videoRef, pcRef, startWebRtc, stopWebRtc, retryWebRtc, handleSignalingMessage, connectionState, hasReceivedFrame, desktopStats, filesClientRef } = useWebRtc({ sendMessage: sendWebRtcSignal });
     const streamStats = useStreamStats(pcRef, showStats && connectionState === 'connected', desktopStats);
+
+    // File manager panel (Phase 10)
+    const filesChannel = useFilesChannel(filesClientRef, connectionState);
+    const {
+        state: fmState,
+        setPanelOpen: fmSetPanelOpen,
+        setSplitRatio: fmSetSplitRatio,
+        setCurrentPath: fmSetCurrentPath,
+        setSort: fmSetSort,
+        setShowHidden: fmSetShowHidden,
+    } = useFileManagerState(deviceId);
 
     const sendSingleAction = (action: { id?: string; type: string; payload?: Record<string, unknown> }) => {
         if (!canSend(action.type)) {
@@ -437,6 +451,53 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
     };
 
     const overallDisabled = !connected || permissionsLoading || !permissions;
+
+    // Ctrl+Shift+F toggles the file manager panel. Guard: bail if focus is
+    // inside the interactive overlay (which owns its own keyboard capture) or
+    // inside any editable element. The overlay is identified by the
+    // `.overlay` class (MainContent sets it on the video overlay div).
+    const fmSetPanelOpenRef = useRef(fmSetPanelOpen);
+    useEffect(() => { fmSetPanelOpenRef.current = fmSetPanelOpen; }, [fmSetPanelOpen]);
+    const fmPanelOpenRef = useRef(fmState.panelOpen);
+    useEffect(() => { fmPanelOpenRef.current = fmState.panelOpen; }, [fmState.panelOpen]);
+
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            const isTargetShortcut =
+                (e.ctrlKey || e.metaKey) &&
+                e.shiftKey &&
+                (e.key === 'F' || e.key === 'f');
+            if (!isTargetShortcut) return;
+
+            // Guard: don't hijack when focus is inside the interactive overlay
+            // or any editable element.
+            const active = document.activeElement as HTMLElement | null;
+            if (active) {
+                const tag = active.tagName;
+                if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+                if (active.isContentEditable) return;
+                if (active.closest('.overlay')) return;
+            }
+            const target = e.target as HTMLElement | null;
+            if (target && target.closest && target.closest('.overlay')) return;
+
+            e.preventDefault();
+            fmSetPanelOpenRef.current(!fmPanelOpenRef.current);
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, []);
+
+    const fileManagerNode = fmState.panelOpen ? (
+        <FileManagerPanel
+            deviceId={deviceId}
+            channel={filesChannel}
+            state={fmState}
+            setCurrentPath={fmSetCurrentPath}
+            setSort={fmSetSort}
+            setShowHidden={fmSetShowHidden}
+        />
+    ) : null;
 
     return (
         <div className="command-websocket flex h-screen w-full font-sans antialiased bg-[#F3F4F6]">

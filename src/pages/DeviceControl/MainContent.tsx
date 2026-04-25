@@ -5,6 +5,7 @@ import { buttonName, pressedButtonsFromMask, normalizeWheelToClicks, mapButtonTo
 import { mapToVirtualKey } from './utils/keyboard';
 import { ManualControls } from './ManualControls';
 import { StreamStatsOverlay } from './components/StreamStatsOverlay';
+import { Splitter } from './components/FileManager/Splitter';
 
 import { generateUUID } from 'src/utils/uuid';
 
@@ -27,6 +28,10 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                                                                                                        retryWebRtc,
                                                                                                        streamStats,
                                                                                                        showStats,
+                                                                                                       panelOpen,
+                                                                                                       fileManagerNode,
+                                                                                                       splitRatio,
+                                                                                                       setSplitRatio,
                                                                                                    }) => {
     // overlay & container refs
     const overlayRef = useRef<HTMLDivElement | null>(null);
@@ -410,6 +415,25 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
 
         return null;
     };
+
+    const showPanel = !!panelOpen && !!fileManagerNode && activeMode !== 'manual';
+
+    if (showPanel) {
+        return (
+            <div className="flex-1 bg-background h-screen flex flex-col">
+                <Splitter
+                    initialRatio={splitRatio ?? 0.5}
+                    onRatioChange={setSplitRatio ?? (() => {})}
+                    left={
+                        <div className="h-full w-full flex items-start justify-center bg-background p-2 overflow-auto">
+                            {renderStreamContent()}
+                        </div>
+                    }
+                    right={<div className="h-full w-full">{fileManagerNode}</div>}
+                />
+            </div>
+        );
+    }
 
     return (
         <div className="flex-1 bg-[#F3F4F6] p-2 flex flex-col items-center">

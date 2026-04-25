@@ -4,6 +4,7 @@ import { ChevronLeftIcon } from './icons';
 import { AccordionItem } from './AccordionItem';
 import { FpsControls } from './components/FpsControls';
 import { ResolutionControl } from './components/ResolutionControl';
+import { FilesToggleIcon } from './components/FileManager/icons';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { generateUUID } from 'src/utils/uuid';
@@ -48,6 +49,8 @@ export function Sidebar({
   currentResolution,
   onResolutionChange,
   deviceName,
+  onTogglePanel,
+  panelOpen,
 }: ExtendedSidebarProps) {
   const { t } = useTranslation('deviceControl');
   const navigate = useNavigate();
@@ -121,6 +124,30 @@ export function Sidebar({
           </button>
         </div>
       </div>
+
+      {/* Panels toggle (Phase 10: Files) */}
+      {onTogglePanel && (
+        <div className="mb-8">
+          <label className="text-xs text-darkgray uppercase font-bold mb-2 block">
+            {t('sidebar.panels', 'Panels')}
+          </label>
+          <button
+            type="button"
+            onClick={onTogglePanel}
+            aria-pressed={!!panelOpen}
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              panelOpen
+                ? 'bg-accent text-white'
+                : 'bg-secondary text-white/90 hover:text-white'
+            }`}
+            title="Ctrl+Shift+F"
+          >
+            <FilesToggleIcon className="w-4 h-4" />
+            <span>Files</span>
+            <span className="ml-auto text-xs opacity-75">Ctrl+Shift+F</span>
+          </button>
+        </div>
+      )}
 
       {/* Quick screen actions - only show in interactive mode */}
       {activeMode === 'interactive' && permissions?.see_screen && (

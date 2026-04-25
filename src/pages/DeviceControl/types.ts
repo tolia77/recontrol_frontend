@@ -24,6 +24,9 @@ export interface SidebarProps {
     permissions?: PermissionsSubset;
     disabled?: boolean;
     connectionState?: WebRtcConnectionState;
+    // file manager panel toggle (Phase 10)
+    onTogglePanel?: () => void;
+    panelOpen?: boolean;
 }
 
 // Command action contract used for sending backend commands
@@ -82,4 +85,9 @@ export interface MainContentProps {
     retryWebRtc: () => void;
     streamStats?: StreamStats | null;
     showStats?: boolean;
+    // file manager panel (Phase 10)
+    panelOpen?: boolean;
+    fileManagerNode?: React.ReactNode;
+    splitRatio?: number;
+    setSplitRatio?: (r: number) => void;
 }
