@@ -59,3 +59,35 @@ export interface SelectionState {
   focusedIndex: number;
   anchorIndex: number;
 }
+
+/**
+ * One row of a {@link ContextMenuState}. Plan 10-04 introduces this with a
+ * Rename / Delete / Move / Copy shape; plan 10-05 turns the disabled stubs
+ * live without changing the shape.
+ *
+ * - `separator: true` renders as a divider; the `label` and `onSelect` fields
+ *   are ignored for that row but still required for shape uniformity.
+ * - `disabled: true` makes the row click a no-op and renders dimmed.
+ * - `danger: true` paints the label in `text-error` (used on Delete).
+ */
+export interface ContextMenuItem {
+  label: string;
+  onSelect: () => void;
+  disabled?: boolean;
+  danger?: boolean;
+  separator?: boolean;
+}
+
+/**
+ * State for the cursor-positioned context menu. When non-null the menu is
+ * rendered at viewport coords {x, y}; closing the menu sets it back to null.
+ *
+ * Auto-flip semantics: if the menu would extend past the viewport edge, the
+ * menu offsets itself by its own width / height so it stays on screen. The
+ * primitive ({@link ContextMenu}) measures itself and applies the flip.
+ */
+export interface ContextMenuState {
+  x: number;
+  y: number;
+  items: ContextMenuItem[];
+}
