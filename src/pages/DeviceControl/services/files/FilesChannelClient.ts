@@ -50,6 +50,7 @@ export class FilesChannelClient {
   private readonly dc: RTCDataChannel;
   private readonly defaultTimeoutMs: number;
   private readonly pending = new Map<string, PendingEntry>();
+  private readonly eventListeners = new Map<string, Set<(payload: unknown) => void>>();
   private disposed = false;
 
   constructor(dc: RTCDataChannel, defaultTimeoutMs: number = 15_000) {
@@ -127,6 +128,31 @@ export class FilesChannelClient {
     });
   }
 
+  /**
+   * Subscribe to server-push events on this channel. Multiple subscribers
+   * can attach to the same command. The returned function unsubscribes
+   * (and is idempotent). Listeners are invoked synchronously on the
+   * onmessage event-loop turn; do not throw from listeners (the channel
+   * is shared by every transfer).
+   *
+   * Phase-11 events: `files.download.complete` (payload:
+   * FilesDownloadCompletePayload) and `files.transfer.error` (payload:
+   * FilesTransferErrorPayload). The payload is delivered untyped (`unknown`);
+   * callers that want type-safety should cast at the subscription site.
+   */
+  onEvent(command: string, listener: (payload: unknown) => void): () => void {
+    let set = this.eventListeners.get(command);
+    if (!set) {
+      set = new Set();
+      this.eventListeners.set(command, set);
+    }
+    set.add(listener);
+    return () => {
+      set?.delete(listener);
+      if (set && set.size === 0) this.eventListeners.delete(command);
+    };
+  }
+
   private onMessage = (ev: MessageEvent): void => {
     let parsed: FilesResponse;
     try {
@@ -139,6 +165,26 @@ export class FilesChannelClient {
       // Malformed JSON -- no id to correlate, nothing to do.
       return;
     }
+
+    // Server-push event branch (Phase 11). Event envelopes have no id;
+    // they correlate by command name to the listener registry, NOT to
+    // the pending-request map. Returns immediately so the rest of the
+    // method only runs for request/response correlation.
+    const maybeEvent = parsed as unknown as { status?: string; command?: string; payload?: unknown };
+    if (maybeEvent.status === 'event' && typeof maybeEvent.command === 'string') {
+      const set = this.eventListeners.get(maybeEvent.command);
+      if (set) {
+        for (const cb of set) {
+          try {
+            cb(maybeEvent.payload);
+          } catch (err) {
+            console.error('[files-ctl] event listener threw', err);
+          }
+        }
+      }
+      return;
+    }
+
     if (!parsed.id) return;
 
     const entry = this.pending.get(parsed.id);
@@ -198,5 +244,6 @@ export class FilesChannelClient {
       );
     }
     this.pending.clear();
+    this.eventListeners.clear();
   }
 }
