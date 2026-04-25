@@ -519,6 +519,8 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                 onFpsChange={handleFpsChange}
                 currentResolution={currentResolution}
                 onResolutionChange={handleResolutionChange}
+                onTogglePanel={() => fmSetPanelOpen(!fmState.panelOpen)}
+                panelOpen={fmState.panelOpen}
             />
             <main className={`flex-1 ml-64 ${activeMode === 'interactive' ? 'overflow-hidden' : ''}`}>
                 <MainContent
@@ -537,6 +539,10 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                     retryWebRtc={retryWebRtc}
                     streamStats={streamStats}
                     showStats={showStats}
+                    panelOpen={fmState.panelOpen}
+                    fileManagerNode={fileManagerNode}
+                    splitRatio={fmState.splitRatio}
+                    setSplitRatio={fmSetSplitRatio}
                 />
             </main>
         </div>
