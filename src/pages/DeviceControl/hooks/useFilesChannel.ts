@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { FilesChannelClient } from '../services/files';
+import type { FilesChannelClient, FilesDataChannel } from '../services/files';
 import { FilesChannelError } from '../services/files';
 import type { UseWebRtcReturn } from './useWebRtc';
 
@@ -24,6 +24,20 @@ export interface UseFilesChannel {
    * rewiring. May be null while the channel is closed; callers must guard.
    */
   filesDataRef: UseWebRtcReturn['filesDataRef'];
+  /**
+   * Live FilesChannelClient (the files-ctl JSON wrapper). Exposed to Plan
+   * 11-05's runDownload so it can subscribe to server-push events
+   * (`files.download.complete`, `files.transfer.error`) for the active
+   * transferId. Null while the channel is closed.
+   */
+  filesClient: FilesChannelClient | null;
+  /**
+   * Live FilesDataChannel WRAPPER (the binary chunk router; NOT the raw
+   * RTCDataChannel which is on `filesDataRef`). Exposed to Plan 11-05's
+   * runDownload so it can call registerDownload / unregisterDownload.
+   * Null while the channel is closed.
+   */
+  filesDataChannel: FilesDataChannel | null;
 }
 
 /**
@@ -44,6 +58,7 @@ export function useFilesChannel(
   filesClientRef: UseWebRtcReturn['filesClientRef'],
   connectionState: UseWebRtcReturn['connectionState'],
   filesDataRef: UseWebRtcReturn['filesDataRef'],
+  filesDataChannelRef: UseWebRtcReturn['filesDataChannelRef'],
 ): UseFilesChannel {
   const [status, setStatus] = useState<FilesChannelStatus>('closed');
 
@@ -84,5 +99,7 @@ export function useFilesChannel(
     status,
     request: status === 'open' ? request : null,
     filesDataRef,
+    filesClient: status === 'open' ? filesClientRef.current : null,
+    filesDataChannel: status === 'open' ? filesDataChannelRef.current : null,
   };
 }

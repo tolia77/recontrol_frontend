@@ -20,6 +20,12 @@ export interface UseWebRtcReturn {
   filesCtlRef: React.RefObject<RTCDataChannel | null>;
   filesDataRef: React.RefObject<RTCDataChannel | null>;
   filesClientRef: React.RefObject<FilesChannelClient | null>;
+  /**
+   * Live ref to the FilesDataChannel WRAPPER (not the raw RTCDataChannel).
+   * Plan 11-05's runDownload reads this so it can call
+   * registerDownload / unregisterDownload on the chunk router.
+   */
+  filesDataChannelRef: React.RefObject<FilesDataChannel | null>;
 }
 
 const ICE_SERVERS: RTCIceServer[] = [
@@ -354,5 +360,6 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     filesCtlRef,
     filesDataRef,
     filesClientRef,
+    filesDataChannelRef,
   };
 }
