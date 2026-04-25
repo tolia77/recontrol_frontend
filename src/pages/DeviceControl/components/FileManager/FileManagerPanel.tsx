@@ -20,7 +20,13 @@ import { FileManagerStatusBar } from './FileManagerStatusBar';
 import { FileManagerEmptyAllowlist } from './FileManagerEmptyAllowlist';
 import { ContextMenu } from './ContextMenu';
 import { ConfirmDialog } from './ConfirmDialog';
-import { detectSeparator, isAncestor, parentPath } from './utils/pathUtils';
+import { FolderPickerModal } from './FolderPickerModal';
+import {
+  detectSeparator,
+  isAncestor,
+  joinPath,
+  parentPath,
+} from './utils/pathUtils';
 import { mapFilesErrorToMessage } from './utils/errors';
 
 interface FileManagerPanelProps {
@@ -91,6 +97,14 @@ export function FileManagerPanel({
     | { kind: 'delete'; paths: string[]; names: string[] }
     | null
   >(null);
+  // ----- Plan 10-05: move / copy flow state -----
+  // FolderPickerModal mode -- non-null while the picker is open.
+  const [picker, setPicker] = useState<null | { kind: 'move' | 'copy' }>(null);
+  // In-flight gate for the sequential move/copy loop. Mirrors `isDeleting`
+  // semantics. Passed to FolderPickerModal as `isBusy` so its Confirm /
+  // Cancel buttons stay disabled and Esc / overlay-click cancellation are
+  // suppressed while wire calls are still resolving.
+  const [isOperating, setIsOperating] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const toast = useToast();
 
@@ -257,6 +271,72 @@ export function FileManagerPanel({
     performDelete,
   ]);
 
+  // ----- Move to… / Copy to… : open the FolderPickerModal -----
+  const handleMoveTo = useCallback(() => {
+    if (selection.state.selected.size === 0) return;
+    setPicker({ kind: 'move' });
+  }, [selection.state.selected.size]);
+
+  const handleCopyTo = useCallback(() => {
+    if (selection.state.selected.size === 0) return;
+    setPicker({ kind: 'copy' });
+  }, [selection.state.selected.size]);
+
+  // Disallowed destinations for the picker:
+  //   - The current parent folder (no-op move/copy into the same place).
+  //   - For Move: the source paths themselves (move-into-self for folders).
+  // Deeper move-into-self (a descendant of any source folder) is caught at
+  // the wire level by the desktop's ALLOWLIST_VIOLATION / IO_ERROR
+  // responses; a complete in-UI ancestor check is Phase 12 hardening.
+  const pickerDisallowedPaths = useMemo<string[]>(() => {
+    const out = new Set<string>();
+    if (state.currentPath) out.add(state.currentPath);
+    if (picker?.kind === 'move') {
+      for (const p of selection.state.selected) out.add(p);
+    }
+    return Array.from(out);
+  }, [state.currentPath, picker, selection.state.selected]);
+
+  // performMoveOrCopy fires files.move / files.copy sequentially over the
+  // selected source paths. Sequential (NOT Promise.all) so error reporting
+  // stays clean and the desktop is never hammered. Wraps the loop in
+  // try/finally so isOperating is always reset.
+  const performMoveOrCopy = useCallback(
+    async (kind: 'move' | 'copy', dstParent: string) => {
+      const request = channel.request;
+      if (!request) {
+        toast.error('Files channel disconnected');
+        return;
+      }
+      const srcs = Array.from(selection.state.selected);
+      const namesByPath = new Map(visibleEntries.map((e) => [e.path, e.name]));
+      const sep = detectSeparator(dstParent);
+      setIsOperating(true);
+      try {
+        for (const src of srcs) {
+          const name =
+            namesByPath.get(src) ?? src.split(/[\\/]/).pop() ?? src;
+          const dst = joinPath([dstParent, name], sep);
+          try {
+            await request<
+              { src: string; dst: string },
+              { src: string; dst: string }
+            >(kind === 'move' ? 'files.move' : 'files.copy', { src, dst });
+          } catch (err: unknown) {
+            toast.error(mapFilesErrorToMessage(err));
+          }
+        }
+        selection.clear();
+        setRefreshKey((k) => k + 1);
+        setPicker(null);
+        rootRef.current?.focus();
+      } finally {
+        setIsOperating(false);
+      }
+    },
+    [channel.request, selection, visibleEntries, toast],
+  );
+
   // ----- mkdir commit / cancel -----
   const handleNewFolderCommit = useCallback(
     (name: string) => {
@@ -370,18 +450,22 @@ export function FileManagerPanel({
           },
           {
             label: 'Move to…',
-            disabled: true,
-            onSelect: () => toast.info('Move to arrives in plan 10-05'),
+            onSelect: handleMoveTo,
           },
           {
             label: 'Copy to…',
-            disabled: true,
-            onSelect: () => toast.info('Copy to arrives in plan 10-05'),
+            onSelect: handleCopyTo,
           },
         ],
       });
     },
-    [selection, visibleEntries, toast, handleRequestDelete],
+    [
+      selection,
+      visibleEntries,
+      handleRequestDelete,
+      handleMoveTo,
+      handleCopyTo,
+    ],
   );
 
   // ----- Context-menu: empty-area right-click -----
@@ -484,6 +568,8 @@ export function FileManagerPanel({
           onDelete={() => {
             void handleRequestDelete();
           }}
+          onMoveTo={handleMoveTo}
+          onCopyTo={handleCopyTo}
         />
         <FileManagerBreadcrumb
           currentPath={state.currentPath}
@@ -564,6 +650,22 @@ export function FileManagerPanel({
         }}
         onCancel={() => {
           if (!isDeleting) setConfirm(null);
+        }}
+      />
+      <FolderPickerModal
+        open={picker !== null}
+        title={picker?.kind === 'move' ? 'Move to…' : 'Copy to…'}
+        confirmLabel={picker?.kind === 'move' ? 'Move' : 'Copy'}
+        channel={channel}
+        disallowedPaths={pickerDisallowedPaths}
+        isBusy={isOperating}
+        onConfirm={(destinationPath) => {
+          if (picker) {
+            void performMoveOrCopy(picker.kind, destinationPath);
+          }
+        }}
+        onCancel={() => {
+          if (!isOperating) setPicker(null);
         }}
       />
     </div>
