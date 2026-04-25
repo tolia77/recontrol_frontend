@@ -14,9 +14,11 @@ import { FilesChannelError } from '../../../services/files';
  * function (or rewrite its internals) with i18next keyed lookups.
  *
  * Coverage matrix (every code referenced by the wire schema):
- *   - All 11 FilesErrorCode values (ALLOWLIST_VIOLATION, INVALID_NAME,
+ *   - All 15 FilesErrorCode values (ALLOWLIST_VIOLATION, INVALID_NAME,
  *     NOT_FOUND, PERMISSION_DENIED, IO_ERROR, INTERNAL_ERROR, UNKNOWN_COMMAND,
- *     TIMEOUT, MALFORMED_RESPONSE, CHANNEL_NOT_OPEN, DISPOSED).
+ *     TIMEOUT, MALFORMED_RESPONSE, CHANNEL_NOT_OPEN, DISPOSED, plus the four
+ *     phase-11 transfer codes TRANSFER_NOT_FOUND, CANCELLED, STALLED,
+ *     DISK_FULL).
  *   - All 6 InvalidNameReason values (RESERVED, ILLEGAL_CHAR, TOO_LONG, EMPTY,
  *     DOT_ONLY, TRAILING_SPACE_OR_DOT).
  *
@@ -69,6 +71,14 @@ export function mapFilesErrorToMessage(err: unknown): string {
       return 'Files channel is disconnected. Reconnect the stream.';
     case 'DISPOSED':
       return 'Files channel has been closed.';
+    case 'TRANSFER_NOT_FOUND':
+      return 'Transfer no longer active.';
+    case 'CANCELLED':
+      return 'Cancelled.';
+    case 'STALLED':
+      return 'Transfer stalled.';
+    case 'DISK_FULL':
+      return 'Not enough free space on the remote desktop.';
     default:
       return message || 'Unknown error.';
   }
