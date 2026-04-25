@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { MouseEvent } from 'react';
+import type { KeyboardEvent, MouseEvent } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { FileEntry, FilesListResponse } from '../../services/files';
 import { FilesChannelError } from '../../services/files';
@@ -8,7 +8,16 @@ import type { UseFilesChannel } from '../../hooks/useFilesChannel';
 import type { useFileManagerSelection } from '../../hooks/useFileManagerSelection';
 import type { SortColumn, SortState } from './types';
 import { ROW_HEIGHT_PX, FileManagerRow } from './FileManagerRow';
+import { FolderIcon } from './icons';
 import { compareEntries } from './utils/sort';
+
+/**
+ * Threshold for "second click on already-selected-and-focused row arms rename"
+ * (Windows Explorer parity). A second click within this many ms of the first
+ * is treated as a double-click (handled by React's onDoubleClick); a second
+ * click after this delay arms the inline rename flow.
+ */
+const RENAME_CLICK_DELAY_MS = 500;
 
 interface FileManagerListingProps {
   channel: UseFilesChannel;
@@ -30,6 +39,27 @@ interface FileManagerListingProps {
   onVisibleEntriesChange: (entries: FileEntry[]) => void;
   /** Called when a file/folder row is double-clicked or activated by Enter. */
   onActivate: (entry: FileEntry) => void;
+
+  // ----- Plan 10-04 additions -----
+
+  /** When true, render a pseudo-row at the top of the list with an inline input. */
+  newFolderPending: boolean;
+  /** Called when the new-folder input commits via Enter. */
+  onNewFolderCommit: (name: string) => void;
+  /** Called when the new-folder input cancels via Esc / blur. */
+  onNewFolderCancel: () => void;
+  /** Path of the row currently in inline-rename mode, or null. */
+  renamingPath: string | null;
+  /** Called when an existing row's rename input commits via Enter. */
+  onRenameCommit: (path: string, newName: string) => void;
+  /** Called when an existing row's rename input cancels via Esc / blur. */
+  onRenameCancel: () => void;
+  /** Called when a row is right-clicked. The panel opens the row context menu. */
+  onRowContextMenu: (e: MouseEvent, entry: FileEntry) => void;
+  /** Called when the empty area of the listing is right-clicked. */
+  onEmptyContextMenu: (e: MouseEvent) => void;
+  /** Called by row click handler when the second-click-to-rename heuristic fires. */
+  onRenameArm: (path: string) => void;
 }
 
 type ListingState =
@@ -55,10 +85,17 @@ function errorMessageFor(err: FilesChannelError): string {
  * header, monotonic request-id guard against stale responses, and Windows-
  * Explorer-style click-selection (single / shift-range / ctrl-toggle).
  *
- * Selection state lives in the panel (so keyboard shortcuts share it); the
- * listing only consumes it. Activation (double-click / Enter) is also routed
- * up to the panel so folder navigation and the file-stub toast both happen
- * in one place.
+ * Plan 10-04 adds:
+ *   - Pseudo-row for new folder creation (rendered ABOVE the virtualized rows;
+ *     not part of the virtualizer's index space so it doesn't shift the row
+ *     indices the selection / keyboard handlers operate on).
+ *   - Per-row inline rename input (when entry.path === renamingPath).
+ *   - Right-click handlers (row + empty area) that open a {@link ContextMenu}
+ *     in the parent panel.
+ *   - Second-click-to-rename heuristic (RENAME_CLICK_DELAY_MS): a click on a
+ *     row that is ALREADY solo-selected and focused, occurring more than
+ *     500ms after the previous click on it, arms inline rename. A click within
+ *     500ms is left to React's onDoubleClick to handle as activation.
  */
 export function FileManagerListing({
   channel,
@@ -70,12 +107,26 @@ export function FileManagerListing({
   selection,
   onVisibleEntriesChange,
   onActivate,
+  newFolderPending,
+  onNewFolderCommit,
+  onNewFolderCancel,
+  renamingPath,
+  onRenameCommit,
+  onRenameCancel,
+  onRowContextMenu,
+  onEmptyContextMenu,
+  onRenameArm,
 }: FileManagerListingProps) {
   const [state, setState] = useState<ListingState>({ kind: 'idle' });
   const toast = useToast();
 
   // Monotonic request id; drop any response whose id is not the current max.
   const requestIdRef = useRef(0);
+
+  // Per-path last-click timestamps for the second-click-to-rename heuristic.
+  // Keyed by entry.path so that switching focus between rows doesn't carry
+  // a stale timestamp from a previous row.
+  const lastClickByPathRef = useRef<Map<string, number>>(new Map());
 
   // Reset when the channel closes entirely.
   useEffect(() => {
@@ -138,16 +189,42 @@ export function FileManagerListing({
   });
 
   const handleRowClick = useCallback(
-    (index: number, e: MouseEvent<HTMLDivElement>) => {
+    (index: number, entry: FileEntry, e: MouseEvent<HTMLDivElement>) => {
+      const now = Date.now();
+      const lastAt = lastClickByPathRef.current.get(entry.path) ?? 0;
+      lastClickByPathRef.current.set(entry.path, now);
+
       if (e.shiftKey) {
         selection.extendTo(index);
-      } else if (e.ctrlKey || e.metaKey) {
-        selection.toggle(index);
-      } else {
-        selection.selectOnly(index);
+        return;
       }
+      if (e.ctrlKey || e.metaKey) {
+        selection.toggle(index);
+        return;
+      }
+
+      // Plain single-click. Second-click-to-rename heuristic: if the row is
+      // ALREADY solo-selected AND focused, AND the previous click on it was
+      // more than RENAME_CLICK_DELAY_MS ago, arm inline rename.
+      const isSoloSelected =
+        selection.state.selected.size === 1 &&
+        selection.state.selected.has(entry.path);
+      const isFocused = selection.state.focusedIndex === index;
+      const dt = now - lastAt;
+      if (
+        isSoloSelected &&
+        isFocused &&
+        lastAt > 0 &&
+        dt > RENAME_CLICK_DELAY_MS &&
+        renamingPath !== entry.path
+      ) {
+        onRenameArm(entry.path);
+        return;
+      }
+
+      selection.selectOnly(index);
     },
-    [selection],
+    [selection, onRenameArm, renamingPath],
   );
 
   const handleRowDoubleClick = useCallback(
@@ -156,6 +233,36 @@ export function FileManagerListing({
     },
     [onActivate],
   );
+
+  const handleNewFolderKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+        onNewFolderCommit(e.currentTarget.value);
+        return;
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        onNewFolderCancel();
+        return;
+      }
+      // Don't let typing leak to the panel keyboard handler.
+      e.stopPropagation();
+    },
+    [onNewFolderCommit, onNewFolderCancel],
+  );
+
+  // Auto-focus + select-all on the new folder input as soon as it mounts.
+  const newFolderInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!newFolderPending) return;
+    const el = newFolderInputRef.current;
+    if (!el) return;
+    el.focus();
+    el.select();
+  }, [newFolderPending]);
 
   const sortIndicator = (col: SortColumn) => {
     if (sort.column !== col) return null;
@@ -183,6 +290,13 @@ export function FileManagerListing({
   const focusedIndex = selection.state.focusedIndex;
   const selectedPaths = selection.state.selected;
 
+  const handleScrollContainerContextMenu = (e: MouseEvent<HTMLDivElement>) => {
+    // Only fire when the click was NOT on a row (rows stopPropagation in
+    // their own onContextMenu). Empty-area clicks land here.
+    e.preventDefault();
+    onEmptyContextMenu(e);
+  };
+
   return (
     <div className="flex-1 flex flex-col min-h-0">
       {/* Sticky 4-column header */}
@@ -197,7 +311,39 @@ export function FileManagerListing({
         {renderHeaderButton('Type', 'type', 'left')}
       </div>
 
-      <div ref={parentRef} className="flex-1 overflow-auto min-h-0">
+      {/* New-folder pseudo-row, rendered ABOVE the scroll container so it's
+          always visible regardless of scroll position. */}
+      {newFolderPending && (
+        <div
+          role="row"
+          className="grid grid-cols-[1fr_120px_180px_140px] items-center px-3 text-sm border-b border-lightgray/50 bg-tertiary/30 flex-shrink-0"
+          style={{ height: `${ROW_HEIGHT_PX}px` }}
+          onContextMenu={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center min-w-0">
+            <FolderIcon className="w-4 h-4 mr-2 flex-shrink-0 text-primary" />
+            <input
+              ref={newFolderInputRef}
+              type="text"
+              defaultValue="New folder"
+              onKeyDown={handleNewFolderKeyDown}
+              onBlur={onNewFolderCancel}
+              onClick={(e) => e.stopPropagation()}
+              onDoubleClick={(e) => e.stopPropagation()}
+              className="flex-1 min-w-0 bg-background text-text border border-accent rounded px-1 py-0.5 outline-none text-sm"
+            />
+          </div>
+          <div />
+          <div />
+          <div />
+        </div>
+      )}
+
+      <div
+        ref={parentRef}
+        className="flex-1 overflow-auto min-h-0"
+        onContextMenu={handleScrollContainerContextMenu}
+      >
         {state.kind === 'idle' && !path && (
           <div className="p-4 text-sm text-darkgray">
             Select a folder from the sidebar to start browsing.
@@ -209,7 +355,7 @@ export function FileManagerListing({
         {state.kind === 'error' && (
           <div className="p-4 text-sm text-error">{state.message}</div>
         )}
-        {state.kind === 'ready' && visibleEntries.length === 0 && (
+        {state.kind === 'ready' && visibleEntries.length === 0 && !newFolderPending && (
           <div className="p-4 text-sm text-darkgray">This folder is empty.</div>
         )}
         {state.kind === 'ready' && visibleEntries.length > 0 && (
@@ -237,8 +383,14 @@ export function FileManagerListing({
                     index={index}
                     isSelected={selectedPaths.has(entry.path)}
                     isFocused={focusedIndex === index}
-                    onClick={(e) => handleRowClick(index, e)}
+                    isRenaming={renamingPath === entry.path}
+                    onClick={(e) => handleRowClick(index, entry, e)}
                     onDoubleClick={() => handleRowDoubleClick(entry)}
+                    onContextMenu={(e) => onRowContextMenu(e, entry)}
+                    onRenameCommit={(newName) =>
+                      onRenameCommit(entry.path, newName)
+                    }
+                    onRenameCancel={onRenameCancel}
                   />
                 </div>
               );

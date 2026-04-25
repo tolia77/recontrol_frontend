@@ -1,5 +1,5 @@
-import { memo } from 'react';
-import type { MouseEvent } from 'react';
+import { memo, useEffect, useRef } from 'react';
+import type { KeyboardEvent, MouseEvent } from 'react';
 import type { FileEntry } from '../../services/files';
 import { IconForEntry } from './icons';
 import { formatBytes, formatDate, formatType } from './utils/formatters';
@@ -12,8 +12,30 @@ interface FileManagerRowProps {
   index: number;
   isSelected: boolean;
   isFocused: boolean;
+  /** Plan 10-04: when this row's path === renamingPath, render inline input. */
+  isRenaming: boolean;
   onClick: (e: MouseEvent<HTMLDivElement>) => void;
   onDoubleClick: () => void;
+  onContextMenu: (e: MouseEvent<HTMLDivElement>) => void;
+  /** Plan 10-04: invoked when the inline rename input commits via Enter. */
+  onRenameCommit: (newName: string) => void;
+  /** Plan 10-04: invoked on Esc / blur to cancel the rename. */
+  onRenameCancel: () => void;
+}
+
+/**
+ * Compute the index of the LAST `.` in a name, treated as the start of the
+ * extension. Returns -1 for hidden dotfiles whose only dot is the leading one
+ * (e.g. ".gitignore" -- the whole name should be selected, not "" before the
+ * dot). Folders bypass this entirely (whole-name selection).
+ */
+function stemEnd(name: string, isDirectory: boolean): number {
+  if (isDirectory) return name.length;
+  // Find the last dot, but ignore a leading dot at index 0 -- ".env" should
+  // be selected entirely, not "" before the dot.
+  const lastDot = name.lastIndexOf('.');
+  if (lastDot <= 0) return name.length; // no extension OR pure dotfile
+  return lastDot;
 }
 
 function FileManagerRowImpl({
@@ -21,8 +43,12 @@ function FileManagerRowImpl({
   index,
   isSelected,
   isFocused,
+  isRenaming,
   onClick,
   onDoubleClick,
+  onContextMenu,
+  onRenameCommit,
+  onRenameCancel,
 }: FileManagerRowProps) {
   // Visual hierarchy:
   //   Selected + Focused -> bg-accent/30 ring-1 ring-accent
@@ -38,12 +64,55 @@ function FileManagerRowImpl({
           ? 'bg-tertiary'
           : 'hover:bg-tertiary/60';
 
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // On enter into rename mode: focus the input + select only the stem.
+  useEffect(() => {
+    if (!isRenaming) return;
+    const el = inputRef.current;
+    if (!el) return;
+    el.focus();
+    const end = stemEnd(entry.name, entry.isDirectory);
+    try {
+      el.setSelectionRange(0, end);
+    } catch {
+      // Some browsers throw on type="text" inputs in rare states; fall back
+      // to selecting everything which is still better than nothing.
+      el.select();
+    }
+  }, [isRenaming, entry.name, entry.isDirectory]);
+
+  const handleInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      e.stopPropagation();
+      onRenameCommit(e.currentTarget.value);
+      return;
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      onRenameCancel();
+      return;
+    }
+    // Stop propagation so parent panel keyboard handler (F2/Delete/Arrows)
+    // doesn't trigger while the user types.
+    e.stopPropagation();
+  };
+
+  const handleRowContextMenu = (e: MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onContextMenu(e);
+  };
+
   return (
     <div
       role="row"
       data-row-index={index}
-      onClick={onClick}
-      onDoubleClick={onDoubleClick}
+      onClick={isRenaming ? undefined : onClick}
+      onDoubleClick={isRenaming ? undefined : onDoubleClick}
+      onContextMenu={isRenaming ? (e) => e.stopPropagation() : handleRowContextMenu}
       className={[
         'grid grid-cols-[1fr_120px_180px_140px] items-center px-3 cursor-default text-sm border-b border-lightgray/50 select-none',
         stateClass,
@@ -52,9 +121,23 @@ function FileManagerRowImpl({
     >
       <div className="flex items-center min-w-0">
         <IconForEntry entry={entry} className="w-4 h-4 mr-2 flex-shrink-0" />
-        <span className="truncate text-text" title={entry.name}>
-          {entry.name}
-        </span>
+        {isRenaming ? (
+          <input
+            ref={inputRef}
+            type="text"
+            defaultValue={entry.name}
+            onKeyDown={handleInputKeyDown}
+            onBlur={onRenameCancel}
+            onClick={(e) => e.stopPropagation()}
+            onDoubleClick={(e) => e.stopPropagation()}
+            onContextMenu={(e) => e.stopPropagation()}
+            className="flex-1 min-w-0 bg-background text-text border border-accent rounded px-1 py-0.5 outline-none text-sm"
+          />
+        ) : (
+          <span className="truncate text-text" title={entry.name}>
+            {entry.name}
+          </span>
+        )}
       </div>
       <div className="text-right text-darkgray tabular-nums pr-4">
         {entry.isDirectory ? '' : formatBytes(entry.sizeBytes)}
