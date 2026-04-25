@@ -14,11 +14,16 @@ interface FileManagerToolbarProps {
   onRename: () => void;
   /** Number of currently-selected rows; gates the Rename button (== 1). */
   selectionCount: number;
+
+  /** Plan 10-05: Delete is enabled iff selectionCount > 0. */
+  onDelete: () => void;
 }
 
 /**
  * Toolbar strip shown above the breadcrumb. Plan 10-04 wires New Folder and
- * Rename; Delete / Move / Copy stay disabled stubs until plan 10-05.
+ * Rename; plan 10-05 wires Delete. Move / Copy stay disabled stubs (move and
+ * copy go through the row context menu in plan 10-05; toolbar entry points
+ * for Move / Copy are out of scope for this plan).
  */
 export function FileManagerToolbar({
   showHidden,
@@ -28,9 +33,11 @@ export function FileManagerToolbar({
   onNewFolder,
   onRename,
   selectionCount,
+  onDelete,
 }: FileManagerToolbarProps) {
   const renameEnabled = !disabled && selectionCount === 1;
   const newFolderEnabled = !disabled;
+  const deleteEnabled = selectionCount > 0;
 
   return (
     <div className="flex items-center gap-2 p-2 border-b border-lightgray bg-background flex-shrink-0">
@@ -66,9 +73,10 @@ export function FileManagerToolbar({
       </button>
       <button
         type="button"
-        disabled
-        title="coming soon"
-        className="p-1.5 rounded text-darkgray opacity-50 cursor-not-allowed"
+        onClick={onDelete}
+        disabled={!deleteEnabled}
+        title="Delete (Del)"
+        className="p-1.5 rounded hover:bg-tertiary disabled:opacity-50 disabled:cursor-not-allowed text-error transition-colors"
       >
         <TrashIcon className="w-4 h-4" />
       </button>

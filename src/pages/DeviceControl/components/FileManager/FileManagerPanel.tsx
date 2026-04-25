@@ -19,6 +19,7 @@ import { FileManagerListing } from './FileManagerListing';
 import { FileManagerStatusBar } from './FileManagerStatusBar';
 import { FileManagerEmptyAllowlist } from './FileManagerEmptyAllowlist';
 import { ContextMenu } from './ContextMenu';
+import { ConfirmDialog } from './ConfirmDialog';
 import { detectSeparator, isAncestor, parentPath } from './utils/pathUtils';
 import { mapFilesErrorToMessage } from './utils/errors';
 
@@ -73,6 +74,23 @@ export function FileManagerPanel({
   const [newFolderPending, setNewFolderPending] = useState(false);
   const [renamingPath, setRenamingPath] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+  // ----- Plan 10-05: delete flow state -----
+  // Session-scoped flag (CONTEXT-locked): when true, single-file deletes skip
+  // the confirm dialog. Lives in component state ONLY -- NOT persisted to
+  // localStorage / sessionStorage / any storage. Resets on full page reload.
+  const [suppressSingleDeleteConfirm, setSuppressSingleDeleteConfirm] =
+    useState(false);
+  // In-flight gate for delete: passed as `isBusy` to ConfirmDialog so the
+  // Confirm button stays disabled while files.delete is sequentially issued
+  // for each selected path. Wrapped in try/finally to always reset.
+  const [isDeleting, setIsDeleting] = useState(false);
+  // Pending delete confirm: paths + display names captured at the moment the
+  // user invoked Delete (so the dialog body stays stable even if entries
+  // change underneath us mid-confirmation).
+  const [confirm, setConfirm] = useState<
+    | { kind: 'delete'; paths: string[]; names: string[] }
+    | null
+  >(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const toast = useToast();
 
@@ -179,9 +197,65 @@ export function FileManagerPanel({
     setRenamingPath(target);
   }, [selection.state.selected]);
 
-  const handleRequestDelete = useCallback(() => {
-    console.log('[file-manager] delete: wired in plan 10-05');
-  }, []);
+  // ----- Delete: open the destructive confirm dialog (or skip for suppressed single-file deletes) -----
+  // performDelete fires files.delete sequentially over the captured paths.
+  // Sequential (NOT Promise.all) so error reporting stays clean and so the
+  // remote desktop is never hammered in parallel. Wraps the loop in
+  // try/finally so isDeleting is always reset, even on uncaught rejection.
+  // No optimistic UI (Pitfall 3): the listing is only refreshed via
+  // setRefreshKey AFTER the wire calls resolve. On error, surfaces a toast
+  // and STILL refreshes -- the source of truth is what the desktop reports.
+  const performDelete = useCallback(
+    async (paths: string[]) => {
+      const request = channel.request;
+      if (!request) {
+        toast.error('Files channel disconnected');
+        return;
+      }
+      setIsDeleting(true);
+      try {
+        for (const p of paths) {
+          try {
+            await request<{ path: string }, Record<string, never>>(
+              'files.delete',
+              { path: p },
+            );
+          } catch (err: unknown) {
+            toast.error(mapFilesErrorToMessage(err));
+          }
+        }
+        // Pitfall 5: clear selection on success (and on partial-failure: the
+        // entries-array-identity bump from setRefreshKey would clear it
+        // anyway; we clear explicitly so the cleared state is observable in
+        // the same render).
+        selection.clear();
+        setRefreshKey((k) => k + 1);
+        setConfirm(null);
+        rootRef.current?.focus();
+      } finally {
+        setIsDeleting(false);
+      }
+    },
+    [channel.request, selection, toast],
+  );
+
+  const handleRequestDelete = useCallback(async () => {
+    const paths = Array.from(selection.state.selected);
+    if (paths.length === 0) return;
+    const namesByPath = new Map(visibleEntries.map((e) => [e.path, e.name]));
+    const names = paths.map((p) => namesByPath.get(p) ?? p);
+    if (paths.length === 1 && suppressSingleDeleteConfirm) {
+      // Skip the dialog for session-suppressed single-file deletes.
+      await performDelete(paths);
+    } else {
+      setConfirm({ kind: 'delete', paths, names });
+    }
+  }, [
+    selection.state.selected,
+    visibleEntries,
+    suppressSingleDeleteConfirm,
+    performDelete,
+  ]);
 
   // ----- mkdir commit / cancel -----
   const handleNewFolderCommit = useCallback(
@@ -289,9 +363,10 @@ export function FileManagerPanel({
           { separator: true, label: '', onSelect: () => {} },
           {
             label: 'Delete',
-            disabled: true,
             danger: true,
-            onSelect: () => toast.info('Delete arrives in plan 10-05'),
+            onSelect: () => {
+              void handleRequestDelete();
+            },
           },
           {
             label: 'Move to…',
@@ -306,7 +381,7 @@ export function FileManagerPanel({
         ],
       });
     },
-    [selection, visibleEntries, toast],
+    [selection, visibleEntries, toast, handleRequestDelete],
   );
 
   // ----- Context-menu: empty-area right-click -----
@@ -406,6 +481,9 @@ export function FileManagerPanel({
           onNewFolder={handleNewFolder}
           onRename={handleRequestRename}
           selectionCount={selection.state.selected.size}
+          onDelete={() => {
+            void handleRequestDelete();
+          }}
         />
         <FileManagerBreadcrumb
           currentPath={state.currentPath}
@@ -439,6 +517,55 @@ export function FileManagerPanel({
         />
       </div>
       <ContextMenu state={contextMenu} onClose={handleContextMenuClose} />
+      <ConfirmDialog
+        open={confirm?.kind === 'delete'}
+        title="Delete"
+        body={
+          confirm && confirm.paths.length === 1 ? (
+            <p>Delete &quot;{confirm.names[0]}&quot;? This cannot be undone.</p>
+          ) : confirm ? (
+            <>
+              <p>
+                Delete these {confirm.names.length} items? This cannot be
+                undone.
+              </p>
+              <ul className="mt-2 text-sm list-disc pl-5">
+                {confirm.names.slice(0, 5).map((n) => (
+                  <li key={n}>{n}</li>
+                ))}
+              </ul>
+              {confirm.names.length > 5 && (
+                <p className="mt-1 text-sm text-darkgray">
+                  and {confirm.names.length - 5} more…
+                </p>
+              )}
+            </>
+          ) : null
+        }
+        confirmLabel="Delete"
+        dangerous
+        isBusy={isDeleting}
+        checkbox={
+          confirm &&
+          confirm.paths.length === 1 &&
+          !suppressSingleDeleteConfirm
+            ? {
+                label:
+                  "Don't ask again for single-file deletes in this session",
+                checked: suppressSingleDeleteConfirm,
+                onChange: setSuppressSingleDeleteConfirm,
+              }
+            : undefined
+        }
+        onConfirm={async () => {
+          if (confirm) {
+            await performDelete(confirm.paths);
+          }
+        }}
+        onCancel={() => {
+          if (!isDeleting) setConfirm(null);
+        }}
+      />
     </div>
   );
 }

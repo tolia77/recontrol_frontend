@@ -91,3 +91,36 @@ export interface ContextMenuState {
   y: number;
   items: ContextMenuItem[];
 }
+
+/**
+ * Props for the {@link ConfirmDialog} primitive (plan 10-05). Used for the
+ * destructive delete confirmation; reusable for any future yes/no modal that
+ * needs to gate a wire round-trip behind explicit user assent.
+ *
+ * - `dangerous`: paints the primary button red and shifts default focus to
+ *   Cancel (Windows-Explorer-style destructive action confirmation).
+ * - `checkbox`: optional row rendered between body and buttons; the dialog
+ *   does NOT own its checked state -- the caller passes the controlled value
+ *   so the panel can persist (or NOT persist, as in the session-scoped
+ *   "don't ask again for single-file deletes" flag) the choice.
+ * - `isBusy`: load-bearing for destructive-op safety. When true, both
+ *   Confirm and Cancel buttons are disabled, the Confirm button shows a
+ *   spinner, and Esc / overlay-click cancellation are suppressed -- the
+ *   wire call has already been fired, double-submit is forbidden.
+ */
+export interface ConfirmDialogProps {
+  open: boolean;
+  title: string;
+  body: React.ReactNode;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  dangerous?: boolean;
+  checkbox?: {
+    label: string;
+    checked: boolean;
+    onChange: (v: boolean) => void;
+  };
+  isBusy?: boolean;
+  onConfirm: () => void | Promise<void>;
+  onCancel: () => void;
+}
