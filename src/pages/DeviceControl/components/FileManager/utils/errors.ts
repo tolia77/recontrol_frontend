@@ -28,7 +28,7 @@ export function mapFilesErrorToMessage(err: unknown): string {
   if (!(err instanceof FilesChannelError)) {
     return 'Unexpected error.';
   }
-  const { code, data, message } = err.info;
+  const { code, data } = err.info;
 
   if (code === 'INVALID_NAME') {
     const reason = (data as { reason?: string } | undefined)?.reason;
@@ -51,35 +51,44 @@ export function mapFilesErrorToMessage(err: unknown): string {
   }
 
   switch (code) {
+    case 'PERMISSION_READ':
+      return 'Permission denied while reading the source item.';
+    case 'PERMISSION_WRITE':
+      return 'Permission denied while writing to the destination.';
     case 'ALLOWLIST_VIOLATION':
       return 'That location is outside the shared area.';
-    case 'NOT_FOUND':
-      return 'Item not found. It may have been moved or deleted.';
-    case 'PERMISSION_DENIED':
-      return 'Permission denied on the remote computer.';
-    case 'IO_ERROR':
-      return 'The remote computer could not complete the operation.';
+    case 'SOURCE_GONE':
+      return 'Source item no longer exists. Refresh and try again.';
+    case 'DESTINATION_GONE':
+      return 'Destination location is no longer available.';
+    case 'NAME_CONFLICT':
+      return 'A file with that name already exists. Choose Replace, Skip, or Keep Both.';
     case 'INTERNAL_ERROR':
       return 'The remote computer returned an unexpected error.';
+    case 'DISK_FULL':
+      return 'Not enough free space on the destination drive.';
+    case 'STALLED':
+      return 'Transfer stalled. Wait a moment or cancel and retry.';
+    case 'CHANNEL_NOT_OPEN':
+    case 'DISPOSED':
+      return 'Files channel is disconnected. Reconnect the stream.';
+    case 'PERMISSION_DENIED':
+      return 'Permission denied on the remote computer.';
+    case 'NOT_FOUND':
+      return 'Item not found. It may have been moved or deleted.';
+    case 'IO_ERROR':
+      return 'I/O error on the remote computer. Retry the operation.';
+    case 'TRANSFER_NOT_FOUND':
+      return 'Transfer no longer active.';
+    case 'CANCELLED':
+      return 'Transfer cancelled.';
     case 'UNKNOWN_COMMAND':
       return 'This version of ReControl Desktop does not support that command.';
     case 'TIMEOUT':
       return 'The remote computer did not respond in time.';
     case 'MALFORMED_RESPONSE':
       return 'The remote response was malformed.';
-    case 'CHANNEL_NOT_OPEN':
-      return 'Files channel is disconnected. Reconnect the stream.';
-    case 'DISPOSED':
-      return 'Files channel has been closed.';
-    case 'TRANSFER_NOT_FOUND':
-      return 'Transfer no longer active.';
-    case 'CANCELLED':
-      return 'Cancelled.';
-    case 'STALLED':
-      return 'Transfer stalled.';
-    case 'DISK_FULL':
-      return 'Not enough free space on the remote desktop.';
     default:
-      return message || 'Unknown error.';
+      return 'Unknown file operation error. Try again.';
   }
 }
