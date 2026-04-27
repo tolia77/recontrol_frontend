@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTransferQueue } from '../../hooks/useTransferQueue';
 import type {
   TransferItem,
   TransferQueue,
   TransferState,
 } from '../../services/transfer';
+import { SpeedTracker } from '../../services/transfer/speedTracker';
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -56,6 +57,7 @@ export function TransferQueuePanel({
 }: TransferQueuePanelProps) {
   const snapshot = useTransferQueue(queue);
   const [collapsed, setCollapsed] = useState(true);
+  const speedTrackersRef = useRef<Map<string, SpeedTracker>>(new Map());
 
   const inFlightCount = snapshot.items.filter(
     (i) =>
@@ -70,6 +72,33 @@ export function TransferQueuePanel({
   const expanded = !collapsed || inFlightCount > 0;
 
   const hasTerminal = snapshot.items.some((i) => isTerminal(i.state));
+  const speedById = useMemo(() => {
+    const now = Date.now();
+    const out = new Map<string, { bytesPerSecond: number | null; etaSeconds: number | null }>();
+    for (const item of snapshot.items) {
+      if (
+        item.state !== 'active' &&
+        item.state !== 'cancelling' &&
+        item.state !== 'stalled'
+      ) {
+        continue;
+      }
+      let tracker = speedTrackersRef.current.get(item.id);
+      if (!tracker) {
+        tracker = new SpeedTracker();
+        speedTrackersRef.current.set(item.id, tracker);
+      }
+      out.set(item.id, tracker.update(item.bytesSoFar, item.size, now));
+    }
+    return out;
+  }, [snapshot.items]);
+
+  useEffect(() => {
+    const liveIds = new Set(snapshot.items.map((item) => item.id));
+    for (const id of speedTrackersRef.current.keys()) {
+      if (!liveIds.has(id)) speedTrackersRef.current.delete(id);
+    }
+  }, [snapshot.items]);
 
   return (
     <div className="border-t border-lightgray bg-tertiary text-text text-sm flex-shrink-0">
@@ -132,6 +161,7 @@ export function TransferQueuePanel({
               key={item.id}
               item={item}
               onCancel={() => queue.cancelById(item.id)}
+              speedEstimate={speedById.get(item.id)}
             />
           ))}
         </div>
@@ -143,9 +173,10 @@ export function TransferQueuePanel({
 interface TransferRowProps {
   item: TransferItem;
   onCancel: () => void;
+  speedEstimate?: { bytesPerSecond: number | null; etaSeconds: number | null };
 }
 
-function TransferRow({ item, onCancel }: TransferRowProps) {
+function TransferRow({ item, onCancel, speedEstimate }: TransferRowProps) {
   const pct =
     item.size > 0 ? Math.min(100, Math.floor((item.bytesSoFar / item.size) * 100)) : 0;
   const Icon = item.direction === 'upload' ? UploadIcon : DownloadIcon;
@@ -154,6 +185,10 @@ function TransferRow({ item, onCancel }: TransferRowProps) {
   const canCancel =
     item.state === 'queued' ||
     item.state === 'active' ||
+    item.state === 'stalled';
+  const showSpeedEta =
+    item.state === 'active' ||
+    item.state === 'cancelling' ||
     item.state === 'stalled';
 
   // Plan 11-06: Wait dismissal is component-local UI state (NOT persisted,
@@ -252,6 +287,18 @@ function TransferRow({ item, onCancel }: TransferRowProps) {
           {formatBytes(item.bytesSoFar)} / {formatBytes(item.size)} ({pct}%)
         </span>
       </div>
+      {showSpeedEta && (
+        <p className="mt-1 text-xs text-darkgray tabular-nums">
+          {(speedEstimate?.bytesPerSecond ?? null) !== null
+            ? `${formatBytes(speedEstimate?.bytesPerSecond ?? 0)}/s`
+            : '--/s'}{' '}
+          · ETA{' '}
+          {speedEstimate?.etaSeconds !== null &&
+          speedEstimate?.etaSeconds !== undefined
+            ? formatEta(speedEstimate.etaSeconds)
+            : '--'}
+        </p>
+      )}
       {item.error && (
         <p
           className="mt-1 text-xs text-error truncate"
@@ -304,4 +351,17 @@ function formatBytes(n: number): string {
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
   if (n < 1024 * 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(1)} MB`;
   return `${(n / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+}
+
+function formatEta(totalSeconds: number): string {
+  const seconds = Math.max(0, Math.floor(totalSeconds));
+  if (seconds >= 3600) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  }
+  const minutes = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${minutes}:${String(secs).padStart(2, '0')}`;
 }
