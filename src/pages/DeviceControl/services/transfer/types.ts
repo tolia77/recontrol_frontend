@@ -1,4 +1,7 @@
-import type { FilesErrorCode } from '../files/filesProtocol.generated';
+import type {
+  FilesErrorCode,
+  NameConflictMode,
+} from '../files/filesProtocol.generated';
 
 /**
  * Direction of a transfer item from the browser's point of view.
@@ -53,6 +56,8 @@ export interface TransferItem {
   size: number;
   /** Bytes transferred so far; runner updates this via queue.updateItem. */
   bytesSoFar: number;
+  /** Upload-only conflict mode passed to files.upload.begin. */
+  conflictMode?: NameConflictMode;
   state: TransferState;
   /**
    * Populated when state moves to 'failed' / 'cancelled' / 'disconnected'.

@@ -106,12 +106,18 @@ export function createRunUpload(deps: CreateRunUploadDeps): RunUploadFn {
     let begin: BeginResp;
     try {
       begin = await request<
-        { parentPath: string; name: string; size: number },
+        {
+          parentPath: string;
+          name: string;
+          size: number;
+          mode: 'fail' | 'replace' | 'skip' | 'keepBoth';
+        },
         BeginResp
       >('files.upload.begin', {
         parentPath: item.parentPath,
         name: item.name,
         size: item.size,
+        mode: item.conflictMode ?? 'fail',
       });
     } catch (err: unknown) {
       const info =

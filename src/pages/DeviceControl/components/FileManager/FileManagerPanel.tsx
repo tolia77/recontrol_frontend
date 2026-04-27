@@ -5,7 +5,8 @@ import type { UseFilesChannel } from '../../hooks/useFilesChannel';
 import { useFilesRoots } from '../../hooks/useFilesRoots';
 import { useFileManagerSelection } from '../../hooks/useFileManagerSelection';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
-import type { FileEntry } from '../../services/files';
+import { FilesChannelError } from '../../services/files';
+import type { FileEntry, NameConflictMode } from '../../services/files';
 import type {
   ContextMenuItem,
   ContextMenuState,
@@ -26,6 +27,7 @@ import { TransferQueuePanel } from './TransferQueuePanel';
 import { DropZoneOverlay } from './DropZoneOverlay';
 import { LargeFileWarningDialog } from './LargeFileWarningDialog';
 import { DownloadBlockedDialog } from './DownloadBlockedDialog';
+import { NameConflictDialog } from './NameConflictDialog';
 import type {
   DownloadTransfer,
   TransferItem,
@@ -63,6 +65,18 @@ interface MkdirResponse {
 }
 interface RenameResponse {
   path: string;
+}
+
+interface WarningPrompt {
+  file: File;
+  resolve: (approved: boolean) => void;
+}
+
+interface ConflictPrompt {
+  operation: 'upload' | 'move' | 'copy';
+  fileName: string;
+  destinationPath: string;
+  resolve: (choice: { mode: NameConflictMode; applyToAll: boolean }) => void;
 }
 
 /**
@@ -137,14 +151,13 @@ export function FileManagerPanel({
   const [dragActive, setDragActive] = useState(false);
   const dragDepthRef = useRef(0);
   const rightColumnRef = useRef<HTMLDivElement>(null);
-  // Sequential 100 MiB warning queue for a drop / upload-pick batch. Each
-  // dropped file walks through this state machine: small files enqueue
-  // immediately and advance the index; large files render the dialog and
-  // wait for Confirm / Cancel before advancing.
-  const [pendingWarn, setPendingWarn] = useState<{
-    files: File[];
-    index: number;
-  } | null>(null);
+  // Upload warning / conflict prompts are Promise-backed dialog gates used by
+  // the batch state machines below.
+  const [warningPrompt, setWarningPrompt] = useState<WarningPrompt | null>(null);
+  const [conflictPrompt, setConflictPrompt] = useState<ConflictPrompt | null>(
+    null,
+  );
+  const uploadBatchRunningRef = useRef(false);
   // ----- Plan 11-05: download flow state -----
   // downloadBlocked renders the non-Chromium >100 MiB modal (no Try Anyway
   // escape hatch -- discoverability of the blocking reason beats silent
@@ -222,12 +235,13 @@ export function FileManagerPanel({
     [setCurrentPath],
   );
 
-  // ----- Plan 11-04: enqueue + 100 MiB warning gate -----
-  // enqueueFile mints a TransferItem and stores the source File in the panel-
-  // owned Map. The runner reads the File via getFile at chunk-loop time.
+  // ----- Upload batch helpers: warnings + conflict prompts + queue waits -----
   const enqueueFile = useCallback(
-    (file: File) => {
-      if (!state.currentPath) return;
+    (
+      file: File,
+      parentPath: string,
+      conflictMode: NameConflictMode = 'fail',
+    ): string => {
       const id =
         typeof crypto !== 'undefined' && 'randomUUID' in crypto
           ? crypto.randomUUID()
@@ -238,56 +252,144 @@ export function FileManagerPanel({
         transferId: null,
         direction: 'upload',
         name: file.name,
-        parentPath: state.currentPath,
+        parentPath,
         size: file.size,
         bytesSoFar: 0,
+        conflictMode,
         state: 'queued',
         enqueuedAt: Date.now(),
       };
       queue.enqueue(item);
+      return id;
     },
-    [state.currentPath, queue],
+    [queue, filesByItemIdRef],
+  );
+
+  const waitForTerminalState = useCallback(
+    (itemId: string): Promise<TransferItem> =>
+      new Promise((resolve) => {
+        const off = queue.subscribe((snap) => {
+          const item = snap.items.find((it) => it.id === itemId);
+          if (!item) return;
+          if (
+            item.state === 'completed' ||
+            item.state === 'cancelled' ||
+            item.state === 'failed' ||
+            item.state === 'disconnected'
+          ) {
+            off();
+            resolve(item);
+          }
+        });
+      }),
+    [queue],
+  );
+
+  const requestLargeUploadApproval = useCallback(
+    (file: File): Promise<boolean> =>
+      new Promise((resolve) => {
+        setWarningPrompt({ file, resolve });
+      }),
+    [],
+  );
+
+  const requestConflictDecision = useCallback(
+    (
+      operation: 'upload' | 'move' | 'copy',
+      fileName: string,
+      destinationPath: string,
+    ): Promise<{ mode: NameConflictMode; applyToAll: boolean }> =>
+      new Promise((resolve) => {
+        setConflictPrompt({ operation, fileName, destinationPath, resolve });
+      }),
+    [],
   );
 
   // handleUploadFiles is the single entry point for both drop + Upload-button
-  // flows. It seeds the sequential warning state machine with the batch.
-  const handleUploadFiles = useCallback((files: File[]) => {
-    if (files.length === 0) return;
-    setPendingWarn({ files, index: 0 });
-  }, []);
+  // flows. This runs the batch sequentially so NAME_CONFLICT can pause the
+  // batch, prompt once, then resume with replace/skip/keepBoth.
+  const handleUploadFiles = useCallback(
+    (files: File[]) => {
+      if (files.length === 0) return;
+      if (!state.currentPath) {
+        toast.info('Navigate to a folder first.');
+        return;
+      }
+      if (uploadBatchRunningRef.current) {
+        toast.info('Another upload batch is already in progress.');
+        return;
+      }
 
-  // Sequential warning processor: walks the batch one file at a time. Small
-  // files (<= 100 MiB) enqueue immediately and advance the index. Large files
-  // park here and let the dialog drive the next state transition via Confirm
-  // (enqueue + advance) or Cancel (skip + advance).
-  useEffect(() => {
-    if (!pendingWarn) return;
-    const { files, index } = pendingWarn;
-    if (index >= files.length) {
-      setPendingWarn(null);
-      return;
-    }
-    const f = files[index];
-    if (f.size <= LARGE_FILE_THRESHOLD) {
-      enqueueFile(f);
-      setPendingWarn({ files, index: index + 1 });
-    }
-    // else: dialog renders below; user clicks Confirm or Cancel to advance.
-  }, [pendingWarn, enqueueFile]);
+      uploadBatchRunningRef.current = true;
+      const targetParent = state.currentPath;
+
+      void (async () => {
+        let rememberedMode: NameConflictMode | null = null;
+        try {
+          for (const file of files) {
+            if (file.size > LARGE_FILE_THRESHOLD) {
+              const approved = await requestLargeUploadApproval(file);
+              if (!approved) continue;
+            }
+
+            let mode: NameConflictMode = rememberedMode ?? 'fail';
+            while (true) {
+              const itemId = enqueueFile(file, targetParent, mode);
+              const result = await waitForTerminalState(itemId);
+
+              if (
+                result.state === 'failed' &&
+                result.error?.code === 'NAME_CONFLICT'
+              ) {
+                const sep = detectSeparator(targetParent);
+                const destinationPath = joinPath([targetParent, file.name], sep);
+                const choice = await requestConflictDecision(
+                  'upload',
+                  file.name,
+                  destinationPath,
+                );
+                console.debug('[files] conflict choice', {
+                  operation: 'upload',
+                  mode: choice.mode,
+                  destinationPath,
+                });
+                if (choice.applyToAll) rememberedMode = choice.mode;
+                if (choice.mode === 'skip') break;
+                mode = choice.mode;
+                continue;
+              }
+
+              break;
+            }
+          }
+        } finally {
+          uploadBatchRunningRef.current = false;
+        }
+      })();
+    },
+    [
+      state.currentPath,
+      toast,
+      enqueueFile,
+      waitForTerminalState,
+      requestLargeUploadApproval,
+      requestConflictDecision,
+    ],
+  );
 
   const handleWarningConfirm = useCallback(() => {
-    setPendingWarn((prev) => {
+    setWarningPrompt((prev) => {
       if (!prev) return prev;
-      enqueueFile(prev.files[prev.index]);
-      return { files: prev.files, index: prev.index + 1 };
+      prev.resolve(true);
+      return null;
     });
-  }, [enqueueFile]);
+  }, []);
 
   const handleWarningCancel = useCallback(() => {
-    setPendingWarn((prev) => {
+    setWarningPrompt((prev) => {
       if (!prev) return prev;
-      // Skip this file (no enqueue) and advance.
-      return { files: prev.files, index: prev.index + 1 };
+      prev.resolve(false);
+      return null;
     });
   }, []);
 
@@ -604,17 +706,42 @@ export function FileManagerPanel({
       const sep = detectSeparator(dstParent);
       setIsOperating(true);
       try {
+        let rememberedMode: NameConflictMode | null = null;
         for (const src of srcs) {
           const name =
             namesByPath.get(src) ?? src.split(/[\\/]/).pop() ?? src;
           const dst = joinPath([dstParent, name], sep);
-          try {
-            await request<
-              { src: string; dst: string },
-              { src: string; dst: string }
-            >(kind === 'move' ? 'files.move' : 'files.copy', { src, dst });
-          } catch (err: unknown) {
-            toast.error(mapFilesErrorToMessage(err));
+          let mode: NameConflictMode = rememberedMode ?? 'fail';
+          while (true) {
+            try {
+              await request<
+                { src: string; dst: string; mode: NameConflictMode },
+                { src: string; dst: string }
+              >(kind === 'move' ? 'files.move' : 'files.copy', {
+                src,
+                dst,
+                mode,
+              });
+              break;
+            } catch (err: unknown) {
+              if (
+                err instanceof FilesChannelError &&
+                err.info.code === 'NAME_CONFLICT'
+              ) {
+                const choice = await requestConflictDecision(kind, name, dst);
+                console.debug('[files] conflict choice', {
+                  operation: kind,
+                  mode: choice.mode,
+                  destinationPath: dst,
+                });
+                if (choice.applyToAll) rememberedMode = choice.mode;
+                if (choice.mode === 'skip') break;
+                mode = choice.mode;
+                continue;
+              }
+              toast.error(mapFilesErrorToMessage(err));
+              break;
+            }
           }
         }
         selection.clear();
@@ -625,7 +752,7 @@ export function FileManagerPanel({
         setIsOperating(false);
       }
     },
-    [channel.request, selection, visibleEntries, toast],
+    [channel.request, selection, visibleEntries, toast, requestConflictDecision],
   );
 
   // ----- mkdir commit / cancel -----
@@ -1114,24 +1241,25 @@ export function FileManagerPanel({
         }}
       />
       <LargeFileWarningDialog
-        open={
-          !!pendingWarn &&
-          pendingWarn.index < pendingWarn.files.length &&
-          pendingWarn.files[pendingWarn.index].size > LARGE_FILE_THRESHOLD
-        }
-        fileName={
-          pendingWarn && pendingWarn.index < pendingWarn.files.length
-            ? pendingWarn.files[pendingWarn.index].name
-            : ''
-        }
-        sizeBytes={
-          pendingWarn && pendingWarn.index < pendingWarn.files.length
-            ? pendingWarn.files[pendingWarn.index].size
-            : 0
-        }
+        open={warningPrompt !== null}
+        fileName={warningPrompt?.file.name ?? ''}
+        sizeBytes={warningPrompt?.file.size ?? 0}
         direction="upload"
         onConfirm={handleWarningConfirm}
         onCancel={handleWarningCancel}
+      />
+      <NameConflictDialog
+        open={conflictPrompt !== null}
+        operation={conflictPrompt?.operation ?? 'upload'}
+        fileName={conflictPrompt?.fileName ?? ''}
+        destinationPath={conflictPrompt?.destinationPath ?? ''}
+        onDecide={(mode, applyToAll) => {
+          setConflictPrompt((prev) => {
+            if (!prev) return prev;
+            prev.resolve({ mode, applyToAll });
+            return null;
+          });
+        }}
       />
       <DownloadBlockedDialog
         open={downloadBlocked !== null}

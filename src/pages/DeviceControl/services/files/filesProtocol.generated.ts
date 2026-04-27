@@ -78,7 +78,7 @@ export interface FilesError {
  * (TRANSFER_NOT_FOUND, CANCELLED, STALLED, DISK_FULL) cover transfer-pipeline cancel races,
  * stall pushes, and disk-full reports.
  */
-export type FilesErrorCode = "ALLOWLIST_VIOLATION" | "INVALID_NAME" | "NOT_FOUND" | "PERMISSION_DENIED" | "IO_ERROR" | "INTERNAL_ERROR" | "UNKNOWN_COMMAND" | "TIMEOUT" | "MALFORMED_RESPONSE" | "CHANNEL_NOT_OPEN" | "DISPOSED" | "TRANSFER_NOT_FOUND" | "CANCELLED" | "STALLED" | "DISK_FULL";
+export type FilesErrorCode = "ALLOWLIST_VIOLATION" | "INVALID_NAME" | "NOT_FOUND" | "PERMISSION_DENIED" | "PERMISSION_READ" | "PERMISSION_WRITE" | "SOURCE_GONE" | "DESTINATION_GONE" | "NAME_CONFLICT" | "IO_ERROR" | "INTERNAL_ERROR" | "UNKNOWN_COMMAND" | "TIMEOUT" | "MALFORMED_RESPONSE" | "CHANNEL_NOT_OPEN" | "DISPOSED" | "TRANSFER_NOT_FOUND" | "CANCELLED" | "STALLED" | "DISK_FULL";
 
 /**
  * Negative response envelope. status is always 'error' and error carries the structured
@@ -144,6 +144,10 @@ export interface FilesCopyRequest {
      * Absolute canonical destination path. Parent must exist.
      */
     dst: string;
+    /**
+     * Conflict behavior when destination name already exists.
+     */
+    mode: NameConflictMode;
     /**
      * Absolute canonical source path (file, not directory).
      */
@@ -331,6 +335,10 @@ export interface FilesMoveRequest {
      */
     dst: string;
     /**
+     * Conflict behavior when destination name already exists.
+     */
+    mode: NameConflictMode;
+    /**
      * Absolute canonical source path.
      */
     src: string;
@@ -400,6 +408,11 @@ export interface FilesTransferCancelRequest {
 export type Reason = "user" | "disconnect" | "stalled" | "desktop_error";
 
 /**
+ * Name-conflict behavior for upload/move/copy commands.
+ */
+export type NameConflictMode = "fail" | "replace" | "skip" | "keepBoth";
+
+/**
  * Response payload for files.transfer.cancel. No fields; an empty object indicates success.
  */
 export interface FilesTransferCancelResponse {
@@ -432,6 +445,10 @@ export interface FilesUploadBeginRequest {
      * Final base name of the uploaded file (no path separators). Must pass name validation.
      */
     name: string;
+    /**
+     * Conflict behavior when destination name already exists.
+     */
+    mode: NameConflictMode;
     /**
      * Absolute canonical path of the parent directory. Must resolve inside an allowlisted root.
      */
