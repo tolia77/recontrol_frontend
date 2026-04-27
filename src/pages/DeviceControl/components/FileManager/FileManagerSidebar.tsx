@@ -69,8 +69,8 @@ export function FileManagerSidebar({
                   <FolderIcon className="w-4 h-4 text-primary flex-shrink-0" />
                   <span className="truncate flex-1">{root.name}</span>
                   <span
-                    title={root.path}
-                    aria-label="Shared from the remote desktop"
+                    title="Shared by the desktop user"
+                    aria-label="Shared by the desktop user"
                     className="flex-shrink-0"
                   >
                     <LockIcon className="w-3 h-3 text-darkgray flex-shrink-0" />

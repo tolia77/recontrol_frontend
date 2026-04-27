@@ -537,6 +537,42 @@ export function FileManagerPanel({
     setPicker({ kind: 'copy' });
   }, [selection.state.selected.size]);
 
+  const copyPathToClipboard = useCallback(
+    async (path: string) => {
+      try {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(path);
+          toast.success('Path copied to clipboard');
+          return;
+        }
+      } catch {
+        // Fall back to execCommand below.
+      }
+
+      const textarea = document.createElement('textarea');
+      textarea.value = path;
+      textarea.setAttribute('readonly', 'true');
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      textarea.setSelectionRange(0, textarea.value.length);
+
+      try {
+        const copied = document.execCommand('copy');
+        if (copied) {
+          toast.success('Path copied to clipboard');
+          return;
+        }
+      } finally {
+        document.body.removeChild(textarea);
+      }
+
+      toast.error('Could not copy the path. Please copy it manually.');
+    },
+    [toast],
+  );
+
   // Disallowed destinations for the picker:
   //   - The current parent folder (no-op move/copy into the same place).
   //   - For Move: the source paths themselves (move-into-self for folders).
@@ -687,6 +723,13 @@ export function FileManagerPanel({
       // preserved for both branches.
       const baseItems: ContextMenuItem[] = [
         {
+          label: 'Copy path',
+          onSelect: () => {
+            void copyPathToClipboard(entry.path);
+          },
+        },
+        { separator: true, label: '', onSelect: () => {} },
+        {
           label: 'Rename',
           onSelect: () => {
             const target = entry.path;
@@ -730,6 +773,7 @@ export function FileManagerPanel({
       handleMoveTo,
       handleCopyTo,
       triggerDownload,
+      copyPathToClipboard,
     ],
   );
 
