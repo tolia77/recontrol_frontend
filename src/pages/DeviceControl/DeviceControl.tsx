@@ -4,6 +4,7 @@ import { Sidebar } from 'src/pages/DeviceControl/Sidebar';
 import { MainContent } from 'src/pages/DeviceControl/MainContent';
 import { getAccessToken, getUserId } from 'src/utils/auth';
 import { refreshAccessTokenOnce } from 'src/services/backend/config';
+import { useToast } from 'src/components/ui';
 import type { AccordionSection, Mode, CommandAction } from 'src/pages/DeviceControl/types';
 import { getMyDeviceSharesForDeviceRequest } from 'src/services/backend/deviceSharesRequests';
 import { getDeviceRequest } from 'src/services/backend/devicesRequests';
@@ -12,7 +13,14 @@ import { useWebRtc } from './hooks/useWebRtc';
 import { useStreamStats } from './hooks/useStreamStats';
 import { useFilesChannel } from './hooks/useFilesChannel';
 import { useFileManagerState } from './hooks/useFileManagerState';
+import { useTransferQueue } from './hooks/useTransferQueue';
 import { FileManagerPanel } from './components/FileManager/FileManagerPanel';
+import {
+    TransferQueue,
+    createRunUpload,
+    createRunDownload,
+} from './services/transfer';
+import type { DownloadTransfer } from './services/transfer';
 
 interface CommandWebSocketProps {
     wsUrl: string;
@@ -66,6 +74,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
     const [permissionsLoading, setPermissionsLoading] = useState(false);
     const [permissions, setPermissions] = useState<DevicePermissions | null>(null);
     const [isOwner, setIsOwner] = useState<boolean>(false);
+    const toast = useToast();
 
     const buildPermissions = (share: DeviceShare | null): DevicePermissions => {
         const pg = share?.permissions_group;
@@ -408,6 +417,59 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         setShowHidden: fmSetShowHidden,
     } = useFileManagerState(deviceId);
 
+    const filesByItemIdRef = useRef<Map<string, File>>(new Map());
+    const activeDownloadRef = useRef<DownloadTransfer | null>(null);
+    const toastRef = useRef(toast);
+    useEffect(() => {
+        toastRef.current = toast;
+    }, [toast]);
+
+    const channelRequestRef = useRef(filesChannel.request);
+    useEffect(() => {
+        channelRequestRef.current = filesChannel.request;
+    }, [filesChannel.request]);
+
+    const filesClientLiveRef = useRef(filesChannel.filesClient);
+    useEffect(() => {
+        filesClientLiveRef.current = filesChannel.filesClient;
+    }, [filesChannel.filesClient]);
+
+    const filesDataChannelLiveRef = useRef(filesChannel.filesDataChannel);
+    useEffect(() => {
+        filesDataChannelLiveRef.current = filesChannel.filesDataChannel;
+    }, [filesChannel.filesDataChannel]);
+
+    const transferQueueRef = useRef<TransferQueue | null>(null);
+    if (transferQueueRef.current === null) {
+        transferQueueRef.current = new TransferQueue(
+            createRunUpload({
+                filesDataRef,
+                getRequest: () => channelRequestRef.current,
+                getFile: (id) => filesByItemIdRef.current.get(id) ?? null,
+            }),
+            createRunDownload({
+                getRequest: () => channelRequestRef.current,
+                getFilesClient: () => filesClientLiveRef.current,
+                getFilesDataChannel: () => filesDataChannelLiveRef.current,
+                onSuccess: (name) => toastRef.current.info(`Downloaded ${name}`),
+                onActiveChange: (active) => {
+                    activeDownloadRef.current = active;
+                },
+            }),
+        );
+    }
+    const transferQueue = transferQueueRef.current!;
+    const transferSnapshot = useTransferQueue(transferQueue);
+
+    useEffect(() => {
+        return transferQueue.subscribe((snap) => {
+            const liveIds = new Set(snap.items.map((i) => i.id));
+            for (const id of filesByItemIdRef.current.keys()) {
+                if (!liveIds.has(id)) filesByItemIdRef.current.delete(id);
+            }
+        });
+    }, [transferQueue]);
+
     const sendSingleAction = (action: { id?: string; type: string; payload?: Record<string, unknown> }) => {
         if (!canSend(action.type)) {
             console.warn(`Blocked command '${action.type}' due to insufficient permissions`);
@@ -499,6 +561,9 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
             setCurrentPath={fmSetCurrentPath}
             setSort={fmSetSort}
             setShowHidden={fmSetShowHidden}
+            queue={transferQueue}
+            filesByItemIdRef={filesByItemIdRef}
+            activeDownloadRef={activeDownloadRef}
         />
     ) : null;
 
@@ -524,6 +589,8 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                 onResolutionChange={handleResolutionChange}
                 onTogglePanel={() => fmSetPanelOpen(!fmState.panelOpen)}
                 panelOpen={fmState.panelOpen}
+                transferSnapshot={transferSnapshot}
+                onOpenPanel={() => fmSetPanelOpen(true)}
             />
             <main className={`flex-1 ml-64 ${activeMode === 'interactive' ? 'overflow-hidden' : ''}`}>
                 <MainContent

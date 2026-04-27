@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { MouseEvent } from 'react';
+import type { MouseEvent, RefObject } from 'react';
 import { useToast } from 'src/components/ui';
 import type { UseFilesChannel } from '../../hooks/useFilesChannel';
 import { useFilesRoots } from '../../hooks/useFilesRoots';
@@ -26,12 +26,11 @@ import { TransferQueuePanel } from './TransferQueuePanel';
 import { DropZoneOverlay } from './DropZoneOverlay';
 import { LargeFileWarningDialog } from './LargeFileWarningDialog';
 import { DownloadBlockedDialog } from './DownloadBlockedDialog';
-import {
+import type {
+  DownloadTransfer,
+  TransferItem,
   TransferQueue,
-  createRunUpload,
-  createRunDownload,
 } from '../../services/transfer';
-import type { DownloadTransfer, TransferItem } from '../../services/transfer';
 import {
   detectSeparator,
   isAncestor,
@@ -54,6 +53,9 @@ interface FileManagerPanelProps {
   setCurrentPath: (p: string | null) => void;
   setSort: (s: SortState) => void;
   setShowHidden: (v: boolean) => void;
+  queue: TransferQueue;
+  filesByItemIdRef: RefObject<Map<string, File>>;
+  activeDownloadRef: RefObject<DownloadTransfer | null>;
 }
 
 interface MkdirResponse {
@@ -90,97 +92,13 @@ export function FileManagerPanel({
   setCurrentPath,
   setSort,
   setShowHidden,
+  queue,
+  filesByItemIdRef,
+  activeDownloadRef,
 }: FileManagerPanelProps) {
   const rootsResult = useFilesRoots(channel);
 
-  // ----- Plan 11-04: transfer queue (real upload runner; download stub) -----
-  //
-  // The queue is constructed once per panel mount via useRef so its listeners
-  // and in-flight state survive re-renders. A panel close + reopen creates a
-  // fresh queue -- "queue survives panel close" is CONTEXT-deferred to phase
-  // 12. Plan 11-05 will replace the download stub.
-  //
-  // Live-ref bridges: channel.request and filesDataRef can flip null/non-null
-  // across reconnects, so we route them through refs the runner reads at
-  // invocation time. This matches the desktop-side deferred-accessor closure
-  // pattern from plan 11-02 (CommandDispatcher) and avoids reconstructing the
-  // queue on every channel-state change.
-  //
-  // filesByItemIdRef holds the source File objects keyed by TransferItem.id.
-  // It is intentionally NOT a field on TransferItem -- retaining a File
-  // reference inside completed-history would prevent the GC from reclaiming
-  // the underlying blob bytes (RESEARCH anti-pattern). The cleanup effect
-  // below subscribes to queue snapshots and drops files for ids that have
-  // been pruned from history.
-  const filesByItemIdRef = useRef<Map<string, File>>(new Map());
-  const channelRequestRef = useRef(channel.request);
-  useEffect(() => {
-    channelRequestRef.current = channel.request;
-  }, [channel.request]);
-  // Plan 11-05: live-ref bridges for the download runner. filesClient +
-  // filesDataChannel both flip null/non-null across reconnects; the runner
-  // reads them at invocation time so the queue (constructed once via useRef)
-  // does not need to be reconstructed on channel-state changes.
-  const filesClientRef = useRef(channel.filesClient);
-  useEffect(() => {
-    filesClientRef.current = channel.filesClient;
-  }, [channel.filesClient]);
-  const filesDataChannelRef = useRef(channel.filesDataChannel);
-  useEffect(() => {
-    filesDataChannelRef.current = channel.filesDataChannel;
-  }, [channel.filesDataChannel]);
-  const filesDataRef = channel.filesDataRef;
-
   const toast = useToast();
-  // Stable ref so createRunDownload's onSuccess closure stays valid across
-  // toast-hook identity changes (the hook is reference-stable in practice but
-  // ref-bridging is the pattern used throughout this panel for reconnects).
-  const toastRef = useRef(toast);
-  useEffect(() => {
-    toastRef.current = toast;
-  }, [toast]);
-
-  // Plan 11-06: panel-level reference to the currently active
-  // DownloadTransfer (or null when no download is in flight). The
-  // download runner sets this via the onActiveChange dep right after
-  // registerDownload() and clears it back to null at every terminal exit.
-  // The 1 s stall interval (below) reads `activeDownloadRef.current
-  // .lastChunkAtMs` to flip the row state to 'stalled' / 'active'. Holding
-  // a ref (not state) keeps the queue+runner stable across re-renders.
-  const activeDownloadRef = useRef<DownloadTransfer | null>(null);
-
-  const queueRef = useRef<TransferQueue | null>(null);
-  if (queueRef.current === null) {
-    queueRef.current = new TransferQueue(
-      createRunUpload({
-        filesDataRef,
-        getRequest: () => channelRequestRef.current,
-        getFile: (id) => filesByItemIdRef.current.get(id) ?? null,
-      }),
-      createRunDownload({
-        getRequest: () => channelRequestRef.current,
-        getFilesClient: () => filesClientRef.current,
-        getFilesDataChannel: () => filesDataChannelRef.current,
-        onSuccess: (name) => toastRef.current.info(`Downloaded ${name}`),
-        onActiveChange: (active) => {
-          activeDownloadRef.current = active;
-        },
-      }),
-    );
-  }
-  const queue = queueRef.current;
-
-  // Drop the panel-side File reference when the queue prunes its TransferItem
-  // out of history (HISTORY_LIMIT eviction). Without this, the Map would
-  // retain File refs indefinitely and prevent GC on the underlying blob.
-  useEffect(() => {
-    return queue.subscribe((snap) => {
-      const liveIds = new Set(snap.items.map((i) => i.id));
-      for (const id of filesByItemIdRef.current.keys()) {
-        if (!liveIds.has(id)) filesByItemIdRef.current.delete(id);
-      }
-    });
-  }, [queue]);
 
   const [refreshKey, setRefreshKey] = useState(0);
   const [visibleEntries, setVisibleEntries] = useState<FileEntry[]>([]);
@@ -314,7 +232,7 @@ export function FileManagerPanel({
         typeof crypto !== 'undefined' && 'randomUUID' in crypto
           ? crypto.randomUUID()
           : `upload-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      filesByItemIdRef.current.set(id, file);
+      filesByItemIdRef.current?.set(id, file);
       const item: TransferItem = {
         id,
         transferId: null,

@@ -5,6 +5,8 @@ import { AccordionItem } from './AccordionItem';
 import { FpsControls } from './components/FpsControls';
 import { ResolutionControl } from './components/ResolutionControl';
 import { FilesToggleIcon } from './components/FileManager/icons';
+import { HeaderTransferPill } from './components/HeaderTransferPill';
+import type { QueueState } from './services/transfer';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { generateUUID } from 'src/utils/uuid';
@@ -29,6 +31,8 @@ interface ExtendedSidebarProps extends SidebarProps {
   currentResolution?: number;
   onResolutionChange?: (resolution: number) => void;
   deviceName?: string;
+  transferSnapshot?: QueueState;
+  onOpenPanel?: () => void;
 }
 
 export function Sidebar({
@@ -51,6 +55,8 @@ export function Sidebar({
   deviceName,
   onTogglePanel,
   panelOpen,
+  transferSnapshot,
+  onOpenPanel,
 }: ExtendedSidebarProps) {
   const { t } = useTranslation('deviceControl');
   const navigate = useNavigate();
@@ -146,6 +152,12 @@ export function Sidebar({
             <span>Files</span>
             <span className="ml-auto text-xs opacity-75">Ctrl+Shift+F</span>
           </button>
+          {!panelOpen && transferSnapshot && (
+            <HeaderTransferPill
+              snapshot={transferSnapshot}
+              onClick={() => (onOpenPanel ? onOpenPanel() : onTogglePanel())}
+            />
+          )}
         </div>
       )}
 
