@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { formatBytes } from './utils/formatters';
 
 interface FileManagerStatusBarProps {
@@ -12,6 +13,7 @@ export function FileManagerStatusBar({
   selectionCount,
   selectionSize,
 }: FileManagerStatusBarProps) {
+  const { t } = useTranslation('fileManager');
   const hasSelection = selectionCount > 0;
   return (
     <footer
@@ -20,14 +22,13 @@ export function FileManagerStatusBar({
     >
       {hasSelection ? (
         <span>
-          {selectionCount} item{selectionCount === 1 ? '' : 's'} selected
-          {' — '}
-          {formatBytes(selectionSize)}
+          {t('statusBar.itemsSelected', {
+            count: selectionCount,
+            size: formatBytes(selectionSize),
+          })}
         </span>
       ) : (
-        <span>
-          {totalCount} item{totalCount === 1 ? '' : 's'}
-        </span>
+        <span>{t('statusBar.items', { count: totalCount })}</span>
       )}
     </footer>
   );

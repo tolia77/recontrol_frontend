@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent, MouseEvent } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { FileEntry, FilesListResponse } from '../../services/files';
 import { FilesChannelError } from '../../services/files';
@@ -68,15 +70,25 @@ type ListingState =
   | { kind: 'error'; message: string }
   | { kind: 'ready'; entries: FileEntry[] };
 
-function errorMessageFor(err: FilesChannelError): string {
+function errorMessageFor(
+  err: FilesChannelError,
+  t: TFunction<'fileManager'>,
+): string {
   switch (err.info.code) {
-    case 'ALLOWLIST_VIOLATION': return 'This folder is outside the shared area.';
-    case 'NOT_FOUND':           return 'Folder does not exist.';
-    case 'PERMISSION_DENIED':   return 'Permission denied on the remote.';
-    case 'TIMEOUT':             return 'Remote did not respond in time.';
-    case 'CHANNEL_NOT_OPEN':    return 'Files channel disconnected. Reconnect the stream.';
-    case 'DISPOSED':            return 'Files channel disposed. Reconnect the stream.';
-    default:                    return 'Could not load folder.';
+    case 'ALLOWLIST_VIOLATION':
+      return t('errors.listing.allowlistViolation');
+    case 'NOT_FOUND':
+      return t('errors.listing.notFound');
+    case 'PERMISSION_DENIED':
+      return t('errors.listing.permissionDenied');
+    case 'TIMEOUT':
+      return t('errors.listing.timeout');
+    case 'CHANNEL_NOT_OPEN':
+      return t('errors.listing.channelNotOpen');
+    case 'DISPOSED':
+      return t('errors.listing.disposed');
+    default:
+      return t('errors.listing.couldNotLoadFolder');
   }
 }
 
@@ -117,6 +129,7 @@ export function FileManagerListing({
   onEmptyContextMenu,
   onRenameArm,
 }: FileManagerListingProps) {
+  const { t } = useTranslation('fileManager');
   const [state, setState] = useState<ListingState>({ kind: 'idle' });
   const toast = useToast();
 
@@ -154,12 +167,12 @@ export function FileManagerListing({
         if (myId !== requestIdRef.current) return; // stale
         const message =
           err instanceof FilesChannelError
-            ? errorMessageFor(err)
-            : 'Unexpected error loading folder.';
+            ? errorMessageFor(err, t)
+            : t('errors.listing.unexpectedLoadingFolder');
         setState({ kind: 'error', message });
         toast.error(message);
       });
-  }, [channel.request, path, refreshKey, toast]);
+  }, [channel.request, path, refreshKey, toast, t]);
 
   // Apply the show-hidden filter BEFORE sorting (NAV-14; isHidden guaranteed
   // by plan 10-01).
@@ -305,10 +318,10 @@ export function FileManagerListing({
         className="grid grid-cols-[1fr_120px_180px_140px] bg-background border-b border-lightgray font-semibold text-sm text-text flex-shrink-0"
         style={{ height: `${ROW_HEIGHT_PX}px` }}
       >
-        {renderHeaderButton('Name', 'name', 'left')}
-        {renderHeaderButton('Size', 'size', 'right')}
-        {renderHeaderButton('Modified', 'modified', 'left')}
-        {renderHeaderButton('Type', 'type', 'left')}
+        {renderHeaderButton(t('listing.columnName'), 'name', 'left')}
+        {renderHeaderButton(t('listing.columnSize'), 'size', 'right')}
+        {renderHeaderButton(t('listing.columnModified'), 'modified', 'left')}
+        {renderHeaderButton(t('listing.columnType'), 'type', 'left')}
       </div>
 
       {/* New-folder pseudo-row, rendered ABOVE the scroll container so it's
@@ -325,7 +338,7 @@ export function FileManagerListing({
             <input
               ref={newFolderInputRef}
               type="text"
-              defaultValue="New folder"
+              defaultValue={t('listing.defaultNewFolderName')}
               onKeyDown={handleNewFolderKeyDown}
               onBlur={onNewFolderCancel}
               onClick={(e) => e.stopPropagation()}
@@ -346,17 +359,17 @@ export function FileManagerListing({
       >
         {state.kind === 'idle' && !path && (
           <div className="p-4 text-sm text-darkgray">
-            Select a folder from the sidebar to start browsing.
+            {t('listing.selectFolderPrompt')}
           </div>
         )}
         {state.kind === 'loading' && (
-          <div className="p-4 text-sm text-darkgray">Loading...</div>
+          <div className="p-4 text-sm text-darkgray">{t('listing.loading')}</div>
         )}
         {state.kind === 'error' && (
           <div className="p-4 text-sm text-error">{state.message}</div>
         )}
         {state.kind === 'ready' && visibleEntries.length === 0 && !newFolderPending && (
-          <div className="p-4 text-sm text-darkgray">This folder is empty.</div>
+          <div className="p-4 text-sm text-darkgray">{t('listing.emptyFolder')}</div>
         )}
         {state.kind === 'ready' && visibleEntries.length > 0 && (
           <div

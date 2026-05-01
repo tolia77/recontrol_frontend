@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { FolderIcon } from './icons';
 
 /**
@@ -7,6 +8,7 @@ import { FolderIcon } from './icons';
  * to ask the desktop user (CONTEXT locked).
  */
 export function FileManagerEmptyAllowlist() {
+  const { t } = useTranslation('fileManager');
   return (
     <div className="h-full w-full flex flex-col items-center justify-center text-center p-8 bg-background">
       <div className="relative mb-4">
@@ -16,19 +18,18 @@ export function FileManagerEmptyAllowlist() {
         </div>
       </div>
       <h3 className="text-lg font-semibold text-text mb-2">
-        No shared folders
+        {t('emptyAllowlist.title')}
       </h3>
       <p className="text-sm text-darkgray max-w-md mb-6">
-        No folders are currently shared from the remote desktop. Ask the
-        desktop user to add folders in ReControl Desktop Settings.
+        {t('emptyAllowlist.description')}
       </p>
       <button
         type="button"
         disabled
-        title="This must be done on the remote computer."
+        title={t('emptyAllowlist.ctaTooltip')}
         className="px-4 py-2 rounded-lg bg-secondary text-white text-sm font-medium opacity-50 cursor-not-allowed"
       >
-        Open ReControl Desktop Settings
+        {t('emptyAllowlist.cta')}
       </button>
     </div>
   );

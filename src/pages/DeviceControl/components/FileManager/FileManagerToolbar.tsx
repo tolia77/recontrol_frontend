@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { RefreshIcon } from '../../icons';
 import {
   FolderPlusIcon,
@@ -56,6 +57,7 @@ export function FileManagerToolbar({
   onCopyTo,
   onUploadFiles,
 }: FileManagerToolbarProps) {
+  const { t } = useTranslation('fileManager');
   const renameEnabled = !disabled && selectionCount === 1;
   const newFolderEnabled = !disabled;
   const deleteEnabled = selectionCount > 0;
@@ -87,7 +89,8 @@ export function FileManagerToolbar({
         type="button"
         onClick={onRefresh}
         disabled={disabled}
-        title="Refresh (F5)"
+        title={t('toolbar.refresh')}
+        aria-label={t('toolbar.refresh')}
         className="p-1.5 rounded hover:bg-tertiary disabled:opacity-50 disabled:cursor-not-allowed text-text transition-colors"
       >
         <RefreshIcon className="w-4 h-4" />
@@ -99,7 +102,8 @@ export function FileManagerToolbar({
         type="button"
         onClick={onNewFolder}
         disabled={!newFolderEnabled}
-        title="New folder"
+        title={t('toolbar.newFolder')}
+        aria-label={t('toolbar.newFolder')}
         className="p-1.5 rounded hover:bg-tertiary disabled:opacity-50 disabled:cursor-not-allowed text-text transition-colors"
       >
         <FolderPlusIcon className="w-4 h-4" />
@@ -108,7 +112,8 @@ export function FileManagerToolbar({
         type="button"
         onClick={handleUploadClick}
         disabled={!uploadEnabled}
-        title="Upload files"
+        title={t('toolbar.uploadFiles')}
+        aria-label={t('toolbar.uploadFiles')}
         className="p-1.5 rounded hover:bg-tertiary disabled:opacity-50 disabled:cursor-not-allowed text-text transition-colors"
       >
         <UploadIcon className="w-4 h-4" />
@@ -124,7 +129,8 @@ export function FileManagerToolbar({
         type="button"
         onClick={onRename}
         disabled={!renameEnabled}
-        title="Rename (F2)"
+        title={t('toolbar.rename')}
+        aria-label={t('toolbar.rename')}
         className="p-1.5 rounded hover:bg-tertiary disabled:opacity-50 disabled:cursor-not-allowed text-text transition-colors"
       >
         <PencilIcon className="w-4 h-4" />
@@ -133,7 +139,8 @@ export function FileManagerToolbar({
         type="button"
         onClick={onDelete}
         disabled={!deleteEnabled}
-        title="Delete (Del)"
+        title={t('toolbar.delete')}
+        aria-label={t('toolbar.delete')}
         className="p-1.5 rounded hover:bg-tertiary disabled:opacity-50 disabled:cursor-not-allowed text-error transition-colors"
       >
         <TrashIcon className="w-4 h-4" />
@@ -142,7 +149,8 @@ export function FileManagerToolbar({
         type="button"
         onClick={onMoveTo}
         disabled={!moveEnabled}
-        title="Move to…"
+        title={t('toolbar.moveTo')}
+        aria-label={t('toolbar.moveTo')}
         className="p-1.5 rounded hover:bg-tertiary disabled:opacity-50 disabled:cursor-not-allowed text-text transition-colors"
       >
         <MoveIcon className="w-4 h-4" />
@@ -151,7 +159,8 @@ export function FileManagerToolbar({
         type="button"
         onClick={onCopyTo}
         disabled={!copyEnabled}
-        title="Copy to…"
+        title={t('toolbar.copyTo')}
+        aria-label={t('toolbar.copyTo')}
         className="p-1.5 rounded hover:bg-tertiary disabled:opacity-50 disabled:cursor-not-allowed text-text transition-colors"
       >
         <CopyIcon className="w-4 h-4" />
@@ -164,7 +173,7 @@ export function FileManagerToolbar({
           onChange={(e) => onToggleShowHidden(e.target.checked)}
           className="accent-primary"
         />
-        Show hidden files
+        {t('toolbar.showHiddenFiles')}
       </label>
     </div>
   );

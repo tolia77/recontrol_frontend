@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 /**
  * Visual-only overlay rendered while the user is dragging files over the file
  * manager's right column.
@@ -13,6 +15,7 @@
  * shared-folders list) while dragging.
  */
 export function DropZoneOverlay() {
+  const { t } = useTranslation('fileManager');
   return (
     <div
       className="absolute inset-0 z-40 pointer-events-none flex items-center justify-center"
@@ -20,7 +23,7 @@ export function DropZoneOverlay() {
     >
       <div className="bg-accent/10 border-2 border-dashed border-accent rounded-lg w-[92%] h-[92%] flex items-center justify-center">
         <p className="text-accent text-base font-medium">
-          Drop files to upload
+          {t('dropZone.drop')}
         </p>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MouseEvent, RefObject } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToast } from 'src/components/ui';
 import type { UseFilesChannel } from '../../hooks/useFilesChannel';
 import { useFilesRoots } from '../../hooks/useFilesRoots';
@@ -110,6 +111,7 @@ export function FileManagerPanel({
   filesByItemIdRef,
   activeDownloadRef,
 }: FileManagerPanelProps) {
+  const { t } = useTranslation('fileManager');
   const rootsResult = useFilesRoots(channel);
 
   const toast = useToast();
@@ -312,11 +314,11 @@ export function FileManagerPanel({
     (files: File[]) => {
       if (files.length === 0) return;
       if (!state.currentPath) {
-        toast.info('Navigate to a folder first.');
+        toast.info(t('panel.navigateToFolderFirst'));
         return;
       }
       if (uploadBatchRunningRef.current) {
-        toast.info('Another upload batch is already in progress.');
+        toast.info(t('panel.uploadBatchInProgress'));
         return;
       }
 
@@ -370,6 +372,7 @@ export function FileManagerPanel({
     [
       state.currentPath,
       toast,
+      t,
       enqueueFile,
       waitForTerminalState,
       requestLargeUploadApproval,
@@ -427,7 +430,7 @@ export function FileManagerPanel({
       setDragActive(false);
 
       if (!state.currentPath) {
-        toast.info('Navigate to a folder first.');
+        toast.info(t('panel.navigateToFolderFirst'));
         return;
       }
       // Folder detection (Pitfall 5: webkitGetAsEntry returns null for non-
@@ -444,7 +447,7 @@ export function FileManagerPanel({
         .filter((entry): entry is FileSystemEntry => entry !== null);
 
       if (entries.some((entry) => entry.isDirectory)) {
-        toast.info("Folder upload isn't supported yet.");
+        toast.info(t('panel.folderUploadUnsupported'));
         return;
       }
 
@@ -462,7 +465,7 @@ export function FileManagerPanel({
       el.removeEventListener('dragleave', onLeave);
       el.removeEventListener('drop', onDrop);
     };
-  }, [state.currentPath, toast, handleUploadFiles]);
+  }, [state.currentPath, toast, t, handleUploadFiles]);
 
   // ----- Selection state (shared between listing + keyboard handler + status) -----
   const selection = useFileManagerSelection(visibleEntries);
@@ -580,7 +583,7 @@ export function FileManagerPanel({
     async (paths: string[]) => {
       const request = channel.request;
       if (!request) {
-        toast.error('Files channel disconnected');
+        toast.error(t('panel.filesChannelDisconnected'));
         return;
       }
       setIsDeleting(true);
@@ -592,7 +595,7 @@ export function FileManagerPanel({
               { path: p },
             );
           } catch (err: unknown) {
-            toast.error(mapFilesErrorToMessage(err));
+            toast.error(mapFilesErrorToMessage(err, t));
           }
         }
         // Pitfall 5: clear selection on success (and on partial-failure: the
@@ -607,7 +610,7 @@ export function FileManagerPanel({
         setIsDeleting(false);
       }
     },
-    [channel.request, selection, toast],
+    [channel.request, selection, toast, t],
   );
 
   const handleRequestDelete = useCallback(async () => {
@@ -644,7 +647,7 @@ export function FileManagerPanel({
       try {
         if (navigator.clipboard?.writeText) {
           await navigator.clipboard.writeText(path);
-          toast.success('Path copied to clipboard');
+          toast.success(t('panel.pathCopied'));
           return;
         }
       } catch {
@@ -663,16 +666,16 @@ export function FileManagerPanel({
       try {
         const copied = document.execCommand('copy');
         if (copied) {
-          toast.success('Path copied to clipboard');
+          toast.success(t('panel.pathCopied'));
           return;
         }
       } finally {
         document.body.removeChild(textarea);
       }
 
-      toast.error('Could not copy the path. Please copy it manually.');
+      toast.error(t('panel.couldNotCopyPath'));
     },
-    [toast],
+    [toast, t],
   );
 
   // Disallowed destinations for the picker:
@@ -698,7 +701,7 @@ export function FileManagerPanel({
     async (kind: 'move' | 'copy', dstParent: string) => {
       const request = channel.request;
       if (!request) {
-        toast.error('Files channel disconnected');
+        toast.error(t('panel.filesChannelDisconnected'));
         return;
       }
       const srcs = Array.from(selection.state.selected);
@@ -739,7 +742,7 @@ export function FileManagerPanel({
                 mode = choice.mode;
                 continue;
               }
-              toast.error(mapFilesErrorToMessage(err));
+              toast.error(mapFilesErrorToMessage(err, t));
               break;
             }
           }
@@ -752,7 +755,7 @@ export function FileManagerPanel({
         setIsOperating(false);
       }
     },
-    [channel.request, selection, visibleEntries, toast, requestConflictDecision],
+    [channel.request, selection, visibleEntries, toast, t, requestConflictDecision],
   );
 
   // ----- mkdir commit / cancel -----
@@ -782,10 +785,10 @@ export function FileManagerPanel({
         })
         .catch((err: unknown) => {
           // Keep the editor open so the user can correct + retry (Pitfall 3).
-          toast.error(mapFilesErrorToMessage(err));
+          toast.error(mapFilesErrorToMessage(err, t));
         });
     },
-    [channel.request, state.currentPath, selection, toast],
+    [channel.request, state.currentPath, selection, toast, t],
   );
 
   const handleNewFolderCancel = useCallback(() => {
@@ -819,10 +822,10 @@ export function FileManagerPanel({
           rootRef.current?.focus();
         })
         .catch((err: unknown) => {
-          toast.error(mapFilesErrorToMessage(err));
+          toast.error(mapFilesErrorToMessage(err, t));
         });
     },
-    [channel.request, visibleEntries, selection, toast],
+    [channel.request, visibleEntries, selection, toast, t],
   );
 
   const handleRenameCancel = useCallback(() => {
@@ -850,14 +853,14 @@ export function FileManagerPanel({
       // preserved for both branches.
       const baseItems: ContextMenuItem[] = [
         {
-          label: 'Copy path',
+          label: t('panel.contextMenu.copyPath'),
           onSelect: () => {
             void copyPathToClipboard(entry.path);
           },
         },
         { separator: true, label: '', onSelect: () => {} },
         {
-          label: 'Rename',
+          label: t('panel.contextMenu.rename'),
           onSelect: () => {
             const target = entry.path;
             setNewFolderPending(false);
@@ -866,18 +869,18 @@ export function FileManagerPanel({
         },
         { separator: true, label: '', onSelect: () => {} },
         {
-          label: 'Delete',
+          label: t('panel.contextMenu.delete'),
           danger: true,
           onSelect: () => {
             void handleRequestDelete();
           },
         },
         {
-          label: 'Move to…',
+          label: t('panel.contextMenu.moveTo'),
           onSelect: handleMoveTo,
         },
         {
-          label: 'Copy to…',
+          label: t('panel.contextMenu.copyTo'),
           onSelect: handleCopyTo,
         },
       ];
@@ -885,7 +888,7 @@ export function FileManagerPanel({
         ? baseItems
         : [
             {
-              label: 'Download',
+              label: t('panel.contextMenu.download'),
               onSelect: () => triggerDownload(entry),
             },
             { separator: true, label: '', onSelect: () => {} },
@@ -901,6 +904,7 @@ export function FileManagerPanel({
       handleCopyTo,
       triggerDownload,
       copyPathToClipboard,
+      t,
     ],
   );
 
@@ -913,14 +917,14 @@ export function FileManagerPanel({
         y: e.clientY,
         items: [
           {
-            label: 'New folder',
+            label: t('panel.contextMenu.newFolder'),
             disabled: !canMkdir,
             onSelect: handleNewFolder,
           },
         ],
       });
     },
-    [state.currentPath, handleNewFolder],
+    [state.currentPath, handleNewFolder, t],
   );
 
   const handleContextMenuClose = useCallback(() => {
@@ -977,16 +981,14 @@ export function FileManagerPanel({
           state: 'disconnected',
           error: {
             code: 'CHANNEL_NOT_OPEN',
-            message: 'Disconnected during transfer.',
+            message: t('panel.disconnectedDuringTransferShort'),
           },
           completedAt: Date.now(),
         });
       }
-      setDisconnectBanner(
-        'Disconnected during transfer. Reconnect and try again.',
-      );
+      setDisconnectBanner(t('panel.disconnectedDuringTransfer'));
     }
-  }, [channel.status, queue]);
+  }, [channel.status, queue, t]);
 
   // ----- Plan 11-06: auto-clear banner when a new transfer starts -----
   // Subscribes to queue snapshots; whenever activeId becomes non-null the
@@ -1086,7 +1088,7 @@ export function FileManagerPanel({
         tabIndex={0}
         className="outline-none flex h-full w-full bg-background text-text items-center justify-center p-8 text-center text-darkgray text-sm"
       >
-        Files channel disconnected -- reconnect the stream.
+        {t('channelDisconnected')}
       </div>
     );
   }
@@ -1114,7 +1116,7 @@ export function FileManagerPanel({
       <FileManagerSidebar
         roots={rootsResult.roots}
         isLoading={rootsResult.isLoading}
-        error={rootsResult.error ? 'Could not load shared folders' : null}
+        error={rootsResult.error ? t('sidebar.couldNotLoadSharedFolders') : null}
         currentPath={state.currentPath}
         onSelectRoot={handleSelectRoot}
       />
@@ -1177,15 +1179,18 @@ export function FileManagerPanel({
       <ContextMenu state={contextMenu} onClose={handleContextMenuClose} />
       <ConfirmDialog
         open={confirm?.kind === 'delete'}
-        title="Delete"
+        title={t('dialogs.delete.title')}
         body={
           confirm && confirm.paths.length === 1 ? (
-            <p>Delete &quot;{confirm.names[0]}&quot;? This cannot be undone.</p>
+            <p>
+              {t('dialogs.delete.singleBody', { name: confirm.names[0] })}
+            </p>
           ) : confirm ? (
             <>
               <p>
-                Delete these {confirm.names.length} items? This cannot be
-                undone.
+                {t('dialogs.delete.multipleBody', {
+                  count: confirm.names.length,
+                })}
               </p>
               <ul className="mt-2 text-sm list-disc pl-5">
                 {confirm.names.slice(0, 5).map((n) => (
@@ -1194,13 +1199,16 @@ export function FileManagerPanel({
               </ul>
               {confirm.names.length > 5 && (
                 <p className="mt-1 text-sm text-darkgray">
-                  and {confirm.names.length - 5} more…
+                  {t('dialogs.delete.andMore', {
+                    count: confirm.names.length - 5,
+                  })}
                 </p>
               )}
             </>
           ) : null
         }
-        confirmLabel="Delete"
+        confirmLabel={t('dialogs.delete.confirm')}
+        cancelLabel={t('dialogs.cancel')}
         dangerous
         isBusy={isDeleting}
         checkbox={
@@ -1208,8 +1216,7 @@ export function FileManagerPanel({
           confirm.paths.length === 1 &&
           !suppressSingleDeleteConfirm
             ? {
-                label:
-                  "Don't ask again for single-file deletes in this session",
+                label: t('dialogs.delete.suppressSingleDeleteConfirm'),
                 checked: suppressSingleDeleteConfirm,
                 onChange: setSuppressSingleDeleteConfirm,
               }
@@ -1226,8 +1233,16 @@ export function FileManagerPanel({
       />
       <FolderPickerModal
         open={picker !== null}
-        title={picker?.kind === 'move' ? 'Move to…' : 'Copy to…'}
-        confirmLabel={picker?.kind === 'move' ? 'Move' : 'Copy'}
+        title={
+          picker?.kind === 'move'
+            ? t('dialogs.folderPicker.moveTitle')
+            : t('dialogs.folderPicker.copyTitle')
+        }
+        confirmLabel={
+          picker?.kind === 'move'
+            ? t('dialogs.folderPicker.moveConfirm')
+            : t('dialogs.folderPicker.copyConfirm')
+        }
         channel={channel}
         disallowedPaths={pickerDisallowedPaths}
         isBusy={isOperating}

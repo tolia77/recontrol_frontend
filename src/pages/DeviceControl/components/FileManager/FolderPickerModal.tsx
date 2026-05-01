@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type {
   FileEntry,
   FilesListResponse,
@@ -87,6 +88,7 @@ export function FolderPickerModal({
   onConfirm,
   onCancel,
 }: FolderPickerModalProps) {
+  const { t } = useTranslation('fileManager');
   const [roots, setRoots] = useState<FileEntry[] | null>(null);
   const [rootsError, setRootsError] = useState<string | null>(null);
   // Per-path expansion + child cache.
@@ -119,7 +121,7 @@ export function FolderPickerModal({
     if (!open) return;
     const request = channel.request;
     if (!request) {
-      setRootsError('Files channel disconnected');
+      setRootsError(t('panel.filesChannelDisconnected'));
       return;
     }
     let cancelled = false;
@@ -133,12 +135,12 @@ export function FolderPickerModal({
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        setRootsError(mapFilesErrorToMessage(err));
+        setRootsError(mapFilesErrorToMessage(err, t));
       });
     return () => {
       cancelled = true;
     };
-  }, [open, channel.request]);
+  }, [open, channel.request, t]);
 
   // Esc cancels only when not busy.
   useEffect(() => {
@@ -160,7 +162,7 @@ export function FolderPickerModal({
       const cur = nodesRef.current.get(path) ?? EMPTY_NODE;
       if (cur.loaded || cur.loading) return;
       nodesRef.current.set(path, { ...cur, loading: true, error: null });
-      setNodeTick((t) => t + 1);
+      setNodeTick((tick) => tick + 1);
       try {
         const res = await request<{ path: string }, FilesListResponse>(
           'files.list',
@@ -178,13 +180,13 @@ export function FolderPickerModal({
         nodesRef.current.set(path, {
           loaded: false,
           loading: false,
-          error: mapFilesErrorToMessage(err),
+          error: mapFilesErrorToMessage(err, t),
           children: [],
         });
       }
-      setNodeTick((t) => t + 1);
+      setNodeTick((tick) => tick + 1);
     },
-    [channel.request],
+    [channel.request, t],
   );
 
   const toggleExpanded = useCallback(
@@ -248,10 +250,12 @@ export function FolderPickerModal({
           {rootsError ? (
             <div className="p-3 text-sm text-error">{rootsError}</div>
           ) : roots === null ? (
-            <div className="p-3 text-sm text-darkgray">Loading…</div>
+            <div className="p-3 text-sm text-darkgray">
+              {t('dialogs.folderPicker.loading')}
+            </div>
           ) : roots.length === 0 ? (
             <div className="p-3 text-sm text-darkgray">
-              No shared folders.
+              {t('dialogs.folderPicker.noSharedFolders')}
             </div>
           ) : (
             <ul role="tree" className="text-sm">
@@ -281,7 +285,7 @@ export function FolderPickerModal({
             disabled={!!isBusy}
             className="px-4 py-2 border border-lightgray rounded-md text-text hover:bg-tertiary disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Cancel
+            {t('dialogs.cancel')}
           </button>
           <button
             type="button"
@@ -329,6 +333,7 @@ function TreeNode({
   nodes,
   nodeTick,
 }: TreeNodeProps) {
+  const { t } = useTranslation('fileManager');
   const isExpanded = expanded.has(entry.path);
   const isSelected = selectedPath === entry.path;
   const disallowed = isDisallowed(entry.path);
@@ -359,7 +364,11 @@ function TreeNode({
       >
         <button
           type="button"
-          aria-label={isExpanded ? 'Collapse' : 'Expand'}
+          aria-label={
+            isExpanded
+              ? t('dialogs.folderPicker.collapse')
+              : t('dialogs.folderPicker.expand')
+          }
           onClick={(e) => {
             e.stopPropagation();
             onToggle(entry.path);
@@ -396,7 +405,7 @@ function TreeNode({
           className="text-xs text-darkgray py-1"
           style={{ paddingLeft: `${(depth + 1) * 16 + 4}px` }}
         >
-          (no folders)
+          {t('dialogs.folderPicker.noFolders')}
         </div>
       )}
       {isExpanded && node.children.length > 0 && (

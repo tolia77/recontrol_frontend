@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { NameConflictMode } from '../../services/files';
 
 interface NameConflictDialogProps {
@@ -9,12 +10,6 @@ interface NameConflictDialogProps {
   onDecide: (mode: NameConflictMode, applyToAll: boolean) => void;
 }
 
-const OPERATION_LABEL: Record<NameConflictDialogProps['operation'], string> = {
-  upload: 'uploading',
-  move: 'moving',
-  copy: 'copying',
-};
-
 export function NameConflictDialog({
   open,
   operation,
@@ -22,6 +17,7 @@ export function NameConflictDialog({
   destinationPath,
   onDecide,
 }: NameConflictDialogProps) {
+  const { t } = useTranslation('fileManager');
   const skipRef = useRef<HTMLButtonElement>(null);
   const [applyToAll, setApplyToAll] = useState(false);
 
@@ -45,18 +41,23 @@ export function NameConflictDialog({
 
   if (!open) return null;
 
+  const operationLabel = t(`dialogs.nameConflict.${operation}`);
+
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
       <div
         className="bg-background border border-lightgray rounded-lg shadow-xl max-w-md w-[90%] p-6"
         role="dialog"
         aria-modal="true"
-        aria-label="Name conflict"
+        aria-label={t('dialogs.nameConflict.ariaLabel')}
       >
-        <h2 className="text-lg font-semibold mb-3 text-text">Name conflict</h2>
+        <h2 className="text-lg font-semibold mb-3 text-text">
+          {t('dialogs.nameConflict.title')}
+        </h2>
         <p className="text-sm text-text/80">
-          A file named <span className="font-medium">&quot;{fileName}&quot;</span>{' '}
-          already exists while {OPERATION_LABEL[operation]} to:
+          {t('dialogs.nameConflict.bodyPrefix')}{' '}
+          <span className="font-medium">&quot;{fileName}&quot;</span>{' '}
+          {t('dialogs.nameConflict.bodySuffix', { operationLabel })}
         </p>
         <p className="text-xs text-text/70 mt-1 break-all">{destinationPath}</p>
 
@@ -67,7 +68,7 @@ export function NameConflictDialog({
             onChange={(e) => setApplyToAll(e.target.checked)}
             className="accent-primary"
           />
-          Apply to all conflicts in this batch
+          {t('dialogs.nameConflict.applyToAll')}
         </label>
 
         <div className="mt-5 flex justify-end gap-2">
@@ -76,7 +77,7 @@ export function NameConflictDialog({
             onClick={() => onDecide('replace', applyToAll)}
             className="px-3 py-2 rounded-md bg-accent text-white hover:opacity-90"
           >
-            Replace
+            {t('dialogs.nameConflict.replace')}
           </button>
           <button
             ref={skipRef}
@@ -84,14 +85,14 @@ export function NameConflictDialog({
             onClick={() => onDecide('skip', applyToAll)}
             className="px-3 py-2 rounded-md border border-lightgray text-text hover:bg-tertiary"
           >
-            Skip
+            {t('dialogs.nameConflict.skip')}
           </button>
           <button
             type="button"
             onClick={() => onDecide('keepBoth', applyToAll)}
             className="px-3 py-2 rounded-md bg-primary text-white hover:opacity-90"
           >
-            Keep Both
+            {t('dialogs.nameConflict.keepBoth')}
           </button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { Fragment } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronRightIcon } from './icons';
 import { detectSeparator, joinPath, splitIntoSegments } from './utils/pathUtils';
 
@@ -22,13 +23,14 @@ export function FileManagerBreadcrumb({
   rootPath,
   onNavigate,
 }: FileManagerBreadcrumbProps) {
+  const { t } = useTranslation('fileManager');
   if (!currentPath) {
     return (
       <nav
-        aria-label="breadcrumb"
+        aria-label={t('breadcrumb.ariaLabel')}
         className="px-3 py-2 border-b border-lightgray text-sm text-darkgray bg-background flex-shrink-0 min-h-[36px]"
       >
-        Select a folder from the sidebar to start browsing.
+        {t('breadcrumb.selectFolderPrompt')}
       </nav>
     );
   }
@@ -39,7 +41,7 @@ export function FileManagerBreadcrumb({
 
   return (
     <nav
-      aria-label="breadcrumb"
+      aria-label={t('breadcrumb.ariaLabel')}
       className="flex items-center gap-1 px-3 py-2 border-b border-lightgray text-sm bg-background flex-shrink-0 min-h-[36px] overflow-x-auto"
     >
       {segments.map((seg, i) => {
