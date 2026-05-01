@@ -37,6 +37,7 @@ export interface FilesProtocolGenerated {
     filesUploadCompleteRequest?:   FilesUploadCompleteRequest;
     filesUploadCompleteResponse?:  FilesUploadCompleteResponse;
     invalidNameReason?:            InvalidNameReason;
+    nameConflictMode?:             NameConflictMode;
     request?:                      FilesRequestEnvelope;
     success?:                      FilesSuccessEnvelope;
 }
@@ -76,7 +77,11 @@ export interface FilesError {
  * add new codes rather than repurposing old ones. Human-readable messages are produced from
  * these codes by the frontend i18n layer in Phase 12. Phase-11 additions
  * (TRANSFER_NOT_FOUND, CANCELLED, STALLED, DISK_FULL) cover transfer-pipeline cancel races,
- * stall pushes, and disk-full reports.
+ * stall pushes, and disk-full reports. Phase-12 additions (PERMISSION_READ,
+ * PERMISSION_WRITE, SOURCE_GONE, DESTINATION_GONE, NAME_CONFLICT) split permission errors
+ * by direction and add explicit codes for missing source/destination and destination-name
+ * collisions so the frontend can render actionable dialogs without parsing free-text
+ * messages.
  */
 export type FilesErrorCode = "ALLOWLIST_VIOLATION" | "INVALID_NAME" | "NOT_FOUND" | "PERMISSION_DENIED" | "PERMISSION_READ" | "PERMISSION_WRITE" | "SOURCE_GONE" | "DESTINATION_GONE" | "NAME_CONFLICT" | "IO_ERROR" | "INTERNAL_ERROR" | "UNKNOWN_COMMAND" | "TIMEOUT" | "MALFORMED_RESPONSE" | "CHANNEL_NOT_OPEN" | "DISPOSED" | "TRANSFER_NOT_FOUND" | "CANCELLED" | "STALLED" | "DISK_FULL";
 
@@ -153,6 +158,13 @@ export interface FilesCopyRequest {
      */
     src: string;
 }
+
+/**
+ * Conflict behavior when destination name already exists.
+ *
+ * Name-conflict behavior for upload/move/copy commands.
+ */
+export type NameConflictMode = "fail" | "replace" | "skip" | "keepBoth";
 
 /**
  * Response payload for files.copy. Echoes the resolved src and dst.
@@ -408,11 +420,6 @@ export interface FilesTransferCancelRequest {
 export type Reason = "user" | "disconnect" | "stalled" | "desktop_error";
 
 /**
- * Name-conflict behavior for upload/move/copy commands.
- */
-export type NameConflictMode = "fail" | "replace" | "skip" | "keepBoth";
-
-/**
  * Response payload for files.transfer.cancel. No fields; an empty object indicates success.
  */
 export interface FilesTransferCancelResponse {
@@ -442,13 +449,13 @@ export interface FilesTransferErrorPayload {
  */
 export interface FilesUploadBeginRequest {
     /**
-     * Final base name of the uploaded file (no path separators). Must pass name validation.
-     */
-    name: string;
-    /**
      * Conflict behavior when destination name already exists.
      */
     mode: NameConflictMode;
+    /**
+     * Final base name of the uploaded file (no path separators). Must pass name validation.
+     */
+    name: string;
     /**
      * Absolute canonical path of the parent directory. Must resolve inside an allowlisted root.
      */
