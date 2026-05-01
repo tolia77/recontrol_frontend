@@ -1,6 +1,7 @@
 import type { FileEntry } from '../../services/files';
 import { LockIcon, FolderIcon } from './icons';
 import { isAncestor } from './utils/pathUtils';
+import { useTranslation } from 'react-i18next';
 
 interface FileManagerSidebarProps {
   roots: FileEntry[] | null;
@@ -23,11 +24,12 @@ export function FileManagerSidebar({
   currentPath,
   onSelectRoot,
 }: FileManagerSidebarProps) {
+  const { t } = useTranslation('fileManager');
   return (
     <aside className="w-60 border-r border-lightgray overflow-y-auto bg-background flex-shrink-0">
       <div className="px-3 py-2 border-b border-lightgray">
         <span className="text-xs text-darkgray uppercase font-bold tracking-wide">
-          Shared folders
+          {t('sidebar.sharedFolders')}
         </span>
       </div>
 
@@ -69,8 +71,8 @@ export function FileManagerSidebar({
                   <FolderIcon className="w-4 h-4 text-primary flex-shrink-0" />
                   <span className="truncate flex-1">{root.name}</span>
                   <span
-                    title="Shared by the desktop user"
-                    aria-label="Shared by the desktop user"
+                    title={t('sidebar.sharedByDesktopUser')}
+                    aria-label={t('sidebar.sharedByDesktopUser')}
                     className="flex-shrink-0"
                   >
                     <LockIcon className="w-3 h-3 text-darkgray flex-shrink-0" />

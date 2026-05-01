@@ -14,6 +14,7 @@ import {
   UploadIcon,
   XIcon,
 } from './icons';
+import { useTranslation } from 'react-i18next';
 
 interface TransferQueuePanelProps {
   queue: TransferQueue;
@@ -55,6 +56,7 @@ export function TransferQueuePanel({
   disconnectMessage,
   onDismissDisconnect,
 }: TransferQueuePanelProps) {
+  const { t } = useTranslation('fileManager');
   const snapshot = useTransferQueue(queue);
   const [collapsed, setCollapsed] = useState(true);
   const speedTrackersRef = useRef<Map<string, SpeedTracker>>(new Map());
@@ -114,10 +116,13 @@ export function TransferQueuePanel({
           ) : (
             <ChevronUpIcon className="w-3 h-3" />
           )}
-          <span className="font-medium">Transfers</span>
+          <span className="font-medium">{t('transfer.title')}</span>
           {snapshot.items.length > 0 && (
             <span className="text-xs text-darkgray">
-              ({inFlightCount} active / {snapshot.items.length} total)
+              {t('transfer.activeTotal', {
+                active: inFlightCount,
+                total: snapshot.items.length,
+              })}
             </span>
           )}
         </button>
@@ -125,8 +130,8 @@ export function TransferQueuePanel({
           <button
             type="button"
             onClick={() => queue.clearCompleted()}
-            title="Clear completed transfers"
-            aria-label="Clear completed transfers"
+            title={t('transfer.clearCompleted')}
+            aria-label={t('transfer.clearCompleted')}
             className="p-1 rounded hover:bg-background"
           >
             <TrashIcon className="w-3.5 h-3.5" />
@@ -145,8 +150,8 @@ export function TransferQueuePanel({
               <button
                 type="button"
                 onClick={onDismissDisconnect}
-                title="Dismiss"
-                aria-label="Dismiss disconnect banner"
+                title={t('transfer.dismiss')}
+                aria-label={t('transfer.dismiss')}
                 className="p-0.5 rounded hover:bg-background"
               >
                 <XIcon className="w-3.5 h-3.5" />
@@ -154,7 +159,9 @@ export function TransferQueuePanel({
             </div>
           )}
           {snapshot.items.length === 0 && (
-            <p className="text-xs text-darkgray px-2 py-1">No transfers yet.</p>
+            <p className="text-xs text-darkgray px-2 py-1">
+              {t('transfer.noTransfersYet')}
+            </p>
           )}
           {snapshot.items.map((item) => (
             <TransferRow
@@ -162,6 +169,7 @@ export function TransferQueuePanel({
               item={item}
               onCancel={() => queue.cancelById(item.id)}
               speedEstimate={speedById.get(item.id)}
+              t={t}
             />
           ))}
         </div>
@@ -174,9 +182,10 @@ interface TransferRowProps {
   item: TransferItem;
   onCancel: () => void;
   speedEstimate?: { bytesPerSecond: number | null; etaSeconds: number | null };
+  t: ReturnType<typeof useTranslation<'fileManager'>>['t'];
 }
 
-function TransferRow({ item, onCancel, speedEstimate }: TransferRowProps) {
+function TransferRow({ item, onCancel, speedEstimate, t }: TransferRowProps) {
   const pct =
     item.size > 0 ? Math.min(100, Math.floor((item.bytesSoFar / item.size) * 100)) : 0;
   const Icon = item.direction === 'upload' ? UploadIcon : DownloadIcon;
@@ -238,10 +247,10 @@ function TransferRow({ item, onCancel, speedEstimate }: TransferRowProps) {
           <span className="truncate" title={item.name}>
             {item.name}
           </span>
-          <span className="text-xs text-darkgray whitespace-nowrap">
-            {stateLabel(item.state)}
-          </span>
-        </div>
+            <span className="text-xs text-darkgray whitespace-nowrap">
+              {stateLabel(item.state, t)}
+            </span>
+          </div>
         {/* Plan 11-06: stalled rows surface Wait + Cancel inline (replacing
             the X-icon-only treatment). Wait hides the buttons via local
             state until the next state transition; Cancel uses the standard
@@ -251,18 +260,18 @@ function TransferRow({ item, onCancel, speedEstimate }: TransferRowProps) {
             <button
               type="button"
               onClick={() => setWaitDismissed(true)}
-              aria-label={`Keep waiting for ${item.name}`}
+              aria-label={t('transfer.keepWaitingFor', { name: item.name })}
               className="px-2 py-0.5 text-xs border border-lightgray rounded hover:bg-tertiary"
             >
-              Wait
+              {t('transfer.wait')}
             </button>
             <button
               type="button"
               onClick={onCancel}
-              aria-label={`Cancel ${item.name}`}
+              aria-label={t('transfer.cancelItem', { name: item.name })}
               className="px-2 py-0.5 text-xs border border-error text-error rounded hover:bg-error/10"
             >
-              Cancel
+              {t('transfer.cancel')}
             </button>
           </div>
         ) : (
@@ -270,8 +279,8 @@ function TransferRow({ item, onCancel, speedEstimate }: TransferRowProps) {
             <button
               type="button"
               onClick={onCancel}
-              title="Cancel transfer"
-              aria-label={`Cancel ${item.name}`}
+              title={t('transfer.cancelTransfer')}
+              aria-label={t('transfer.cancelItem', { name: item.name })}
               className="p-0.5 rounded hover:bg-tertiary"
             >
               <XIcon className="w-3.5 h-3.5" />
@@ -291,12 +300,12 @@ function TransferRow({ item, onCancel, speedEstimate }: TransferRowProps) {
         <p className="mt-1 text-xs text-darkgray tabular-nums">
           {(speedEstimate?.bytesPerSecond ?? null) !== null
             ? `${formatBytes(speedEstimate?.bytesPerSecond ?? 0)}/s`
-            : '--/s'}{' '}
-          · ETA{' '}
+            : t('transfer.speedUnknown')}{' '}
+          · {t('transfer.etaLabel')}{' '}
           {speedEstimate?.etaSeconds !== null &&
           speedEstimate?.etaSeconds !== undefined
             ? formatEta(speedEstimate.etaSeconds)
-            : '--'}
+            : t('transfer.etaUnknown')}
         </p>
       )}
       {item.error && (
@@ -320,24 +329,27 @@ function isTerminal(s: TransferState): boolean {
   );
 }
 
-function stateLabel(s: TransferState): string {
+function stateLabel(
+  s: TransferState,
+  t: ReturnType<typeof useTranslation<'fileManager'>>['t'],
+): string {
   switch (s) {
     case 'queued':
-      return 'Queued';
+      return t('transfer.states.queued');
     case 'active':
-      return 'Transferring';
+      return t('transfer.states.transferring');
     case 'stalled':
-      return 'Stalled';
+      return t('transfer.states.stalled');
     case 'cancelling':
-      return 'Cancelling…';
+      return t('transfer.states.cancelling');
     case 'completed':
-      return 'Completed';
+      return t('transfer.states.completed');
     case 'cancelled':
-      return 'Cancelled';
+      return t('transfer.states.cancelled');
     case 'disconnected':
-      return 'Disconnected';
+      return t('transfer.states.disconnected');
     case 'failed':
-      return 'Failed';
+      return t('transfer.states.failed');
   }
 }
 

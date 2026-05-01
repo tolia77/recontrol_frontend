@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Modal shown when a user attempts to download a file > 100 MiB on a browser
@@ -28,6 +29,7 @@ export function DownloadBlockedDialog({
   sizeBytes,
   onClose,
 }: DownloadBlockedDialogProps) {
+  const { t } = useTranslation('fileManager');
   const okRef = useRef<HTMLButtonElement>(null);
 
   // Focus the OK button on open so Enter/Space dismisses without a click.
@@ -64,10 +66,12 @@ export function DownloadBlockedDialog({
         className="bg-background border border-lightgray rounded-lg shadow-xl max-w-md w-[90%] p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold mb-3 text-text">Download blocked</h2>
+        <h2 className="text-lg font-semibold mb-3 text-text">
+          {t('dialogs.downloadBlocked.title')}
+        </h2>
         <p className="text-sm text-text/80 mb-2 break-all">{fileName}</p>
         <p className="text-sm text-text/80 mb-4">
-          This file is too large to download in your browser ({sizeMb} MB). Use Chrome or Edge for files over 100 MB.
+          {t('dialogs.downloadBlocked.body', { sizeMb })}
         </p>
         <div className="flex justify-end">
           <button
@@ -76,7 +80,7 @@ export function DownloadBlockedDialog({
             onClick={onClose}
             className="px-4 py-2 bg-accent text-white rounded-md hover:opacity-90"
           >
-            OK
+            {t('dialogs.ok')}
           </button>
         </div>
       </div>

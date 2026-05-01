@@ -1,4 +1,5 @@
 import { FilesChannelError } from '../../../services/files';
+import type { TFunction } from 'i18next';
 
 /**
  * Map a {@link FilesChannelError} (or any unknown thrown value) to a single
@@ -24,9 +25,9 @@ import { FilesChannelError } from '../../../services/files';
  *
  * Anything not matching falls through to `err.message || 'Unknown error'`.
  */
-export function mapFilesErrorToMessage(err: unknown): string {
+export function mapFilesErrorToMessage(err: unknown, t: TFunction<'fileManager'>): string {
   if (!(err instanceof FilesChannelError)) {
-    return 'Unexpected error.';
+    return t('errors.unexpected');
   }
   const { code, data } = err.info;
 
@@ -34,61 +35,23 @@ export function mapFilesErrorToMessage(err: unknown): string {
     const reason = (data as { reason?: string } | undefined)?.reason;
     switch (reason) {
       case 'RESERVED':
-        return 'Name is a reserved Windows name (e.g. CON, PRN, NUL).';
+        return t('errors.invalidName.reserved');
       case 'ILLEGAL_CHAR':
-        return 'Name contains an illegal character.';
+        return t('errors.invalidName.illegalChar');
       case 'TOO_LONG':
-        return 'Name is too long.';
+        return t('errors.invalidName.tooLong');
       case 'EMPTY':
-        return 'Name cannot be empty.';
+        return t('errors.invalidName.empty');
       case 'DOT_ONLY':
-        return 'Name cannot be only dots.';
+        return t('errors.invalidName.dotOnly');
       case 'TRAILING_SPACE_OR_DOT':
-        return 'Name cannot end with a space or a dot.';
+        return t('errors.invalidName.trailingSpaceOrDot');
       default:
-        return 'That name is not allowed.';
+        return t('errors.invalidName.fallback');
     }
   }
 
-  switch (code) {
-    case 'PERMISSION_READ':
-      return 'Permission denied while reading the source item.';
-    case 'PERMISSION_WRITE':
-      return 'Permission denied while writing to the destination.';
-    case 'ALLOWLIST_VIOLATION':
-      return 'That location is outside the shared area.';
-    case 'SOURCE_GONE':
-      return 'Source item no longer exists. Refresh and try again.';
-    case 'DESTINATION_GONE':
-      return 'Destination location is no longer available.';
-    case 'NAME_CONFLICT':
-      return 'A file with that name already exists. Choose Replace, Skip, or Keep Both.';
-    case 'INTERNAL_ERROR':
-      return 'The remote computer returned an unexpected error.';
-    case 'DISK_FULL':
-      return 'Not enough free space on the destination drive.';
-    case 'STALLED':
-      return 'Transfer stalled. Wait a moment or cancel and retry.';
-    case 'CHANNEL_NOT_OPEN':
-    case 'DISPOSED':
-      return 'Files channel is disconnected. Reconnect the stream.';
-    case 'PERMISSION_DENIED':
-      return 'Permission denied on the remote computer.';
-    case 'NOT_FOUND':
-      return 'Item not found. It may have been moved or deleted.';
-    case 'IO_ERROR':
-      return 'I/O error on the remote computer. Retry the operation.';
-    case 'TRANSFER_NOT_FOUND':
-      return 'Transfer no longer active.';
-    case 'CANCELLED':
-      return 'Transfer cancelled.';
-    case 'UNKNOWN_COMMAND':
-      return 'This version of ReControl Desktop does not support that command.';
-    case 'TIMEOUT':
-      return 'The remote computer did not respond in time.';
-    case 'MALFORMED_RESPONSE':
-      return 'The remote response was malformed.';
-    default:
-      return 'Unknown file operation error. Try again.';
-  }
+  const key = `errors.codes.${code}` as const;
+  const translated = t(key);
+  return translated === key ? t('errors.unknownOperation') : translated;
 }
