@@ -4,6 +4,48 @@ const fileManager = {
     sharedByDesktopUser: 'Shared by the desktop user',
     couldNotLoadSharedFolders: 'Could not load shared folders',
   },
+  toolbar: {
+    refresh: 'Refresh (F5)',
+    newFolder: 'New folder',
+    uploadFiles: 'Upload files',
+    rename: 'Rename (F2)',
+    delete: 'Delete (Del)',
+    moveTo: 'Move to…',
+    copyTo: 'Copy to…',
+    showHiddenFiles: 'Show hidden files',
+  },
+  breadcrumb: {
+    selectFolderPrompt: 'Select a folder from the sidebar to start browsing.',
+    ariaLabel: 'breadcrumb',
+  },
+  listing: {
+    columnName: 'Name',
+    columnSize: 'Size',
+    columnModified: 'Modified',
+    columnType: 'Type',
+    selectFolderPrompt: 'Select a folder from the sidebar to start browsing.',
+    loading: 'Loading...',
+    emptyFolder: 'This folder is empty.',
+    defaultNewFolderName: 'New folder',
+  },
+  statusBar: {
+    itemsSelected_one: '{{count}} item selected — {{size}}',
+    itemsSelected_other: '{{count}} items selected — {{size}}',
+    items_one: '{{count}} item',
+    items_other: '{{count}} items',
+  },
+  emptyAllowlist: {
+    title: 'No shared folders',
+    description:
+      'No folders are currently shared from the remote desktop. Ask the desktop user to add folders in ReControl Desktop Settings.',
+    cta: 'Open ReControl Desktop Settings',
+    ctaTooltip: 'This must be done on the remote computer.',
+  },
+  dropZone: {
+    drop: 'Drop files to upload',
+  },
+  channelDisconnected: 'Files channel disconnected -- reconnect the stream.',
+  filesChannelDisconnectedShort: 'Files channel disconnected',
   dialogs: {
     cancel: 'Cancel',
     ok: 'OK',
@@ -40,8 +82,8 @@ const fileManager = {
     nameConflict: {
       ariaLabel: 'Name conflict',
       title: 'Name conflict',
-      body:
-        'A file named "{{fileName}}" already exists while {{operationLabel}} to:',
+      bodyPrefix: 'A file named',
+      bodySuffix: 'already exists while {{operationLabel}} to:',
       upload: 'uploading',
       move: 'moving',
       copy: 'copying',
@@ -56,6 +98,7 @@ const fileManager = {
     disconnectedReconnect: 'Files channel disconnected — reconnect the stream.',
     disconnectedDuringTransfer:
       'Disconnected during transfer. Reconnect and try again.',
+    disconnectedDuringTransferShort: 'Disconnected during transfer.',
     navigateToFolderFirst: 'Navigate to a folder first.',
     uploadBatchInProgress: 'Another upload batch is already in progress.',
     folderUploadUnsupported: "Folder upload isn't supported yet.",

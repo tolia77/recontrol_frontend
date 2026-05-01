@@ -4,6 +4,55 @@ const fileManager = {
     sharedByDesktopUser: 'Надано спільний доступ користувачем десктопу',
     couldNotLoadSharedFolders: 'Не вдалося завантажити спільні папки',
   },
+  toolbar: {
+    refresh: 'Оновити (F5)',
+    newFolder: 'Нова папка',
+    uploadFiles: 'Завантажити файли',
+    rename: 'Перейменувати (F2)',
+    delete: 'Видалити (Del)',
+    moveTo: 'Перемістити в…',
+    copyTo: 'Копіювати в…',
+    showHiddenFiles: 'Показати приховані файли',
+  },
+  breadcrumb: {
+    selectFolderPrompt:
+      'Оберіть папку з бічної панелі, щоб почати перегляд.',
+    ariaLabel: 'хлібні крихти',
+  },
+  listing: {
+    columnName: 'Назва',
+    columnSize: 'Розмір',
+    columnModified: 'Змінено',
+    columnType: 'Тип',
+    selectFolderPrompt:
+      'Оберіть папку з бічної панелі, щоб почати перегляд.',
+    loading: 'Завантаження...',
+    emptyFolder: 'Ця папка порожня.',
+    defaultNewFolderName: 'Нова папка',
+  },
+  statusBar: {
+    itemsSelected_one: '{{count}} елемент обрано — {{size}}',
+    itemsSelected_few: '{{count}} елементи обрано — {{size}}',
+    itemsSelected_many: '{{count}} елементів обрано — {{size}}',
+    itemsSelected_other: '{{count}} елементів обрано — {{size}}',
+    items_one: '{{count}} елемент',
+    items_few: '{{count}} елементи',
+    items_many: '{{count}} елементів',
+    items_other: '{{count}} елементів',
+  },
+  emptyAllowlist: {
+    title: 'Немає спільних папок',
+    description:
+      'Зараз з віддаленого компʼютера не надано доступ до жодної папки. Попросіть користувача десктопу додати папки в Налаштуваннях ReControl Desktop.',
+    cta: 'Відкрити Налаштування ReControl Desktop',
+    ctaTooltip: 'Це потрібно зробити на віддаленому компʼютері.',
+  },
+  dropZone: {
+    drop: 'Перетягніть файли для завантаження',
+  },
+  channelDisconnected:
+    'Канал файлів відключено — перепідключіть трансляцію.',
+  filesChannelDisconnectedShort: 'Канал файлів відключено',
   dialogs: {
     cancel: 'Скасувати',
     ok: 'OK',
@@ -40,8 +89,8 @@ const fileManager = {
     nameConflict: {
       ariaLabel: 'Конфлікт імен',
       title: 'Конфлікт імен',
-      body:
-        'Файл з назвою "{{fileName}}" вже існує під час {{operationLabel}} до:',
+      bodyPrefix: 'Файл з назвою',
+      bodySuffix: 'вже існує під час {{operationLabel}} до:',
       upload: 'завантаження',
       move: 'переміщення',
       copy: 'копіювання',
@@ -57,6 +106,7 @@ const fileManager = {
       'Канал файлів відключено — перепідключіть трансляцію.',
     disconnectedDuringTransfer:
       'Під час передачі зʼєднання розірвано. Перепідключіться та спробуйте знову.',
+    disconnectedDuringTransferShort: 'Під час передачі зʼєднання розірвано.',
     navigateToFolderFirst: 'Спершу відкрийте папку.',
     uploadBatchInProgress: 'Інша партія завантаження вже виконується.',
     folderUploadUnsupported: 'Завантаження папок поки що не підтримується.',
