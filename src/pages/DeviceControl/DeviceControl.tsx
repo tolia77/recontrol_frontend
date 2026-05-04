@@ -400,7 +400,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         sendMessagePayload({ command, payload });
     }, []);
 
-    const { videoRef, pcRef, startWebRtc, stopWebRtc, retryWebRtc, handleSignalingMessage, connectionState, hasReceivedFrame, desktopStats, filesClientRef, filesDataRef, filesDataChannelRef } = useWebRtc({ sendMessage: sendWebRtcSignal });
+    const { videoRef, setVideoNode, pcRef, startWebRtc, stopWebRtc, retryWebRtc, handleSignalingMessage, connectionState, hasReceivedFrame, desktopStats, filesClientRef, filesDataRef, filesDataChannelRef } = useWebRtc({ sendMessage: sendWebRtcSignal });
     const streamStats = useStreamStats(pcRef, showStats && connectionState === 'connected', desktopStats);
 
     // File manager panel (Phase 10) -- Plan 11-04 threads filesDataRef so the
@@ -604,6 +604,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                     killProcess={killProcess}
                     permissions={permissions || undefined}
                     videoRef={videoRef}
+                    setVideoNode={setVideoNode}
                     connectionState={connectionState}
                     hasReceivedFrame={hasReceivedFrame}
                     retryWebRtc={retryWebRtc}

@@ -80,6 +80,7 @@ export interface MainContentProps {
     killProcess?: (pid: number) => void;
     permissions?: PermissionsSubset;
     videoRef?: React.RefObject<HTMLVideoElement | null>;
+    setVideoNode?: (node: HTMLVideoElement | null) => void;
     connectionState: WebRtcConnectionState;
     hasReceivedFrame: boolean;
     retryWebRtc: () => void;

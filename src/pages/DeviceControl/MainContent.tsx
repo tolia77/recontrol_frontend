@@ -23,6 +23,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                                                                                                        killProcess,
                                                                                                        permissions,
                                                                                                        videoRef,
+                                                                                                       setVideoNode,
                                                                                                        connectionState,
                                                                                                        hasReceivedFrame,
                                                                                                        retryWebRtc,
@@ -212,7 +213,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
             }}
         >
             <video
-                ref={videoRef}
+                ref={setVideoNode ?? videoRef}
                 autoPlay
                 playsInline
                 muted

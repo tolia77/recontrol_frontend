@@ -9,6 +9,7 @@ interface UseWebRtcOptions {
 
 export interface UseWebRtcReturn {
   videoRef: React.RefObject<HTMLVideoElement | null>;
+  setVideoNode: (node: HTMLVideoElement | null) => void;
   pcRef: React.RefObject<RTCPeerConnection | null>;
   startWebRtc: () => void;
   stopWebRtc: () => void;
@@ -62,6 +63,16 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
   const attachStream = useCallback(() => {
     if (videoRef.current && streamRef.current) {
       videoRef.current.srcObject = streamRef.current;
+    }
+  }, []);
+
+  // Callback ref: parent layout swaps (e.g. opening the file manager panel)
+  // remount the <video> element. Re-attach srcObject every time the node
+  // changes so the live MediaStream binds to the new DOM node.
+  const setVideoNode = useCallback((node: HTMLVideoElement | null) => {
+    videoRef.current = node;
+    if (node && streamRef.current) {
+      node.srcObject = streamRef.current;
     }
   }, []);
 
@@ -349,6 +360,7 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
 
   return {
     videoRef,
+    setVideoNode,
     pcRef,
     startWebRtc,
     stopWebRtc,
