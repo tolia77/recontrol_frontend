@@ -75,6 +75,7 @@ const fileManager = {
       noFolders: '(немає папок)',
       collapse: 'Згорнути',
       expand: 'Розгорнути',
+      currentLabel: 'поточне розташування',
     },
     largeFileWarning: {
       title: 'Великий файл: {{direction}}',

@@ -15,13 +15,24 @@ interface FolderPickerModalProps {
   confirmLabel: string;
   channel: UseFilesChannel;
   /**
-   * Paths that cannot be selected as the destination. Always includes the
-   * current parent folder (no-op move) and -- for Move -- the source paths
-   * themselves (move-into-self for folders). Deeper move-into-self
-   * (descendant-of-source) is caught at the wire level by the desktop's
-   * ALLOWLIST_VIOLATION / IO_ERROR responses.
+   * Paths that cannot be selected as the destination. For Move this includes
+   * the current parent (no-op) plus the source paths themselves (move-into-
+   * self for folders). For Copy this is just the source paths -- copy into
+   * the current parent IS allowed; the desktop's NAME_CONFLICT response and
+   * the panel's conflict dialog handle rename ("Keep Both"). Deeper move-
+   * into-self (descendant-of-source) is caught at the wire level via
+   * ALLOWLIST_VIOLATION / IO_ERROR.
    */
   disallowedPaths?: string[];
+  /**
+   * The folder the user is currently viewing in the panel. Rendered with a
+   * distinct "current location" badge so the user can orient themselves --
+   * separate from {@link disallowedPaths} so we don't conflate "you are
+   * here" with "this destination is forbidden". For Copy, this row is also
+   * selectable; for Move, the parent caller adds it to disallowedPaths
+   * since moving to where you already are is a no-op.
+   */
+  currentPath?: string | null;
   /**
    * In-flight gate. When true, the panel is iterating files.move /
    * files.copy sequentially over the source paths. Confirm + Cancel both
@@ -84,6 +95,7 @@ export function FolderPickerModal({
   confirmLabel,
   channel,
   disallowedPaths,
+  currentPath,
   isBusy,
   onConfirm,
   onCancel,
@@ -269,6 +281,7 @@ export function FolderPickerModal({
                   selectedPath={selectedPath}
                   onSelect={handleRowClick}
                   isDisallowed={isDisallowed}
+                  currentPath={currentPath ?? null}
                   nodes={nodesRef.current}
                   // nodeTick wired in to force re-render when child cache mutates
                   nodeTick={nodeTick}
@@ -317,6 +330,7 @@ interface TreeNodeProps {
   selectedPath: string | null;
   onSelect: (path: string) => void;
   isDisallowed: (path: string) => boolean;
+  currentPath: string | null;
   nodes: Map<string, NodeState>;
   /** Bumped when nodes Map mutates so React re-renders the subtree. */
   nodeTick: number;
@@ -330,6 +344,7 @@ function TreeNode({
   selectedPath,
   onSelect,
   isDisallowed,
+  currentPath,
   nodes,
   nodeTick,
 }: TreeNodeProps) {
@@ -337,19 +352,29 @@ function TreeNode({
   const isExpanded = expanded.has(entry.path);
   const isSelected = selectedPath === entry.path;
   const disallowed = isDisallowed(entry.path);
+  const isCurrent = currentPath !== null && entry.path === currentPath;
   const node = nodes.get(entry.path) ?? EMPTY_NODE;
   // Reference nodeTick so eslint doesn't flag it; the ref-stored Map already
   // gives us the latest data, but React needs the prop in our deps to
   // schedule a re-render.
   void nodeTick;
 
+  // "Current location" gets its own visual language so users don't read it
+  // as disabled. When it's selectable (Copy), it stays at full opacity with
+  // a hover affordance. When it's also disallowed (Move), we drop the
+  // forbidden cursor but keep full text colour -- the badge carries the
+  // semantics, not the greyed-out look.
   const rowCls = [
     'flex items-center gap-1 py-1 pl-1 pr-2 rounded transition-colors',
     isSelected
       ? 'bg-accent/20 border-l-4 border-accent'
-      : 'border-l-4 border-transparent',
+      : isCurrent
+        ? 'bg-primary/5 border-l-4 border-primary/40'
+        : 'border-l-4 border-transparent',
     disallowed
-      ? 'opacity-50 cursor-not-allowed'
+      ? isCurrent
+        ? 'cursor-default'
+        : 'opacity-50 cursor-not-allowed'
       : 'hover:bg-tertiary cursor-pointer',
   ]
     .filter(Boolean)
@@ -385,6 +410,14 @@ function TreeNode({
         <span className="truncate text-text" title={entry.path}>
           {entry.name}
         </span>
+        {isCurrent && (
+          <span
+            className="ml-1 shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wide bg-primary/15 text-primary border border-primary/30"
+            aria-label={t('dialogs.folderPicker.currentLabel')}
+          >
+            {t('dialogs.folderPicker.currentLabel')}
+          </span>
+        )}
         {node.loading && (
           <span
             className="ml-1 inline-block w-3 h-3 border-2 border-darkgray border-t-transparent rounded-full animate-spin"
@@ -420,6 +453,7 @@ function TreeNode({
               selectedPath={selectedPath}
               onSelect={onSelect}
               isDisallowed={isDisallowed}
+              currentPath={currentPath}
               nodes={nodes}
               nodeTick={nodeTick}
             />

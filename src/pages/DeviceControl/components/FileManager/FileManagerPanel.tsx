@@ -679,15 +679,19 @@ export function FileManagerPanel({
   );
 
   // Disallowed destinations for the picker:
-  //   - The current parent folder (no-op move/copy into the same place).
-  //   - For Move: the source paths themselves (move-into-self for folders).
+  //   - For Move: current parent (no-op) + source paths (move-into-self).
+  //   - For Copy: source paths only. Copy into current parent IS allowed --
+  //     the desktop replies NAME_CONFLICT and the rename ("Keep Both") flow
+  //     handles it, letting the user duplicate-in-place.
   // Deeper move-into-self (a descendant of any source folder) is caught at
   // the wire level by the desktop's ALLOWLIST_VIOLATION / IO_ERROR
   // responses; a complete in-UI ancestor check is Phase 12 hardening.
   const pickerDisallowedPaths = useMemo<string[]>(() => {
     const out = new Set<string>();
-    if (state.currentPath) out.add(state.currentPath);
     if (picker?.kind === 'move') {
+      if (state.currentPath) out.add(state.currentPath);
+      for (const p of selection.state.selected) out.add(p);
+    } else if (picker?.kind === 'copy') {
       for (const p of selection.state.selected) out.add(p);
     }
     return Array.from(out);
@@ -1271,6 +1275,7 @@ export function FileManagerPanel({
         }
         channel={channel}
         disallowedPaths={pickerDisallowedPaths}
+        currentPath={state.currentPath}
         isBusy={isOperating}
         onConfirm={(destinationPath) => {
           if (picker) {

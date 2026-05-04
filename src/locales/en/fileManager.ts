@@ -68,6 +68,7 @@ const fileManager = {
       noFolders: '(no folders)',
       collapse: 'Collapse',
       expand: 'Expand',
+      currentLabel: 'current location',
     },
     largeFileWarning: {
       title: 'Large file {{direction}}',
