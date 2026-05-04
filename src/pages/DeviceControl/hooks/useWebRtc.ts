@@ -27,6 +27,7 @@ export interface UseWebRtcReturn {
    * registerDownload / unregisterDownload on the chunk router.
    */
   filesDataChannelRef: React.RefObject<FilesDataChannel | null>;
+  filesCtlOpen: boolean;
 }
 
 const ICE_SERVERS: RTCIceServer[] = [
@@ -51,6 +52,11 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
   const [connectionState, setConnectionState] = useState<WebRtcConnectionState>('idle');
   const [hasReceivedFrame, setHasReceivedFrame] = useState(false);
   const [desktopStats, setDesktopStats] = useState<{ framesSkipped: number; encoder?: string } | null>(null);
+  // Mirrors the files-ctl RTCDataChannel readyState as React state so consumers
+  // (useFilesChannel) can react to it without polling. The 'open' event for
+  // file-ctl can fire ~100ms AFTER pc.connectionState transitions to
+  // 'connected', so a one-shot setTimeout(0) check would race and miss it.
+  const [filesCtlOpen, setFilesCtlOpen] = useState(false);
 
   // Reconnect tracking refs
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -94,6 +100,7 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     filesDataChannelRef.current = null;
     filesCtlRef.current = null;
     filesDataRef.current = null;
+    setFilesCtlOpen(false);
     delete (window as unknown as { __filesCtl?: FilesChannelClient }).__filesCtl;
 
     const pc = pcRef.current;
@@ -202,11 +209,13 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
         // Expose on window so Plan 09-05's browser-console demo can call
         // window.__filesCtl.request('files.list', { path: '...' }).
         (window as unknown as { __filesCtl?: FilesChannelClient }).__filesCtl = filesClientRef.current;
+        setFilesCtlOpen(true);
       });
       filesCtl.addEventListener('close', () => {
         console.log('[files-ctl] closed');
         filesClientRef.current?.dispose();
         filesClientRef.current = null;
+        setFilesCtlOpen(false);
         delete (window as unknown as { __filesCtl?: FilesChannelClient }).__filesCtl;
       });
 
@@ -373,5 +382,6 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     filesDataRef,
     filesClientRef,
     filesDataChannelRef,
+    filesCtlOpen,
   };
 }

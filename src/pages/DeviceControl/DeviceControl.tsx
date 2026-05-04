@@ -400,14 +400,14 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         sendMessagePayload({ command, payload });
     }, []);
 
-    const { videoRef, setVideoNode, pcRef, startWebRtc, stopWebRtc, retryWebRtc, handleSignalingMessage, connectionState, hasReceivedFrame, desktopStats, filesClientRef, filesDataRef, filesDataChannelRef } = useWebRtc({ sendMessage: sendWebRtcSignal });
+    const { videoRef, setVideoNode, pcRef, startWebRtc, stopWebRtc, retryWebRtc, handleSignalingMessage, connectionState, hasReceivedFrame, desktopStats, filesClientRef, filesDataRef, filesDataChannelRef, filesCtlOpen } = useWebRtc({ sendMessage: sendWebRtcSignal });
     const streamStats = useStreamStats(pcRef, showStats && connectionState === 'connected', desktopStats);
 
     // File manager panel (Phase 10) -- Plan 11-04 threads filesDataRef so the
     // upload runner has a live ref to the binary channel; Plan 11-05 also
     // threads filesDataChannelRef so the download runner can reach the chunk
     // router wrapper (registerDownload / unregisterDownload).
-    const filesChannel = useFilesChannel(filesClientRef, connectionState, filesDataRef, filesDataChannelRef);
+    const filesChannel = useFilesChannel(filesClientRef, connectionState, filesDataRef, filesDataChannelRef, filesCtlOpen);
     const {
         state: fmState,
         setPanelOpen: fmSetPanelOpen,

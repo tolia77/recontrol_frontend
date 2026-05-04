@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import type { FilesChannelClient, FilesDataChannel } from '../services/files';
 import { FilesChannelError } from '../services/files';
 import type { UseWebRtcReturn } from './useWebRtc';
@@ -59,21 +59,19 @@ export function useFilesChannel(
   connectionState: UseWebRtcReturn['connectionState'],
   filesDataRef: UseWebRtcReturn['filesDataRef'],
   filesDataChannelRef: UseWebRtcReturn['filesDataChannelRef'],
+  filesCtlOpen: UseWebRtcReturn['filesCtlOpen'],
 ): UseFilesChannel {
-  const [status, setStatus] = useState<FilesChannelStatus>('closed');
-
-  useEffect(() => {
-    if (connectionState !== 'connected') {
-      setStatus('closed');
-      return;
-    }
-    setStatus('opening');
-    // files-ctl 'open' fires a tick after pc.connectionState; poll once.
-    const id = setTimeout(() => {
-      setStatus(filesClientRef.current ? 'open' : 'failed');
-    }, 0);
-    return () => clearTimeout(id);
-  }, [connectionState, filesClientRef]);
+  // Derive status directly from the live signals: WebRTC connection state and
+  // the files-ctl data channel's open state. The data channel's 'open' event
+  // can fire ~100ms after pc.connectionState transitions to 'connected', so we
+  // can't decide 'open' vs 'failed' from a one-shot timeout - we just stay in
+  // 'opening' until filesCtlOpen flips true.
+  const status: FilesChannelStatus =
+    connectionState !== 'connected'
+      ? 'closed'
+      : filesCtlOpen
+      ? 'open'
+      : 'opening';
 
   const request = useCallback<FilesChannelRequest>(
     <TPayload, TResult>(
