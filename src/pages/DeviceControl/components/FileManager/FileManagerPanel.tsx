@@ -135,7 +135,18 @@ export function FileManagerPanel({
   // user invoked Delete (so the dialog body stays stable even if entries
   // change underneath us mid-confirmation).
   const [confirm, setConfirm] = useState<
-    | { kind: 'delete'; paths: string[]; names: string[] }
+    | {
+        kind: 'delete';
+        paths: string[];
+        names: string[];
+        // Local pending value for the "Don't ask again" checkbox. Only
+        // flushed to suppressSingleDeleteConfirm when the user actually
+        // confirms the delete -- otherwise cancelling the dialog must NOT
+        // persist the flag. (Prior bug: the checkbox wrote straight to
+        // suppressSingleDeleteConfirm, so closing the modal without
+        // deleting still suppressed every future single-file delete.)
+        suppressOnConfirm: boolean;
+      }
     | null
   >(null);
   // ----- Plan 10-05: move / copy flow state -----
@@ -622,7 +633,12 @@ export function FileManagerPanel({
       // Skip the dialog for session-suppressed single-file deletes.
       await performDelete(paths);
     } else {
-      setConfirm({ kind: 'delete', paths, names });
+      setConfirm({
+        kind: 'delete',
+        paths,
+        names,
+        suppressOnConfirm: false,
+      });
     }
   }, [
     selection.state.selected,
@@ -1247,13 +1263,19 @@ export function FileManagerPanel({
           !suppressSingleDeleteConfirm
             ? {
                 label: t('dialogs.delete.suppressSingleDeleteConfirm'),
-                checked: suppressSingleDeleteConfirm,
-                onChange: setSuppressSingleDeleteConfirm,
+                checked: confirm.suppressOnConfirm,
+                onChange: (next) =>
+                  setConfirm((prev) =>
+                    prev ? { ...prev, suppressOnConfirm: next } : prev,
+                  ),
               }
             : undefined
         }
         onConfirm={async () => {
           if (confirm) {
+            if (confirm.paths.length === 1 && confirm.suppressOnConfirm) {
+              setSuppressSingleDeleteConfirm(true);
+            }
             await performDelete(confirm.paths);
           }
         }}
