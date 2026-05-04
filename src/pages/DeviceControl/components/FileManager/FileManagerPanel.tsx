@@ -1002,6 +1002,32 @@ export function FileManagerPanel({
     });
   }, [queue]);
 
+  // Refresh the listing when an upload to the current folder finishes. The
+  // upload runner enqueues bytes through the data channel and only flips the
+  // queue item to 'completed' after the desktop confirms; without this, the
+  // newly-uploaded file shows up only after a manual refresh / navigation.
+  // Track which item ids we've already reacted to so the snapshot subscription
+  // doesn't refire forever while the entry sits in completed-history.
+  const seenCompletedUploadsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    return queue.subscribe((snap) => {
+      const seen = seenCompletedUploadsRef.current;
+      let shouldRefresh = false;
+      for (const item of snap.items) {
+        if (item.direction !== 'upload') continue;
+        if (item.state !== 'completed') continue;
+        if (seen.has(item.id)) continue;
+        seen.add(item.id);
+        if (item.parentPath === state.currentPath) {
+          shouldRefresh = true;
+        }
+      }
+      if (shouldRefresh) {
+        setRefreshKey((k) => k + 1);
+      }
+    });
+  }, [queue, state.currentPath]);
+
   // ----- Plan 11-06: 1 s stall interval (download + upload recovery) -----
   // Downloads: read activeDownloadRef.current.lastChunkAtMs against
   // Date.now(); flip to 'stalled' past 10 s, back to 'active' when bytes
