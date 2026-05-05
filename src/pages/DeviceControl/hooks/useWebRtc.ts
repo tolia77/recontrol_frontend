@@ -1,5 +1,6 @@
 import { useRef, useCallback, useState, useEffect } from 'react';
 import { FilesChannelClient, FilesDataChannel } from '../services/files';
+import { ClipboardLoopGate, createClipboardChannelHandle, type ClipboardChannelHandle } from '../services/clipboard';
 
 export type WebRtcConnectionState = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'failed';
 
@@ -48,6 +49,11 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
   const filesDataRef = useRef<RTCDataChannel | null>(null);
   const filesClientRef = useRef<FilesChannelClient | null>(null);
   const filesDataChannelRef = useRef<FilesDataChannel | null>(null);
+  const clipboardRef = useRef<RTCDataChannel | null>(null);
+  const clipboardHandleRef = useRef<ClipboardChannelHandle | null>(null);
+  const clipboardLoopGateRef = useRef<ClipboardLoopGate>(new ClipboardLoopGate());
+  const clipboardOriginIdRef = useRef<string | null>(null);
+  const lastRemoteApplyTimeRef = useRef<number>(0);
 
   const [connectionState, setConnectionState] = useState<WebRtcConnectionState>('idle');
   const [hasReceivedFrame, setHasReceivedFrame] = useState(false);
@@ -98,6 +104,12 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     filesClientRef.current = null;
     filesDataChannelRef.current?.dispose();
     filesDataChannelRef.current = null;
+    clipboardHandleRef.current?.dispose();
+    clipboardHandleRef.current = null;
+    clipboardRef.current = null;
+    clipboardOriginIdRef.current = null;
+    lastRemoteApplyTimeRef.current = 0;
+    clipboardLoopGateRef.current.reset();
     filesCtlRef.current = null;
     filesDataRef.current = null;
     setFilesCtlOpen(false);
@@ -230,6 +242,28 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
         console.log('[files-data] closed');
         filesDataChannelRef.current?.dispose();
         filesDataChannelRef.current = null;
+      });
+
+      const clipboard = pc.createDataChannel('clipboard', { ordered: true });
+      clipboardRef.current = clipboard;
+      clipboard.addEventListener('open', () => {
+        const originId = crypto.randomUUID();
+        clipboardOriginIdRef.current = originId;
+        clipboardLoopGateRef.current.reset();
+        lastRemoteApplyTimeRef.current = 0;
+        console.log(`clipboard channel open — originId=${originId}`);
+        clipboardHandleRef.current?.dispose();
+        clipboardHandleRef.current = createClipboardChannelHandle(
+          clipboard,
+          clipboardLoopGateRef.current,
+          console,
+        );
+      });
+      clipboard.addEventListener('close', () => {
+        clipboardHandleRef.current?.dispose();
+        clipboardHandleRef.current = null;
+        clipboardRef.current = null;
+        console.log('[clipboard] closed');
       });
     } catch (err) {
       // Defensive: should never happen in a fresh RTCPeerConnection, but if it
