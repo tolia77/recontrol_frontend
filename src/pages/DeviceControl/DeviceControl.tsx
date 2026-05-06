@@ -12,6 +12,7 @@ import type { DeviceShare } from 'src/types/global';
 import { useWebRtc } from './hooks/useWebRtc';
 import { useStreamStats } from './hooks/useStreamStats';
 import { useFilesChannel } from './hooks/useFilesChannel';
+import { useClipboardSync } from './hooks/useClipboardSync';
 import { useFileManagerState } from './hooks/useFileManagerState';
 import { useTransferQueue } from './hooks/useTransferQueue';
 import { FileManagerPanel } from './components/FileManager/FileManagerPanel';
@@ -400,7 +401,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         sendMessagePayload({ command, payload });
     }, []);
 
-    const { videoRef, setVideoNode, pcRef, startWebRtc, stopWebRtc, retryWebRtc, handleSignalingMessage, connectionState, hasReceivedFrame, desktopStats, filesClientRef, filesDataRef, filesDataChannelRef, filesCtlOpen } = useWebRtc({ sendMessage: sendWebRtcSignal });
+    const { videoRef, setVideoNode, pcRef, startWebRtc, stopWebRtc, retryWebRtc, handleSignalingMessage, connectionState, hasReceivedFrame, desktopStats, filesClientRef, filesDataRef, filesDataChannelRef, filesCtlOpen, clipboardCtlRef, clipboardOriginIdRef, clipboardLoopGate, lastRemoteApplyTimeRef } = useWebRtc({ sendMessage: sendWebRtcSignal });
     const streamStats = useStreamStats(pcRef, showStats && connectionState === 'connected', desktopStats);
 
     // File manager panel (Phase 10) -- Plan 11-04 threads filesDataRef so the
@@ -408,6 +409,22 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
     // threads filesDataChannelRef so the download runner can reach the chunk
     // router wrapper (registerDownload / unregisterDownload).
     const filesChannel = useFilesChannel(filesClientRef, connectionState, filesDataRef, filesDataChannelRef, filesCtlOpen);
+
+    // Phase 14: clipboard sync hook. Lives at DeviceControl mount level so isPaused
+    // survives WebRTC reconnects within this session (POLICY-05). Phase 16 will mount
+    // the pill UI and wire togglePause to it; Phase 14 leaves the return value unused
+    // by the JSX (the hook still binds focus/visibility listeners + inbound subscription).
+    const clipboardSync = useClipboardSync({
+        pcRef,
+        connectionState,
+        clipboardCtlRef,
+        clipboardOriginIdRef,
+        loopGate: clipboardLoopGate,
+        lastRemoteApplyTimeRef,
+    });
+    // Suppress unused-var lint by referencing the value in a no-op assertion. Phase 16 reads it.
+    void clipboardSync;
+
     const {
         state: fmState,
         setPanelOpen: fmSetPanelOpen,

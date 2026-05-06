@@ -1,6 +1,7 @@
 import { useRef, useCallback, useState, useEffect } from 'react';
 import { FilesChannelClient, FilesDataChannel } from '../services/files';
 import { ClipboardLoopGate, createClipboardChannelHandle, type ClipboardChannelHandle } from '../services/clipboard';
+import type React from 'react';
 
 export type WebRtcConnectionState = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'failed';
 
@@ -29,6 +30,10 @@ export interface UseWebRtcReturn {
    */
   filesDataChannelRef: React.RefObject<FilesDataChannel | null>;
   filesCtlOpen: boolean;
+  clipboardCtlRef: React.RefObject<RTCDataChannel | null>;
+  clipboardOriginIdRef: React.RefObject<string | null>;
+  clipboardLoopGate: ClipboardLoopGate;
+  lastRemoteApplyTimeRef: React.MutableRefObject<number>;
 }
 
 const ICE_SERVERS: RTCIceServer[] = [
@@ -417,5 +422,9 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     filesClientRef,
     filesDataChannelRef,
     filesCtlOpen,
+    clipboardCtlRef: clipboardRef,
+    clipboardOriginIdRef,
+    clipboardLoopGate: clipboardLoopGateRef.current,
+    lastRemoteApplyTimeRef,
   };
 }
