@@ -4,6 +4,21 @@ export type * from './clipboardProtocol.generated';
 export { ClipboardLoopGate, RING_CAPACITY, TTL_MS } from './clipboardLoopGate';
 export { normalizeClipboard, NON_TEXT_THRESHOLD } from './clipboardNormalization';
 export { hashHex16 } from './clipboardHash';
+export { ClipboardChannelClient } from './ClipboardChannelClient';
+export {
+  detectCapability,
+  prepareOutbound,
+  decideInbound,
+  bindFocusVisibilityListeners,
+  FOCUS_DAMPEN_MS,
+  MAX_CONTENT_BYTES,
+} from './clipboardCore';
+export type {
+  OutboundDecision,
+  InboundDecision,
+  PrepareOutboundInput,
+  ListenerTargets,
+} from './clipboardCore';
 
 export interface ClipboardChannelHandle {
   dispose: () => void;
