@@ -2,6 +2,8 @@ import { ClipboardLoopGate } from './clipboardLoopGate';
 
 export type * from './clipboardProtocol.generated';
 export { ClipboardLoopGate, RING_CAPACITY, TTL_MS } from './clipboardLoopGate';
+export { normalizeClipboard, NON_TEXT_THRESHOLD } from './clipboardNormalization';
+export { hashHex16 } from './clipboardHash';
 
 export interface ClipboardChannelHandle {
   dispose: () => void;
