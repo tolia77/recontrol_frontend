@@ -51,7 +51,13 @@ export class ClipboardChannelClient {
 
   send(envelope: ClipboardSetEnvelope): void {
     if (this.disposed) return;
-    if (this.dc.readyState !== 'open') return; // Pitfall 2 carry-over: never send on closing channel
+    if (this.dc.readyState !== 'open') {
+      // WR-11: log instead of silently dropping. The loop gate has already
+      // recorded the hash via prepareOutbound, so a silent drop here would
+      // leave the local peer believing the remote received the change.
+      console.warn(`[clipboard] send dropped: channel readyState=${this.dc.readyState}`);
+      return;
+    }
     try {
       this.dc.send(JSON.stringify(envelope));
     } catch (err) {
