@@ -34,6 +34,13 @@ export interface UseWebRtcReturn {
   clipboardOriginIdRef: React.RefObject<string | null>;
   clipboardLoopGate: ClipboardLoopGate;
   lastRemoteApplyTimeRef: React.MutableRefObject<number>;
+  /**
+   * Mirrors the clipboard RTCDataChannel readyState as React state so consumers
+   * (useClipboardSync) can re-run effects when the channel actually opens. The
+   * 'open' event fires AFTER pc.connectionState transitions to 'connected', so
+   * a connectionState-only effect would miss the transition (CR-04).
+   */
+  clipboardCtlOpen: boolean;
 }
 
 const ICE_SERVERS: RTCIceServer[] = [
@@ -68,6 +75,10 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
   // file-ctl can fire ~100ms AFTER pc.connectionState transitions to
   // 'connected', so a one-shot setTimeout(0) check would race and miss it.
   const [filesCtlOpen, setFilesCtlOpen] = useState(false);
+  // CR-04: mirror clipboard data-channel 'open' state so useClipboardSync can
+  // re-run its inbound subscription effect when the channel opens (which fires
+  // AFTER pc.connectionState='connected').
+  const [clipboardCtlOpen, setClipboardCtlOpen] = useState(false);
 
   // Reconnect tracking refs
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -115,6 +126,7 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     clipboardOriginIdRef.current = null;
     lastRemoteApplyTimeRef.current = 0;
     clipboardLoopGateRef.current.reset();
+    setClipboardCtlOpen(false);
     filesCtlRef.current = null;
     filesDataRef.current = null;
     setFilesCtlOpen(false);
@@ -263,11 +275,19 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
           clipboardLoopGateRef.current,
           console,
         );
+        // CR-04: signal channel-open as React state so useClipboardSync can
+        // (re-)wire its inbound subscription. Fires after pc.connectionState='connected'.
+        setClipboardCtlOpen(true);
       });
       clipboard.addEventListener('close', () => {
         clipboardHandleRef.current?.dispose();
         clipboardHandleRef.current = null;
         clipboardRef.current = null;
+        // WR-01: clear originId on close so a stale value cannot pass the
+        // self-origin-drop check on a subsequent reconnect/race.
+        clipboardOriginIdRef.current = null;
+        clipboardLoopGateRef.current.reset();
+        setClipboardCtlOpen(false);
         console.log('[clipboard] closed');
       });
     } catch (err) {
@@ -426,5 +446,6 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     clipboardOriginIdRef,
     clipboardLoopGate: clipboardLoopGateRef.current,
     lastRemoteApplyTimeRef,
+    clipboardCtlOpen,
   };
 }

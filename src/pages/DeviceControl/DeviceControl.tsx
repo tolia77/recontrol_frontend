@@ -401,7 +401,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         sendMessagePayload({ command, payload });
     }, []);
 
-    const { videoRef, setVideoNode, pcRef, startWebRtc, stopWebRtc, retryWebRtc, handleSignalingMessage, connectionState, hasReceivedFrame, desktopStats, filesClientRef, filesDataRef, filesDataChannelRef, filesCtlOpen, clipboardCtlRef, clipboardOriginIdRef, clipboardLoopGate, lastRemoteApplyTimeRef } = useWebRtc({ sendMessage: sendWebRtcSignal });
+    const { videoRef, setVideoNode, pcRef, startWebRtc, stopWebRtc, retryWebRtc, handleSignalingMessage, connectionState, hasReceivedFrame, desktopStats, filesClientRef, filesDataRef, filesDataChannelRef, filesCtlOpen, clipboardCtlRef, clipboardOriginIdRef, clipboardLoopGate, lastRemoteApplyTimeRef, clipboardCtlOpen } = useWebRtc({ sendMessage: sendWebRtcSignal });
     const streamStats = useStreamStats(pcRef, showStats && connectionState === 'connected', desktopStats);
 
     // File manager panel (Phase 10) -- Plan 11-04 threads filesDataRef so the
@@ -421,6 +421,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         clipboardOriginIdRef,
         loopGate: clipboardLoopGate,
         lastRemoteApplyTimeRef,
+        clipboardCtlOpen,
     });
     // Suppress unused-var lint by referencing the value in a no-op assertion. Phase 16 reads it.
     void clipboardSync;

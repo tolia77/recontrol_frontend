@@ -24,9 +24,25 @@ export interface UseClipboardSyncArgs {
   clipboardOriginIdRef: React.RefObject<string | null>;
   loopGate: ClipboardLoopGate;
   lastRemoteApplyTimeRef: React.MutableRefObject<number>;
+  /**
+   * CR-04: clipboard data-channel readyState mirrored as React state so the
+   * inbound subscription effect can re-run when the channel actually opens
+   * (which fires AFTER connectionState='connected'). Without this state,
+   * the effect deps only see ref identity and never re-run.
+   */
+  clipboardCtlOpen: boolean;
 }
 
 export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
+  const {
+    connectionState,
+    clipboardCtlRef,
+    clipboardOriginIdRef,
+    loopGate,
+    lastRemoteApplyTimeRef,
+    clipboardCtlOpen,
+  } = args;
+
   const [isPaused, setIsPaused] = useState(false);
   const [status, setStatus] = useState<ClipboardSyncStatus>('idle');
   const [lastSyncAt, setLastSyncAt] = useState<number | null>(null);
@@ -54,9 +70,13 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
   const togglePause = useCallback(() => setIsPaused((p) => !p), []);
 
   // ---- Outbound: focus / visibilitychange driven readText -> envelope ----
+  // WR-10: use explicit primitive/ref deps instead of the entire `args` object.
+  // The args object is reconstructed on every parent render via inline destructuring,
+  // so `[args, nextSeq]` would re-bind focus/visibilitychange listeners on every
+  // render -- the unsubscribe-resubscribe window can drop a focus event.
   const maybeReadAndPush = useCallback(async () => {
-    if (args.connectionState !== 'connected') return;
-    const dc = args.clipboardCtlRef.current;
+    if (connectionState !== 'connected') return;
+    const dc = clipboardCtlRef.current;
     if (!dc || dc.readyState !== 'open') return;
 
     let raw: string | null = null;
@@ -73,7 +93,7 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
       // DEGRADE-04 dampening pre-check: avoid readText immediately after a remote
       // apply (reduces permission-prompt churn on browsers that prompt every read).
       const now = Date.now();
-      if (now - args.lastRemoteApplyTimeRef.current < 1000) {
+      if (now - lastRemoteApplyTimeRef.current < 1000) {
         console.log('[clipboard] skipped focus-read due to recent remote write');
         return;
       }
@@ -91,9 +111,9 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
         hasFocus: document.hasFocus(),
         visibilityVisible: document.visibilityState === 'visible',
         nowMs: Date.now(),
-        lastRemoteApplyTimeMs: args.lastRemoteApplyTimeRef.current,
-        loopGate: args.loopGate,
-        originId: args.clipboardOriginIdRef.current,
+        lastRemoteApplyTimeMs: lastRemoteApplyTimeRef.current,
+        loopGate,
+        originId: clipboardOriginIdRef.current,
       },
       nextSeq,
     );
@@ -105,65 +125,56 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
         if (statusRef.current === 'permission-required') setStatus('idle');
       }
     }
-  }, [args, nextSeq]);
+  }, [connectionState, clipboardCtlRef, clipboardOriginIdRef, loopGate, lastRemoteApplyTimeRef, nextSeq]);
 
-  // ---- Inbound: subscribe to ClipboardChannelClient on dc 'open' ----
+  // ---- Inbound: subscribe to ClipboardChannelClient when channel opens ----
+  // CR-04: depend on clipboardCtlOpen state so the effect re-runs when the data
+  // channel actually transitions to 'open' (which is normally AFTER
+  // connectionState='connected'). The previous version snapshotted
+  // clipboardCtlRef.current once and never re-ran when the ref's inner value
+  // changed -- silently dropping all inbound clipboard messages.
   useEffect(() => {
-    if (args.connectionState !== 'connected') return;
-    const dc = args.clipboardCtlRef.current;
-    if (!dc) return;
+    if (connectionState !== 'connected') return;
+    if (!clipboardCtlOpen) return;
+    const dc = clipboardCtlRef.current;
+    if (!dc || dc.readyState !== 'open') return;
 
-    const startSubscription = (): void => {
-      if (clientRef.current) clientRef.current.dispose();
-      const client = new ClipboardChannelClient(dc);
-      clientRef.current = client;
-      client.subscribe(async (env) => {
-        const decision = await decideInbound(
-          env,
-          args.clipboardOriginIdRef.current,
-          isPausedRef.current,
-          args.loopGate,
-        );
-        if (decision.kind !== 'apply') return;
-        // Pitfall 1: RECORD FIRST, THEN WRITE (T-14-34).
-        args.loopGate.recordApplied(decision.hashBytes);
-        try {
-          if (typeof navigator?.clipboard?.writeText !== 'function') {
-            setStatus('unsupported');
-            return;
-          }
-          await navigator.clipboard.writeText(decision.text);
-          args.lastRemoteApplyTimeRef.current = Date.now();
-          setLastSyncAt(Date.now());
-          if (statusRef.current === 'permission-required') setStatus('idle');
-        } catch {
-          setStatus('permission-required');
+    if (clientRef.current) clientRef.current.dispose();
+    const client = new ClipboardChannelClient(dc);
+    clientRef.current = client;
+    client.subscribe(async (env) => {
+      const decision = await decideInbound(
+        env,
+        clipboardOriginIdRef.current,
+        isPausedRef.current,
+        loopGate,
+      );
+      if (decision.kind !== 'apply') return;
+      // Pitfall 1: RECORD FIRST, THEN WRITE (T-14-34).
+      loopGate.recordApplied(decision.hashBytes);
+      try {
+        if (typeof navigator?.clipboard?.writeText !== 'function') {
+          setStatus('unsupported');
+          return;
         }
-      });
-    };
+        await navigator.clipboard.writeText(decision.text);
+        lastRemoteApplyTimeRef.current = Date.now();
+        setLastSyncAt(Date.now());
+        if (statusRef.current === 'permission-required') setStatus('idle');
+      } catch {
+        setStatus('permission-required');
+      }
+    });
 
-    if (dc.readyState === 'open') {
-      startSubscription();
-    } else {
-      const onOpen = (): void => {
-        startSubscription();
-      };
-      dc.addEventListener('open', onOpen);
-      return () => {
-        dc.removeEventListener('open', onOpen);
-        clientRef.current?.dispose();
-        clientRef.current = null;
-      };
-    }
     return () => {
       clientRef.current?.dispose();
       clientRef.current = null;
     };
-  }, [args.connectionState, args.clipboardCtlRef, args.clipboardOriginIdRef, args.loopGate, args.lastRemoteApplyTimeRef]);
+  }, [connectionState, clipboardCtlOpen, clipboardCtlRef, clipboardOriginIdRef, loopGate, lastRemoteApplyTimeRef]);
 
   // ---- Listener registration: window 'focus' + document 'visibilitychange' (DEGRADE-02) ----
   useEffect(() => {
-    if (args.connectionState !== 'connected') return;
+    if (connectionState !== 'connected') return;
     const cleanup = bindFocusVisibilityListeners(
       { window, document },
       () => {
@@ -171,7 +182,7 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
       },
     );
     return cleanup;
-  }, [args.connectionState, maybeReadAndPush]);
+  }, [connectionState, maybeReadAndPush]);
 
   const effectiveStatus: ClipboardSyncStatus = isPaused ? 'paused' : status;
   return { isPaused, togglePause, status: effectiveStatus, lastSyncAt };
