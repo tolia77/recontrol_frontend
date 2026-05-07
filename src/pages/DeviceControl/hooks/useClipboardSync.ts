@@ -173,7 +173,11 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
       // apply (reduces permission-prompt churn on browsers that prompt every read).
       const now = Date.now();
       if (now - lastRemoteApplyTimeRef.current < 1000) {
-        console.log('[clipboard] skipped focus-read due to recent remote write');
+        // IN-01: demoted from console.log to console.debug. This branch fires
+        // on every focus event during the 1s post-remote-write dampening
+        // window -- in normal use that's once per paste -- and the prior level
+        // was spamming the production console with no operator value.
+        console.debug('[clipboard] skipped focus-read due to recent remote write');
         return;
       }
       raw = await navigator.clipboard.readText();
