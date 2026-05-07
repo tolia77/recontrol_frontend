@@ -6,6 +6,11 @@ import {
   prepareOutbound,
 } from '../services/clipboard';
 import { ClipboardChannelClient } from '../services/clipboard';
+import type {
+  ClipboardCapabilitiesEnvelope,
+  ClipboardRefusalReason,
+} from '../services/clipboard/clipboardProtocol.generated';
+import type { ClipboardCapability } from './useClipboardCapability';
 import type { WebRtcConnectionState } from './useWebRtc';
 
 export type ClipboardSyncStatus = 'idle' | 'permission-required' | 'unsupported' | 'paused';
@@ -15,6 +20,10 @@ export interface UseClipboardSync {
   togglePause: () => void;
   status: ClipboardSyncStatus;
   lastSyncAt: number | null;
+  // Phase 15 D-10: discrete fields for Phase 16's selectPillState() consumption.
+  cachedDesktopCaps: ClipboardCapabilitiesEnvelope | null;
+  lastRefusal: { reason: ClipboardRefusalReason; at: number; source: 'remote' | 'local' } | null;
+  capsTimedOut: boolean;
 }
 
 export interface UseClipboardSyncArgs {
@@ -31,7 +40,16 @@ export interface UseClipboardSyncArgs {
    * the effect deps only see ref identity and never re-run.
    */
   clipboardCtlOpen: boolean;
+  /**
+   * Phase 15 CAP-01 / D-18: browser-side capability detection (from
+   * useClipboardCapability) used to construct the outgoing capabilities
+   * envelope. Defaults to the same all-false shape useClipboardCapability
+   * returns at first render so legacy callers keep type-checking.
+   */
+  caps?: ClipboardCapability;
 }
+
+const DEFAULT_CAPS: ClipboardCapability = { canRead: false, canWrite: false, isSecureContext: false };
 
 export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
   const {
@@ -41,16 +59,33 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
     loopGate,
     lastRemoteApplyTimeRef,
     clipboardCtlOpen,
+    caps = DEFAULT_CAPS,
   } = args;
 
   const [isPaused, setIsPaused] = useState(false);
   const [status, setStatus] = useState<ClipboardSyncStatus>('idle');
   const [lastSyncAt, setLastSyncAt] = useState<number | null>(null);
 
+  // Phase 15: three new discrete fields for Phase 16's pill (D-10).
+  const [cachedDesktopCaps, setCachedDesktopCaps] = useState<ClipboardCapabilitiesEnvelope | null>(null);
+  const [lastRefusal, setLastRefusal] = useState<
+    { reason: ClipboardRefusalReason; at: number; source: 'remote' | 'local' } | null
+  >(null);
+  const [capsTimedOut, setCapsTimedOut] = useState(false);
+
   const isPausedRef = useRef(isPaused);
   const seqRef = useRef(0);
   const clientRef = useRef<ClipboardChannelClient | null>(null);
   const statusRef = useRef(status);
+
+  // Phase 15: refs mirror the new state so async callbacks read live values
+  // without stale-closure (Pattern F: dual state + ref mirroring).
+  const cachedDesktopCapsRef = useRef(cachedDesktopCaps);
+  const lastRefusalRef = useRef(lastRefusal);
+  const capsTimedOutRef = useRef(capsTimedOut);
+  // D-18 re-advertise tracking: remember last advertised flag pair so we only
+  // re-send when the flag combination actually flips (avoids T-15-19 flap-loop).
+  const prevSentCapsRef = useRef<{ outboundEnabled: boolean; inboundEnabled: boolean } | null>(null);
 
   // Keep refs in sync with state so async callbacks read live values.
   useEffect(() => {
@@ -61,11 +96,40 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
     statusRef.current = status;
   }, [status]);
 
+  useEffect(() => {
+    cachedDesktopCapsRef.current = cachedDesktopCaps;
+  }, [cachedDesktopCaps]);
+
+  useEffect(() => {
+    lastRefusalRef.current = lastRefusal;
+  }, [lastRefusal]);
+
+  useEffect(() => {
+    capsTimedOutRef.current = capsTimedOut;
+  }, [capsTimedOut]);
+
   // Expose a stable nextSeq for prepareOutbound.
   const nextSeq = useCallback(() => {
     seqRef.current += 1;
     return seqRef.current;
   }, []);
+
+  // Phase 15 D-17 / D-18: build the outgoing capabilities envelope from current
+  // browser-side caps detection. Returns null if originId is not yet minted.
+  const buildCapsEnvelope = useCallback((): ClipboardCapabilitiesEnvelope | null => {
+    const originId = clipboardOriginIdRef.current;
+    if (!originId) return null;
+    return {
+      kind: 'capabilities',
+      originId,
+      outboundEnabled: caps.canRead && caps.isSecureContext,
+      inboundEnabled: caps.canWrite && caps.isSecureContext,
+      maxBytes: 2_000_000,
+      protocolVersion: '1.0',
+      seq: nextSeq(),
+      ts: Date.now(),
+    };
+  }, [caps.canRead, caps.canWrite, caps.isSecureContext, clipboardOriginIdRef, nextSeq]);
 
   const togglePause = useCallback(() => setIsPaused((p) => !p), []);
 
@@ -114,6 +178,8 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
         lastRemoteApplyTimeMs: lastRemoteApplyTimeRef.current,
         loopGate,
         originId: clipboardOriginIdRef.current,
+        cachedDesktopCaps: cachedDesktopCapsRef.current,
+        capsTimedOut: capsTimedOutRef.current,
       },
       nextSeq,
     );
@@ -123,9 +189,48 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
         clientRef.current.send(decision.envelope);
         setLastSyncAt(Date.now());
         if (statusRef.current === 'permission-required') setStatus('idle');
+        // D-18 re-advertise on permission resolve: a successful readText+send
+        // proves canRead is now actually true; if our flag pair flipped from the
+        // last advertised, send a fresh capabilities envelope so the desktop
+        // unblocks its inbound gate.
+        const desired = {
+          outboundEnabled: caps.canRead && caps.isSecureContext,
+          inboundEnabled: caps.canWrite && caps.isSecureContext,
+        };
+        if (
+          !prevSentCapsRef.current ||
+          prevSentCapsRef.current.outboundEnabled !== desired.outboundEnabled ||
+          prevSentCapsRef.current.inboundEnabled !== desired.inboundEnabled
+        ) {
+          const envelope = buildCapsEnvelope();
+          if (envelope) {
+            clientRef.current.send(envelope);
+            prevSentCapsRef.current = desired;
+          }
+        }
       }
+    } else if (decision.kind === 'refused-local') {
+      // D-13 / D-14: surface local refusal to the pill feed. source='local'
+      // disambiguates from desktop-replied refused for any future direction-
+      // specific UX in Phase 16.
+      setLastRefusal({
+        reason: decision.reason as ClipboardRefusalReason,
+        at: Date.now(),
+        source: 'local',
+      });
     }
-  }, [connectionState, clipboardCtlRef, clipboardOriginIdRef, loopGate, lastRemoteApplyTimeRef, nextSeq]);
+  }, [
+    connectionState,
+    clipboardCtlRef,
+    clipboardOriginIdRef,
+    loopGate,
+    lastRemoteApplyTimeRef,
+    nextSeq,
+    caps.canRead,
+    caps.canWrite,
+    caps.isSecureContext,
+    buildCapsEnvelope,
+  ]);
 
   // ---- Inbound: subscribe to ClipboardChannelClient when channel opens ----
   // CR-04: depend on clipboardCtlOpen state so the effect re-runs when the data
@@ -142,6 +247,16 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
     if (clientRef.current) clientRef.current.dispose();
     const client = new ClipboardChannelClient(dc);
     clientRef.current = client;
+
+    // Phase 15 D-07 / CAP-07: 2-second timer; if no caps envelope arrives in
+    // that window, set capsTimedOut=true so prepareOutbound treats the desktop
+    // as a v1.2 client and blocks outbound (D-08). Cleared by either the
+    // capabilities-receipt handler below or effect cleanup.
+    let capsTimer: ReturnType<typeof setTimeout> | null = setTimeout(() => {
+      setCapsTimedOut(true);
+      capsTimer = null;
+    }, 2000);
+
     client.subscribe(async (env) => {
       const decision = await decideInbound(
         env,
@@ -161,16 +276,89 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
         lastRemoteApplyTimeRef.current = Date.now();
         setLastSyncAt(Date.now());
         if (statusRef.current === 'permission-required') setStatus('idle');
+        // D-18 re-advertise: writeText resolved cleanly -> canWrite is actually
+        // true. Re-send caps envelope if the flag pair flipped from the last
+        // advertised value.
+        const desired = {
+          outboundEnabled: caps.canRead && caps.isSecureContext,
+          inboundEnabled: caps.canWrite && caps.isSecureContext,
+        };
+        if (
+          !prevSentCapsRef.current ||
+          prevSentCapsRef.current.outboundEnabled !== desired.outboundEnabled ||
+          prevSentCapsRef.current.inboundEnabled !== desired.inboundEnabled
+        ) {
+          const envelope = buildCapsEnvelope();
+          if (envelope) {
+            client.send(envelope);
+            prevSentCapsRef.current = desired;
+          }
+        }
       } catch {
         setStatus('permission-required');
       }
     });
 
+    // Phase 15 D-06: cache desktop caps + clear timer + flip capsTimedOut back
+    // to false. Late-arriving caps unblock outbound cleanly (CONTEXT
+    // "Claude's Discretion" recommendation).
+    client.subscribeCapabilities((capsEnv: ClipboardCapabilitiesEnvelope) => {
+      setCachedDesktopCaps(capsEnv);
+      setCapsTimedOut(false);
+      if (capsTimer !== null) {
+        clearTimeout(capsTimer);
+        capsTimer = null;
+      }
+    });
+
+    // Phase 15 D-11: refusal feed source='remote' for desktop-replied refusals.
+    client.subscribeRefused((refusedEnv) => {
+      setLastRefusal({
+        reason: refusedEnv.reason as ClipboardRefusalReason,
+        at: Date.now(),
+        source: 'remote',
+      });
+    });
+
+    // Phase 15 D-17: send browser's capabilities envelope on open. Synchronous
+    // (mirrors desktop's WR-06-safe send). Uses optimistic detection from
+    // useClipboardCapability output -- D-18 re-advertise covers the case where
+    // a permission prompt later flips the actual flag.
+    const capsEnvelope = buildCapsEnvelope();
+    if (capsEnvelope) {
+      client.send(capsEnvelope);
+      prevSentCapsRef.current = {
+        outboundEnabled: capsEnvelope.outboundEnabled,
+        inboundEnabled: capsEnvelope.inboundEnabled,
+      };
+    }
+
     return () => {
+      if (capsTimer !== null) {
+        clearTimeout(capsTimer);
+        capsTimer = null;
+      }
+      // D-06: cache cleared on channel close so a fresh channel re-handshakes
+      // from scratch (mirrors Phase 13 D-17 reset philosophy). prevSentCapsRef
+      // also reset so the next channel always re-advertises on open.
+      setCachedDesktopCaps(null);
+      setCapsTimedOut(false);
+      prevSentCapsRef.current = null;
       clientRef.current?.dispose();
       clientRef.current = null;
     };
-  }, [connectionState, clipboardCtlOpen, clipboardCtlRef, clipboardOriginIdRef, loopGate, lastRemoteApplyTimeRef]);
+  }, [
+    connectionState,
+    clipboardCtlOpen,
+    clipboardCtlRef,
+    clipboardOriginIdRef,
+    loopGate,
+    lastRemoteApplyTimeRef,
+    caps.canRead,
+    caps.canWrite,
+    caps.isSecureContext,
+    buildCapsEnvelope,
+  ]);
 
   // ---- Listener registration: window 'focus' + document 'visibilitychange' (DEGRADE-02) ----
   useEffect(() => {
@@ -185,5 +373,13 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
   }, [connectionState, maybeReadAndPush]);
 
   const effectiveStatus: ClipboardSyncStatus = isPaused ? 'paused' : status;
-  return { isPaused, togglePause, status: effectiveStatus, lastSyncAt };
+  return {
+    isPaused,
+    togglePause,
+    status: effectiveStatus,
+    lastSyncAt,
+    cachedDesktopCaps,
+    lastRefusal,
+    capsTimedOut,
+  };
 }
