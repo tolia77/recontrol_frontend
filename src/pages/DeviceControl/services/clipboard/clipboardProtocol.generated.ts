@@ -58,7 +58,8 @@ export type ClipboardRefusalReason =
     | "TOO_LARGE"
     | "INBOUND_DISABLED"
     | "MASTER_DISABLED"
-    | "PAUSED";
+    | "PAUSED"
+    | "NON_TEXT";
 
 /**
  * Refusal in response to a `set` we cannot apply.
