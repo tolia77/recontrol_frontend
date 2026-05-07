@@ -59,7 +59,8 @@ export type ClipboardRefusalReason =
     | "INBOUND_DISABLED"
     | "MASTER_DISABLED"
     | "PAUSED"
-    | "NON_TEXT";
+    | "NON_TEXT"
+    | "CAPS_UNKNOWN";
 
 /**
  * Refusal in response to a `set` we cannot apply.

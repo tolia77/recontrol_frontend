@@ -24,13 +24,18 @@ export function detectCapability(
 // Subset of ClipboardRefusalReason that the BROWSER can self-emit as a local
 // refusal (D-13/D-14). Excludes 'PAUSED' because the browser-local pause path
 // returns `skip-paused` -- pause is browser-local and the user already knows
-// they paused (D-15 keeps pause out of the refusal feed).
+// they paused (D-15 keeps pause out of the refusal feed). Includes CAPS_UNKNOWN
+// (Phase 15 CR-03) so Phase 16 can render an honest "waiting for desktop /
+// requires v1.3+" toast instead of the misleading MASTER_DISABLED overload.
 export type RefusalReasonForLocal =
   | 'INBOUND_DISABLED'
   | 'MASTER_DISABLED'
   | 'TOO_LARGE'
-  | 'NON_TEXT';
+  | 'NON_TEXT'
+  | 'CAPS_UNKNOWN';
 
+// WR-05: removed dead 'skip-non-text' and 'skip-too-large' variants — D-14
+// replaced both with 'refused-local'; no caller references the silent kinds.
 export type OutboundDecision =
   | { kind: 'send'; envelope: ClipboardSetEnvelope; hashHex: string; hashBytes: Uint8Array }
   | { kind: 'skip-no-channel' }
@@ -38,8 +43,6 @@ export type OutboundDecision =
   | { kind: 'skip-not-focused' }
   | { kind: 'skip-dampened' }
   | { kind: 'skip-empty' }
-  | { kind: 'skip-non-text' }
-  | { kind: 'skip-too-large' }
   | { kind: 'skip-loop-gate' }
   | { kind: 'refused-local'; reason: RefusalReasonForLocal };
 
@@ -82,13 +85,16 @@ export async function prepareOutbound(
 ): Promise<OutboundDecision> {
   if (!input.originId) return { kind: 'skip-no-channel' };
 
-  // D-08: caps timed out and no caps cached -> block all outbound. Surface as
-  // refused-local with reason MASTER_DISABLED -- closest CAP-05 toast string
-  // for "desktop policy unknown" (15-PATTERNS line 486 rationale).
+  // D-08 / Phase 15 CR-03: caps timed out and no caps cached -> block all
+  // outbound. Surface as refused-local with reason CAPS_UNKNOWN (added to the
+  // schema in Phase 15 specifically to avoid overloading MASTER_DISABLED for
+  // the "desktop policy unknown / v1.2 client" state — see CONTEXT D-01 on
+  // honest categorization). Phase 16 will render this as the dedicated
+  // "waiting for desktop / requires v1.3+" pill state.
   // This gate runs BEFORE pause/focus/dampening because the absence of a peer
   // policy is a stronger signal than any local listener-layer state.
   if (input.capsTimedOut && !input.cachedDesktopCaps) {
-    return { kind: 'refused-local', reason: 'MASTER_DISABLED' };
+    return { kind: 'refused-local', reason: 'CAPS_UNKNOWN' };
   }
 
   // D-13: cap-cache says desktop's inbound is off -> preempt before sending.

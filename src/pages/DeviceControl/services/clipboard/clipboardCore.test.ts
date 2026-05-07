@@ -246,7 +246,7 @@ describe('prepareOutbound', () => {
     expect(result.kind).toBe('skip-no-channel');
   });
 
-  it('C19a: capsTimedOut + no cached caps -> refused-local MASTER_DISABLED (D-08)', async () => {
+  it('C19a: capsTimedOut + no cached caps -> refused-local CAPS_UNKNOWN (D-08, CR-03)', async () => {
     seqCounter = 0;
     const result = await prepareOutbound(
       baseInput('hello', { capsTimedOut: true, cachedDesktopCaps: null }),
@@ -254,7 +254,9 @@ describe('prepareOutbound', () => {
     );
     expect(result.kind).toBe('refused-local');
     if (result.kind === 'refused-local') {
-      expect(result.reason).toBe('MASTER_DISABLED');
+      // CR-03: Phase 15 added CAPS_UNKNOWN specifically for this state to avoid
+      // the dishonest MASTER_DISABLED overload (CONTEXT D-01).
+      expect(result.reason).toBe('CAPS_UNKNOWN');
     }
   });
 
@@ -298,7 +300,8 @@ describe('prepareOutbound', () => {
     );
     expect(result.kind).toBe('refused-local');
     if (result.kind === 'refused-local') {
-      expect(result.reason).toBe('MASTER_DISABLED');
+      // CR-03: timeout state now reports CAPS_UNKNOWN, not MASTER_DISABLED.
+      expect(result.reason).toBe('CAPS_UNKNOWN');
     }
   });
 
