@@ -278,13 +278,63 @@ describe('useClipboardSync — Phase 15 Plan 04', () => {
     expect(result.current.isPaused).toBe(true);
   });
 
+  it('CR-01 regression: caps flip does NOT wipe cachedDesktopCaps or restart CAP-07 timer', () => {
+    // CR-01 in 15-REVIEW.md: the previous shape listed caps.* in the inbound
+    // subscribe effect's deps, so the effect tore down (clearing the cache and
+    // restarting the timer) every time useClipboardCapability flipped from
+    // initial-false to detected. The fix splits re-advertise into a separate
+    // effect that does NOT touch subscription state.
+    vi.useFakeTimers();
+    const h = makeHarness();
+    const initialCaps: ClipboardCapability = {
+      canRead: false,
+      canWrite: false,
+      isSecureContext: true,
+    };
+    const { result, rerender } = renderHook(
+      (props: { caps: ClipboardCapability }) => useClipboardSync(h.args({ caps: props.caps })),
+      { initialProps: { caps: initialCaps } },
+    );
+    // Desktop sends a capabilities envelope before caps flip (e.g. arrived in
+    // the first window after channel-open, before useClipboardCapability has
+    // resolved its detection).
+    act(() => {
+      h.dc.dispatch(
+        JSON.stringify({
+          kind: 'capabilities',
+          originId: 'desk-1',
+          outboundEnabled: true,
+          inboundEnabled: true,
+          maxBytes: 2_000_000,
+          protocolVersion: '1.0',
+          seq: 1,
+          ts: Date.now(),
+        }),
+      );
+    });
+    expect(result.current.cachedDesktopCaps).not.toBeNull();
+
+    // Caps flip — must not wipe the cache.
+    act(() => {
+      rerender({ caps: FULL_CAPS });
+    });
+    expect(result.current.cachedDesktopCaps).not.toBeNull();
+    expect(result.current.cachedDesktopCaps?.inboundEnabled).toBe(true);
+
+    // Advance well past the CAP-07 2s window — capsTimedOut must remain false
+    // because the timer was never restarted by the caps flip.
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+    expect(result.current.capsTimedOut).toBe(false);
+  });
+
   it('re-advertise on permission resolve (caps flip causes fresh capabilities send)', () => {
     // D-18: when the browser's optimistic caps detection later flips (e.g. the
     // user grants the permission prompt), the hook re-advertises so the desktop
-    // unblocks its inbound gate. In practice this is driven by the effect
-    // re-running with updated `caps.canRead` / `caps.canWrite` deps, which both
-    // tears down the old subscription (resetting prevSentCapsRef) and sends a
-    // fresh capabilities envelope on the new client.
+    // unblocks its inbound gate. After CR-01, this is driven by a dedicated
+    // re-advertise effect that watches caps.* and calls client.send WITHOUT
+    // touching the inbound subscription.
     const h = makeHarness();
     const initialCaps: ClipboardCapability = {
       canRead: false,

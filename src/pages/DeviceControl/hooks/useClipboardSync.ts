@@ -86,6 +86,16 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
   // D-18 re-advertise tracking: remember last advertised flag pair so we only
   // re-send when the flag combination actually flips (avoids T-15-19 flap-loop).
   const prevSentCapsRef = useRef<{ outboundEnabled: boolean; inboundEnabled: boolean } | null>(null);
+  // CR-01: mirror current caps into a ref so buildCapsEnvelope is stable across
+  // caps changes. The previous shape listed caps.* in buildCapsEnvelope's deps,
+  // which made the inbound-subscribe effect tear down (wiping the cache and
+  // restarting the CAP-07 timer) every time useClipboardCapability flipped from
+  // initial-false to detected. Splitting into a separate re-advertise effect
+  // (below) preserves the channel-lifecycle isolation D-06 demands.
+  const capsRef = useRef(caps);
+  useEffect(() => {
+    capsRef.current = caps;
+  }, [caps]);
 
   // Keep refs in sync with state so async callbacks read live values.
   useEffect(() => {
@@ -116,20 +126,25 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
 
   // Phase 15 D-17 / D-18: build the outgoing capabilities envelope from current
   // browser-side caps detection. Returns null if originId is not yet minted.
+  // CR-01: reads `caps` via capsRef so the callback identity is stable across
+  // caps flips. The inbound subscribe effect lists this in its deps and must
+  // NOT re-run when caps detection resolves -- doing so wipes the cache and
+  // restarts the CAP-07 timer (see CR-01 in 15-REVIEW.md).
   const buildCapsEnvelope = useCallback((): ClipboardCapabilitiesEnvelope | null => {
     const originId = clipboardOriginIdRef.current;
     if (!originId) return null;
+    const c = capsRef.current;
     return {
       kind: 'capabilities',
       originId,
-      outboundEnabled: caps.canRead && caps.isSecureContext,
-      inboundEnabled: caps.canWrite && caps.isSecureContext,
+      outboundEnabled: c.canRead && c.isSecureContext,
+      inboundEnabled: c.canWrite && c.isSecureContext,
       maxBytes: 2_000_000,
       protocolVersion: '1.0',
       seq: nextSeq(),
       ts: Date.now(),
     };
-  }, [caps.canRead, caps.canWrite, caps.isSecureContext, clipboardOriginIdRef, nextSeq]);
+  }, [clipboardOriginIdRef, nextSeq]);
 
   const togglePause = useCallback(() => setIsPaused((p) => !p), []);
 
@@ -193,9 +208,10 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
         // proves canRead is now actually true; if our flag pair flipped from the
         // last advertised, send a fresh capabilities envelope so the desktop
         // unblocks its inbound gate.
+        const c = capsRef.current;
         const desired = {
-          outboundEnabled: caps.canRead && caps.isSecureContext,
-          inboundEnabled: caps.canWrite && caps.isSecureContext,
+          outboundEnabled: c.canRead && c.isSecureContext,
+          inboundEnabled: c.canWrite && c.isSecureContext,
         };
         if (
           !prevSentCapsRef.current ||
@@ -219,6 +235,7 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
         source: 'local',
       });
     }
+    // CR-01: caps.* read via capsRef so this callback's identity is stable.
   }, [
     connectionState,
     clipboardCtlRef,
@@ -226,9 +243,6 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
     loopGate,
     lastRemoteApplyTimeRef,
     nextSeq,
-    caps.canRead,
-    caps.canWrite,
-    caps.isSecureContext,
     buildCapsEnvelope,
   ]);
 
@@ -247,6 +261,16 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
     if (clientRef.current) clientRef.current.dispose();
     const client = new ClipboardChannelClient(dc);
     clientRef.current = client;
+
+    // WR-03: reset the per-channel seq counter on every channel-open so the
+    // first capabilities envelope is seq=1 and matches the desktop's
+    // AttachChannel reset. Without this, the browser-side counter carries
+    // across reconnects, breaking log correlation symmetry with the desktop.
+    seqRef.current = 0;
+    // CR-01: also clear the prev-sent tracker so the first send on the new
+    // channel is unconditional (the previous channel's tracker is meaningless
+    // here).
+    prevSentCapsRef.current = null;
 
     // Phase 15 D-07 / CAP-07: 2-second timer; if no caps envelope arrives in
     // that window, set capsTimedOut=true so prepareOutbound treats the desktop
@@ -279,9 +303,10 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
         // D-18 re-advertise: writeText resolved cleanly -> canWrite is actually
         // true. Re-send caps envelope if the flag pair flipped from the last
         // advertised value.
+        const c = capsRef.current;
         const desired = {
-          outboundEnabled: caps.canRead && caps.isSecureContext,
-          inboundEnabled: caps.canWrite && caps.isSecureContext,
+          outboundEnabled: c.canRead && c.isSecureContext,
+          inboundEnabled: c.canWrite && c.isSecureContext,
         };
         if (
           !prevSentCapsRef.current ||
@@ -347,6 +372,10 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
       clientRef.current?.dispose();
       clientRef.current = null;
     };
+    // CR-01: caps.* are intentionally NOT in this effect's dependency array.
+    // The subscribe lifecycle is per-CHANNEL, not per-caps. caps flipping must
+    // not tear down the cache, restart the CAP-07 timer, or re-create the
+    // client. A separate effect below handles re-advertise on caps change.
   }, [
     connectionState,
     clipboardCtlOpen,
@@ -354,11 +383,33 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
     clipboardOriginIdRef,
     loopGate,
     lastRemoteApplyTimeRef,
-    caps.canRead,
-    caps.canWrite,
-    caps.isSecureContext,
     buildCapsEnvelope,
   ]);
+
+  // CR-01 / D-18: dedicated re-advertise effect. Runs whenever the browser-side
+  // caps detection flips and a client is currently attached, sending a fresh
+  // capabilities envelope WITHOUT touching the inbound subscription, the
+  // cached desktop caps, or the CAP-07 timer. This is the per-caps surface
+  // that the previous design conflated with channel teardown.
+  useEffect(() => {
+    const client = clientRef.current;
+    if (!client) return;
+    const desired = {
+      outboundEnabled: caps.canRead && caps.isSecureContext,
+      inboundEnabled: caps.canWrite && caps.isSecureContext,
+    };
+    if (
+      prevSentCapsRef.current &&
+      prevSentCapsRef.current.outboundEnabled === desired.outboundEnabled &&
+      prevSentCapsRef.current.inboundEnabled === desired.inboundEnabled
+    ) {
+      return; // unchanged — nothing to advertise
+    }
+    const env = buildCapsEnvelope();
+    if (!env) return;
+    client.send(env);
+    prevSentCapsRef.current = desired;
+  }, [caps.canRead, caps.canWrite, caps.isSecureContext, buildCapsEnvelope]);
 
   // ---- Listener registration: window 'focus' + document 'visibilitychange' (DEGRADE-02) ----
   useEffect(() => {
