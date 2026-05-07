@@ -2,7 +2,24 @@ import type {
   ClipboardSetEnvelope,
   ClipboardCapabilitiesEnvelope,
   ClipboardRefusedEnvelope,
+  ClipboardRefusalReason,
 } from './clipboardProtocol.generated';
+
+// WR-01: validate inbound `refused` reason strings against the schema enum
+// before dispatching. Without this gate, a malicious or buggy peer can stuff
+// any string into lastRefusal.reason -- Phase 16's i18n toast renderer would
+// then receive an unknown key and show no toast (or a fallback). The enum is
+// duplicated as a Set rather than imported from the generated file because
+// the generated module exports only types, not runtime values; keep the two
+// in lockstep (a CI grep on the generated file would catch drift).
+const VALID_REFUSAL_REASONS: ReadonlySet<ClipboardRefusalReason> = new Set<ClipboardRefusalReason>([
+  'TOO_LARGE',
+  'INBOUND_DISABLED',
+  'MASTER_DISABLED',
+  'PAUSED',
+  'NON_TEXT',
+  'CAPS_UNKNOWN',
+]);
 
 type SetHandler = (env: ClipboardSetEnvelope) => void;
 type CapabilitiesHandler = (env: ClipboardCapabilitiesEnvelope) => void;
@@ -79,6 +96,13 @@ export class ClipboardChannelClient {
       case 'refused': {
         const r = e as Partial<ClipboardRefusedEnvelope>;
         if (typeof r.originId !== 'string' || typeof r.reason !== 'string') return;
+        // WR-01: drop refused envelopes whose reason is not in the schema enum.
+        // Permitting arbitrary strings would let a peer poison lastRefusal.reason
+        // and silently break Phase 16's i18n toast lookup.
+        if (!VALID_REFUSAL_REASONS.has(r.reason as ClipboardRefusalReason)) {
+          console.warn('[clipboard] dropped refused with unknown reason:', r.reason);
+          return;
+        }
         for (const h of this.refusedHandlers) {
           try {
             h(r as ClipboardRefusedEnvelope);
