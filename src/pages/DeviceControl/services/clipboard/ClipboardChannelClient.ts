@@ -1,19 +1,32 @@
-import type { ClipboardSetEnvelope } from './clipboardProtocol.generated';
+import type {
+  ClipboardSetEnvelope,
+  ClipboardCapabilitiesEnvelope,
+  ClipboardRefusedEnvelope,
+} from './clipboardProtocol.generated';
 
-type Handler = (env: ClipboardSetEnvelope) => void;
+type SetHandler = (env: ClipboardSetEnvelope) => void;
+type CapabilitiesHandler = (env: ClipboardCapabilitiesEnvelope) => void;
+type RefusedHandler = (env: ClipboardRefusedEnvelope) => void;
 
 /**
  * Thin wrapper over the 'clipboard' RTCDataChannel.
- * Subscribes to onmessage; routes JSON-parsed { kind: 'set' } envelopes to handlers.
- * Other kinds (refused / capabilities) are accepted in Phase 15; this Phase 14 client
- * only forwards 'set' envelopes -- non-'set' messages are silently dropped here so
- * they don't reach the apply-side and double-process.
+ * Subscribes to onmessage; routes JSON-parsed envelopes to handlers via a
+ * three-way kind discriminator (set / capabilities / refused). Each kind has
+ * its own handler set so consumers (Plan 04 useClipboardSync) can subscribe
+ * independently to each envelope kind.
+ *
+ * Browser sends only 'set' or 'capabilities' envelopes -- the 'refused'
+ * envelope is desktop-only on the wire (Phase 15 D-04). Browser-local
+ * refusals are surfaced via clipboardCore's `refused-local` decision, not
+ * over the data channel.
  *
  * Channel teardown: NEVER call dc.close() -- pc.close() is the only mechanism (SIPSorcery #882).
  */
 export class ClipboardChannelClient {
   private readonly dc: RTCDataChannel;
-  private readonly handlers = new Set<Handler>();
+  private readonly setHandlers = new Set<SetHandler>();
+  private readonly capabilitiesHandlers = new Set<CapabilitiesHandler>();
+  private readonly refusedHandlers = new Set<RefusedHandler>();
   private disposed = false;
 
   constructor(dc: RTCDataChannel) {
@@ -30,26 +43,78 @@ export class ClipboardChannelClient {
     } catch {
       return;
     }
-    const e = env as Partial<ClipboardSetEnvelope> | null;
-    if (!e || typeof e !== 'object' || e.kind !== 'set') return;
-    if (typeof e.originId !== 'string' || typeof e.contentHash !== 'string') return;
-    for (const h of this.handlers) {
-      try {
-        h(e as ClipboardSetEnvelope);
-      } catch (err) {
-        console.warn('[clipboard] handler threw:', err);
+    const e = env as { kind?: string } | null;
+    if (!e || typeof e !== 'object') return;
+    switch (e.kind) {
+      case 'set': {
+        const s = e as Partial<ClipboardSetEnvelope>;
+        if (typeof s.originId !== 'string' || typeof s.contentHash !== 'string') return;
+        for (const h of this.setHandlers) {
+          try {
+            h(s as ClipboardSetEnvelope);
+          } catch (err) {
+            console.warn('[clipboard] set handler threw:', err);
+          }
+        }
+        return;
       }
+      case 'capabilities': {
+        const c = e as Partial<ClipboardCapabilitiesEnvelope>;
+        if (
+          typeof c.originId !== 'string' ||
+          typeof c.outboundEnabled !== 'boolean' ||
+          typeof c.inboundEnabled !== 'boolean' ||
+          typeof c.maxBytes !== 'number'
+        )
+          return;
+        for (const h of this.capabilitiesHandlers) {
+          try {
+            h(c as ClipboardCapabilitiesEnvelope);
+          } catch (err) {
+            console.warn('[clipboard] caps handler threw:', err);
+          }
+        }
+        return;
+      }
+      case 'refused': {
+        const r = e as Partial<ClipboardRefusedEnvelope>;
+        if (typeof r.originId !== 'string' || typeof r.reason !== 'string') return;
+        for (const h of this.refusedHandlers) {
+          try {
+            h(r as ClipboardRefusedEnvelope);
+          } catch (err) {
+            console.warn('[clipboard] refused handler threw:', err);
+          }
+        }
+        return;
+      }
+      default:
+        return;
     }
   };
 
-  subscribe(handler: Handler): () => void {
-    this.handlers.add(handler);
+  subscribe(handler: SetHandler): () => void {
+    this.setHandlers.add(handler);
     return () => {
-      this.handlers.delete(handler);
+      this.setHandlers.delete(handler);
     };
   }
 
-  send(envelope: ClipboardSetEnvelope): void {
+  subscribeCapabilities(handler: CapabilitiesHandler): () => void {
+    this.capabilitiesHandlers.add(handler);
+    return () => {
+      this.capabilitiesHandlers.delete(handler);
+    };
+  }
+
+  subscribeRefused(handler: RefusedHandler): () => void {
+    this.refusedHandlers.add(handler);
+    return () => {
+      this.refusedHandlers.delete(handler);
+    };
+  }
+
+  send(envelope: ClipboardSetEnvelope | ClipboardCapabilitiesEnvelope): void {
     if (this.disposed) return;
     if (this.dc.readyState !== 'open') {
       // WR-11: log instead of silently dropping. The loop gate has already
@@ -69,6 +134,8 @@ export class ClipboardChannelClient {
     if (this.disposed) return;
     this.disposed = true;
     this.dc.removeEventListener('message', this.onMessage);
-    this.handlers.clear();
+    this.setHandlers.clear();
+    this.capabilitiesHandlers.clear();
+    this.refusedHandlers.clear();
   }
 }

@@ -1,7 +1,10 @@
 import { type ClipboardLoopGate } from './clipboardLoopGate';
 import { normalizeClipboard } from './clipboardNormalization';
 import { hashHex16 } from './clipboardHash';
-import type { ClipboardSetEnvelope } from './clipboardProtocol.generated';
+import type {
+  ClipboardCapabilitiesEnvelope,
+  ClipboardSetEnvelope,
+} from './clipboardProtocol.generated';
 
 export const FOCUS_DAMPEN_MS = 1000;       // CONTEXT D-11
 export const MAX_CONTENT_BYTES = 2_000_000; // Phase 13 lock
@@ -18,6 +21,16 @@ export function detectCapability(
   return { canRead, canWrite, isSecureContext: !!isSecure };
 }
 
+// Subset of ClipboardRefusalReason that the BROWSER can self-emit as a local
+// refusal (D-13/D-14). Excludes 'PAUSED' because the browser-local pause path
+// returns `skip-paused` -- pause is browser-local and the user already knows
+// they paused (D-15 keeps pause out of the refusal feed).
+export type RefusalReasonForLocal =
+  | 'INBOUND_DISABLED'
+  | 'MASTER_DISABLED'
+  | 'TOO_LARGE'
+  | 'NON_TEXT';
+
 export type OutboundDecision =
   | { kind: 'send'; envelope: ClipboardSetEnvelope; hashHex: string; hashBytes: Uint8Array }
   | { kind: 'skip-no-channel' }
@@ -27,7 +40,8 @@ export type OutboundDecision =
   | { kind: 'skip-empty' }
   | { kind: 'skip-non-text' }
   | { kind: 'skip-too-large' }
-  | { kind: 'skip-loop-gate' };
+  | { kind: 'skip-loop-gate' }
+  | { kind: 'refused-local'; reason: RefusalReasonForLocal };
 
 export interface PrepareOutboundInput {
   rawText: string | null;
@@ -38,6 +52,17 @@ export interface PrepareOutboundInput {
   lastRemoteApplyTimeMs: number;
   loopGate: ClipboardLoopGate;
   originId: string | null;
+  /**
+   * Latest desktop capabilities envelope received via ClipboardChannelClient
+   * subscribeCapabilities, or null if none received yet (D-13).
+   */
+  cachedDesktopCaps: ClipboardCapabilitiesEnvelope | null;
+  /**
+   * True when the CAP-07 2-second post-channel-open timer fired without a
+   * capabilities envelope arriving (D-08). Combined with cachedDesktopCaps==null
+   * this means "desktop policy unknown -- block outbound".
+   */
+  capsTimedOut: boolean;
 }
 
 function hex16ToBytes(hex: string): Uint8Array {
@@ -56,15 +81,38 @@ export async function prepareOutbound(
   nextSeq: () => number,
 ): Promise<OutboundDecision> {
   if (!input.originId) return { kind: 'skip-no-channel' };
+
+  // D-08: caps timed out and no caps cached -> block all outbound. Surface as
+  // refused-local with reason MASTER_DISABLED -- closest CAP-05 toast string
+  // for "desktop policy unknown" (15-PATTERNS line 486 rationale).
+  // This gate runs BEFORE pause/focus/dampening because the absence of a peer
+  // policy is a stronger signal than any local listener-layer state.
+  if (input.capsTimedOut && !input.cachedDesktopCaps) {
+    return { kind: 'refused-local', reason: 'MASTER_DISABLED' };
+  }
+
+  // D-13: cap-cache says desktop's inbound is off -> preempt before sending.
+  // Browser does not separately track desktop's "master" toggle; SendCapabilities
+  // on the desktop folds master into outboundEnabled / inboundEnabled, so a false
+  // here is sufficient.
+  if (input.cachedDesktopCaps && input.cachedDesktopCaps.inboundEnabled === false) {
+    return { kind: 'refused-local', reason: 'INBOUND_DISABLED' };
+  }
+
   if (input.isPaused) return { kind: 'skip-paused' };
   if (!input.visibilityVisible || !input.hasFocus) return { kind: 'skip-not-focused' };
   if (input.nowMs - input.lastRemoteApplyTimeMs < FOCUS_DAMPEN_MS) return { kind: 'skip-dampened' };
   if (input.rawText == null || input.rawText.length === 0) return { kind: 'skip-empty' };
 
   const norm = normalizeClipboard(input.rawText);
-  if (norm.refused) return { kind: 'skip-non-text' };
+  // D-14: was 'skip-non-text' silent drop -- now produce refused-local for the
+  // lastRefusal feed (CAP-04 / CAP-05). The 'skip-non-text' variant is kept on
+  // the OutboundDecision union for backward compat / regression-guard tests.
+  if (norm.refused) return { kind: 'refused-local', reason: 'NON_TEXT' };
   const utf8 = new TextEncoder().encode(norm.text);
-  if (utf8.byteLength > MAX_CONTENT_BYTES) return { kind: 'skip-too-large' };
+  // D-14: was 'skip-too-large' silent drop -- now produce refused-local for the
+  // lastRefusal feed.
+  if (utf8.byteLength > MAX_CONTENT_BYTES) return { kind: 'refused-local', reason: 'TOO_LARGE' };
   if (utf8.byteLength === 0) return { kind: 'skip-empty' };
 
   const hashHex = await hashHex16(utf8);

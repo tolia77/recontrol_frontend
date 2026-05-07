@@ -8,7 +8,10 @@ import {
   MAX_CONTENT_BYTES,
 } from './clipboardCore';
 import { hashHex16 } from './clipboardHash';
-import type { ClipboardSetEnvelope } from './clipboardProtocol.generated';
+import type {
+  ClipboardCapabilitiesEnvelope,
+  ClipboardSetEnvelope,
+} from './clipboardProtocol.generated';
 
 class FakeClock {
   private now = 0;
@@ -18,6 +21,20 @@ class FakeClock {
   advance(ms: number) {
     this.now += ms;
   }
+}
+
+function makeCaps(overrides: Partial<ClipboardCapabilitiesEnvelope> = {}): ClipboardCapabilitiesEnvelope {
+  return {
+    kind: 'capabilities',
+    originId: 'DESKTOP',
+    outboundEnabled: true,
+    inboundEnabled: true,
+    maxBytes: 2_000_000,
+    protocolVersion: '1.0',
+    seq: 1,
+    ts: 0,
+    ...overrides,
+  };
 }
 
 function baseInput(
@@ -33,6 +50,8 @@ function baseInput(
     lastRemoteApplyTimeMs: 0,
     loopGate: new ClipboardLoopGate(new FakeClock()),
     originId: 'ABC',
+    cachedDesktopCaps: makeCaps(),
+    capsTimedOut: false,
     ...overrides,
   };
 }
@@ -131,12 +150,15 @@ describe('prepareOutbound', () => {
     expect(result.kind).toBe('send');
   });
 
-  it('C11: non-text refused (96% control bytes) -> skip-non-text (CLIP-08)', async () => {
+  it('C11: non-text refused (96% control bytes) -> refused-local NON_TEXT (CLIP-08, D-14)', async () => {
     seqCounter = 0;
     // 24 control chars (U+0001), 1 normal char => 24/25 = 96%
     const controlText = '\x01'.repeat(24) + 'a';
     const result = await prepareOutbound(baseInput(controlText), nextSeq);
-    expect(result.kind).toBe('skip-non-text');
+    expect(result.kind).toBe('refused-local');
+    if (result.kind === 'refused-local') {
+      expect(result.reason).toBe('NON_TEXT');
+    }
   });
 
   it('C12: CRLF normalized (CLIP-07)', async () => {
@@ -148,12 +170,15 @@ describe('prepareOutbound', () => {
     }
   });
 
-  it('C13: rawText utf8 length > 2MB -> skip-too-large', async () => {
+  it('C13: rawText utf8 length > 2MB -> refused-local TOO_LARGE (D-14)', async () => {
     seqCounter = 0;
     // Build a string that's just over 2 MB of ASCII (each char = 1 byte in UTF-8)
     const bigText = 'A'.repeat(MAX_CONTENT_BYTES + 1);
     const result = await prepareOutbound(baseInput(bigText), nextSeq);
-    expect(result.kind).toBe('skip-too-large');
+    expect(result.kind).toBe('refused-local');
+    if (result.kind === 'refused-local') {
+      expect(result.reason).toBe('TOO_LARGE');
+    }
   });
 
   it('C14: loop-gate suppresses outbound (sender second-guard LOOP-01)', async () => {
@@ -219,6 +244,78 @@ describe('prepareOutbound', () => {
     seqCounter = 0;
     const result = await prepareOutbound(baseInput('hello', { originId: null }), nextSeq);
     expect(result.kind).toBe('skip-no-channel');
+  });
+
+  it('C19a: capsTimedOut + no cached caps -> refused-local MASTER_DISABLED (D-08)', async () => {
+    seqCounter = 0;
+    const result = await prepareOutbound(
+      baseInput('hello', { capsTimedOut: true, cachedDesktopCaps: null }),
+      nextSeq,
+    );
+    expect(result.kind).toBe('refused-local');
+    if (result.kind === 'refused-local') {
+      expect(result.reason).toBe('MASTER_DISABLED');
+    }
+  });
+
+  it('C19b: cap-cache says inboundEnabled=false -> refused-local INBOUND_DISABLED (D-13)', async () => {
+    seqCounter = 0;
+    const caps = makeCaps({ inboundEnabled: false });
+    const result = await prepareOutbound(
+      baseInput('hello', { cachedDesktopCaps: caps }),
+      nextSeq,
+    );
+    expect(result.kind).toBe('refused-local');
+    if (result.kind === 'refused-local') {
+      expect(result.reason).toBe('INBOUND_DISABLED');
+    }
+  });
+
+  it('C19c: cap-cache inboundEnabled=false preempts even with capsTimedOut=true', async () => {
+    // D-13: if a cache exists and says no, that's the answer regardless of timer state.
+    seqCounter = 0;
+    const caps = makeCaps({ inboundEnabled: false });
+    const result = await prepareOutbound(
+      baseInput('hello', { cachedDesktopCaps: caps, capsTimedOut: true }),
+      nextSeq,
+    );
+    expect(result.kind).toBe('refused-local');
+    if (result.kind === 'refused-local') {
+      expect(result.reason).toBe('INBOUND_DISABLED');
+    }
+  });
+
+  it('C19d: caps gate ordering -- capsTimedOut blocks even when isPaused=true', async () => {
+    // D-08 ordering invariant: caps gates run BEFORE pause check.
+    seqCounter = 0;
+    const result = await prepareOutbound(
+      baseInput('hello', {
+        capsTimedOut: true,
+        cachedDesktopCaps: null,
+        isPaused: true,
+      }),
+      nextSeq,
+    );
+    expect(result.kind).toBe('refused-local');
+    if (result.kind === 'refused-local') {
+      expect(result.reason).toBe('MASTER_DISABLED');
+    }
+  });
+
+  it('C19e: regression -- existing skip-paused / skip-no-channel kinds preserved with valid caps', async () => {
+    // Make sure adding the new branches did not poison the existing skip-* paths.
+    seqCounter = 0;
+    const noChannel = await prepareOutbound(
+      baseInput('hello', { originId: null }),
+      nextSeq,
+    );
+    expect(noChannel.kind).toBe('skip-no-channel');
+
+    const paused = await prepareOutbound(
+      baseInput('hello', { isPaused: true }),
+      nextSeq,
+    );
+    expect(paused.kind).toBe('skip-paused');
   });
 });
 
