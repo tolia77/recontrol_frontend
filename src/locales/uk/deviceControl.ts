@@ -99,7 +99,8 @@ const deviceControl = {
         cpuTime: 'Час CPU',
         startTime: 'Час запуску',
         actions: 'Дії',
-        refresh: 'Оновити'
+        refresh: 'Оновити',
+        headerTooltip: 'Дії керування процесами'
       }
     },
     quick: {
