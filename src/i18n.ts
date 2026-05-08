@@ -23,6 +23,8 @@ import userSettings_en from 'src/locales/en/userSettings.ts';
 import userSettings_uk from 'src/locales/uk/userSettings.ts';
 import adminUsers_en from 'src/locales/en/adminUsers.ts';
 import adminUsers_uk from 'src/locales/uk/adminUsers.ts';
+import clipboard_en from 'src/locales/en/clipboard.ts';
+import clipboard_uk from 'src/locales/uk/clipboard.ts';
 
 void i18n
   .use(LanguageDetector)
@@ -30,11 +32,11 @@ void i18n
   .init({
     fallbackLng: 'en',
     supportedLngs: ['en', 'uk'],
-    ns: ['common', 'help', 'index', 'auth', 'devices', 'deviceSettings', 'deviceControl', 'fileManager', 'userSettings', 'adminUsers'],
+    ns: ['common', 'help', 'index', 'auth', 'devices', 'deviceSettings', 'deviceControl', 'fileManager', 'userSettings', 'adminUsers', 'clipboard'],
     defaultNS: 'common',
     resources: {
-      en: { common: common_en, help: help_en, index: index_en, auth: auth_en, devices: devices_en, deviceSettings: deviceSettings_en, deviceControl: deviceControl_en, fileManager: fileManager_en, userSettings: userSettings_en, adminUsers: adminUsers_en },
-      uk: { common: common_uk, help: help_uk, index: index_uk, auth: auth_uk, devices: devices_uk, deviceSettings: deviceSettings_uk, deviceControl: deviceControl_uk, fileManager: fileManager_uk, userSettings: userSettings_uk, adminUsers: adminUsers_uk },
+      en: { common: common_en, help: help_en, index: index_en, auth: auth_en, devices: devices_en, deviceSettings: deviceSettings_en, deviceControl: deviceControl_en, fileManager: fileManager_en, userSettings: userSettings_en, adminUsers: adminUsers_en, clipboard: clipboard_en },
+      uk: { common: common_uk, help: help_uk, index: index_uk, auth: auth_uk, devices: devices_uk, deviceSettings: deviceSettings_uk, deviceControl: deviceControl_uk, fileManager: fileManager_uk, userSettings: userSettings_uk, adminUsers: adminUsers_uk, clipboard: clipboard_uk },
     },
     detection: {
       // prefer query ?lng=uk, then localStorage, then browser language
