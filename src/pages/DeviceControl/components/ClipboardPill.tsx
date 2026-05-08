@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { selectPillState, type PillState, type PillStateResult } from '../hooks/selectPillState';
 import type {
@@ -143,6 +143,12 @@ export function ClipboardPill(props: ClipboardPillProps) {
     prevSyncAt.current = props.lastSyncAt;
   }
 
+  // selectPillState reads `now` as input but the time-windowed rungs (pulsing,
+  // refused-too-large) only resolve when a re-render happens after the window
+  // closes. `tick` is bumped from a setTimeout so the pill doesn't get stuck
+  // on "Syncing…" / "Too large" past the window's end.
+  const [tick, setTick] = useState(0);
+
   const result: PillStateResult = useMemo(
     () =>
       selectPillState({
@@ -165,8 +171,24 @@ export function ClipboardPill(props: ClipboardPillProps) {
       props.isPaused,
       props.lastSyncAt,
       props.status,
+      tick,
     ],
   );
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const now = Date.now();
+    if (result.state === 'pulsing' && props.lastSyncAt != null) {
+      const delay = Math.max(props.lastSyncAt + 400 - now + 1, 0);
+      timer = setTimeout(() => setTick((t) => t + 1), delay);
+    } else if (result.state === 'refused-too-large' && props.lastRefusal != null) {
+      const delay = Math.max(props.lastRefusal.at + 5_000 - now + 1, 0);
+      timer = setTimeout(() => setTick((t) => t + 1), delay);
+    }
+    return () => {
+      if (timer !== null) clearTimeout(timer);
+    };
+  }, [result.state, props.lastSyncAt, props.lastRefusal]);
 
   // PILL-01: render nothing until the WebRTC peer connection is up.
   if (!props.webRtcUp) return null;
