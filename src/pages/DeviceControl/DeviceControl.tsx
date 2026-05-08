@@ -14,6 +14,8 @@ import { useStreamStats } from './hooks/useStreamStats';
 import { useFilesChannel } from './hooks/useFilesChannel';
 import { useClipboardSync } from './hooks/useClipboardSync';
 import { useClipboardCapability } from './hooks/useClipboardCapability';
+import { useRefusalToastThrottle } from './hooks/useRefusalToastThrottle';
+import { useTranslation } from 'react-i18next';
 import { useFileManagerState } from './hooks/useFileManagerState';
 import { useTransferQueue } from './hooks/useTransferQueue';
 import { FileManagerPanel } from './components/FileManager/FileManagerPanel';
@@ -428,8 +430,47 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         clipboardCtlOpen,
         caps: clipboardCaps,
     });
-    // Suppress unused-var lint by referencing the value in a no-op assertion. Phase 16 reads it.
-    void clipboardSync;
+    // Phase 16: consume useClipboardSync outputs to drive the pill, the first-sync
+    // banner, and refusal toasts.
+    const {
+        isPaused: clipboardIsPaused,
+        togglePause: clipboardTogglePause,
+        status: clipboardStatus,
+        lastSyncAt: clipboardLastSyncAt,
+        cachedDesktopCaps: clipboardCachedDesktopCaps,
+        lastRefusal: clipboardLastRefusal,
+        capsTimedOut: clipboardCapsTimedOut,
+    } = clipboardSync;
+
+    const fireRefusalToast = useRefusalToastThrottle();
+    const { t: tClipboard } = useTranslation('clipboard');
+
+    // PILL-06 / D-13: fire a single info toast on the first successful sync of
+    // each browser session per device. sessionStorage namespace mirrors Phase
+    // 10's per-device-id convention. The literal lives in clipboard:toast.firstSync
+    // (en/clipboard.ts, em dash U+2014) — never hardcoded here per Pitfall 1.
+    useEffect(() => {
+        if (clipboardLastSyncAt == null || clipboardLastSyncAt === 0) return;
+        if (!deviceId) return;
+        const key = `recontrol.clipboard.firstSyncToasted.${deviceId}`;
+        try {
+            if (sessionStorage.getItem(key)) return;
+            sessionStorage.setItem(key, '1');
+        } catch {
+            // sessionStorage may throw in private browsing / strict modes — fail
+            // closed (skip the toast rather than spam on every sync).
+            return;
+        }
+        toast.info(tClipboard('toast.firstSync'));
+    }, [clipboardLastSyncAt, deviceId, toast, tClipboard]);
+
+    // PILL-07 / D-12: throttle refusal toasts at most one per 2 seconds per
+    // reason category. useRefusalToastThrottle internally suppresses
+    // CAPS_UNKNOWN (RESEARCH OQ 2).
+    useEffect(() => {
+        if (!clipboardLastRefusal) return;
+        fireRefusalToast(clipboardLastRefusal.reason);
+    }, [clipboardLastRefusal, fireRefusalToast]);
 
     const {
         state: fmState,
@@ -614,6 +655,17 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                 panelOpen={fmState.panelOpen}
                 transferSnapshot={transferSnapshot}
                 onOpenPanel={() => fmSetPanelOpen(true)}
+                clipboardPill={{
+                    webRtcUp: connectionState === 'connected',
+                    isPaused: clipboardIsPaused,
+                    togglePause: clipboardTogglePause,
+                    status: clipboardStatus,
+                    cachedDesktopCaps: clipboardCachedDesktopCaps,
+                    lastRefusal: clipboardLastRefusal,
+                    capsTimedOut: clipboardCapsTimedOut,
+                    lastSyncAt: clipboardLastSyncAt,
+                    browserCaps: clipboardCaps,
+                }}
             />
             <main className={`flex-1 ml-64 ${activeMode === 'interactive' ? 'overflow-hidden' : ''}`}>
                 <MainContent

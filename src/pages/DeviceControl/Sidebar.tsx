@@ -6,6 +6,8 @@ import { FpsControls } from './components/FpsControls';
 import { ResolutionControl } from './components/ResolutionControl';
 import { FilesToggleIcon } from './components/FileManager/icons';
 import { HeaderTransferPill } from './components/HeaderTransferPill';
+import { ClipboardPill } from './components/ClipboardPill';
+import type { ClipboardPillProps } from './components/ClipboardPill';
 import type { QueueState } from './services/transfer';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
@@ -33,6 +35,12 @@ interface ExtendedSidebarProps extends SidebarProps {
   deviceName?: string;
   transferSnapshot?: QueueState;
   onOpenPanel?: () => void;
+  /**
+   * Phase 16: clipboard sync pill prop bundle. The pill renders ABOVE the
+   * HeaderTransferPill whenever WebRTC peer connection is up, regardless of
+   * panelOpen (D-05). Internally gated on `clipboardPill.webRtcUp`.
+   */
+  clipboardPill?: ClipboardPillProps;
 }
 
 export function Sidebar({
@@ -57,6 +65,7 @@ export function Sidebar({
   panelOpen,
   transferSnapshot,
   onOpenPanel,
+  clipboardPill,
 }: ExtendedSidebarProps) {
   const { t } = useTranslation('deviceControl');
   const navigate = useNavigate();
@@ -152,6 +161,8 @@ export function Sidebar({
             <span>Files</span>
             <span className="ml-auto text-xs opacity-75">Ctrl+Shift+F</span>
           </button>
+          {/* Phase 16: clipboard pill — always visible above transfer pill while WebRTC is up. PILL-01 / D-05. */}
+          {clipboardPill && <ClipboardPill {...clipboardPill} />}
           {!panelOpen && transferSnapshot && (
             <HeaderTransferPill
               snapshot={transferSnapshot}
