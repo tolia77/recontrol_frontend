@@ -1,0 +1,47 @@
+const clipboard = {
+  pill: {
+    state: {
+      idle: 'Clipboard ready',
+      pulsing: 'Syncing…',
+      paused: 'Paused',
+      readOnly: 'One-way sync',
+      permissionRequired: 'Allow clipboard',
+      disconnected: 'Disconnected',
+      disabled: 'Disabled',
+      refusedTooLarge: 'Too large to sync',
+      requiresV13: 'Update desktop',
+      unsupportedBrowser: 'Use Chrome or Edge',
+    },
+    tooltip: {
+      idle: 'Click to pause clipboard sync',
+      pulsingJustSynced: 'Last synced just now',
+      pulsingSecondsAgo_one: 'Last synced {{count}} second ago',
+      pulsingSecondsAgo_other: 'Last synced {{count}} seconds ago',
+      pulsingMinutesAgo_one: 'Last synced {{count}} minute ago',
+      pulsingMinutesAgo_other: 'Last synced {{count}} minutes ago',
+      idleStale: 'Idle',
+      paused: 'Sync paused — click to resume',
+      readOnly: 'Desktop allows only one direction',
+      permissionRequired: 'Click to grant clipboard permission',
+      disconnected: 'Reconnect to resume clipboard sync',
+      disabled: 'Desktop has clipboard sync turned off',
+      refusedTooLarge: 'Last copy was over 2 MB and was not sent',
+      requiresV13: 'Requires ReControl Desktop v1.3 or newer',
+      unsupportedBrowser: "This browser can't sync the clipboard",
+    },
+  },
+  toast: {
+    firstSync: 'Clipboard sync is active — copies are mirrored both ways',
+    refused: {
+      tooLarge: 'Clipboard too large to sync — over 2 MB',
+      nonText: 'Clipboard contains non-text content and was not synced',
+      masterDisabled: 'Clipboard sync is turned off on the desktop',
+      inboundDisabled: 'The desktop is not accepting clipboard from this browser',
+      outboundDisabled: 'The desktop is not sending clipboard to this browser',
+      paused: 'Clipboard sync is paused on the desktop',
+    },
+  },
+  sizeCap_one: 'Clipboard exceeds {{count}} byte limit',
+  sizeCap_other: 'Clipboard exceeds {{count}} bytes limit',
+};
+export default clipboard;
