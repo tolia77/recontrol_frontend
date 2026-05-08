@@ -97,6 +97,12 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
     capsRef.current = caps;
   }, [caps]);
 
+  // Inbound writeText requires document focus on Chrome/Edge. When the user is
+  // focused on another window (a VM, the desktop client itself), the apply
+  // throws NotAllowedError and the inbound text is dropped. Stash the latest
+  // failed apply here and retry from the focus / copy / cut listeners below.
+  const pendingInboundRef = useRef<{ text: string; hashBytes: Uint8Array } | null>(null);
+
   // Keep refs in sync with state so async callbacks read live values.
   useEffect(() => {
     isPausedRef.current = isPaused;
@@ -324,6 +330,12 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
           }
         }
       } catch {
+        // writeText rejects when the document lacks focus — common when the
+        // user is in the VM window. Roll back the loop-gate record (the apply
+        // didn't happen, so the OS clipboard event we were suppressing won't
+        // fire) and stash the text for retry on focus regain.
+        loopGate.reset();
+        pendingInboundRef.current = { text: decision.text, hashBytes: decision.hashBytes };
         setStatus('permission-required');
       }
     });
@@ -415,24 +427,45 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
     prevSentCapsRef.current = desired;
   }, [caps.canRead, caps.canWrite, caps.isSecureContext, buildCapsEnvelope]);
 
+  // Retry a previously-failed inbound apply once the document has focus again.
+  // No-op when nothing is pending. Resets the gate before recordApplied so a
+  // second failure does not poison subsequent outbound for this hash.
+  const flushPendingInbound = useCallback(async () => {
+    const pending = pendingInboundRef.current;
+    if (!pending) return;
+    if (typeof navigator?.clipboard?.writeText !== 'function') return;
+    if (!document.hasFocus() || document.visibilityState !== 'visible') return;
+    loopGate.recordApplied(pending.hashBytes);
+    try {
+      await navigator.clipboard.writeText(pending.text);
+      pendingInboundRef.current = null;
+      lastRemoteApplyTimeRef.current = Date.now();
+      setLastSyncAt(Date.now());
+      if (statusRef.current === 'permission-required') setStatus('idle');
+    } catch {
+      loopGate.reset();
+    }
+  }, [loopGate, lastRemoteApplyTimeRef]);
+
   // ---- Listener registration: window 'focus' + document 'visibilitychange' (DEGRADE-02) ----
   // Browsers expose no clipboard-change event, and a user controlling a remote
   // desktop in-tab never loses browser focus — so 'copy'/'cut' are also bound
   // here. Without them, Ctrl+C in the browser does not push outbound until the
   // user alt-tabs. The setTimeout(0) defers the read past the 'copy' default
-  // action so readText() sees the new clipboard contents.
+  // action so readText() sees the new clipboard contents. Each trigger flushes
+  // any pending inbound apply BEFORE the outbound read so we don't echo the
+  // browser's stale clipboard back to the desktop.
   useEffect(() => {
     if (connectionState !== 'connected') return;
-    const cleanup = bindFocusVisibilityListeners(
-      { window, document },
-      () => {
+    const onTrigger = (): void => {
+      void (async () => {
+        await flushPendingInbound();
         void maybeReadAndPush();
-      },
-    );
+      })();
+    };
+    const cleanup = bindFocusVisibilityListeners({ window, document }, onTrigger);
     const onCopyOrCut = (): void => {
-      setTimeout(() => {
-        void maybeReadAndPush();
-      }, 0);
+      setTimeout(onTrigger, 0);
     };
     document.addEventListener('copy', onCopyOrCut);
     document.addEventListener('cut', onCopyOrCut);
@@ -441,7 +474,7 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
       document.removeEventListener('copy', onCopyOrCut);
       document.removeEventListener('cut', onCopyOrCut);
     };
-  }, [connectionState, maybeReadAndPush]);
+  }, [connectionState, maybeReadAndPush, flushPendingInbound]);
 
   const effectiveStatus: ClipboardSyncStatus = isPaused ? 'paused' : status;
   return {
