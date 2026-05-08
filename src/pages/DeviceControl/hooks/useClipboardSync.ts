@@ -416,6 +416,11 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
   }, [caps.canRead, caps.canWrite, caps.isSecureContext, buildCapsEnvelope]);
 
   // ---- Listener registration: window 'focus' + document 'visibilitychange' (DEGRADE-02) ----
+  // Browsers expose no clipboard-change event, and a user controlling a remote
+  // desktop in-tab never loses browser focus — so 'copy'/'cut' are also bound
+  // here. Without them, Ctrl+C in the browser does not push outbound until the
+  // user alt-tabs. The setTimeout(0) defers the read past the 'copy' default
+  // action so readText() sees the new clipboard contents.
   useEffect(() => {
     if (connectionState !== 'connected') return;
     const cleanup = bindFocusVisibilityListeners(
@@ -424,7 +429,18 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
         void maybeReadAndPush();
       },
     );
-    return cleanup;
+    const onCopyOrCut = (): void => {
+      setTimeout(() => {
+        void maybeReadAndPush();
+      }, 0);
+    };
+    document.addEventListener('copy', onCopyOrCut);
+    document.addEventListener('cut', onCopyOrCut);
+    return () => {
+      cleanup();
+      document.removeEventListener('copy', onCopyOrCut);
+      document.removeEventListener('cut', onCopyOrCut);
+    };
   }, [connectionState, maybeReadAndPush]);
 
   const effectiveStatus: ClipboardSyncStatus = isPaused ? 'paused' : status;
