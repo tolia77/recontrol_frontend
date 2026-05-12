@@ -29,8 +29,8 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                                                                                                        retryWebRtc,
                                                                                                        streamStats,
                                                                                                        showStats,
-                                                                                                       panelOpen,
                                                                                                        fileManagerNode,
+                                                                                                       assistantPanelNode,
                                                                                                        splitRatio,
                                                                                                        setSplitRatio,
                                                                                                    }) => {
@@ -417,7 +417,12 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
         return null;
     };
 
-    const showPanel = !!panelOpen && !!fileManagerNode && activeMode !== 'manual';
+    // Phase 20-06: D-01 mutex — at most one of fileManagerNode / assistantPanelNode
+    // is non-null at any time (enforced upstream by rightPaneActive in
+    // useFileManagerState). Pick whichever is present so the Splitter's right
+    // slot renders the active panel.
+    const rightNode = fileManagerNode ?? assistantPanelNode;
+    const showPanel = !!rightNode && activeMode !== 'manual';
 
     if (showPanel) {
         return (
@@ -430,7 +435,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                             {renderStreamContent()}
                         </div>
                     }
-                    right={<div className="h-full w-full">{fileManagerNode}</div>}
+                    right={<div className="h-full w-full">{rightNode}</div>}
                 />
             </div>
         );

@@ -27,6 +27,9 @@ export interface SidebarProps {
     // file manager panel toggle (Phase 10)
     onTogglePanel?: () => void;
     panelOpen?: boolean;
+    // assistant panel toggle (Phase 20-06) — radio group with onTogglePanel per D-02
+    onToggleAiPanel?: () => void;
+    aiPanelOpen?: boolean;
 }
 
 // Command action contract used for sending backend commands
@@ -89,6 +92,8 @@ export interface MainContentProps {
     // file manager panel (Phase 10)
     panelOpen?: boolean;
     fileManagerNode?: React.ReactNode;
+    // assistant panel (Phase 20-06) — D-01 mutex with fileManagerNode
+    assistantPanelNode?: React.ReactNode;
     splitRatio?: number;
     setSplitRatio?: (r: number) => void;
 }

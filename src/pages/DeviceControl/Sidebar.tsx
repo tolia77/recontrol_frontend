@@ -5,6 +5,7 @@ import { AccordionItem } from './AccordionItem';
 import { FpsControls } from './components/FpsControls';
 import { ResolutionControl } from './components/ResolutionControl';
 import { FilesToggleIcon } from './components/FileManager/icons';
+import { AssistantToggleIcon } from './components/Assistant/icons';
 import { HeaderTransferPill } from './components/HeaderTransferPill';
 import { ClipboardPill } from './components/ClipboardPill';
 import type { ClipboardPillProps } from './components/ClipboardPill';
@@ -63,11 +64,16 @@ export function Sidebar({
   deviceName,
   onTogglePanel,
   panelOpen,
+  onToggleAiPanel,
+  aiPanelOpen,
   transferSnapshot,
   onOpenPanel,
   clipboardPill,
 }: ExtendedSidebarProps) {
   const { t } = useTranslation('deviceControl');
+  // Phase 20-10 ships the `assistant` namespace; use it for the toggle label so
+  // the sidebar respects the operator's locale.
+  const { t: tAssistant } = useTranslation('assistant');
   const navigate = useNavigate();
 
   const toggleAccordion = (item: AccordionSection) => {
@@ -140,7 +146,7 @@ export function Sidebar({
         </div>
       </div>
 
-      {/* Panels toggle (Phase 10: Files) */}
+      {/* Panels toggle (Phase 10: Files; Phase 20-06: Assistant radio-group sibling) */}
       {onTogglePanel && (
         <div className="mb-8">
           <label className="text-xs text-darkgray uppercase font-bold mb-2 block">
@@ -161,6 +167,26 @@ export function Sidebar({
             <span>Files</span>
             <span className="ml-auto text-xs opacity-75">Ctrl+Shift+F</span>
           </button>
+          {/* Phase 20-06: AssistantPanel toggle. Radio-group semantics with the
+              Files button emerge from `rightPaneActive` upstream in
+              DeviceControl, not from local Sidebar logic. */}
+          {onToggleAiPanel && (
+            <button
+              type="button"
+              onClick={onToggleAiPanel}
+              aria-pressed={!!aiPanelOpen}
+              className={`mt-2 w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                aiPanelOpen
+                  ? 'bg-accent text-white'
+                  : 'bg-secondary text-white/90 hover:text-white'
+              }`}
+              title="Ctrl+Shift+A"
+            >
+              <AssistantToggleIcon className="w-4 h-4" />
+              <span>{tAssistant('sidebar.toggle', { defaultValue: 'Assistant' })}</span>
+              <span className="ml-auto text-xs opacity-75">Ctrl+Shift+A</span>
+            </button>
+          )}
           {/* Phase 16: clipboard pill — always visible above transfer pill while WebRTC is up. PILL-01 / D-05. */}
           {clipboardPill && <ClipboardPill {...clipboardPill} />}
           {!panelOpen && transferSnapshot && (

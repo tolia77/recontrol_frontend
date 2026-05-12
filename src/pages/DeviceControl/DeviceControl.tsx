@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { useFileManagerState } from './hooks/useFileManagerState';
 import { useTransferQueue } from './hooks/useTransferQueue';
 import { FileManagerPanel } from './components/FileManager/FileManagerPanel';
+import { AssistantPanel } from './components/Assistant/AssistantPanel';
 import {
     TransferQueue,
     createRunUpload,
@@ -494,8 +495,8 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
 
     const {
         state: fmState,
-        setPanelOpen: fmSetPanelOpen,
         setSplitRatio: fmSetSplitRatio,
+        setRightPaneActive: fmSetRightPaneActive,
         setCurrentPath: fmSetCurrentPath,
         setSort: fmSetSort,
         setShowHidden: fmSetShowHidden,
@@ -601,22 +602,29 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
 
     const overallDisabled = !connected || permissionsLoading || !permissions;
 
-    // Ctrl+Shift+F toggles the file manager panel. Guard: bail if focus is
-    // inside the interactive overlay (which owns its own keyboard capture) or
-    // inside any editable element. The overlay is identified by the
-    // `.overlay` class (MainContent sets it on the video overlay div).
-    const fmSetPanelOpenRef = useRef(fmSetPanelOpen);
-    useEffect(() => { fmSetPanelOpenRef.current = fmSetPanelOpen; }, [fmSetPanelOpen]);
-    const fmPanelOpenRef = useRef(fmState.panelOpen);
-    useEffect(() => { fmPanelOpenRef.current = fmState.panelOpen; }, [fmState.panelOpen]);
+    // Ctrl+Shift+F toggles the file manager panel; Ctrl+Shift+A toggles the
+    // AssistantPanel (Phase 20-06, mirrors the F hotkey). Both share the same
+    // focus-guard: bail if focus is inside the interactive overlay (which owns
+    // its own keyboard capture) or inside any editable element. The overlay is
+    // identified by the `.overlay` class (MainContent sets it on the video
+    // overlay div). The two hotkeys live in the same useEffect so they share
+    // the listener lifecycle.
+    const fmSetRightPaneActiveRef = useRef(fmSetRightPaneActive);
+    useEffect(() => { fmSetRightPaneActiveRef.current = fmSetRightPaneActive; }, [fmSetRightPaneActive]);
+    const fmRightPaneActiveRef = useRef(fmState.rightPaneActive);
+    useEffect(() => { fmRightPaneActiveRef.current = fmState.rightPaneActive; }, [fmState.rightPaneActive]);
 
     useEffect(() => {
         const onKeyDown = (e: KeyboardEvent) => {
-            const isTargetShortcut =
+            const isFilesShortcut =
                 (e.ctrlKey || e.metaKey) &&
                 e.shiftKey &&
                 (e.key === 'F' || e.key === 'f');
-            if (!isTargetShortcut) return;
+            const isAssistantShortcut =
+                (e.ctrlKey || e.metaKey) &&
+                e.shiftKey &&
+                (e.key === 'A' || e.key === 'a');
+            if (!isFilesShortcut && !isAssistantShortcut) return;
 
             // Guard: don't hijack when focus is inside the interactive overlay
             // or any editable element.
@@ -631,13 +639,25 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
             if (target && target.closest && target.closest('.overlay')) return;
 
             e.preventDefault();
-            fmSetPanelOpenRef.current(!fmPanelOpenRef.current);
+            if (isFilesShortcut) {
+                // Mutex setter: opening Files closes Assistant; toggling off
+                // when already open clears the right pane.
+                const next = fmRightPaneActiveRef.current === 'files' ? null : 'files';
+                fmSetRightPaneActiveRef.current(next);
+            } else {
+                const next = fmRightPaneActiveRef.current === 'assistant' ? null : 'assistant';
+                fmSetRightPaneActiveRef.current(next);
+            }
         };
         window.addEventListener('keydown', onKeyDown);
         return () => window.removeEventListener('keydown', onKeyDown);
     }, []);
 
-    const fileManagerNode = fmState.panelOpen ? (
+    // Phase 20-06: gate FileManager on rightPaneActive='files' so the D-01
+    // mutex with AssistantPanel works. `fmState.panelOpen` is kept in sync by
+    // useFileManagerState (it tracks rightPaneActive === 'files') for any
+    // legacy consumer that still reads the boolean.
+    const fileManagerNode = fmState.rightPaneActive === 'files' ? (
         <FileManagerPanel
             deviceId={deviceId}
             channel={filesChannel}
@@ -648,6 +668,18 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
             queue={transferQueue}
             filesByItemIdRef={filesByItemIdRef}
             activeDownloadRef={activeDownloadRef}
+        />
+    ) : null;
+
+    // Phase 20-06: AssistantPanel scaffold rendered when rightPaneActive='assistant'.
+    // Reuses the existing raw WebSocket (CommandChannel) for the AssistantChannel
+    // subscription per RESEARCH §Pattern 4. deviceName falls back to deviceId
+    // when the device record has not loaded yet.
+    const assistantPanelNode = fmState.rightPaneActive === 'assistant' ? (
+        <AssistantPanel
+            deviceId={deviceId}
+            ws={wsRef.current}
+            deviceName={deviceName || deviceId}
         />
     ) : null;
 
@@ -671,10 +703,16 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                 onFpsChange={handleFpsChange}
                 currentResolution={currentResolution}
                 onResolutionChange={handleResolutionChange}
-                onTogglePanel={() => fmSetPanelOpen(!fmState.panelOpen)}
-                panelOpen={fmState.panelOpen}
+                onTogglePanel={() =>
+                    fmSetRightPaneActive(fmState.rightPaneActive === 'files' ? null : 'files')
+                }
+                panelOpen={fmState.rightPaneActive === 'files'}
+                onToggleAiPanel={() =>
+                    fmSetRightPaneActive(fmState.rightPaneActive === 'assistant' ? null : 'assistant')
+                }
+                aiPanelOpen={fmState.rightPaneActive === 'assistant'}
                 transferSnapshot={transferSnapshot}
-                onOpenPanel={() => fmSetPanelOpen(true)}
+                onOpenPanel={() => fmSetRightPaneActive('files')}
                 clipboardPill={{
                     webRtcUp: connectionState === 'connected',
                     isPaused: clipboardIsPaused,
@@ -705,8 +743,9 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                     retryWebRtc={retryWebRtc}
                     streamStats={streamStats}
                     showStats={showStats}
-                    panelOpen={fmState.panelOpen}
+                    panelOpen={fmState.rightPaneActive === 'files'}
                     fileManagerNode={fileManagerNode}
+                    assistantPanelNode={assistantPanelNode}
                     splitRatio={fmState.splitRatio}
                     setSplitRatio={fmSetSplitRatio}
                 />
