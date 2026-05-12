@@ -1,6 +1,7 @@
 import { useRef, useCallback, useState, useEffect } from 'react';
 import { FilesChannelClient, FilesDataChannel } from '../services/files';
 import { ClipboardLoopGate, createClipboardChannelHandle, type ClipboardChannelHandle } from '../services/clipboard';
+import { getTurnCredentialsRequest } from 'src/services/backend/turnRequests';
 import type React from 'react';
 
 export type WebRtcConnectionState = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'failed';
@@ -43,12 +44,28 @@ export interface UseWebRtcReturn {
   clipboardCtlOpen: boolean;
 }
 
-const ICE_SERVERS: RTCIceServer[] = [
+// STUN-only fallback. Used if the backend's /turn_credentials endpoint is
+// unreachable (network outage, Cloudflare API hiccup, dev env without TURN env
+// vars). Same-LAN peers still connect via host candidates; cross-NAT peers
+// behind symmetric NATs will fail without TURN, which matches pre-TURN behavior.
+const FALLBACK_ICE_SERVERS: RTCIceServer[] = [
   { urls: 'stun:stun.l.google.com:19302' },
 ];
 
 const MAX_BACKOFF_MS = 8000;
 const TOTAL_TIMEOUT_MS = 20000;
+
+async function fetchIceServers(): Promise<RTCIceServer[]> {
+  try {
+    const { data } = await getTurnCredentialsRequest();
+    if (data?.ice_servers?.length) return data.ice_servers;
+    console.warn('[webrtc] /turn_credentials returned empty list, falling back to STUN-only');
+    return FALLBACK_ICE_SERVERS;
+  } catch (err) {
+    console.warn('[webrtc] /turn_credentials failed, falling back to STUN-only:', err);
+    return FALLBACK_ICE_SERVERS;
+  }
+}
 
 export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -86,6 +103,11 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
   const retryCountRef = useRef<number>(0);
   const isReconnectingRef = useRef(false);
   const wasConnectedRef = useRef(false);
+
+  // Generation counter so an in-flight TURN-credentials fetch from a superseded
+  // createPeerConnection call (e.g. user clicked retry mid-fetch) is discarded
+  // instead of clobbering the live peer connection.
+  const pcGenRef = useRef(0);
 
   // Whenever the video element mounts or the stream changes, attach it
   const attachStream = useCallback(() => {
@@ -147,10 +169,18 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     }
   }, []);
 
-  const createPeerConnection = useCallback(() => {
+  const createPeerConnection = useCallback(async () => {
     cleanupPeerConnection();
 
-    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+    const gen = ++pcGenRef.current;
+    const iceServers = await fetchIceServers();
+    if (gen !== pcGenRef.current) {
+      // A later createPeerConnection call superseded us while awaiting TURN
+      // credentials. Drop this attempt; the newer one owns the lifecycle.
+      return;
+    }
+
+    const pc = new RTCPeerConnection({ iceServers });
     pcRef.current = pc;
 
     pc.onicecandidate = (event) => {
@@ -300,6 +330,12 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
       return pc.setLocalDescription(offer).then(() => {
         sendMessage('webrtc.offer', { sdp: offer.sdp });
       });
+    }).catch((err) => {
+      // Without this, a rejection in createOffer/setLocalDescription dies as
+      // an unhandled promise rejection and the UI stays stuck on 'connecting'
+      // with no clue why.
+      console.error('[webrtc] createOffer/setLocalDescription failed:', err);
+      setConnectionState('failed');
     });
   }, [sendMessage, cleanupPeerConnection, attachStream, clearReconnectTimer]);
 
@@ -341,7 +377,7 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
         cleanupPeerConnection();
         return;
       }
-      createPeerConnection();
+      void createPeerConnection();
     }, backoff);
   }, [cleanupPeerConnection, clearReconnectTimer, createPeerConnection]);
 
@@ -354,7 +390,7 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     setHasReceivedFrame(false);
     setDesktopStats(null);
     setConnectionState('connecting');
-    createPeerConnection();
+    void createPeerConnection();
   }, [createPeerConnection, clearReconnectTimer]);
 
   const stopWebRtc = useCallback(() => {
@@ -377,7 +413,7 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     reconnectStartRef.current = 0;
     retryCountRef.current = 0;
     setConnectionState('connecting');
-    createPeerConnection();
+    void createPeerConnection();
   }, [createPeerConnection, clearReconnectTimer]);
 
   const handleSignalingMessage = useCallback((command: string, payload: Record<string, unknown>) => {
