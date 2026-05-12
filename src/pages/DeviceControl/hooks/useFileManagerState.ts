@@ -9,6 +9,7 @@ const STORAGE_VERSION = 'v1';
 const DEFAULT_STATE: FileManagerState = {
   panelOpen: false,
   splitRatio: 0.5,
+  rightPaneActive: null,
   currentPath: null,
   sort: { column: 'name', direction: 'asc' },
   showHidden: false,
@@ -49,13 +50,27 @@ function writeField(
 
 function loadInitialState(deviceId: string): FileManagerState {
   if (!deviceId) return DEFAULT_STATE;
+
+  const storedActive = readField<'files' | 'assistant' | null>(
+    deviceId,
+    'rightPaneActive',
+    DEFAULT_STATE.rightPaneActive,
+    (s) => (s === 'files' || s === 'assistant' ? s : null),
+  );
+
+  // Back-compat: if the new key is unset but the legacy panelOpen=true is
+  // present, seed rightPaneActive='files'.
+  const legacyPanelOpen = readField<boolean>(
+    deviceId,
+    'panelOpen',
+    DEFAULT_STATE.panelOpen,
+    (s) => s === 'true',
+  );
+  const rightPaneActive: 'files' | 'assistant' | null =
+    storedActive ?? (legacyPanelOpen ? 'files' : null);
+
   return {
-    panelOpen: readField<boolean>(
-      deviceId,
-      'panelOpen',
-      DEFAULT_STATE.panelOpen,
-      (s) => s === 'true',
-    ),
+    panelOpen: rightPaneActive === 'files',
     splitRatio: readField<number>(
       deviceId,
       'splitRatio',
@@ -66,6 +81,7 @@ function loadInitialState(deviceId: string): FileManagerState {
         return Math.min(0.9, Math.max(0.1, n));
       },
     ),
+    rightPaneActive,
     currentPath: readField<string | null>(
       deviceId,
       'currentPath',
@@ -106,6 +122,7 @@ export interface UseFileManagerStateReturn {
   state: FileManagerState;
   setPanelOpen: (v: boolean) => void;
   setSplitRatio: (v: number) => void;
+  setRightPaneActive: (v: 'files' | 'assistant' | null) => void;
   setCurrentPath: (v: string | null) => void;
   setSort: (v: SortState) => void;
   setShowHidden: (v: boolean) => void;
@@ -128,7 +145,25 @@ export function useFileManagerState(deviceId: string): UseFileManagerStateReturn
   const setPanelOpen = useCallback(
     (v: boolean) => {
       writeField(deviceId, 'panelOpen', v ? 'true' : 'false');
-      setState((prev) => ({ ...prev, panelOpen: v }));
+      const newActive: 'files' | 'assistant' | null = v ? 'files' : null;
+      writeField(deviceId, 'rightPaneActive', newActive ?? '');
+      setState((prev) => ({
+        ...prev,
+        panelOpen: v,
+        rightPaneActive: newActive,
+      }));
+    },
+    [deviceId],
+  );
+
+  const setRightPaneActive = useCallback(
+    (v: 'files' | 'assistant' | null) => {
+      writeField(deviceId, 'rightPaneActive', v ?? '');
+      setState((prev) => ({
+        ...prev,
+        rightPaneActive: v,
+        panelOpen: v === 'files',
+      }));
     },
     [deviceId],
   );
@@ -167,7 +202,23 @@ export function useFileManagerState(deviceId: string): UseFileManagerStateReturn
   );
 
   return useMemo(
-    () => ({ state, setPanelOpen, setSplitRatio, setCurrentPath, setSort, setShowHidden }),
-    [state, setPanelOpen, setSplitRatio, setCurrentPath, setSort, setShowHidden],
+    () => ({
+      state,
+      setPanelOpen,
+      setSplitRatio,
+      setRightPaneActive,
+      setCurrentPath,
+      setSort,
+      setShowHidden,
+    }),
+    [
+      state,
+      setPanelOpen,
+      setSplitRatio,
+      setRightPaneActive,
+      setCurrentPath,
+      setSort,
+      setShowHidden,
+    ],
   );
 }
