@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import en_adminUsers from '../en/adminUsers';
 import uk_adminUsers from '../uk/adminUsers';
+import en_assistant from '../en/assistant';
+import uk_assistant from '../uk/assistant';
 import en_auth from '../en/auth';
 import uk_auth from '../uk/auth';
 import en_clipboard from '../en/clipboard';
@@ -40,6 +42,7 @@ function collectKeys(obj: unknown, prefix = '', acc = new Set<string>()): Set<st
 
 const NAMESPACE_PAIRS = [
   ['adminUsers', en_adminUsers, uk_adminUsers],
+  ['assistant', en_assistant, uk_assistant],
   ['auth', en_auth, uk_auth],
   ['clipboard', en_clipboard, uk_clipboard],
   ['common', en_common, uk_common],
