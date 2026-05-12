@@ -54,6 +54,7 @@ interface DevicePermissions {
 export function DeviceControl({wsUrl}: CommandWebSocketProps) {
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const heartbeatInterval = useRef<ReturnType<typeof setInterval> | null>(null);
     const isHandlingAuthReconnect = useRef(false);
     const lastDeviceIdRef = useRef<string | null>(null);
     const pendingCommandsRef = useRef<Map<string, string>>(new Map());
@@ -170,6 +171,21 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                     identifier: JSON.stringify({channel: "CommandChannel"}),
                 })
             );
+
+            // Backend uses a TTL'd cache entry refreshed by these heartbeats
+            // to derive the device's "used" status. Without this, the row
+            // would flip back to "active" 45s after page open.
+            if (heartbeatInterval.current) clearInterval(heartbeatInterval.current);
+            heartbeatInterval.current = setInterval(() => {
+                if (ws.readyState !== WebSocket.OPEN) return;
+                ws.send(
+                    JSON.stringify({
+                        command: "message",
+                        identifier: JSON.stringify({channel: "CommandChannel"}),
+                        data: JSON.stringify({command: "heartbeat"}),
+                    })
+                );
+            }, 15000);
         };
 
         ws.onmessage = (event) => {
@@ -336,6 +352,10 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         return () => {
             if (reconnectTimeout.current) {
                 clearTimeout(reconnectTimeout.current);
+            }
+            if (heartbeatInterval.current) {
+                clearInterval(heartbeatInterval.current);
+                heartbeatInterval.current = null;
             }
             if (wsRef.current) {
                 wsRef.current.close(1000, "Component unmounting");
