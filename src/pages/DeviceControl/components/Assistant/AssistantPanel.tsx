@@ -19,12 +19,21 @@ export interface AssistantPanelProps {
  * Top-level assistant panel.
  *
  * Plan 20-07 wires the transcript reducer + Transcript / OperatorBubble /
- * AssistantMessage. Tool rows render a minimal placeholder; the full
- * ToolCallCard / ConfirmationCard land in Plan 20-08. The header (Stop /
- * step counter / Copy-as-Markdown) and InputBox land in Plan 20-09.
+ * AssistantMessage. Plan 20-08 wires ToolCallCard / ConfirmationCard via
+ * Transcript's RowRenderer and threads the `confirm_tool_call` dispatch
+ * pathway from `useAssistantChannel` through Transcript → ConfirmationCard.
+ * The header (Stop / step counter / Copy-as-Markdown) and InputBox land in
+ * Plan 20-09.
  *
  * Conversation state is local React state (`useReducer`); nothing in
  * localStorage; nothing in the backend (CHAT-11).
+ *
+ * Confirmation dispatch (20-08):
+ *   - `dispatch` is sourced from `useAssistantChannel` at render time
+ *     (RESEARCH §Pitfall 8 — never cache callable in reducer state).
+ *   - `handleConfirm` sends `confirm_tool_call` with `{confirmation_id,
+ *     decision}` over the AssistantChannel; backend expects `confirmation_id`
+ *     (verified in `recontrol_backend/app/channels/assistant_channel.rb:63-72`).
  */
 export function AssistantPanel({ deviceId, ws, deviceName }: AssistantPanelProps): JSX.Element {
   const { t } = useTranslation('assistant');
@@ -34,7 +43,17 @@ export function AssistantPanel({ deviceId, ws, deviceName }: AssistantPanelProps
     dispatchTranscript({ type: 'broadcast', broadcast: msg });
   }, []);
 
-  useAssistantChannel(ws, onBroadcast);
+  const { dispatch } = useAssistantChannel(ws, onBroadcast);
+
+  const handleConfirm = useCallback(
+    (confirmationId: string, decision: 'allow' | 'deny') => {
+      dispatch('confirm_tool_call', {
+        confirmation_id: confirmationId,
+        decision,
+      });
+    },
+    [dispatch],
+  );
 
   const isEmpty = state.rows.length === 0;
 
@@ -52,7 +71,7 @@ export function AssistantPanel({ deviceId, ws, deviceName }: AssistantPanelProps
           })}
         </div>
       ) : (
-        <Transcript rows={state.rows} />
+        <Transcript rows={state.rows} onConfirm={handleConfirm} />
       )}
 
       {/* Debug strip — replaced by the real InputBox in Plan 20-09. Exposes

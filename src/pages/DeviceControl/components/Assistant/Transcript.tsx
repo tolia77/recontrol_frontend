@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, type FC } from 'react';
-import { useTranslation } from 'react-i18next';
-import type { Row, ToolRow } from './transcriptReducer';
+import type { Row } from './transcriptReducer';
 import { OperatorBubble } from './OperatorBubble';
 import { AssistantMessage } from './AssistantMessage';
+import { ToolCallCard } from './ToolCallCard';
+import { ConfirmationCard } from './ConfirmationCard';
 
 /**
- * Scroll container + RowRenderer dispatcher (Plan 20-07).
+ * Scroll container + RowRenderer dispatcher (Plan 20-07; ToolRowPlaceholder
+ * replaced by ToolCallCard / ConfirmationCard in Plan 20-08).
  *
  * Auto-scroll behavior (CHAT-02 / RESEARCH §Pattern 2):
  *   - Pinned to bottom as new rows arrive while the operator has not
@@ -18,12 +20,20 @@ import { AssistantMessage } from './AssistantMessage';
  * smooth-scrolling because the intermediate frames would trip the disengage
  * threshold (RESEARCH §Pattern 2 Pitfall).
  *
- * The tool-row placeholder shipped here is a minimal one-liner; the full
- * ToolCallCard + ConfirmationCard composition lands in Plan 20-08.
+ * Tool-row dispatching (20-08):
+ *   - `row.state === 'awaiting_confirmation'` → ConfirmationCard. The card
+ *     receives an `onConfirm(decision)` callback that closes over the row's
+ *     `confirmationId` (validated upstream).
+ *   - Any other tool row state → ToolCallCard.
+ *
+ * The dispatch pathway for `confirm_tool_call` lives in AssistantPanel.tsx
+ * (sourced from `useAssistantChannel.dispatch`); Transcript receives the
+ * pre-wired `onConfirm(confirmationId, decision)` callback and only routes.
  */
 
 interface TranscriptProps {
   rows: Row[];
+  onConfirm: (confirmationId: string, decision: 'allow' | 'deny') => void;
 }
 
 function rowKey(row: Row): string {
@@ -31,37 +41,27 @@ function rowKey(row: Row): string {
   return `${row.kind}:${row.id}`;
 }
 
-const ToolRowPlaceholder: FC<{ row: ToolRow }> = ({ row }) => {
-  const { t } = useTranslation('assistant');
-  return (
-    <div
-      className="rounded border border-gray-200 bg-white px-3 py-2 text-xs font-mono"
-      data-testid={`tool-row-${row.toolCallId}`}
-    >
-      <span className="text-darkgray">[{row.state}]</span>{' '}
-      <span>$ {row.command}</span>
-      {row.args.length > 0 && (
-        <span> {row.args.map((a) => String(a)).join(' ')}</span>
-      )}
-      {row.state === 'awaiting_confirmation' && (
-        <div className="mt-1 text-darkgray">
-          {t('toolCall.placeholderAwaiting', {
-            defaultValue: 'awaiting confirmation',
-          })}
-        </div>
-      )}
-    </div>
-  );
-};
-
-const RowRenderer: FC<{ row: Row }> = ({ row }) => {
+const RowRenderer: FC<{
+  row: Row;
+  onConfirm: TranscriptProps['onConfirm'];
+}> = ({ row, onConfirm }) => {
   switch (row.kind) {
     case 'operator':
       return <OperatorBubble text={row.text} />;
     case 'assistant':
       return <AssistantMessage markdown={row.markdown} isStreaming={row.isStreaming} />;
     case 'tool':
-      return <ToolRowPlaceholder row={row} />;
+      if (row.state === 'awaiting_confirmation') {
+        return (
+          <ConfirmationCard
+            row={row}
+            onConfirm={(decision) => {
+              if (row.confirmationId) onConfirm(row.confirmationId, decision);
+            }}
+          />
+        );
+      }
+      return <ToolCallCard row={row} />;
     default: {
       // Exhaustiveness check — compile error if a new Row kind is added.
       const _exhaustive: never = row;
@@ -70,7 +70,7 @@ const RowRenderer: FC<{ row: Row }> = ({ row }) => {
   }
 };
 
-export const Transcript: FC<TranscriptProps> = ({ rows }) => {
+export const Transcript: FC<TranscriptProps> = ({ rows, onConfirm }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const stickyToBottomRef = useRef(true);
 
@@ -104,7 +104,7 @@ export const Transcript: FC<TranscriptProps> = ({ rows }) => {
       data-testid="assistant-transcript"
     >
       {rows.map((row) => (
-        <RowRenderer key={rowKey(row)} row={row} />
+        <RowRenderer key={rowKey(row)} row={row} onConfirm={onConfirm} />
       ))}
     </div>
   );
