@@ -1,6 +1,7 @@
-import { useCallback, useReducer } from 'react';
+import { useCallback, useEffect, useReducer, useRef } from 'react';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useToast } from 'src/components/ui';
 import { useAssistantChannel } from '../../hooks/useAssistantChannel';
 import type { AssistantBroadcast } from '../../hooks/useAssistantChannel';
 import {
@@ -8,6 +9,9 @@ import {
   transcriptReducer,
 } from './transcriptReducer';
 import { Transcript } from './Transcript';
+import { AssistantHeader } from './AssistantHeader';
+import { InputBox } from './InputBox';
+import { copyAsMarkdown } from './copyAsMarkdown';
 
 export interface AssistantPanelProps {
   deviceId: string;
@@ -16,34 +20,75 @@ export interface AssistantPanelProps {
 }
 
 /**
- * Top-level assistant panel.
+ * Mint a session_token UUID for the new prompt.
  *
- * Plan 20-07 wires the transcript reducer + Transcript / OperatorBubble /
- * AssistantMessage. Plan 20-08 wires ToolCallCard / ConfirmationCard via
- * Transcript's RowRenderer and threads the `confirm_tool_call` dispatch
- * pathway from `useAssistantChannel` through Transcript → ConfirmationCard.
- * The header (Stop / step counter / Copy-as-Markdown) and InputBox land in
- * Plan 20-09.
+ * The reducer uses this value as the STREAM-04 broadcast filter. The backend
+ * (`AssistantChannel#run_prompt`) mints its own session_token and broadcasts
+ * with that value — the client-minted value here is the local discriminator
+ * the reducer keeps until the panel learns the backend's via a future
+ * `accepted` envelope (currently unused). In practice both values coexist on
+ * the wire: the backend's session_token shows up in every broadcast and
+ * passes the reducer's filter only if the reducer has been seeded with the
+ * matching value. Today the reducer trusts whatever submit_prompt provides;
+ * future hardening should reconcile with the backend's accepted-envelope
+ * token (deferred — see threat model T-20-09-04).
+ */
+function generateSessionToken(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `s-${Date.now().toString(16)}-${Math.random().toString(16).slice(2, 10)}`;
+}
+
+/**
+ * Top-level assistant panel — Plan 20-09 final wiring.
  *
- * Conversation state is local React state (`useReducer`); nothing in
- * localStorage; nothing in the backend (CHAT-11).
+ * Layout: AssistantHeader (step counter + Stop + Copy) on top, Transcript (or
+ * idle placeholder) in the middle, InputBox on the bottom. The InputBox owns
+ * the halted_quota inline reset-time message.
  *
- * Confirmation dispatch (20-08):
- *   - `dispatch` is sourced from `useAssistantChannel` at render time
- *     (RESEARCH §Pitfall 8 — never cache callable in reducer state).
- *   - `handleConfirm` sends `confirm_tool_call` with `{confirmation_id,
- *     decision}` over the AssistantChannel; backend expects `confirmation_id`
- *     (verified in `recontrol_backend/app/channels/assistant_channel.rb:63-72`).
+ * Side-effects orchestrated here:
+ *   - Submit prompt: mint session_token, dispatch `submit_prompt` to reducer,
+ *     dispatch `run_prompt` over AssistantChannel.
+ *   - Stop: dispatch `stop_loop` over AssistantChannel; the reducer transitions
+ *     to idle on the eventual `done(:user_stopped)` broadcast.
+ *   - Copy as Markdown: serialize state.rows and write to navigator.clipboard.
+ *   - 80% quota_warning: fire a single Toast per run via useEffect watching
+ *     the reducer's `quotaWarningShown` flag; the flag resets on submit_prompt
+ *     so the next run can warn again (the backend also dedupes once-per-run).
+ *
+ * Conversation state lives in `useReducer` state — nothing in localStorage,
+ * nothing in the backend (CHAT-11). Closing the tab clears the panel.
  */
 export function AssistantPanel({ deviceId, ws, deviceName }: AssistantPanelProps): JSX.Element {
   const { t } = useTranslation('assistant');
+  const toast = useToast();
   const [state, dispatchTranscript] = useReducer(transcriptReducer, initialTranscriptState);
+  const quotaWarningShownRef = useRef(false);
 
   const onBroadcast = useCallback((msg: AssistantBroadcast): void => {
     dispatchTranscript({ type: 'broadcast', broadcast: msg });
   }, []);
 
   const { dispatch } = useAssistantChannel(ws, onBroadcast);
+
+  // 80% quota Toast — fires once when the reducer flips the flag (which
+  // happens at most once per run; the reducer resets the flag on
+  // submit_prompt). The local ref guards against the unlikely case where
+  // React replays the effect with the flag still true (StrictMode double
+  // invoke); we only fire when the flag transitions false→true.
+  useEffect(() => {
+    if (state.quotaWarningShown && !quotaWarningShownRef.current) {
+      quotaWarningShownRef.current = true;
+      toast.warning(
+        t('quota.warningToast', {
+          defaultValue: "You've used 80% of today's AI quota.",
+        }),
+      );
+    } else if (!state.quotaWarningShown && quotaWarningShownRef.current) {
+      quotaWarningShownRef.current = false;
+    }
+  }, [state.quotaWarningShown, toast, t]);
 
   const handleConfirm = useCallback(
     (confirmationId: string, decision: 'allow' | 'deny') => {
@@ -55,14 +100,58 @@ export function AssistantPanel({ deviceId, ws, deviceName }: AssistantPanelProps
     [dispatch],
   );
 
+  const handleSubmit = useCallback(
+    (text: string) => {
+      const sessionToken = generateSessionToken();
+      dispatchTranscript({ type: 'submit_prompt', text, sessionToken });
+      dispatch('run_prompt', { prompt: text, session_token: sessionToken });
+    },
+    [dispatch],
+  );
+
+  const handleStop = useCallback(() => {
+    dispatch('stop_loop', {});
+  }, [dispatch]);
+
+  const handleCopy = useCallback(() => {
+    const md = copyAsMarkdown(state.rows);
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      void navigator.clipboard
+        .writeText(md)
+        .then(() =>
+          toast.success(
+            t('header.copySuccess', {
+              defaultValue: 'Transcript copied to clipboard',
+            }),
+          ),
+        )
+        .catch(() =>
+          toast.error(
+            t('header.copyError', { defaultValue: 'Could not copy to clipboard' }),
+          ),
+        );
+    } else {
+      toast.error(
+        t('header.copyError', { defaultValue: 'Could not copy to clipboard' }),
+      );
+    }
+  }, [state.rows, toast, t]);
+
   const isEmpty = state.rows.length === 0;
 
   return (
     <div
       data-testid="assistant-panel"
+      data-device-id={deviceId}
       className="outline-none flex h-full w-full bg-background text-text flex-col"
     >
-      {/* Plan 20-09 inserts <AssistantHeader> above the transcript. */}
+      <AssistantHeader
+        status={state.status}
+        stepCount={state.stepCount}
+        onStop={handleStop}
+        onCopy={handleCopy}
+      />
+
       {isEmpty ? (
         <div className="flex-1 flex items-center justify-center text-darkgray text-sm px-4 text-center">
           {t('idle.greeting', {
@@ -74,20 +163,7 @@ export function AssistantPanel({ deviceId, ws, deviceName }: AssistantPanelProps
         <Transcript rows={state.rows} onConfirm={handleConfirm} />
       )}
 
-      {/* Debug strip — replaced by the real InputBox in Plan 20-09. Exposes
-          status / stepCount so mid-build smoke testing does not require
-          opening React DevTools. */}
-      <div className="border-t border-gray-200 p-3 text-xs text-darkgray">
-        deviceId: <span className="font-mono">{deviceId}</span>
-        {' · '}
-        status: <span className="font-mono">{state.status}</span>
-        {state.stepCount > 0 && (
-          <>
-            {' · '}
-            step: <span className="font-mono">{state.stepCount} / 25</span>
-          </>
-        )}
-      </div>
+      <InputBox status={state.status} onSubmit={handleSubmit} />
     </div>
   );
 }
