@@ -183,6 +183,22 @@ export function useAssistantChannel(
       if (!inner || typeof inner !== 'object') return;
       const broadcast = inner as AssistantBroadcast;
 
+      // Per-run reorder-buffer reset. Backend AgentRunner allocates a fresh
+      // seq counter per run (starts at 0, post-increments — first broadcast
+      // is seq=1). Without resetting between runs, expectedSeqRef stays at
+      // the previous run's tail, so the new run's seq 1..N get buffered
+      // forever waiting for a seq that never arrives. AssistantChannel emits
+      // `accepted` (transmit, seqless) before any seq broadcasts of a new
+      // run — use it as the reset marker.
+      if ((broadcast as { type?: string }).type === 'accepted') {
+        bufferRef.current = new Map();
+        expectedSeqRef.current = 1;
+        if (gapTimerRef.current !== null) {
+          window.clearTimeout(gapTimerRef.current);
+          gapTimerRef.current = null;
+        }
+      }
+
       if (typeof (broadcast as { seq?: unknown }).seq === 'number') {
         bufferRef.current.set((broadcast as { seq: number }).seq, broadcast);
         flushInOrder();
