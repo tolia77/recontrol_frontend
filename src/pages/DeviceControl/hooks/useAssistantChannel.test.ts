@@ -173,9 +173,10 @@ describe('useAssistantChannel — VERIFY-04 stream-drop', () => {
       //
       // (When state.sessionToken === null, the reducer accepts any
       // session_token; see transcriptReducer.ts STREAM-04 branch.)
+      // seq starts at 1 to match backend's post-increment convention.
       ws.dispatchBroadcast({
         type: 'token',
-        seq: 0,
+        seq: 1,
         session_token: 'sess-verify-04',
         content: 'hello',
       });
@@ -210,7 +211,7 @@ describe('useAssistantChannel — VERIFY-04 stream-drop', () => {
       initialProps: { socket: ws as unknown as WebSocket },
     });
 
-    // Open a seq gap: send seq=5 with no seq=0..4 preceding it. The hook
+    // Open a seq gap: send seq=5 with no seq=1..4 preceding it. The hook
     // arms a 500ms gap-close timer that would otherwise fire a synthetic
     // `{type:'error', source:'stream_out_of_order'}` broadcast.
     act(() => {
@@ -222,7 +223,7 @@ describe('useAssistantChannel — VERIFY-04 stream-drop', () => {
       });
     });
 
-    // Confirm the buffered message did NOT flush yet (seq=0 missing) — no
+    // Confirm the buffered message did NOT flush yet (seqs 1..4 missing) — no
     // token row exists and the reducer is still idle.
     expect(result.current.state.rows).toHaveLength(0);
     expect(result.current.state.status).toBe('idle');
@@ -264,7 +265,7 @@ describe('useAssistantChannel — VERIFY-04 stream-drop', () => {
     act(() => {
       ws.dispatchBroadcast({
         type: 'token',
-        seq: 0,
+        seq: 1,
         session_token: 'sess-idem',
         content: 'tok',
       });

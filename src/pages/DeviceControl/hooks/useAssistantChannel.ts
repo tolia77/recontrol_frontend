@@ -152,7 +152,11 @@ export function useAssistantChannel(
 
     closedRef.current = false;
     bufferRef.current = new Map();
-    expectedSeqRef.current = 0;
+    // Backend AgentRunner uses post-increment seq starting from `@seq = 0`,
+    // so the first broadcast emitted carries `seq: 1`. The reorder buffer
+    // MUST start at 1, not 0, or the very first chunk gets buffered forever
+    // waiting for a non-existent seq=0 and the panel never renders anything.
+    expectedSeqRef.current = 1;
     let subscribed = false;
 
     const sendSubscribe = (): void => {
