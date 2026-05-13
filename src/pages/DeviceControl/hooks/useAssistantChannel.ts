@@ -139,16 +139,30 @@ export function useAssistantChannel(
     }
   }, []);
 
-  // Channel lifecycle effect: subscribe on mount, unsubscribe on unmount.
+  // Channel lifecycle effect: subscribe on mount (or on socket open if the
+  // socket is still CONNECTING at mount), unsubscribe on unmount.
+  //
+  // The CONNECTING→OPEN transition does NOT change the WebSocket object
+  // reference, so a dependency on `ws` alone would let the subscribe slip
+  // through whenever AssistantPanel mounts before the parent's socket is open.
+  // We attach an `open` listener as a wake-up to catch that case.
   useEffect(() => {
     if (!ws) return;
-    if (ws.readyState !== WebSocket.OPEN) return;
+    if (ws.readyState === WebSocket.CLOSING || ws.readyState === WebSocket.CLOSED) return;
 
     closedRef.current = false;
     bufferRef.current = new Map();
     expectedSeqRef.current = 0;
+    let subscribed = false;
 
-    ws.send(JSON.stringify({ command: 'subscribe', identifier: ASSISTANT_IDENTIFIER }));
+    const sendSubscribe = (): void => {
+      if (subscribed) return;
+      if (ws.readyState !== WebSocket.OPEN) return;
+      ws.send(JSON.stringify({ command: 'subscribe', identifier: ASSISTANT_IDENTIFIER }));
+      subscribed = true;
+    };
+
+    const onOpen = (): void => sendSubscribe();
 
     const onMessage = (event: MessageEvent): void => {
       let data: AssistantCableEnvelope;
@@ -201,17 +215,23 @@ export function useAssistantChannel(
       }
     };
 
+    ws.addEventListener('open', onOpen);
     ws.addEventListener('message', onMessage);
     ws.addEventListener('close', onClose);
 
+    // Already open at mount → subscribe immediately. Otherwise the `open`
+    // listener handles it when the CONNECTING socket transitions.
+    sendSubscribe();
+
     return () => {
       try {
-        if (ws.readyState === WebSocket.OPEN) {
+        if (subscribed && ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({ command: 'unsubscribe', identifier: ASSISTANT_IDENTIFIER }));
         }
       } catch {
         // swallow — socket may already be closing
       }
+      ws.removeEventListener('open', onOpen);
       ws.removeEventListener('message', onMessage);
       ws.removeEventListener('close', onClose);
       if (gapTimerRef.current !== null) {

@@ -57,6 +57,7 @@ class MockWebSocket {
   sent: string[] = [];
   private messageListeners: Array<(ev: MessageEvent) => void> = [];
   private closeListeners: Array<(ev: CloseEvent) => void> = [];
+  private openListeners: Array<(ev: Event) => void> = [];
 
   send(payload: string): void {
     this.sent.push(payload);
@@ -67,6 +68,8 @@ class MockWebSocket {
       this.messageListeners.push(listener as (ev: MessageEvent) => void);
     } else if (type === 'close') {
       this.closeListeners.push(listener as (ev: CloseEvent) => void);
+    } else if (type === 'open') {
+      this.openListeners.push(listener as (ev: Event) => void);
     }
   }
 
@@ -75,7 +78,16 @@ class MockWebSocket {
       this.messageListeners = this.messageListeners.filter((l) => l !== listener);
     } else if (type === 'close') {
       this.closeListeners = this.closeListeners.filter((l) => l !== listener);
+    } else if (type === 'open') {
+      this.openListeners = this.openListeners.filter((l) => l !== listener);
     }
+  }
+
+  /** Flip readyState to OPEN and fire any 'open' listeners (CONNECTING→OPEN). */
+  fireOpen(): void {
+    this.readyState = MockWebSocket.OPEN;
+    const ev = new Event('open');
+    this.openListeners.slice().forEach((l) => l(ev));
   }
 
   close(): void {
@@ -275,5 +287,32 @@ describe('useAssistantChannel — VERIFY-04 stream-drop', () => {
 
     expect(result.current.state.status).toBe('error');
     expect(result.current.broadcasts.length).toBe(broadcastsBefore);
+  });
+
+  it('subscribes when the socket transitions from CONNECTING to OPEN', () => {
+    // Regression for the production bug where AssistantPanel mounts before
+    // wsRef.current finishes its TCP handshake: the original hook returned
+    // early when readyState !== OPEN and never re-ran because the WebSocket
+    // object reference is stable across the CONNECTING→OPEN transition.
+    const ws = new MockWebSocket();
+    ws.readyState = MockWebSocket.CONNECTING;
+
+    renderHook(({ socket }) => useChannelWithReducer(socket), {
+      initialProps: { socket: ws as unknown as WebSocket },
+    });
+
+    // Pre-open: no subscribe frame should be on the wire yet.
+    expect(ws.sent).toHaveLength(0);
+
+    // Simulate the TCP handshake completing — the hook's `open` listener
+    // must now fire `sendSubscribe()`.
+    act(() => {
+      ws.fireOpen();
+    });
+
+    expect(ws.sent).toHaveLength(1);
+    const frame = JSON.parse(ws.sent[0]) as { command: string; identifier: string };
+    expect(frame.command).toBe('subscribe');
+    expect(frame.identifier).toBe(ASSISTANT_IDENTIFIER);
   });
 });
