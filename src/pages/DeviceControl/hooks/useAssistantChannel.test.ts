@@ -177,7 +177,7 @@ describe('useAssistantChannel — VERIFY-04 stream-drop', () => {
         type: 'token',
         seq: 0,
         session_token: 'sess-verify-04',
-        text: 'hello',
+        content: 'hello',
       });
     });
 
@@ -218,7 +218,7 @@ describe('useAssistantChannel — VERIFY-04 stream-drop', () => {
         type: 'token',
         seq: 5,
         session_token: 'sess-gap',
-        text: 'out-of-order',
+        content: 'out-of-order',
       });
     });
 
@@ -266,7 +266,7 @@ describe('useAssistantChannel — VERIFY-04 stream-drop', () => {
         type: 'token',
         seq: 0,
         session_token: 'sess-idem',
-        text: 'tok',
+        content: 'tok',
       });
     });
     expect(result.current.state.status).toBe('streaming');

@@ -172,7 +172,7 @@ export function transcriptReducer(
           if (last && last.kind === 'assistant' && last.isStreaming) {
             const updated: AssistantMsgRow = {
               ...last,
-              markdown: last.markdown + msg.text,
+              markdown: last.markdown + msg.content,
             };
             return {
               ...state,
@@ -182,7 +182,7 @@ export function transcriptReducer(
           const newRow: AssistantMsgRow = {
             kind: 'assistant',
             id: makeId(),
-            markdown: msg.text,
+            markdown: msg.content,
             isStreaming: true,
           };
           return {

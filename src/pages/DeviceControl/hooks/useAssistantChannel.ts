@@ -11,7 +11,7 @@ const GAP_CLOSE_TIMEOUT_MS = 500;
  * silently by the reducer (STREAM-03 forward-compat).
  */
 export type AssistantBroadcast =
-  | { type: 'token'; seq: number; session_token: string; text: string }
+  | { type: 'token'; seq: number; session_token: string; content: string }
   | {
       type: 'tool_call_start';
       seq: number;

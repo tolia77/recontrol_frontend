@@ -71,11 +71,11 @@ describe('transcriptReducer', () => {
     let s = transcriptReducer(initialTranscriptState, submit('q', 's'));
     s = transcriptReducer(
       s,
-      broadcast({ type: 'token', seq: 0, session_token: 's', text: 'Hel' }),
+      broadcast({ type: 'token', seq: 0, session_token: 's', content: 'Hel' }),
     );
     s = transcriptReducer(
       s,
-      broadcast({ type: 'token', seq: 1, session_token: 's', text: 'lo' }),
+      broadcast({ type: 'token', seq: 1, session_token: 's', content: 'lo' }),
     );
     const last = s.rows[s.rows.length - 1] as AssistantMsgRow;
     expect(last.kind).toBe('assistant');
@@ -89,7 +89,7 @@ describe('transcriptReducer', () => {
     let s = transcriptReducer(initialTranscriptState, submit('q', 's'));
     s = transcriptReducer(
       s,
-      broadcast({ type: 'token', seq: 0, session_token: 's', text: 'first' }),
+      broadcast({ type: 'token', seq: 0, session_token: 's', content: 'first' }),
     );
     // Done flips isStreaming false on existing assistant row.
     s = transcriptReducer(
@@ -102,7 +102,7 @@ describe('transcriptReducer', () => {
     // it as a new streaming row.
     s = transcriptReducer(
       s,
-      broadcast({ type: 'token', seq: 2, session_token: 's', text: 'second' }),
+      broadcast({ type: 'token', seq: 2, session_token: 's', content: 'second' }),
     );
     const assistantRows = s.rows.filter((r) => r.kind === 'assistant') as AssistantMsgRow[];
     expect(assistantRows).toHaveLength(2);
@@ -116,7 +116,7 @@ describe('transcriptReducer', () => {
     let s = transcriptReducer(initialTranscriptState, submit('q', 'sess-A'));
     s = transcriptReducer(
       s,
-      broadcast({ type: 'token', seq: 0, session_token: 'sess-B', text: 'stale' }),
+      broadcast({ type: 'token', seq: 0, session_token: 'sess-B', content: 'stale' }),
     );
     // Only the operator row; the stale token did not create an assistant row.
     expect(s.rows).toHaveLength(1);
@@ -355,7 +355,7 @@ describe('transcriptReducer', () => {
     let s = transcriptReducer(initialTranscriptState, submit('q', 's'));
     s = transcriptReducer(
       s,
-      broadcast({ type: 'token', seq: 0, session_token: 's', text: 'hi' }),
+      broadcast({ type: 'token', seq: 0, session_token: 's', content: 'hi' }),
     );
     s = transcriptReducer(
       s,
