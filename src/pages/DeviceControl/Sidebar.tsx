@@ -1,6 +1,6 @@
 import type { SidebarProps, AccordionSection, CommandAction } from './types';
 import type { WebRtcConnectionState } from './hooks/useWebRtc';
-import { ChevronLeftIcon } from './icons';
+import { ChevronLeftIcon, ScenariosIcon } from './icons';
 import { AccordionItem } from './AccordionItem';
 import { FpsControls } from './components/FpsControls';
 import { ResolutionControl } from './components/ResolutionControl';
@@ -66,6 +66,8 @@ export function Sidebar({
   panelOpen,
   onToggleAiPanel,
   aiPanelOpen,
+  onToggleScenarios,
+  scenariosPanelOpen,
   transferSnapshot,
   onOpenPanel,
   clipboardPill,
@@ -74,6 +76,9 @@ export function Sidebar({
   // Phase 20-10 ships the `assistant` namespace; use it for the toggle label so
   // the sidebar respects the operator's locale.
   const { t: tAssistant } = useTranslation('assistant');
+  // Phase 21 ships the `scenarios` namespace (Plan 21-07); the toggle label
+  // lives there. Until that plan lands, defaultValue keeps the label readable.
+  const { t: tScenarios } = useTranslation('scenarios');
   const navigate = useNavigate();
 
   const toggleAccordion = (item: AccordionSection) => {
@@ -185,6 +190,26 @@ export function Sidebar({
               <AssistantToggleIcon className="w-4 h-4" />
               <span>{tAssistant('sidebar.toggle', { defaultValue: 'Assistant' })}</span>
               <span className="ml-auto text-xs opacity-75">Ctrl+Shift+A</span>
+            </button>
+          )}
+          {/* Phase 21 UI-01: ScenariosPanel toggle. Third radio sibling; mutex
+              with Files / Assistant is enforced upstream via rightPaneActive. */}
+          {onToggleScenarios && (
+            <button
+              type="button"
+              onClick={onToggleScenarios}
+              aria-pressed={!!scenariosPanelOpen}
+              className={`mt-2 w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                scenariosPanelOpen
+                  ? 'bg-accent text-white'
+                  : 'bg-secondary text-white/90 hover:text-white'
+              }`}
+              title="Ctrl+Shift+S"
+              data-testid="sidebar-toggle-scenarios"
+            >
+              <ScenariosIcon className="w-4 h-4" />
+              <span>{tScenarios('sidebar.toggle', { defaultValue: 'Scenarios' })}</span>
+              <span className="ml-auto text-xs opacity-75">Ctrl+Shift+S</span>
             </button>
           )}
           {/* Phase 16: clipboard pill — always visible above transfer pill while WebRTC is up. PILL-01 / D-05. */}

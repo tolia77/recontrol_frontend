@@ -30,6 +30,9 @@ export interface SidebarProps {
     // assistant panel toggle (Phase 20-06) — radio group with onTogglePanel per D-02
     onToggleAiPanel?: () => void;
     aiPanelOpen?: boolean;
+    // scenarios panel toggle (Phase 21, UI-01) — third radio sibling alongside files/assistant
+    onToggleScenarios?: () => void;
+    scenariosPanelOpen?: boolean;
 }
 
 // Command action contract used for sending backend commands
@@ -94,6 +97,8 @@ export interface MainContentProps {
     fileManagerNode?: React.ReactNode;
     // assistant panel (Phase 20-06) — D-01 mutex with fileManagerNode
     assistantPanelNode?: React.ReactNode;
+    // scenarios panel (Phase 21-06) — third mutex sibling with files/assistant
+    scenariosPanelNode?: React.ReactNode;
     splitRatio?: number;
     setSplitRatio?: (r: number) => void;
 }

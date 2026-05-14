@@ -82,3 +82,26 @@ export const CloseIcon: React.FC<IconProps> = ({ className = "w-5 h-5" }) => (
         <path d="m6 6 12 12" />
     </svg>
 );
+
+/**
+ * Scenarios Icon (clipboard with checklist) — sidebar third toggle (Phase 21, UI-01).
+ * Sibling of FilesToggleIcon / AssistantToggleIcon, but lives in the top-level
+ * DeviceControl icon module so the Scenarios feature module can stay isolated.
+ */
+export const ScenariosIcon: React.FC<IconProps> = ({ className = "w-4 h-4" }) => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 20 20"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={className}
+        aria-hidden="true"
+    >
+        <rect x="4.5" y="3.5" width="11" height="13" rx="1.5" />
+        <path d="M7.5 3.5v-1h5v1" />
+        <path d="M7 8h6M7 11h6M7 14h3" />
+    </svg>
+);
