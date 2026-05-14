@@ -31,6 +31,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                                                                                                        showStats,
                                                                                                        fileManagerNode,
                                                                                                        assistantPanelNode,
+                                                                                                       scenariosPanelNode,
                                                                                                        splitRatio,
                                                                                                        setSplitRatio,
                                                                                                    }) => {
@@ -417,11 +418,11 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
         return null;
     };
 
-    // Phase 20-06: D-01 mutex — at most one of fileManagerNode / assistantPanelNode
-    // is non-null at any time (enforced upstream by rightPaneActive in
-    // useFileManagerState). Pick whichever is present so the Splitter's right
-    // slot renders the active panel.
-    const rightNode = fileManagerNode ?? assistantPanelNode;
+    // Phase 20-06 + Phase 21-06: D-01 mutex — at most one of fileManagerNode /
+    // assistantPanelNode / scenariosPanelNode is non-null at any time (enforced
+    // upstream by rightPaneActive in useFileManagerState). Pick whichever is
+    // present so the Splitter's right slot renders the active panel.
+    const rightNode = fileManagerNode ?? assistantPanelNode ?? scenariosPanelNode;
     const showPanel = !!rightNode && activeMode !== 'manual';
 
     if (showPanel) {
