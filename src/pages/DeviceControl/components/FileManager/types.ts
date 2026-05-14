@@ -23,8 +23,8 @@ export interface SortState {
 export interface FileManagerState {
   panelOpen: boolean;
   splitRatio: number;
-  /** Phase 20 D-01/D-02: which right pane is active (mutex). null = both closed. */
-  rightPaneActive: 'files' | 'assistant' | null;
+  /** Phase 20 D-01/D-02 + Phase 21 UI-02: which right pane is active (mutex). null = all closed. */
+  rightPaneActive: 'files' | 'assistant' | 'scenarios' | null;
   currentPath: string | null;
   sort: SortState;
   showHidden: boolean;

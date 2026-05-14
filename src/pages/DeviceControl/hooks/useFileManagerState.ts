@@ -51,11 +51,11 @@ function writeField(
 function loadInitialState(deviceId: string): FileManagerState {
   if (!deviceId) return DEFAULT_STATE;
 
-  const storedActive = readField<'files' | 'assistant' | null>(
+  const storedActive = readField<'files' | 'assistant' | 'scenarios' | null>(
     deviceId,
     'rightPaneActive',
     DEFAULT_STATE.rightPaneActive,
-    (s) => (s === 'files' || s === 'assistant' ? s : null),
+    (s) => (s === 'files' || s === 'assistant' || s === 'scenarios' ? s : null),
   );
 
   // Back-compat: if the new key is unset but the legacy panelOpen=true is
@@ -66,7 +66,7 @@ function loadInitialState(deviceId: string): FileManagerState {
     DEFAULT_STATE.panelOpen,
     (s) => s === 'true',
   );
-  const rightPaneActive: 'files' | 'assistant' | null =
+  const rightPaneActive: 'files' | 'assistant' | 'scenarios' | null =
     storedActive ?? (legacyPanelOpen ? 'files' : null);
 
   return {
@@ -122,7 +122,7 @@ export interface UseFileManagerStateReturn {
   state: FileManagerState;
   setPanelOpen: (v: boolean) => void;
   setSplitRatio: (v: number) => void;
-  setRightPaneActive: (v: 'files' | 'assistant' | null) => void;
+  setRightPaneActive: (v: 'files' | 'assistant' | 'scenarios' | null) => void;
   setCurrentPath: (v: string | null) => void;
   setSort: (v: SortState) => void;
   setShowHidden: (v: boolean) => void;
@@ -145,7 +145,7 @@ export function useFileManagerState(deviceId: string): UseFileManagerStateReturn
   const setPanelOpen = useCallback(
     (v: boolean) => {
       writeField(deviceId, 'panelOpen', v ? 'true' : 'false');
-      const newActive: 'files' | 'assistant' | null = v ? 'files' : null;
+      const newActive: 'files' | 'assistant' | 'scenarios' | null = v ? 'files' : null;
       writeField(deviceId, 'rightPaneActive', newActive ?? '');
       setState((prev) => ({
         ...prev,
@@ -157,7 +157,7 @@ export function useFileManagerState(deviceId: string): UseFileManagerStateReturn
   );
 
   const setRightPaneActive = useCallback(
-    (v: 'files' | 'assistant' | null) => {
+    (v: 'files' | 'assistant' | 'scenarios' | null) => {
       writeField(deviceId, 'rightPaneActive', v ?? '');
       setState((prev) => ({
         ...prev,
