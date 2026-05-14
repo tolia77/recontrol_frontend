@@ -22,6 +22,8 @@ import en_help from '../en/help';
 import uk_help from '../uk/help';
 import en_index from '../en/index';
 import uk_index from '../uk/index';
+import en_scenarios from '../en/scenarios';
+import uk_scenarios from '../uk/scenarios';
 import en_userSettings from '../en/userSettings';
 import uk_userSettings from '../uk/userSettings';
 
@@ -53,6 +55,7 @@ const NAMESPACE_PAIRS = [
   ['help', en_help, uk_help],
   ['index', en_index, uk_index],
   ['userSettings', en_userSettings, uk_userSettings],
+  ['scenarios', en_scenarios, uk_scenarios],
 ] as const;
 
 describe.each(NAMESPACE_PAIRS)('i18n parity: %s', (name, en, uk) => {
@@ -75,6 +78,24 @@ describe('uk clipboard sizeCap plural coverage', () => {
     expect('sizeCap_few' in uk_clipboard).toBe(true);
     expect('sizeCap_many' in uk_clipboard).toBe(true);
     expect('sizeCap_other' in uk_clipboard).toBe(true);
+  });
+});
+
+// Defense-in-depth: assert UK has all four CLDR plural categories for the
+// scenarios.library count-bearing keys (I18N-03). The PLURAL_SUFFIX normalisation
+// in collectKeys would otherwise let UK ship only _one+_other and still pass.
+describe('uk scenarios plural coverage', () => {
+  it('library.runCount has all four CLDR plural variants', () => {
+    expect('runCount_one' in uk_scenarios.library).toBe(true);
+    expect('runCount_few' in uk_scenarios.library).toBe(true);
+    expect('runCount_many' in uk_scenarios.library).toBe(true);
+    expect('runCount_other' in uk_scenarios.library).toBe(true);
+  });
+  it('library.stepCount has all four CLDR plural variants', () => {
+    expect('stepCount_one' in uk_scenarios.library).toBe(true);
+    expect('stepCount_few' in uk_scenarios.library).toBe(true);
+    expect('stepCount_many' in uk_scenarios.library).toBe(true);
+    expect('stepCount_other' in uk_scenarios.library).toBe(true);
   });
 });
 
