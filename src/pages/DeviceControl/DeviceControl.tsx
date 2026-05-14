@@ -20,6 +20,7 @@ import { useFileManagerState } from './hooks/useFileManagerState';
 import { useTransferQueue } from './hooks/useTransferQueue';
 import { FileManagerPanel } from './components/FileManager/FileManagerPanel';
 import { AssistantPanel } from './components/Assistant/AssistantPanel';
+import ScenariosPanel from './components/Scenarios/ScenariosPanel';
 import {
     TransferQueue,
     createRunUpload,
@@ -624,7 +625,12 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                 (e.ctrlKey || e.metaKey) &&
                 e.shiftKey &&
                 (e.key === 'A' || e.key === 'a');
-            if (!isFilesShortcut && !isAssistantShortcut) return;
+            // Phase 21 UI-01: Ctrl+Shift+S toggles the Scenarios panel.
+            const isScenariosShortcut =
+                (e.ctrlKey || e.metaKey) &&
+                e.shiftKey &&
+                (e.key === 'S' || e.key === 's');
+            if (!isFilesShortcut && !isAssistantShortcut && !isScenariosShortcut) return;
 
             // Guard: don't hijack when focus is inside the interactive overlay
             // or any editable element.
@@ -644,8 +650,12 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                 // when already open clears the right pane.
                 const next = fmRightPaneActiveRef.current === 'files' ? null : 'files';
                 fmSetRightPaneActiveRef.current(next);
-            } else {
+            } else if (isAssistantShortcut) {
                 const next = fmRightPaneActiveRef.current === 'assistant' ? null : 'assistant';
+                fmSetRightPaneActiveRef.current(next);
+            } else {
+                // Phase 21 UI-01: Scenarios mutex toggle.
+                const next = fmRightPaneActiveRef.current === 'scenarios' ? null : 'scenarios';
                 fmSetRightPaneActiveRef.current(next);
             }
         };
@@ -683,6 +693,13 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         />
     ) : null;
 
+    // Phase 21-06: ScenariosPanel scaffold mount. Library + editor land in
+    // Plans 21-09 / 21-10; for this plan we render a placeholder so the
+    // Splitter's right slot has a non-null node when rightPaneActive='scenarios'.
+    const scenariosPanelNode = fmState.rightPaneActive === 'scenarios' ? (
+        <ScenariosPanel deviceId={deviceId} />
+    ) : null;
+
     return (
         <div className="command-websocket flex h-screen w-full font-sans antialiased bg-[#F3F4F6]">
             <Sidebar
@@ -711,6 +728,10 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                     fmSetRightPaneActive(fmState.rightPaneActive === 'assistant' ? null : 'assistant')
                 }
                 aiPanelOpen={fmState.rightPaneActive === 'assistant'}
+                onToggleScenarios={() =>
+                    fmSetRightPaneActive(fmState.rightPaneActive === 'scenarios' ? null : 'scenarios')
+                }
+                scenariosPanelOpen={fmState.rightPaneActive === 'scenarios'}
                 transferSnapshot={transferSnapshot}
                 onOpenPanel={() => fmSetRightPaneActive('files')}
                 clipboardPill={{
@@ -746,6 +767,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                     panelOpen={fmState.rightPaneActive === 'files'}
                     fileManagerNode={fileManagerNode}
                     assistantPanelNode={assistantPanelNode}
+                    scenariosPanelNode={scenariosPanelNode}
                     splitRatio={fmState.splitRatio}
                     setSplitRatio={fmSetSplitRatio}
                 />
