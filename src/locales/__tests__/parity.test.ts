@@ -97,6 +97,24 @@ describe('uk scenarios plural coverage', () => {
     expect('stepCount_many' in uk_scenarios.library).toBe(true);
     expect('stepCount_other' in uk_scenarios.library).toBe(true);
   });
+  it('run.stepCounter has all four CLDR plural variants', () => {
+    expect('stepCounter_one' in uk_scenarios.run).toBe(true);
+    expect('stepCounter_few' in uk_scenarios.run).toBe(true);
+    expect('stepCounter_many' in uk_scenarios.run).toBe(true);
+    expect('stepCounter_other' in uk_scenarios.run).toBe(true);
+  });
+  it('history.runCount has all four CLDR plural variants', () => {
+    expect('runCount_one' in uk_scenarios.history).toBe(true);
+    expect('runCount_few' in uk_scenarios.history).toBe(true);
+    expect('runCount_many' in uk_scenarios.history).toBe(true);
+    expect('runCount_other' in uk_scenarios.history).toBe(true);
+  });
+  it('history.stepCount has all four CLDR plural variants', () => {
+    expect('stepCount_one' in uk_scenarios.history).toBe(true);
+    expect('stepCount_few' in uk_scenarios.history).toBe(true);
+    expect('stepCount_many' in uk_scenarios.history).toBe(true);
+    expect('stepCount_other' in uk_scenarios.history).toBe(true);
+  });
 });
 
 // Verifier-greppable assertion that the PILL-06 banner literal is byte-exact.
