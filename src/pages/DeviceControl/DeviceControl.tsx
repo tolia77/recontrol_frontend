@@ -697,7 +697,11 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
     // Plans 21-09 / 21-10; for this plan we render a placeholder so the
     // Splitter's right slot has a non-null node when rightPaneActive='scenarios'.
     const scenariosPanelNode = fmState.rightPaneActive === 'scenarios' ? (
-        <ScenariosPanel deviceId={deviceId} />
+        <ScenariosPanel
+            deviceId={deviceId}
+            ws={wsRef.current}
+            deviceName={deviceName || deviceId}
+        />
     ) : null;
 
     return (
