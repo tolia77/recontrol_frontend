@@ -134,6 +134,8 @@ const scenarios = {
     stepCounter_other: 'step {{current}} of {{total}}',
     inProgressToast: 'A run is already in progress on {{deviceName}}.',
     beforeUnloadMessage: 'A run is in progress. Leaving will stop the run.',
+    copyMarkdownSuccess: 'Copied transcript to clipboard.',
+    copyMarkdownError: 'Could not copy to clipboard.',
   },
   history: {
     tabLabel: 'History',

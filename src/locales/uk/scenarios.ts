@@ -141,6 +141,8 @@ const scenarios = {
     inProgressToast: 'Запуск уже триває на пристрої {{deviceName}}.',
     beforeUnloadMessage:
       'Сценарій виконується. Якщо ви залишите сторінку, запуск буде зупинено.',
+    copyMarkdownSuccess: 'Транскрипт скопійовано в буфер обміну.',
+    copyMarkdownError: 'Не вдалося скопіювати в буфер обміну.',
   },
   history: {
     tabLabel: 'Історія',
