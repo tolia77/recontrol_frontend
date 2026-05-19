@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { Scenario } from 'src/services/backend/scenariosService';
+import { Button } from 'src/components/ui';
 
 export interface ScenariosRowProps {
   scenario: Scenario;
@@ -7,6 +8,10 @@ export interface ScenariosRowProps {
   onEdit: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
+  onRun: () => void;
+  // D-22-08: disables [▶ Run] when the parent ScenariosLibrary knows a run is
+  // already in-flight on this row's pinned device (single-in-flight signal).
+  runDisabled?: boolean;
 }
 
 function relative(dateIso: string | null | undefined): string {
@@ -28,6 +33,8 @@ export default function ScenariosRow({
   onEdit,
   onDuplicate,
   onDelete,
+  onRun,
+  runDisabled = false,
 }: ScenariosRowProps) {
   const { t } = useTranslation('scenarios');
   // SHARE-06: owner vs recipient. Recipients get a read-only marker and do NOT
@@ -42,6 +49,19 @@ export default function ScenariosRow({
       className="flex items-start gap-2 rounded border border-lightgray bg-white px-3 py-2"
       data-testid={`scenarios-row-${scenario.id}`}
     >
+      {/* D-22-08: primary [▶ Run] action on left edge in accent token. The
+        Button primitive's variant="primary" sets bg-primary; the !bg-accent
+        override forces the accent token per UI-SPEC §[▶ Run] on library row. */}
+      <Button
+        variant="primary"
+        size="sm"
+        className="!bg-accent hover:opacity-90"
+        onClick={onRun}
+        disabled={runDisabled}
+        data-testid="scenarios-row-run"
+      >
+        ▶ {t('library.actions.run')}
+      </Button>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className="truncate font-medium text-primary">{scenario.name}</span>
@@ -76,43 +96,37 @@ export default function ScenariosRow({
           </span>
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-1">
-        {isOwner ? (
-          <>
-            <button
-              type="button"
-              className="rounded px-2 py-1 text-xs text-primary hover:bg-gray-100"
-              onClick={onEdit}
-              data-testid="scenarios-row-edit"
-            >
-              {t('library.actions.edit')}
-            </button>
-            <button
-              type="button"
-              className="rounded px-2 py-1 text-xs text-primary hover:bg-gray-100"
-              onClick={onDuplicate}
-              data-testid="scenarios-row-duplicate"
-            >
-              {t('library.actions.duplicate')}
-            </button>
-            <button
-              type="button"
-              className="rounded px-2 py-1 text-xs text-error hover:bg-red-50"
-              onClick={onDelete}
-              data-testid="scenarios-row-delete"
-            >
-              {t('library.actions.delete')}
-            </button>
-          </>
-        ) : (
-          <span
-            className="px-2 py-1 text-xs text-gray-500"
-            data-testid="recipient-readonly-marker"
+      {/* D-22-08: P21 right-cluster actions are hidden for recipients (SHARE
+        rules). Recipients see only [▶ Run] + the 'Shared by' chip rendered in
+        the metadata block above. */}
+      {isOwner && (
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            className="rounded px-2 py-1 text-xs text-primary hover:bg-gray-100"
+            onClick={onEdit}
+            data-testid="scenarios-row-edit"
           >
-            read-only
-          </span>
-        )}
-      </div>
+            {t('library.actions.edit')}
+          </button>
+          <button
+            type="button"
+            className="rounded px-2 py-1 text-xs text-primary hover:bg-gray-100"
+            onClick={onDuplicate}
+            data-testid="scenarios-row-duplicate"
+          >
+            {t('library.actions.duplicate')}
+          </button>
+          <button
+            type="button"
+            className="rounded px-2 py-1 text-xs text-error hover:bg-red-50"
+            onClick={onDelete}
+            data-testid="scenarios-row-delete"
+          >
+            {t('library.actions.delete')}
+          </button>
+        </div>
+      )}
     </li>
   );
 }

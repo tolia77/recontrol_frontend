@@ -38,6 +38,12 @@ export default function ScenariosPanel({ deviceId }: ScenariosPanelProps) {
             deviceId={deviceId}
             onEdit={(id) => setMode({ kind: 'editor', editingId: id })}
             onNew={() => setMode({ kind: 'editor', editingId: 'new' })}
+            // Plan 22.10 replaces this no-op with the real PolicyPreviewModal
+            // opener that takes (scenarioId) → fetch /policy_preview → mount
+            // the modal with the response. Plan 22.07 only ships the prop
+            // plumbing reach (row → library → panel) so 22.10's wiring is
+            // a one-line change here.
+            onRun={() => {}}
           />
         ) : (
           <ScenarioEditor

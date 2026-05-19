@@ -11,12 +11,20 @@ export interface ScenariosLibraryProps {
   deviceId: string;
   onEdit: (id: string) => void;
   onNew: () => void;
+  // D-22-08: Plan 22.10's panel wiring plugs this into the PolicyPreviewModal
+  // opener. Plan 22.07 only requires the prop plumbing reach ScenariosRow.
+  onRun: (scenarioId: string) => void;
+  // Single-in-flight signal — when an active run is running on this device id,
+  // every row pinned to that device disables its [▶ Run] button.
+  activeRunDeviceId?: string | null;
 }
 
 export default function ScenariosLibrary({
   deviceId,
   onEdit,
   onNew,
+  onRun,
+  activeRunDeviceId = null,
 }: ScenariosLibraryProps) {
   const { t } = useTranslation('scenarios');
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
@@ -166,6 +174,10 @@ export default function ScenariosLibrary({
             onEdit={() => onEdit(s.id)}
             onDuplicate={() => handleDuplicate(s)}
             onDelete={() => handleDelete(s)}
+            onRun={() => onRun(s.id)}
+            runDisabled={
+              !!activeRunDeviceId && s.pinned_device_id === activeRunDeviceId
+            }
           />
         ))}
       </ul>
