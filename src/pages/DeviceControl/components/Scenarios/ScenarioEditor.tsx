@@ -23,6 +23,22 @@ import {
 } from 'src/services/backend/scenariosService';
 import StepRow from './StepRow';
 import DirtyGuardModal from './DirtyGuardModal';
+import type { ScenariosSegment } from './scenariosReducer';
+
+// AI-draft prefill shape (D-12 — no `id` field; UUIDs assigned at save time
+// via Scenario#before_validation). Matches DraftResponse['draft'] from
+// scenariosService.ts but is repeated here so the editor's public prop
+// surface does not require importing the full draft envelope.
+export interface ScenarioEditorPrefill {
+  name: string;
+  description: string;
+  command_steps: Array<{
+    binary: string;
+    args: string[];
+    cwd: string;
+    description?: string | null;
+  }>;
+}
 
 export interface ScenarioEditorProps {
   // deviceId is plumbed in by ScenariosPanel; reserved for the future
@@ -31,6 +47,16 @@ export interface ScenarioEditorProps {
   deviceId: string;
   editingId: string | 'new';
   onClose: () => void;
+  // Phase 23 / Plan 23-09: optional AI-draft prefill. When present AND
+  // `editingId === 'new'`, the initial form state is seeded from `prefill`
+  // instead of empty defaults. Steps from prefill have NO id field (D-12);
+  // the editor's blankStep-style UUID assignment is applied per-step on
+  // hydration so dirty-state + drag-reorder operate on stable keys.
+  prefill?: ScenarioEditorPrefill;
+  // Phase 23 / Plan 23-09: back-navigation target. When `'ai'`, the
+  // [← Back] button label uses `editor.backToAI` ("← Back to AI prompt").
+  // The dirty-state guard (DirtyGuardModal) fires regardless of backTarget.
+  backTarget?: ScenariosSegment;
 }
 
 function blankStep(): CommandStep {
@@ -96,6 +122,8 @@ function snapshotPayload(
 export default function ScenarioEditor({
   editingId,
   onClose,
+  prefill,
+  backTarget,
 }: ScenarioEditorProps) {
   const { t } = useTranslation('scenarios');
   const [name, setName] = useState('');
@@ -120,16 +148,32 @@ export default function ScenarioEditor({
       setNameError(null);
       setVerdicts({});
       if (editingId === 'new') {
-        const seedSteps = [blankStep()];
+        // Phase 23 / Plan 23-09: AI-draft prefill seeds the initial form
+        // state. Each prefilled step is wrapped in a client-side
+        // crypto.randomUUID() so the editor's @dnd-kit + dirty-state guard
+        // can key off `id`. The UUID is intentionally dropped at save time
+        // by toPayloadStep — server's Scenario#before_validation assigns
+        // canonical UUIDs (D-12).
+        const seedName = prefill?.name ?? '';
+        const seedDescription = prefill?.description ?? '';
+        const seedSteps: CommandStep[] = prefill
+          ? prefill.command_steps.map((s) => ({
+              id: crypto.randomUUID(),
+              binary: s.binary,
+              args: [...s.args],
+              cwd: s.cwd,
+              description: s.description ?? '',
+            }))
+          : [blankStep()];
         if (cancelled) return;
-        setName('');
-        setDescription('');
+        setName(seedName);
+        setDescription(seedDescription);
         setPinnedDeviceId(null);
         setIsShared(false);
         setSteps(seedSteps);
         initialSnapshotRef.current = snapshotPayload(
-          '',
-          '',
+          seedName,
+          seedDescription,
           null,
           false,
           seedSteps,
@@ -332,7 +376,9 @@ export default function ScenarioEditor({
           onClick={requestClose}
           data-testid="editor-back"
         >
-          {t('editor.backToLibrary')}
+          {backTarget === 'ai'
+            ? t('editor.backToAI')
+            : t('editor.backToLibrary')}
         </button>
       </div>
 
