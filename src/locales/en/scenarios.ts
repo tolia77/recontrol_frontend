@@ -36,6 +36,7 @@ const scenarios = {
   },
   editor: {
     backToLibrary: '← Back to library',
+    backToAI: '← Back to AI prompt',
     newScenarioTitle: 'Untitled scenario',
     nameLabel: 'Name',
     namePlaceholder: 'e.g. Diagnose nginx',
@@ -95,23 +96,51 @@ const scenarios = {
     },
   },
   ai: {
+    segmentLabel: 'AI',
     promptLabel: 'Describe what the scenario should do',
     promptPlaceholder: "e.g. Diagnose why nginx isn't responding",
-    generate: 'Generate',
+    generate: 'Generate Draft',
+    cancelGenerate: 'Cancel generation',
     generating: 'Generating...',
-    regenerate: 'Regenerate',
+    generatingCounter_one: 'Generating... (1 second)',
+    generatingCounter_other: 'Generating... ({{count}} seconds)',
+    emptyStateBody:
+      "Describe what you want the scenario to do, and we'll draft it for you. The AI suggests commands — you review and save.",
+    lastPrompt: 'Last: "{{prompt}}" — {{relative}}',
+    quotaDrafts: '{{used}} / {{limit}} drafts today',
+    quotaTokens: '{{used}} / {{limit}} tokens',
+    dismiss: 'Dismiss ✕',
+    regenerate: 'Regenerate Draft',
     acceptAndSave: 'Accept and save',
-    editDraft: 'Edit',
+    editDraft: 'Edit Draft',
+    discardDraft: 'Discard draft',
+    acceptSuccess: 'Scenario saved.',
     draftReviewTitle: 'Review draft',
     dryIntentWarning: 'This step may be destructive — review carefully.',
     systemPromptDirective:
       'Respond and generate command descriptions in the same language as the user prompt.',
+    dry_intent: {
+      find_delete: 'Matched "find -delete" pattern — review before running.',
+      dd_of_dev: 'Matched "dd of=/dev/" pattern — review before running.',
+      chmod_777_recursive: 'Matched "chmod -R 777" pattern — review before running.',
+      mkfs: 'Matched "mkfs" pattern — review before running.',
+      truncate_zero: 'Matched "truncate -s 0" pattern — review before running.',
+      redirect_to_system: 'Matched "> /system path" pattern — review before running.',
+      rm_rf_root_adjacent: 'Matched "rm -rf" pattern — review before running.',
+    },
     errors: {
       unparseable: 'The AI returned an invalid draft. Try regenerating.',
-      unsafe: 'Step {{stepIndex}} of the draft was rejected by the safety policy.',
-      quotaTokens: 'Daily token quota reached. Resets {{resetRelative}}.',
-      quotaDrafts: 'Daily draft-attempts quota reached (30/day).',
+      unsafe:
+        'Step {{stepIndex}} of the draft was rejected by the safety policy. Try a different prompt.',
+      quotaTokens:
+        "You've reached today's AI token limit. Resets {{resetRelative}}.",
+      quotaDrafts:
+        "You've used all 30 daily AI draft attempts. Resets {{resetRelative}}.",
       rateLimited: 'Too many requests. Try again in a moment.',
+      network:
+        "Couldn't reach the AI service. Check your connection and try again.",
+      nameTaken:
+        'A scenario with this name already exists. Use Edit Draft to rename it.',
     },
   },
   runState: {

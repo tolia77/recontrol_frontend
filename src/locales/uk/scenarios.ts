@@ -40,6 +40,7 @@ const scenarios = {
   },
   editor: {
     backToLibrary: '← Назад до бібліотеки',
+    backToAI: '← Назад до AI-запиту',
     newScenarioTitle: 'Сценарій без назви',
     nameLabel: 'Назва',
     namePlaceholder: 'напр. Діагностика nginx',
@@ -99,23 +100,60 @@ const scenarios = {
     },
   },
   ai: {
+    segmentLabel: 'AI',
     promptLabel: 'Опишіть, що має робити сценарій',
     promptPlaceholder: 'напр. Діагностувати, чому nginx не відповідає',
-    generate: 'Згенерувати',
+    generate: 'Створити чернетку',
+    cancelGenerate: 'Скасувати генерацію',
     generating: 'Генерація...',
-    regenerate: 'Згенерувати знову',
+    generatingCounter_one: 'Генерація... (1 секунда)',
+    generatingCounter_few: 'Генерація... ({{count}} секунди)',
+    generatingCounter_many: 'Генерація... ({{count}} секунд)',
+    generatingCounter_other: 'Генерація... ({{count}} секунди)',
+    emptyStateBody:
+      'Опишіть, що має зробити сценарій, і ми створимо чернетку. AI пропонує команди — ви переглядаєте та зберігаєте.',
+    lastPrompt: 'Останній: «{{prompt}}» — {{relative}}',
+    quotaDrafts: '{{used}} / {{limit}} чернеток сьогодні',
+    quotaTokens: '{{used}} / {{limit}} токенів',
+    dismiss: 'Закрити ✕',
+    regenerate: 'Створити чернетку знову',
     acceptAndSave: 'Прийняти та зберегти',
-    editDraft: 'Редагувати',
+    editDraft: 'Редагувати чернетку',
+    discardDraft: 'Відкинути чернетку',
+    acceptSuccess: 'Сценарій збережено.',
     draftReviewTitle: 'Перегляд чернетки',
     dryIntentWarning: 'Цей крок може бути деструктивним — перевірте уважно.',
     systemPromptDirective:
       'Відповідайте та формуйте описи команд тією ж мовою, що й запит користувача.',
+    dry_intent: {
+      find_delete:
+        'Збіг із шаблоном «find -delete» — перевірте перед запуском.',
+      dd_of_dev:
+        'Збіг із шаблоном «dd of=/dev/» — перевірте перед запуском.',
+      chmod_777_recursive:
+        'Збіг із шаблоном «chmod -R 777» — перевірте перед запуском.',
+      mkfs: 'Збіг із шаблоном «mkfs» — перевірте перед запуском.',
+      truncate_zero:
+        'Збіг із шаблоном «truncate -s 0» — перевірте перед запуском.',
+      redirect_to_system:
+        'Збіг із шаблоном «> /системний шлях» — перевірте перед запуском.',
+      rm_rf_root_adjacent:
+        'Збіг із шаблоном «rm -rf» — перевірте перед запуском.',
+    },
     errors: {
-      unparseable: 'AI повернув некоректну чернетку. Спробуйте згенерувати знову.',
-      unsafe: 'Крок {{stepIndex}} чернетки відхилено політикою безпеки.',
-      quotaTokens: 'Денний ліміт токенів вичерпано. Оновиться {{resetRelative}}.',
-      quotaDrafts: 'Денний ліміт спроб генерації вичерпано (30/день).',
+      unparseable:
+        'AI повернув некоректну чернетку. Спробуйте згенерувати знову.',
+      unsafe:
+        'Крок {{stepIndex}} чернетки відхилено політикою безпеки. Спробуйте інший запит.',
+      quotaTokens:
+        'Денний ліміт AI-токенів вичерпано. Оновиться {{resetRelative}}.',
+      quotaDrafts:
+        'Ви використали всі 30 щоденних спроб AI-чернеток. Оновиться {{resetRelative}}.',
       rateLimited: 'Забагато запитів. Спробуйте за мить.',
+      network:
+        'Не вдалося звʼязатися з AI-сервісом. Перевірте зʼєднання та спробуйте ще раз.',
+      nameTaken:
+        'Сценарій із такою назвою вже існує. Використайте «Редагувати чернетку», щоб перейменувати.',
     },
   },
   runState: {
