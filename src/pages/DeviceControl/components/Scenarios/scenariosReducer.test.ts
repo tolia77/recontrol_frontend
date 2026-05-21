@@ -103,6 +103,18 @@ describe('segment_set', () => {
     const next = scenariosReducer(s, { type: 'segment_set', segment: 'library' });
     expect(next).toBe(s);
   });
+
+  it('accepts the "ai" segment (Phase 23 widening)', () => {
+    let s: ScenariosState = initialScenariosState;
+    s = scenariosReducer(s, { type: 'segment_set', segment: 'ai' });
+    expect(s.segment).toBe('ai');
+    // Round-trip through library + history to prove the widened union has
+    // no exhaustiveness regressions in the segment_set branch.
+    s = scenariosReducer(s, { type: 'segment_set', segment: 'history' });
+    expect(s.segment).toBe('history');
+    s = scenariosReducer(s, { type: 'segment_set', segment: 'ai' });
+    expect(s.segment).toBe('ai');
+  });
 });
 
 // ----------------------------------------------------------------------------

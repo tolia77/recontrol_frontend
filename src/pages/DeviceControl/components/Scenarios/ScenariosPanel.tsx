@@ -55,6 +55,18 @@ function writeSegmentToStorage(value: ScenariosSegment): void {
   }
 }
 
+// Plan 23-07 narrowing: the ScenariosSegment union was widened to include
+// 'ai' for the Phase-23 AI segment, but PanelMode here still only has
+// library/history kinds (Plan 23-09 wires the AI body). Until that lands,
+// any segment-keyed PanelMode transition that could carry 'ai' coerces it
+// to 'library' so the panel never enters an unhandled mode. This keeps
+// tsc -b --noEmit clean without changing visible behavior — Plan 23-09
+// replaces this with a real `{ kind: 'ai' }` PanelMode variant.
+type LegacyPanelSegment = 'library' | 'history';
+function toLegacySegment(value: ScenariosSegment): LegacyPanelSegment {
+  return value === 'history' ? 'history' : 'library';
+}
+
 interface ModalState {
   open: boolean;
   scenarioId: string | null;
@@ -92,7 +104,9 @@ export default function ScenariosPanel({
   const [segment, setSegment] = useState<ScenariosSegment>(initialSegment);
 
   // Mode router — starts in the initial segment (library or history).
-  const [mode, setMode] = useState<PanelMode>({ kind: initialSegment });
+  const [mode, setMode] = useState<PanelMode>({
+    kind: toLegacySegment(initialSegment),
+  });
 
   // Scenarios outer reducer (composes transcriptReducer for live run state).
   const [scenariosState, dispatchScenarios] = useReducer(scenariosReducer, {
@@ -116,7 +130,7 @@ export default function ScenariosPanel({
     // Only re-route mode if we are currently on a non-takeover view.
     setMode((prev) => {
       if (prev.kind === 'library' || prev.kind === 'history') {
-        return { kind: next };
+        return { kind: toLegacySegment(next) };
       }
       return prev;
     });
@@ -228,7 +242,7 @@ export default function ScenariosPanel({
   const handleBack = useCallback(() => {
     const backTo = mode.kind === 'run' ? mode.backTo : segment;
     dispatchScenarios({ type: 'run_clear' });
-    setMode({ kind: backTo });
+    setMode({ kind: toLegacySegment(backTo) });
     setSegment(backTo);
   }, [mode, segment]);
 
@@ -304,14 +318,14 @@ export default function ScenariosPanel({
           <ScenarioEditor
             deviceId={deviceId}
             editingId={mode.editingId}
-            onClose={() => setMode({ kind: segment })}
+            onClose={() => setMode({ kind: toLegacySegment(segment) })}
           />
         )}
         {mode.kind === 'run' && scenariosState.activeRun && (
           <ScenariosRunMode
             activeRun={scenariosState.activeRun}
             deviceName={deviceName}
-            backTo={mode.backTo}
+            backTo={toLegacySegment(mode.backTo)}
             onStop={handleStop}
             onBack={handleBack}
             commandSteps={

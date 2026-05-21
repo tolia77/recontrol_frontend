@@ -78,7 +78,7 @@ export interface ActiveRun {
   transcript: TranscriptState;
 }
 
-export type ScenariosSegment = 'library' | 'history';
+export type ScenariosSegment = 'library' | 'history' | 'ai';
 
 export interface ScenariosState {
   activeRun: ActiveRun | null;
