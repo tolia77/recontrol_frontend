@@ -115,10 +115,11 @@ function makeDraft(): DraftResponse {
       drafts_used: 1,
       drafts_limit: 30,
     },
+    usage: { total_tokens: 123 },
   };
 }
 
-function defaultProps(overrides: Partial<{ onDraftReady: (d: DraftResponse['draft']) => void; initialQuota: DraftQuota }> = {}) {
+function defaultProps(overrides: Partial<{ onDraftReady: (d: DraftResponse['draft'], totalTokens: number) => void; initialQuota: DraftQuota }> = {}) {
   return {
     onDraftReady: vi.fn(),
     initialQuota: undefined,
@@ -172,13 +173,15 @@ describe('ScenariosAISegment', () => {
     expect(cancelSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('6. state.success → onDraftReady is invoked with the inner draft payload', () => {
+  it('6. state.success → onDraftReady is invoked with the inner draft payload and usage.total_tokens', () => {
     const draft = makeDraft();
     hookState = { kind: 'success', draft };
     const onDraftReady = vi.fn();
     render(<ScenariosAISegment {...defaultProps({ onDraftReady })} />);
     expect(onDraftReady).toHaveBeenCalledTimes(1);
-    expect(onDraftReady).toHaveBeenCalledWith(draft.draft);
+    // Plan 23-11 (AI-10): second arg is `usage.total_tokens` for end-to-end
+    // token persistence onto `scenarios.created_via_ai_token_count`.
+    expect(onDraftReady).toHaveBeenCalledWith(draft.draft, draft.usage.total_tokens);
   });
 
   it('7. state.error draft_unparseable → error card renders unparseable copy', () => {

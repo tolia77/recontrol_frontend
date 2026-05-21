@@ -195,6 +195,7 @@ function makeDraftResponse(): DraftResponse {
       drafts_used: 1,
       drafts_limit: 30,
     },
+    usage: { total_tokens: 456 },
   };
 }
 

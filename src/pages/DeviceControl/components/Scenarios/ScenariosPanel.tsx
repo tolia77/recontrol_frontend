@@ -95,16 +95,21 @@ const initialModalState: ModalState = {
   error: null,
 };
 
-// Phase 23 / Plan 23-09: DraftReviewModal state container.
+// Phase 23 / Plan 23-09 + 23-11: DraftReviewModal state container.
+// `totalTokens` is the OpenRouter per-call usage captured at draft generation
+// time (Plan 23-11 / AI-10). It rides alongside `draft` so [Accept and save]
+// can forward it as `created_via_ai_token_count` in the create payload.
 interface DraftModalState {
   open: boolean;
   draft: DraftResponse['draft'] | null;
+  totalTokens: number | null;
   loading: boolean;
 }
 
 const initialDraftModal: DraftModalState = {
   open: false,
   draft: null,
+  totalTokens: null,
   loading: false,
 };
 
@@ -302,9 +307,12 @@ export default function ScenariosPanel({
 
   // ScenariosAISegment → onDraftReady. Opens DraftReviewModal with the
   // draft payload. Quota piggyback stays internal to the AI segment.
+  // Phase 23 / Plan 23-11 (AI-10): `totalTokens` is the OpenRouter per-call
+  // usage captured at draft time — stashed on the modal state so
+  // [Accept and save] can forward it as `created_via_ai_token_count`.
   const handleDraftReady = useCallback(
-    (draft: DraftResponse['draft']) => {
-      setDraftModal({ open: true, draft, loading: false });
+    (draft: DraftResponse['draft'], totalTokens: number) => {
+      setDraftModal({ open: true, draft, totalTokens, loading: false });
     },
     [],
   );
@@ -325,6 +333,7 @@ export default function ScenariosPanel({
     if (!draftModal.draft) return;
     setDraftModal((prev) => ({ ...prev, loading: true }));
     const draft = draftModal.draft;
+    const totalTokens = draftModal.totalTokens;
     const cleanedSteps = draft.command_steps.map(
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       ({ dry_intent_warning, ...rest }) => rest,
@@ -335,6 +344,11 @@ export default function ScenariosPanel({
         description: draft.description,
         command_steps: cleanedSteps,
         created_via_ai: true,
+        // Phase 23 / Plan 23-11 (AI-10): forward the OpenRouter per-call
+        // token total so backend persists it on the scenarios row and stamps
+        // scenario_runs.total_ai_gen_tokens at run start. Omit entirely when
+        // null so the backend default applies (rather than sending 0).
+        ...(totalTokens != null ? { created_via_ai_token_count: totalTokens } : {}),
       });
       setDraftModal(initialDraftModal);
       setMode({ kind: 'library' });
@@ -354,7 +368,7 @@ export default function ScenariosPanel({
       }
       setDraftModal((prev) => ({ ...prev, loading: false }));
     }
-  }, [draftModal.draft, toast, t]);
+  }, [draftModal.draft, draftModal.totalTokens, toast, t]);
 
   // DraftReviewModal [Edit Draft]. Closes the modal and transitions panel
   // mode to the manual editor with the draft prefilled + backTarget='ai'

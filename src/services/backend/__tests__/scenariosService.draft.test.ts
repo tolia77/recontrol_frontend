@@ -61,6 +61,7 @@ function makeDraftResponse(overrides?: Partial<DraftResponse>): DraftResponse {
       drafts_used: 3,
       drafts_limit: 30,
     },
+    usage: { total_tokens: 360 },
     ...overrides,
   };
 }

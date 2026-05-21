@@ -43,8 +43,14 @@ export interface ScenariosAISegmentProps {
    * Invoked on state.kind === 'success' with the inner draft payload (NOT the
    * envelope — parent doesn't need the quota piggyback, which the segment
    * keeps internally for its quota indicator).
+   *
+   * Phase 23 / Plan 23-11 (AI-10): second arg `totalTokens` carries the
+   * OpenRouter `usage.total_tokens` for this call. Parent forwards it on
+   * [Accept and save] as `created_via_ai_token_count`. May be 0 if the backend
+   * could not parse the usage block (graceful — backend nullifies bogus
+   * values, frontend simply stamps whatever it received).
    */
-  onDraftReady: (draft: DraftResponse['draft']) => void;
+  onDraftReady: (draft: DraftResponse['draft'], totalTokens: number) => void;
   /**
    * Optional initial quota snapshot supplied by the parent (typically from a
    * GET /ai_usages/today fetch on segment mount). When omitted, the quota
@@ -162,10 +168,12 @@ export function ScenariosAISegment({
 
   // Success-branch effect: hand the draft to the parent, refresh quota from
   // the piggyback (per D-04 Quota indicator data source), and stamp lastPrompt.
+  // Phase 23 / Plan 23-11 (AI-10): forward `usage.total_tokens` so the panel
+  // can persist it as `created_via_ai_token_count` on [Accept and save].
   useEffect(() => {
     if (state.kind !== 'success') return;
     setQuota(state.draft.quota);
-    onDraftReady(state.draft.draft);
+    onDraftReady(state.draft.draft, state.draft.usage?.total_tokens ?? 0);
   }, [state, onDraftReady]);
 
   // Error-branch effect: re-show the error card whenever the hook surfaces a

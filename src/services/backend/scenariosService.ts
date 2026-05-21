@@ -51,6 +51,12 @@ export interface ScenarioCreatePayload {
   // persisted Scenario row. Optional — manual editor saves omit it (default
   // false on the backend `before_validation` hook).
   created_via_ai?: boolean;
+  // Phase 23 / Plan 23-11 (AI-10): OpenRouter `usage.total_tokens` captured at
+  // draft generation time and forwarded on [Accept and save]. The backend
+  // nullifies this field when `created_via_ai != true` (T-23-44 guard), so it
+  // is safe to send unconditionally — but in practice the modal only sends it
+  // alongside `created_via_ai: true`.
+  created_via_ai_token_count?: number;
   command_steps: Array<
     Omit<CommandStep, 'id' | 'classified_intent_at_save' | 'verdict_at_save'> & { id?: string }
   >;
@@ -117,7 +123,16 @@ export interface DraftQuota {
   drafts_limit: number;
 }
 
-// Top-level response envelope: { draft: {...}, quota: {...} }
+// Per-call OpenRouter usage piggyback. Phase 23 / Plan 23-11 (AI-10):
+// `total_tokens = prompt_tokens + completion_tokens`. The DraftReviewModal
+// Accept handler captures this number and forwards it to `scenariosService.create`
+// as `created_via_ai_token_count` so the backend persists it on the row and
+// later copies it to `scenario_runs.total_ai_gen_tokens` at run start.
+export interface DraftUsage {
+  total_tokens: number;
+}
+
+// Top-level response envelope: { draft: {...}, quota: {...}, usage: {...} }
 export interface DraftResponse {
   draft: {
     name: string;
@@ -125,6 +140,9 @@ export interface DraftResponse {
     command_steps: DraftStep[];
   };
   quota: DraftQuota;
+  // Phase 23 / Plan 23-11 (AI-10) — surfaced by the backend so the frontend
+  // can persist `created_via_ai_token_count` on Accept.
+  usage: DraftUsage;
 }
 
 export interface ScenarioWriteResponse {
