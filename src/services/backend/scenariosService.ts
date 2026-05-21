@@ -86,9 +86,14 @@ export interface ScenarioIndexParams {
   per_page?: number;
 }
 
+interface ScenarioIndexResponse {
+  scenarios: Scenario[];
+  meta: { page: number; per_page: number; total: number };
+}
+
 export const scenariosService = {
   async index(params?: ScenarioIndexParams): Promise<Scenario[]> {
-    const { data } = await backendInstance.get<Scenario[]>('/scenarios', {
+    const { data } = await backendInstance.get<ScenarioIndexResponse>('/scenarios', {
       params: {
         ...(params?.q ? { q: params.q } : {}),
         ...(params?.pinned_device_id ? { pinned_device_id: params.pinned_device_id } : {}),
@@ -97,7 +102,7 @@ export const scenariosService = {
       },
       headers: { Authorization: getAccessToken() },
     });
-    return data;
+    return data.scenarios;
   },
 
   async show(id: string): Promise<Scenario> {
