@@ -75,6 +75,53 @@ export interface PolicyDenyError {
   reason: string;
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// AI draft generation (Phase 23) — D-12: drafts have no step `id`; backend
+// `before_validation` hook assigns UUIDs only at save time. The amber
+// `dry_intent_warning` is draft-time-only and is discarded on [Accept and save]
+// (D-11): saved scenarios are independently re-classified by the run-time
+// irreversible-intent catalog inside PolicyPreviewModal.
+// ────────────────────────────────────────────────────────────────────────────
+
+// AI-05 frontend half: shape produced by `CommandPolicy.dry_intent_check`
+// (recontrol_backend/app/services/command_policy/dry_intent_patterns.rb).
+// `message_key` matches /\Ascenarios\.ai\.dry_intent\.[a-z_]+\z/ — the frontend
+// passes it directly to i18next to render the localized tooltip.
+export interface DryIntentWarning {
+  pattern: string;
+  message_key: string;
+}
+
+// Per-step draft shape returned by POST /scenarios/drafts. NO `id` per D-12.
+// `description` is `string | null` (model may emit JSON null). The optional
+// `dry_intent_warning` is absent when no draft-time heuristic pattern matched.
+export interface DraftStep {
+  binary: string;
+  args: string[];
+  cwd: string;
+  description: string | null;
+  dry_intent_warning?: DryIntentWarning;
+}
+
+// Quota piggyback per AI-06 / AI-07: shared token ledger + independent
+// 30/day drafts counter. Used to drive the quota indicator UI.
+export interface DraftQuota {
+  tokens_used: number;
+  tokens_limit: number;
+  drafts_used: number;
+  drafts_limit: number;
+}
+
+// Top-level response envelope: { draft: {...}, quota: {...} }
+export interface DraftResponse {
+  draft: {
+    name: string;
+    description: string;
+    command_steps: DraftStep[];
+  };
+  quota: DraftQuota;
+}
+
 export interface ScenarioWriteResponse {
   scenario: Scenario;
 }
@@ -117,6 +164,32 @@ export const scenariosService = {
       '/scenarios',
       { scenario: payload },
       { headers: { Authorization: getAccessToken() } }
+    );
+    return data;
+  },
+
+  // AI-01 frontend half: POST /scenarios/drafts (Plan 23-06 backend mount;
+  // no `/api` prefix per backend routing). `locale` flows through the
+  // `Accept-Language` header so the backend system prompt (D-09) renders the
+  // correct locale directive. The `signal` argument is forwarded into the
+  // axios request config so `controller.abort()` terminates the in-flight
+  // HTTP request client-side (D-05 — server may still complete + charge;
+  // documented trade-off captured in UI copy "Cancel generation").
+  async createDraft(
+    prompt: string,
+    locale: string,
+    signal?: AbortSignal
+  ): Promise<DraftResponse> {
+    const { data } = await backendInstance.post<DraftResponse>(
+      '/scenarios/drafts',
+      { prompt },
+      {
+        headers: {
+          Authorization: getAccessToken(),
+          'Accept-Language': locale,
+        },
+        signal,
+      }
     );
     return data;
   },
