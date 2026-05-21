@@ -8,8 +8,11 @@ import ScenariosHistory from './ScenariosHistory';
 import ScenariosHistoryDetail from './ScenariosHistoryDetail';
 import ScenariosRunMode from './ScenariosRunMode';
 import PolicyPreviewModal from './PolicyPreviewModal';
+import ScenariosAISegment from './ScenariosAISegment';
+import DraftReviewModal from './DraftReviewModal';
 import {
   scenariosService,
+  type DraftResponse,
   type PolicyPreviewResponse,
   type Scenario,
 } from '../../../../services/backend/scenariosService';
@@ -22,16 +25,28 @@ import {
 } from './scenariosReducer';
 
 // -----------------------------------------------------------------------------
-// PanelMode discriminated union — Plan 22.10 extends the P21 shape to add
-// 'history' + 'run' + 'history_detail' variants. The 'library' / 'editor'
-// variants stay; the integration is mechanical wiring per Plan 22.10 objective.
+// PanelMode discriminated union — Plan 23-09 extends the P22 shape with a
+// real `{ kind: 'ai' }` variant (replacing the Plan 23-07 `toLegacySegment`
+// narrowing bridge) and widens the `editor` variant with optional
+// `prefill` + `backTarget` fields so the AI flow can hand a draft to the
+// manual editor and round-trip via the [← Back] button.
+//
+// `run.backTo` stays a `'library' | 'history'` literal (run-mode launched
+// from AI flow is not a target the v1.5 UI exposes; if a run launches from
+// AI it logically goes back to library).
 // -----------------------------------------------------------------------------
 
 type PanelMode =
   | { kind: 'library' }
   | { kind: 'history' }
-  | { kind: 'editor'; editingId: string | 'new' }
-  | { kind: 'run'; runId: string; scenarioId: string; backTo: ScenariosSegment }
+  | { kind: 'ai' }
+  | {
+      kind: 'editor';
+      editingId: string | 'new';
+      prefill?: DraftResponse['draft'];
+      backTarget?: ScenariosSegment;
+    }
+  | { kind: 'run'; runId: string; scenarioId: string; backTo: 'library' | 'history' }
   | { kind: 'history_detail'; runId: string };
 
 // UI-05: sessionStorage key for the active segment. Wrapped in try/catch
@@ -41,7 +56,9 @@ const SEGMENT_KEY = 'scenarios_panel_segment';
 function readSegmentFromStorage(): ScenariosSegment {
   try {
     const stored = sessionStorage.getItem(SEGMENT_KEY);
-    return stored === 'history' ? 'history' : 'library';
+    if (stored === 'history') return 'history';
+    if (stored === 'ai') return 'ai';
+    return 'library';
   } catch {
     return 'library';
   }
@@ -55,16 +72,9 @@ function writeSegmentToStorage(value: ScenariosSegment): void {
   }
 }
 
-// Plan 23-07 narrowing: the ScenariosSegment union was widened to include
-// 'ai' for the Phase-23 AI segment, but PanelMode here still only has
-// library/history kinds (Plan 23-09 wires the AI body). Until that lands,
-// any segment-keyed PanelMode transition that could carry 'ai' coerces it
-// to 'library' so the panel never enters an unhandled mode. This keeps
-// tsc -b --noEmit clean without changing visible behavior — Plan 23-09
-// replaces this with a real `{ kind: 'ai' }` PanelMode variant.
-type LegacyPanelSegment = 'library' | 'history';
-function toLegacySegment(value: ScenariosSegment): LegacyPanelSegment {
-  return value === 'history' ? 'history' : 'library';
+// Run-mode back targets are always library or history (not 'ai').
+function backTargetForRun(segment: ScenariosSegment): 'library' | 'history' {
+  return segment === 'history' ? 'history' : 'library';
 }
 
 interface ModalState {
@@ -85,6 +95,19 @@ const initialModalState: ModalState = {
   error: null,
 };
 
+// Phase 23 / Plan 23-09: DraftReviewModal state container.
+interface DraftModalState {
+  open: boolean;
+  draft: DraftResponse['draft'] | null;
+  loading: boolean;
+}
+
+const initialDraftModal: DraftModalState = {
+  open: false,
+  draft: null,
+  loading: false,
+};
+
 export interface ScenariosPanelProps {
   deviceId: string;
   ws: WebSocket | null;
@@ -103,9 +126,9 @@ export default function ScenariosPanel({
   const initialSegment = readSegmentFromStorage();
   const [segment, setSegment] = useState<ScenariosSegment>(initialSegment);
 
-  // Mode router — starts in the initial segment (library or history).
+  // Mode router — starts in the initial segment (library / history / ai).
   const [mode, setMode] = useState<PanelMode>({
-    kind: toLegacySegment(initialSegment),
+    kind: initialSegment,
   });
 
   // Scenarios outer reducer (composes transcriptReducer for live run state).
@@ -117,20 +140,32 @@ export default function ScenariosPanel({
   // Modal state for PolicyPreviewModal.
   const [modalState, setModalState] = useState<ModalState>(initialModalState);
 
+  // Phase 23 / Plan 23-09: DraftReviewModal state.
+  const [draftModal, setDraftModal] = useState<DraftModalState>(initialDraftModal);
+  // Phase 23 / Plan 23-09: last operator prompt (captured at generate time;
+  // re-submitted verbatim by [Regenerate Draft]). Component-state only —
+  // never persisted, matches the D-04 ephemerality posture.
+  const [lastAIPrompt, setLastAIPrompt] = useState<string | null>(null);
+  // Phase 23 / Plan 23-09: regenerate signal — bumping this number causes
+  // the mounted ScenariosAISegment to re-fire generate(lastAIPrompt) via its
+  // own effect. The segment uses the AbortController inside its hook so any
+  // prior in-flight request is cancelled.
+  const [regenerateToken, setRegenerateToken] = useState(0);
+
   // Persist segment changes to sessionStorage.
   useEffect(() => {
     writeSegmentToStorage(segment);
   }, [segment]);
 
   // Keep the mode and segment in sync when the operator clicks a segment pill
-  // while in library / history. Editor / run / history_detail are takeovers
+  // while in library / history / ai. Editor / run / history_detail are takeovers
   // and do not change the segment.
   const handleSegmentChange = useCallback((next: ScenariosSegment): void => {
     setSegment(next);
     // Only re-route mode if we are currently on a non-takeover view.
     setMode((prev) => {
-      if (prev.kind === 'library' || prev.kind === 'history') {
-        return { kind: toLegacySegment(next) };
+      if (prev.kind === 'library' || prev.kind === 'history' || prev.kind === 'ai') {
+        return { kind: next };
       }
       return prev;
     });
@@ -224,7 +259,7 @@ export default function ScenariosPanel({
       kind: 'run',
       runId: placeholderRunId,
       scenarioId: modalState.scenarioId,
-      backTo: segment,
+      backTo: backTargetForRun(segment),
     });
     setModalState(initialModalState);
   }, [modalState, deviceId, dispatchChannel, segment]);
@@ -240,9 +275,9 @@ export default function ScenariosPanel({
   }, [dispatchChannel]);
 
   const handleBack = useCallback(() => {
-    const backTo = mode.kind === 'run' ? mode.backTo : segment;
+    const backTo = mode.kind === 'run' ? mode.backTo : backTargetForRun(segment);
     dispatchScenarios({ type: 'run_clear' });
-    setMode({ kind: toLegacySegment(backTo) });
+    setMode({ kind: backTo });
     setSegment(backTo);
   }, [mode, segment]);
 
@@ -261,14 +296,105 @@ export default function ScenariosPanel({
     setSegment('history');
   }, []);
 
+  // ---------------------------------------------------------------------------
+  // Phase 23 / Plan 23-09 — AI draft flow handlers
+  // ---------------------------------------------------------------------------
+
+  // ScenariosAISegment → onDraftReady. Opens DraftReviewModal with the
+  // draft payload. Quota piggyback stays internal to the AI segment.
+  const handleDraftReady = useCallback(
+    (draft: DraftResponse['draft']) => {
+      setDraftModal({ open: true, draft, loading: false });
+    },
+    [],
+  );
+
+  // ScenariosAISegment → onPromptSubmit (NOT part of the v1 hook surface —
+  // the segment captures the prompt internally; we mirror it via this
+  // callback so [Regenerate Draft] can re-send the exact original text).
+  const handlePromptSubmitted = useCallback((prompt: string) => {
+    setLastAIPrompt(prompt);
+  }, []);
+
+  // DraftReviewModal [Accept and save]. D-11: strip `dry_intent_warning`
+  // from every step via destructure-rest BEFORE POSTing — guarantees the
+  // saved scenario row carries zero AI-draft-time annotations. Mutation-
+  // free: the in-memory draft state retains the warning so if the operator
+  // re-opens the modal the badge still renders.
+  const handleAcceptDraft = useCallback(async () => {
+    if (!draftModal.draft) return;
+    setDraftModal((prev) => ({ ...prev, loading: true }));
+    const draft = draftModal.draft;
+    const cleanedSteps = draft.command_steps.map(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      ({ dry_intent_warning, ...rest }) => rest,
+    );
+    try {
+      await scenariosService.create({
+        name: draft.name,
+        description: draft.description,
+        command_steps: cleanedSteps,
+        created_via_ai: true,
+      });
+      setDraftModal(initialDraftModal);
+      setMode({ kind: 'library' });
+      setSegment('library');
+      toast.success(t('ai.acceptSuccess'));
+    } catch (err) {
+      // 422 name collision surfaces a toast + leaves modal open so the
+      // operator can hit [Edit Draft] to rename in the manual editor.
+      const data = (err as { response?: { data?: unknown } } | undefined)
+        ?.response?.data as
+        | { errors?: { name?: string[] } }
+        | undefined;
+      if (data?.errors?.name?.length) {
+        toast.error(t('ai.errors.nameTaken'));
+      } else {
+        toast.error(t('editor.errors.policyDenied'));
+      }
+      setDraftModal((prev) => ({ ...prev, loading: false }));
+    }
+  }, [draftModal.draft, toast, t]);
+
+  // DraftReviewModal [Edit Draft]. Closes the modal and transitions panel
+  // mode to the manual editor with the draft prefilled + backTarget='ai'
+  // so the [← Back] button returns to the AI segment.
+  const handleEditDraft = useCallback(() => {
+    if (!draftModal.draft) return;
+    const draft = draftModal.draft;
+    setDraftModal(initialDraftModal);
+    setMode({
+      kind: 'editor',
+      editingId: 'new',
+      prefill: draft,
+      backTarget: 'ai',
+    });
+  }, [draftModal.draft]);
+
+  // DraftReviewModal [Regenerate Draft]. Closes the modal + bumps the
+  // regenerate token so the ScenariosAISegment effect re-fires generate()
+  // with `lastAIPrompt`. If the editor takeover has dirty state (D-03),
+  // the dirty-guard fires inside the editor when [← Back] is clicked; the
+  // regenerate flow itself does not touch the editor.
+  const handleRegenerateDraft = useCallback(() => {
+    setDraftModal(initialDraftModal);
+    setRegenerateToken((n) => n + 1);
+  }, []);
+
+  // DraftReviewModal [Discard draft]. Closes modal, clears draft.
+  const handleDiscardDraft = useCallback(() => {
+    setDraftModal(initialDraftModal);
+  }, []);
+
   const showSegmentedControl =
-    mode.kind === 'library' || mode.kind === 'history';
+    mode.kind === 'library' || mode.kind === 'history' || mode.kind === 'ai';
 
   // Compute the header title per mode.
   const headerTitle = (() => {
     switch (mode.kind) {
       case 'library':
       case 'history':
+      case 'ai':
         return t('library.title');
       case 'editor':
         return t('editor.newScenarioTitle');
@@ -294,6 +420,7 @@ export default function ScenariosPanel({
             options={[
               { value: 'library', label: t('library.segmentLabel') },
               { value: 'history', label: t('history.tabLabel') },
+              { value: 'ai', label: t('ai.segmentLabel') },
             ]}
             onChange={handleSegmentChange}
             data-testid="scenarios-panel-segment"
@@ -314,18 +441,34 @@ export default function ScenariosPanel({
         {mode.kind === 'history' && (
           <ScenariosHistory onSelectRun={handleSelectRun} />
         )}
+        {mode.kind === 'ai' && (
+          <div className="p-4" data-testid="scenarios-ai-segment">
+            <ScenariosAISegment
+              onDraftReady={handleDraftReady}
+              onPromptSubmitted={handlePromptSubmitted}
+              regenerateToken={regenerateToken}
+              regeneratePrompt={lastAIPrompt}
+            />
+          </div>
+        )}
         {mode.kind === 'editor' && (
           <ScenarioEditor
             deviceId={deviceId}
             editingId={mode.editingId}
-            onClose={() => setMode({ kind: toLegacySegment(segment) })}
+            onClose={() => {
+              const target = mode.backTarget ?? segment;
+              setMode({ kind: target });
+              setSegment(target);
+            }}
+            prefill={mode.prefill}
+            backTarget={mode.backTarget}
           />
         )}
         {mode.kind === 'run' && scenariosState.activeRun && (
           <ScenariosRunMode
             activeRun={scenariosState.activeRun}
             deviceName={deviceName}
-            backTo={toLegacySegment(mode.backTo)}
+            backTo={mode.backTo}
             onStop={handleStop}
             onBack={handleBack}
             commandSteps={
@@ -370,6 +513,17 @@ export default function ScenariosPanel({
         }
         onApprove={handleApprove}
         onCancel={handleCancel}
+      />
+
+      {/* Phase 23 / Plan 23-09: DraftReviewModal mounted at panel root */}
+      <DraftReviewModal
+        open={draftModal.open}
+        draft={draftModal.draft}
+        loading={draftModal.loading}
+        onAccept={handleAcceptDraft}
+        onEdit={handleEditDraft}
+        onRegenerate={handleRegenerateDraft}
+        onCancel={handleDiscardDraft}
       />
     </div>
   );

@@ -25,7 +25,7 @@
  *     AbortController + signal.aborted guards on resolve/reject.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Card } from 'src/components/ui/Card.tsx';
@@ -52,6 +52,26 @@ export interface ScenariosAISegmentProps {
    * a piggybacked snapshot.
    */
   initialQuota?: DraftQuota;
+  /**
+   * Phase 23 / Plan 23-09: parent observer for prompt submissions. The
+   * panel records the most recent prompt so [Regenerate Draft] can re-send
+   * it verbatim (D-03). The segment never reads back from the parent;
+   * this is a one-way notify.
+   */
+  onPromptSubmitted?: (prompt: string) => void;
+  /**
+   * Phase 23 / Plan 23-09: monotonically-increasing token bumped by the
+   * parent when [Regenerate Draft] fires. The segment effect watches this
+   * value and, on each change after first mount, re-invokes generate()
+   * with `regeneratePrompt`. Same AbortController lifecycle as a manual
+   * generate (prior in-flight is cancelled).
+   */
+  regenerateToken?: number;
+  /**
+   * Phase 23 / Plan 23-09: prompt to re-submit when `regenerateToken`
+   * changes. Typically the parent's `lastAIPrompt` state.
+   */
+  regeneratePrompt?: string | null;
 }
 
 const PROMPT_MAX_LENGTH = 1000;
@@ -109,6 +129,9 @@ function isAmberQuota(q: DraftQuota): boolean {
 export function ScenariosAISegment({
   onDraftReady,
   initialQuota,
+  onPromptSubmitted,
+  regenerateToken,
+  regeneratePrompt,
 }: ScenariosAISegmentProps) {
   const { t } = useTranslation('scenarios');
   const { state, generate, cancel } = useDraftGeneration();
@@ -158,11 +181,27 @@ export function ScenariosAISegment({
     if (trimmed.length === 0) return;
     setErrorDismissed(false);
     setLastPrompt({ text: prompt, at: Date.now() });
+    onPromptSubmitted?.(prompt);
     // Locale flows through the Accept-Language header from i18n.language at
     // call-site per D-09. Binary names + args stay canonical English; only
     // descriptive prose responds to the locale directive.
     void generate(prompt, i18n.language);
-  }, [prompt, generate]);
+  }, [prompt, generate, onPromptSubmitted]);
+
+  // Phase 23 / Plan 23-09: parent-driven regenerate. Watches `regenerateToken`
+  // and re-fires generate(regeneratePrompt) on each bump (skipping the
+  // initial mount value). Uses the hook's existing AbortController lifecycle
+  // so any in-flight request is cancelled.
+  const lastRegenerateTokenRef = useRef<number | undefined>(regenerateToken);
+  useEffect(() => {
+    if (regenerateToken === undefined) return;
+    if (regenerateToken === lastRegenerateTokenRef.current) return;
+    lastRegenerateTokenRef.current = regenerateToken;
+    if (!regeneratePrompt || regeneratePrompt.trim().length === 0) return;
+    setErrorDismissed(false);
+    setLastPrompt({ text: regeneratePrompt, at: Date.now() });
+    void generate(regeneratePrompt, i18n.language);
+  }, [regenerateToken, regeneratePrompt, generate]);
 
   const handleCancel = useCallback(() => {
     cancel();

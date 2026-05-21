@@ -46,6 +46,11 @@ export interface ScenarioCreatePayload {
   description?: string | null;
   pinned_device_id?: string | null;
   is_shared?: boolean;
+  // Phase 23 / Plan 23-09 (AI-09 / D-10): set true by the DraftReviewModal
+  // Accept-and-save path so the backend stamps `created_via_ai: true` on the
+  // persisted Scenario row. Optional — manual editor saves omit it (default
+  // false on the backend `before_validation` hook).
+  created_via_ai?: boolean;
   command_steps: Array<
     Omit<CommandStep, 'id' | 'classified_intent_at_save' | 'verdict_at_save'> & { id?: string }
   >;
