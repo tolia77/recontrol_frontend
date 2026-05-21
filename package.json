@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "preview": "vite preview",
     "start": "node server.js",
-    "heroku-postbuild": "npm run build"
+    "heroku-postbuild": "npm run build",
+    "security:check-key": "./scripts/check-no-openrouter-key.sh"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
