@@ -60,16 +60,26 @@ export interface ScenarioRunIndexParams {
   per_page?: number;
 }
 
+interface ScenarioRunIndexResponse {
+  scenario_runs: ScenarioRun[];
+  meta: { page: number; per_page: number; total: number };
+}
+
+export interface ScenarioRunIndexResult {
+  runs: ScenarioRun[];
+  total: number;
+}
+
 export const scenarioRunsService = {
-  async index(params?: ScenarioRunIndexParams): Promise<ScenarioRun[]> {
-    const { data } = await backendInstance.get<ScenarioRun[]>('/scenario_runs', {
+  async index(params?: ScenarioRunIndexParams): Promise<ScenarioRunIndexResult> {
+    const { data } = await backendInstance.get<ScenarioRunIndexResponse>('/scenario_runs', {
       params: {
         ...(params?.page ? { page: params.page } : {}),
         ...(params?.per_page ? { per_page: params.per_page } : {}),
       },
       headers: { Authorization: getAccessToken() },
     });
-    return data;
+    return { runs: data.scenario_runs, total: data.meta.total };
   },
 
   async show(id: string): Promise<ScenarioRun> {

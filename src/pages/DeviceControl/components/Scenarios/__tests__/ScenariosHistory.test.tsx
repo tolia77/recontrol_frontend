@@ -41,6 +41,10 @@ import ScenariosHistory from '../ScenariosHistory';
 const mockedIndex = vi.mocked(scenarioRunsService.index);
 const mockedDestroyAll = vi.mocked(scenarioRunsService.destroyAll);
 
+function page(runs: ScenarioRun[], total: number = runs.length) {
+  return { runs, total };
+}
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -129,11 +133,11 @@ describe('ScenariosHistory', () => {
   });
 
   it('renders a row per ScenarioRun returned by index()', async () => {
-    mockedIndex.mockResolvedValue([
+    mockedIndex.mockResolvedValue(page([
       makeRun('r1', 'completed'),
       makeRun('r2', 'failed'),
       makeRun('r3', 'user_stopped'),
-    ]);
+    ]));
     renderHistory();
     await waitFor(() => {
       expect(screen.getByTestId('history-row-r1')).toBeDefined();
@@ -143,7 +147,7 @@ describe('ScenariosHistory', () => {
   });
 
   it('shows the empty state when no runs', async () => {
-    mockedIndex.mockResolvedValue([]);
+    mockedIndex.mockResolvedValue(page([]));
     renderHistory();
     await waitFor(() => {
       expect(screen.getByTestId('scenarios-history-empty')).toBeDefined();
@@ -154,11 +158,11 @@ describe('ScenariosHistory', () => {
   });
 
   it('renders the status badge with the correct color class per run status', async () => {
-    mockedIndex.mockResolvedValue([
+    mockedIndex.mockResolvedValue(page([
       makeRun('r1', 'completed'),
       makeRun('r2', 'failed'),
       makeRun('r3', 'user_stopped'),
-    ]);
+    ]));
     renderHistory();
     await waitFor(() => screen.getByTestId('history-row-r1'));
     const row1 = within(screen.getByTestId('history-row-r1')).getByTestId(
@@ -176,7 +180,7 @@ describe('ScenariosHistory', () => {
   });
 
   it('renders the exit-code glyph row from buildExitCodeTimeline when steps are provided', async () => {
-    mockedIndex.mockResolvedValue([
+    mockedIndex.mockResolvedValue(page([
       makeRun('r1', 'failed', {
         steps: [
           makeStep(0, 'success'),
@@ -184,7 +188,7 @@ describe('ScenariosHistory', () => {
           makeStep(2, 'failed'),
         ],
       }),
-    ]);
+    ]));
     renderHistory();
     await waitFor(() => screen.getByTestId('history-row-r1'));
     const glyphRow = within(screen.getByTestId('history-row-r1')).getByTestId(
@@ -195,7 +199,7 @@ describe('ScenariosHistory', () => {
   });
 
   it('calls onSelectRun(runId) when a row is clicked', async () => {
-    mockedIndex.mockResolvedValue([makeRun('rABC', 'completed')]);
+    mockedIndex.mockResolvedValue(page([makeRun('rABC', 'completed')]));
     const onSelectRun = vi.fn();
     renderHistory({ onSelectRun });
     await waitFor(() => screen.getByTestId('history-row-rABC'));
@@ -209,7 +213,9 @@ describe('ScenariosHistory', () => {
       makeRun(`p1-r${i}`, 'completed'),
     );
     const page2 = [makeRun('p2-r0', 'completed')];
-    mockedIndex.mockResolvedValueOnce(page1).mockResolvedValueOnce(page2);
+    mockedIndex
+      .mockResolvedValueOnce(page(page1, 26))
+      .mockResolvedValueOnce(page(page2, 26));
     renderHistory();
     await waitFor(() => screen.getByTestId('history-row-p1-r0'));
     fireEvent.click(screen.getByTestId('history-next'));
@@ -219,15 +225,15 @@ describe('ScenariosHistory', () => {
   });
 
   it('disables [← Prev] on page 1', async () => {
-    mockedIndex.mockResolvedValue([makeRun('r1')]);
+    mockedIndex.mockResolvedValue(page([makeRun('r1')]));
     renderHistory();
     await waitFor(() => screen.getByTestId('history-row-r1'));
     const prev = screen.getByTestId('history-prev') as HTMLButtonElement;
     expect(prev.disabled).toBe(true);
   });
 
-  it('disables [Next →] when the current page returned fewer than per_page', async () => {
-    mockedIndex.mockResolvedValue([makeRun('r1'), makeRun('r2')]);
+  it('disables [Next →] when the current page is the last page', async () => {
+    mockedIndex.mockResolvedValue(page([makeRun('r1'), makeRun('r2')]));
     renderHistory();
     await waitFor(() => screen.getByTestId('history-row-r1'));
     const next = screen.getByTestId('history-next') as HTMLButtonElement;
@@ -235,14 +241,14 @@ describe('ScenariosHistory', () => {
   });
 
   it('hides [✕ Delete all history] when there are no runs', async () => {
-    mockedIndex.mockResolvedValue([]);
+    mockedIndex.mockResolvedValue(page([]));
     renderHistory();
     await waitFor(() => screen.getByTestId('scenarios-history-empty'));
     expect(screen.queryByTestId('history-delete-all')).toBeNull();
   });
 
   it('opens the mass-delete confirm modal when [✕ Delete all history] is clicked', async () => {
-    mockedIndex.mockResolvedValue([makeRun('r1')]);
+    mockedIndex.mockResolvedValue(page([makeRun('r1')]));
     renderHistory();
     await waitFor(() => screen.getByTestId('history-row-r1'));
     fireEvent.click(screen.getByTestId('history-delete-all'));
@@ -251,8 +257,8 @@ describe('ScenariosHistory', () => {
 
   it('calls scenarioRunsService.destroyAll() on confirm and refreshes the list', async () => {
     mockedIndex
-      .mockResolvedValueOnce([makeRun('r1'), makeRun('r2')])
-      .mockResolvedValueOnce([]);
+      .mockResolvedValueOnce(page([makeRun('r1'), makeRun('r2')]))
+      .mockResolvedValueOnce(page([]));
     mockedDestroyAll.mockResolvedValue();
     renderHistory();
     await waitFor(() => screen.getByTestId('history-row-r1'));
@@ -275,7 +281,7 @@ describe('ScenariosHistory', () => {
   });
 
   it('shows an error Toast when destroyAll() rejects', async () => {
-    mockedIndex.mockResolvedValue([makeRun('r1')]);
+    mockedIndex.mockResolvedValue(page([makeRun('r1')]));
     mockedDestroyAll.mockRejectedValue(new Error('boom'));
     renderHistory();
     await waitFor(() => screen.getByTestId('history-row-r1'));
@@ -295,7 +301,7 @@ describe('ScenariosHistory', () => {
   });
 
   it('closes the modal on Cancel without calling destroyAll', async () => {
-    mockedIndex.mockResolvedValue([makeRun('r1')]);
+    mockedIndex.mockResolvedValue(page([makeRun('r1')]));
     renderHistory();
     await waitFor(() => screen.getByTestId('history-row-r1'));
     fireEvent.click(screen.getByTestId('history-delete-all'));
@@ -307,11 +313,11 @@ describe('ScenariosHistory', () => {
   });
 
   it('renders the "Showing X-Y of N" indicator', async () => {
-    mockedIndex.mockResolvedValue([
+    mockedIndex.mockResolvedValue(page([
       makeRun('r1'),
       makeRun('r2'),
       makeRun('r3'),
-    ]);
+    ]));
     renderHistory();
     await waitFor(() => screen.getByTestId('history-row-r1'));
     const indicator = screen.getByTestId('history-showing');

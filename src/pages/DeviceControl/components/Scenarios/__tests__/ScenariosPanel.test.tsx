@@ -228,7 +228,7 @@ beforeEach(() => {
   mockedScenariosIndex.mockResolvedValue([makeScenario()]);
   mockedScenariosShow.mockResolvedValue(makeScenario());
   mockedPolicyPreview.mockResolvedValue(makePolicyPreview());
-  mockedRunsIndex.mockResolvedValue([makeRun('r1'), makeRun('r2')]);
+  mockedRunsIndex.mockResolvedValue({ runs: [makeRun('r1'), makeRun('r2')], total: 2 });
   mockDispatch.mockReset();
   capturedOnBroadcast = null;
 });
@@ -310,18 +310,16 @@ describe('ScenariosPanel — launch flow (library → modal → run)', () => {
     });
   });
 
-  it('fetches scenario.show + policyPreview after [▶ Run] click', async () => {
+  it('fetches policyPreview after [▶ Run] click using the row scenario', async () => {
     renderPanel();
     await waitFor(() => {
       expect(screen.getByTestId('scenarios-list')).toBeDefined();
     });
     fireEvent.click(screen.getByTestId('scenarios-row-run'));
     await waitFor(() => {
-      expect(mockedScenariosShow).toHaveBeenCalledWith('scen-1');
-    });
-    await waitFor(() => {
       expect(mockedPolicyPreview).toHaveBeenCalledWith('scen-1', 'dev-1');
     });
+    expect(mockedScenariosShow).not.toHaveBeenCalled();
   });
 
   it('renders the per-step rows from the policyPreview response', async () => {

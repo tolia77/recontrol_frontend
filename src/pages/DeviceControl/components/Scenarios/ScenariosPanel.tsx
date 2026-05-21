@@ -149,26 +149,27 @@ export default function ScenariosPanel({
   const { dispatch: dispatchChannel } = useScenarioRunChannel(ws, onBroadcast);
 
   // Library → modal opener flow per D-22-07 + RUN-01.
+  // The library row already holds the full Scenario from the index payload, so
+  // we hand it straight to the modal and only the policy preview round-trips.
   const handleRunClick = useCallback(
-    async (scenarioId: string) => {
+    async (scenario: Scenario) => {
       setModalState({
         open: true,
-        scenarioId,
-        scenario: null,
+        scenarioId: scenario.id,
+        scenario,
         response: null,
         loading: true,
         error: null,
       });
       try {
-        const scenario = await scenariosService.show(scenarioId);
         const targetDeviceId = scenario.pinned_device_id ?? deviceId;
         const preview = await scenariosService.policyPreview(
-          scenarioId,
+          scenario.id,
           targetDeviceId,
         );
         setModalState({
           open: true,
-          scenarioId,
+          scenarioId: scenario.id,
           scenario,
           response: preview,
           loading: false,

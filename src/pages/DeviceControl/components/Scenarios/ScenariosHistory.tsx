@@ -124,6 +124,7 @@ export default function ScenariosHistory({ onSelectRun }: ScenariosHistoryProps)
   const { t } = useTranslation('scenarios');
   const toast = useToast();
   const [runs, setRuns] = useState<ScenarioRun[]>([]);
+  const [total, setTotal] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -140,8 +141,10 @@ export default function ScenariosHistory({ onSelectRun }: ScenariosHistoryProps)
     setError(null);
     scenarioRunsService
       .index({ page, per_page: PER_PAGE })
-      .then((data) => {
-        if (!cancelled) setRuns(data);
+      .then((result) => {
+        if (cancelled) return;
+        setRuns(result.runs);
+        setTotal(result.total);
       })
       .catch(() => {
         if (!cancelled) setError('error');
@@ -154,17 +157,12 @@ export default function ScenariosHistory({ onSelectRun }: ScenariosHistoryProps)
     };
   }, [page, refreshTick]);
 
-  const total = runs.length; // page-local count; backend doesn't return X-Total-Count
-  const from = total === 0 ? 0 : (page - 1) * PER_PAGE + 1;
-  const to = total === 0 ? 0 : (page - 1) * PER_PAGE + total;
-  // "of N" — when the current page is full, we know there's at least one more,
-  // so display the lower bound as `to+` (cosmetic; the Plan 22.10 detail flow
-  // doesn't depend on the precise total). Until/unless the backend exposes a
-  // count header, the indicator is an honest lower-bound.
-  const totalLabel = total < PER_PAGE ? `${to}` : `${to}+`;
+  const pageCount = runs.length;
+  const from = pageCount === 0 ? 0 : (page - 1) * PER_PAGE + 1;
+  const to = pageCount === 0 ? 0 : (page - 1) * PER_PAGE + pageCount;
 
   const prevDisabled = page === 1;
-  const nextDisabled = total < PER_PAGE;
+  const nextDisabled = page * PER_PAGE >= total;
 
   const handleConfirmDeleteAll = useCallback(async () => {
     setDeleting(true);
@@ -194,7 +192,7 @@ export default function ScenariosHistory({ onSelectRun }: ScenariosHistoryProps)
             className="text-xs text-darkgray"
             data-testid="history-showing"
           >
-            {t('history.toolbar.showing', { from, to, total: totalLabel })}
+            {t('history.toolbar.showing', { from, to, total })}
           </span>
           <button
             type="button"
