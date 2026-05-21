@@ -200,8 +200,16 @@ export function scenariosReducer(
       // disagrees with the current activeRun.runId, ignore. This protects
       // against late-arriving envelopes from a previous run polluting the
       // new run's state.
+      //
+      // `run_started` is exempt: it IS the reconciliation envelope that swaps
+      // the placeholder runId minted by run_launch (`pending-<ts>`) for the
+      // real scenario_run.id. The run_started case handles the mismatch
+      // explicitly below; blocking it here strands the placeholder forever
+      // and every subsequent tool_call_* gets filtered by the inner
+      // transcriptReducer's session_token check.
       if (
         activeRun &&
+        msg.type !== 'run_started' &&
         'run_id' in msg &&
         typeof msg.run_id === 'string' &&
         msg.run_id !== activeRun.runId
