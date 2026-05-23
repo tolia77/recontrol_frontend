@@ -193,9 +193,32 @@ export function transcriptReducer(
         }
 
         case 'requires_confirmation': {
-          // D-11: requires_confirmation now carries tool_call_id; row keys on
-          // it directly so the eventual tool_call_start can find and mutate
-          // this row.
+          // D-11: requires_confirmation carries tool_call_id; rows key on it
+          // directly so an earlier `tool_call_start` for the same call shares
+          // this row. AgentRunner emits tool_call_start before invoking the
+          // tool (whose `await_confirmation` then fires this broadcast), so a
+          // row already exists in `running` state by the time we get here --
+          // mutate it back into `awaiting_confirmation` rather than appending
+          // a duplicate row that would never receive its tool_call_result.
+          const existingIdx = state.rows.findIndex(
+            (r) => r.kind === 'tool' && r.toolCallId === msg.tool_call_id,
+          );
+          if (existingIdx >= 0) {
+            const rows = state.rows.slice();
+            const existing = rows[existingIdx] as ToolRow;
+            rows[existingIdx] = {
+              ...existing,
+              confirmationId: msg.confirmation_id,
+              label: msg.label,
+              command: msg.command,
+              args: msg.args,
+              cwd: msg.cwd,
+              zone: msg.zone,
+              reason: msg.reason,
+              state: 'awaiting_confirmation',
+            };
+            return { ...state, rows, status: 'awaiting_confirmation' };
+          }
           const newRow: ToolRow = {
             kind: 'tool',
             toolCallId: msg.tool_call_id,
