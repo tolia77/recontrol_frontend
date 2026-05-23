@@ -84,6 +84,45 @@ export const CloseIcon: React.FC<IconProps> = ({ className = "w-5 h-5" }) => (
 );
 
 /**
+ * Power Icon — TopBar system zone trigger (opens PowerPopover).
+ */
+export const PowerIcon: React.FC<IconProps> = ({ className = "w-5 h-5" }) => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={className}
+        aria-hidden="true"
+    >
+        <path d="M12 2v10" />
+        <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+    </svg>
+);
+
+/**
+ * Stop Icon (rounded square) — leads the "Stop Screen Stream" button in the TopBar.
+ */
+export const StopIcon: React.FC<IconProps> = ({ className = "w-4 h-4" }) => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        className={className}
+        aria-hidden="true"
+    >
+        <rect x="6" y="6" width="12" height="12" rx="2" />
+    </svg>
+);
+
+/**
  * Scenarios Icon (clipboard with checklist) — sidebar third toggle (Phase 21, UI-01).
  * Sibling of FilesToggleIcon / AssistantToggleIcon, but lives in the top-level
  * DeviceControl icon module so the Scenarios feature module can stay isolated.

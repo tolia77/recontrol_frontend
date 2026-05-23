@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { generateUUID } from 'src/utils/uuid';
-import { Sidebar } from 'src/pages/DeviceControl/Sidebar';
+import { TopBar } from 'src/pages/DeviceControl/TopBar';
 import { MainContent } from 'src/pages/DeviceControl/MainContent';
 import { getAccessToken, getUserId } from 'src/utils/auth';
 import { refreshAccessTokenOnce } from 'src/services/backend/config';
 import { useToast } from 'src/components/ui';
-import type { AccordionSection, Mode, CommandAction } from 'src/pages/DeviceControl/types';
+import type { Mode } from 'src/pages/DeviceControl/types';
 import { getMyDeviceSharesForDeviceRequest } from 'src/services/backend/deviceSharesRequests';
 import { getDeviceRequest } from 'src/services/backend/devicesRequests';
 import type { DeviceShare } from 'src/types/global';
@@ -66,7 +66,6 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
     const [deviceName, setDeviceName] = useState<string>("");
 
     const [activeMode, setActiveMode] = useState<Mode>("interactive");
-    const [openAccordion, setOpenAccordion] = useState<AccordionSection | null>(null);
 
     const [terminalResults, setTerminalResults] = useState<{ id: string; status: string; result: string }[]>([]);
     const [processes, setProcesses] = useState<{ Pid: number; Name: string; MemoryMB?: number; CpuTime?: string; StartTime?: string }[]>([]);
@@ -704,12 +703,10 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
     ) : null;
 
     return (
-        <div className="command-websocket flex h-screen w-full font-sans antialiased bg-[#F3F4F6]">
-            <Sidebar
+        <div className="command-websocket flex flex-col h-screen w-full font-sans antialiased bg-[#F3F4F6]">
+            <TopBar
                 activeMode={activeMode}
                 setActiveMode={setActiveMode}
-                openAccordion={openAccordion}
-                setOpenAccordion={setOpenAccordion}
                 addAction={sendSingleAction}
                 permissions={permissions || undefined}
                 disabled={overallDisabled}
@@ -748,7 +745,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                     browserCaps: clipboardCaps,
                 }}
             />
-            <main className={`flex-1 ml-64 ${activeMode === 'interactive' ? 'overflow-hidden' : ''}`}>
+            <main className={`flex-1 min-h-0 flex flex-col ${activeMode === 'interactive' ? 'overflow-hidden' : ''}`}>
                 <MainContent
                     disabled={overallDisabled}
                     addAction={sendSingleAction}

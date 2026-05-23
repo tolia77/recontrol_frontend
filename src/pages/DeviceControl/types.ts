@@ -2,24 +2,15 @@ import type { WebRtcConnectionState } from './hooks/useWebRtc';
 import type { StreamStats } from './hooks/useStreamStats';
 
 export type Mode = 'interactive' | 'manual';
-export type AccordionSection = 'power' | 'terminal' | 'processes';
 export type ScalingMode = 'fit' | '1:1';
 
 export interface IconProps {
     className?: string;
 }
 
-export interface AccordionItemProps {
-    title: string;
-    isOpen: boolean;
-    onClick: () => void;
-}
-
 export interface SidebarProps {
     activeMode: Mode;
     setActiveMode: (mode: Mode) => void;
-    openAccordion: AccordionSection | null;
-    setOpenAccordion: (item: AccordionSection | null) => void;
     // new optional props for moving quick actions
     permissions?: PermissionsSubset;
     disabled?: boolean;

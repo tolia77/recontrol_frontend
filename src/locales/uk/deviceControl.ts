@@ -105,9 +105,20 @@ const deviceControl = {
     },
     quick: {
       startStream: 'Почати трансляцію екрана',
-      stopStream: 'Зупинити трансляцію екрана'
+      stopStream: 'Зупинити трансляцію екрана',
+      connecting: 'Підключення...'
     },
     noPermission: 'У вас немає дозволу на використання цього розділу'
+  },
+  topbar: {
+    files: 'Файли',
+    deviceLabel: 'Пристрій',
+    quality: {
+      title: 'Якість трансляції'
+    },
+    power: {
+      title: 'Живлення'
+    }
   }
 };
 export default deviceControl;

@@ -105,9 +105,20 @@ const deviceControl = {
     },
     quick: {
       startStream: 'Start Screen Stream',
-      stopStream: 'Stop Screen Stream'
+      stopStream: 'Stop Screen Stream',
+      connecting: 'Connecting...'
     },
     noPermission: "You don't have permission to use this section"
+  },
+  topbar: {
+    files: 'Files',
+    deviceLabel: 'Device',
+    quality: {
+      title: 'Stream quality'
+    },
+    power: {
+      title: 'Power'
+    }
   }
 };
 export default deviceControl;
