@@ -51,23 +51,12 @@ function writeField(
 function loadInitialState(deviceId: string): FileManagerState {
   if (!deviceId) return DEFAULT_STATE;
 
-  const storedActive = readField<'files' | 'assistant' | 'scenarios' | null>(
-    deviceId,
-    'rightPaneActive',
-    DEFAULT_STATE.rightPaneActive,
-    (s) => (s === 'files' || s === 'assistant' || s === 'scenarios' ? s : null),
-  );
-
-  // Back-compat: if the new key is unset but the legacy panelOpen=true is
-  // present, seed rightPaneActive='files'.
-  const legacyPanelOpen = readField<boolean>(
-    deviceId,
-    'panelOpen',
-    DEFAULT_STATE.panelOpen,
-    (s) => s === 'true',
-  );
-  const rightPaneActive: 'files' | 'assistant' | 'scenarios' | null =
-    storedActive ?? (legacyPanelOpen ? 'files' : null);
+  // The right pane (Files / Assistant / Scenarios) always starts CLOSED on page
+  // load. We intentionally do NOT restore a persisted `rightPaneActive`, and we
+  // ignore the legacy `panelOpen=true` key entirely -- both used to make the
+  // Files panel auto-open on every visit, which surprised operators. The panel
+  // is now only ever opened by an explicit toggle within a session.
+  const rightPaneActive: 'files' | 'assistant' | 'scenarios' | null = null;
 
   return {
     panelOpen: rightPaneActive === 'files',
