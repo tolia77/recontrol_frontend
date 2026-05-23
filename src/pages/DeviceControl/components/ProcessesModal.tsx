@@ -139,7 +139,7 @@ export const ProcessesModal: React.FC<ProcessesModalProps> = ({
               {loading ? (
                 <div className="h-full flex items-center justify-center text-sm text-gray-600">
                   <div className="flex flex-col items-center gap-2">
-                    <div className="w-8 h-8 border-4 border-t-transparent border-primary rounded-full animate-spin" style={{borderColor: 'var(--color-lightgray)', borderTopColor: 'var(--color-primary)'}} />
+                    <div className="w-8 h-8 border-4 border-lightgray border-t-primary rounded-full animate-spin" />
                     {t('manual.terminal.processesModal.loading')}
                   </div>
                 </div>

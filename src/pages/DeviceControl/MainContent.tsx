@@ -195,223 +195,128 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
     }, [activeMode, getRealCoordsFromClient, addAction, disabled, hasMouse]);
 
     // Render the video stream with interactive overlay
-    const renderVideoStream = (showOverlay: boolean) => (
-        <div
-            ref={videoContainerRef}
-            className="canvas-placeholder"
-            style={{
-                position: 'relative',
-                width: '100%',
-                aspectRatio: (videoRef?.current?.videoWidth && videoRef?.current?.videoHeight)
-                    ? `${videoRef.current.videoWidth}/${videoRef.current.videoHeight}`
-                    : '16/9',
-                background: '#111827',
-                overflow: scalingMode === '1:1' ? 'auto' : 'hidden',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
-            }}
-        >
-            <video
-                ref={setVideoNode ?? videoRef}
-                autoPlay
-                playsInline
-                muted
-                style={{
-                    position: scalingMode === '1:1' ? 'relative' : 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: scalingMode === '1:1' ? 'auto' : '100%',
-                    height: scalingMode === '1:1' ? 'auto' : '100%',
-                    objectFit: scalingMode === '1:1' ? 'none' : 'contain',
-                    zIndex: 1,
-                    pointerEvents: 'none',
-                    background: '#000',
-                }}
-            />
-            <StreamStatsOverlay stats={streamStats ?? null} visible={!!showStats} />
-            {showOverlay && (
-                <div
-                    ref={overlayRef}
-                    className="overlay pointer-events-auto"
-                    onPointerDown={disabled ? undefined : handlePointerDown}
-                    onPointerMove={disabled ? undefined : handlePointerMove}
-                    onPointerUp={disabled ? undefined : handlePointerUp}
-                    onPointerCancel={disabled ? undefined : handlePointerCancel}
-                    onWheel={disabled ? undefined : handleWheel}
-                    onContextMenu={(e) => { e.preventDefault(); }}
-                    tabIndex={0}
-                    onKeyDown={disabled ? undefined : handleKeyDown}
-                    onKeyUp={disabled ? undefined : handleKeyUp}
-                    style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        zIndex: 10,
-                        background: 'transparent',
-                        outline: 'none',
-                    }}
+    const renderVideoStream = (showOverlay: boolean) => {
+        // aspectRatio is computed from the live video dimensions, so it is the
+        // one value that can't be a static Tailwind utility — it stays inline.
+        const aspectRatio =
+            videoRef?.current?.videoWidth && videoRef?.current?.videoHeight
+                ? `${videoRef.current.videoWidth}/${videoRef.current.videoHeight}`
+                : '16/9';
+        const pixelPerfect = scalingMode === '1:1';
+        return (
+            <div
+                ref={videoContainerRef}
+                className={`relative flex w-full items-center justify-center bg-[#0a0d18] shadow-[inset_0_2px_4px_0_rgb(0_0_0/0.05)] ${pixelPerfect ? 'overflow-auto' : 'overflow-hidden'}`}
+                style={{ aspectRatio }}
+            >
+                <video
+                    ref={setVideoNode ?? videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className={`pointer-events-none z-[1] bg-black ${pixelPerfect ? 'static h-auto w-auto object-none' : 'absolute inset-0 h-full w-full object-contain'}`}
                 />
-            )}
+                <StreamStatsOverlay stats={streamStats ?? null} visible={!!showStats} />
+                {showOverlay && (
+                    <div
+                        ref={overlayRef}
+                        className="overlay pointer-events-auto absolute inset-0 z-10 bg-transparent outline-none"
+                        onPointerDown={disabled ? undefined : handlePointerDown}
+                        onPointerMove={disabled ? undefined : handlePointerMove}
+                        onPointerUp={disabled ? undefined : handlePointerUp}
+                        onPointerCancel={disabled ? undefined : handlePointerCancel}
+                        onWheel={disabled ? undefined : handleWheel}
+                        onContextMenu={(e) => { e.preventDefault(); }}
+                        tabIndex={0}
+                        onKeyDown={disabled ? undefined : handleKeyDown}
+                        onKeyUp={disabled ? undefined : handleKeyUp}
+                    />
+                )}
+            </div>
+        );
+    };
+
+    // Dark 16:9 stage for the idle / connecting / failed / reconnecting states.
+    const renderStage = (children: React.ReactNode) => (
+        <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden bg-[#0a0d18] shadow-[inset_0_2px_4px_0_rgb(0_0_0/0.05)]">
+            {children}
         </div>
+    );
+
+    // Fills the stage height and caps the stream width (replaces .canvas-container).
+    const streamFrame = (children: React.ReactNode) => (
+        <div className="flex w-full max-w-[1280px] flex-1 items-center justify-center">{children}</div>
     );
 
     // Render stream content based on connection state
     const renderStreamContent = () => {
         if (connectionState === 'idle') {
-            // Waiting placeholder
-            return (
-                <div className="canvas-container w-full" style={{ maxWidth: 1280 }}>
-                    <div
-                        className="canvas-placeholder"
-                        style={{
-                            position: 'relative',
-                            width: '100%',
-                            aspectRatio: '16/9',
-                            background: '#111827',
-                            overflow: 'hidden',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            boxShadow: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
-                        }}
-                    >
-                        <div style={{ position: 'relative', zIndex: 3, color: '#D1D5DB', textAlign: 'center' }}>
-                            <svg className="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25A2.25 2.25 0 0 1 5.25 3h13.5A2.25 2.25 0 0 1 21 5.25Z" />
-                            </svg>
-                            <span className="text-lg font-medium">Click Start Stream to begin</span>
-                        </div>
+            return streamFrame(
+                renderStage(
+                    <div className="relative z-[3] text-center text-[#D1D5DB]">
+                        <svg className="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25A2.25 2.25 0 0 1 5.25 3h13.5A2.25 2.25 0 0 1 21 5.25Z" />
+                        </svg>
+                        <span className="text-lg font-medium">Click Start Stream to begin</span>
                     </div>
-                </div>
+                )
             );
         }
 
         if (connectionState === 'connecting') {
-            // Connecting spinner
-            return (
-                <div className="canvas-container w-full" style={{ maxWidth: 1280 }}>
-                    <div
-                        className="canvas-placeholder"
-                        style={{
-                            position: 'relative',
-                            width: '100%',
-                            aspectRatio: '16/9',
-                            background: '#111827',
-                            overflow: 'hidden',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            boxShadow: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
-                        }}
-                    >
-                        <div style={{ position: 'relative', zIndex: 3, color: '#D1D5DB', textAlign: 'center' }}>
-                            <div className="w-8 h-8 mx-auto mb-3 border-2 border-gray-500 border-t-indigo-400 rounded-full animate-spin" />
-                            <span className="text-lg font-medium">Connecting...</span>
-                        </div>
+            return streamFrame(
+                renderStage(
+                    <div className="relative z-[3] text-center text-[#D1D5DB]">
+                        <div className="w-8 h-8 mx-auto mb-3 border-2 border-gray-500 border-t-indigo-400 rounded-full animate-spin" />
+                        <span className="text-lg font-medium">Connecting...</span>
                     </div>
-                </div>
+                )
             );
         }
 
         if (connectionState === 'connected') {
-            // Live video stream with controls
-            return (
-                <div className="canvas-container w-full" style={{ maxWidth: 1280 }}>
-                    {renderVideoStream(true)}
-                </div>
-            );
+            return streamFrame(renderVideoStream(true));
         }
 
         if (connectionState === 'reconnecting') {
-            // Reconnecting overlay on last frame (or spinner if no frame yet)
-            return (
-                <div className="canvas-container w-full" style={{ maxWidth: 1280 }}>
-                    {hasReceivedFrame && videoRef ? (
-                        <div style={{ position: 'relative' }}>
-                            {renderVideoStream(false)}
-                            {/* Dimmed overlay with reconnecting message */}
-                            <div
-                                style={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    width: '100%',
-                                    height: '100%',
-                                    background: 'rgba(0, 0, 0, 0.6)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    zIndex: 20,
-                                    borderRadius: 'inherit',
-                                }}
-                            >
-                                <div style={{ color: '#D1D5DB', textAlign: 'center' }}>
-                                    <div className="w-8 h-8 mx-auto mb-3 border-2 border-gray-500 border-t-indigo-400 rounded-full animate-spin" />
-                                    <span className="text-lg font-medium">Reconnecting...</span>
-                                </div>
-                            </div>
-                        </div>
-                    ) : (
-                        <div
-                            className="canvas-placeholder"
-                            style={{
-                                position: 'relative',
-                                width: '100%',
-                                aspectRatio: '16/9',
-                                background: '#111827',
-                                overflow: 'hidden',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                boxShadow: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
-                            }}
-                        >
-                            <div style={{ position: 'relative', zIndex: 3, color: '#D1D5DB', textAlign: 'center' }}>
+            return streamFrame(
+                hasReceivedFrame && videoRef ? (
+                    <div className="relative w-full">
+                        {renderVideoStream(false)}
+                        <div className="absolute inset-0 z-20 flex items-center justify-center rounded-[inherit] bg-black/60">
+                            <div className="text-center text-[#D1D5DB]">
                                 <div className="w-8 h-8 mx-auto mb-3 border-2 border-gray-500 border-t-indigo-400 rounded-full animate-spin" />
                                 <span className="text-lg font-medium">Reconnecting...</span>
                             </div>
                         </div>
-                    )}
-                </div>
+                    </div>
+                ) : (
+                    renderStage(
+                        <div className="relative z-[3] text-center text-[#D1D5DB]">
+                            <div className="w-8 h-8 mx-auto mb-3 border-2 border-gray-500 border-t-indigo-400 rounded-full animate-spin" />
+                            <span className="text-lg font-medium">Reconnecting...</span>
+                        </div>
+                    )
+                )
             );
         }
 
         if (connectionState === 'failed') {
-            // Error state with retry button
-            return (
-                <div className="canvas-container w-full" style={{ maxWidth: 1280 }}>
-                    <div
-                        className="canvas-placeholder"
-                        style={{
-                            position: 'relative',
-                            width: '100%',
-                            aspectRatio: '16/9',
-                            background: '#111827',
-                            overflow: 'hidden',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            boxShadow: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
-                        }}
-                    >
-                        <div style={{ position: 'relative', zIndex: 3, color: '#D1D5DB', textAlign: 'center' }}>
-                            <svg className="w-12 h-12 mx-auto mb-3 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-                            </svg>
-                            <span className="text-lg font-medium block mb-4">Connection failed</span>
-                            <button
-                                onClick={retryWebRtc}
-                                className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-sm font-medium transition-colors"
-                            >
-                                Retry Connection
-                            </button>
-                        </div>
+            return streamFrame(
+                renderStage(
+                    <div className="relative z-[3] text-center text-[#D1D5DB]">
+                        <svg className="w-12 h-12 mx-auto mb-3 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                        </svg>
+                        <span className="text-lg font-medium block mb-4">Connection failed</span>
+                        <button
+                            onClick={retryWebRtc}
+                            className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-sm font-medium transition-colors"
+                        >
+                            Retry Connection
+                        </button>
                     </div>
-                </div>
+                )
             );
         }
 
@@ -427,12 +332,12 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
 
     if (showPanel) {
         return (
-            <div className="flex-1 bg-background h-screen flex flex-col">
+            <div className="flex-1 min-h-0 bg-background flex flex-col">
                 <Splitter
                     initialRatio={splitRatio ?? 0.5}
                     onRatioChange={setSplitRatio ?? (() => {})}
                     left={
-                        <div className="h-full w-full flex items-start justify-center bg-background p-2 overflow-auto">
+                        <div className="h-full w-full flex items-start justify-center bg-[#0a0d18] p-2 overflow-auto">
                             {renderStreamContent()}
                         </div>
                     }
@@ -443,7 +348,13 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
     }
 
     return (
-        <div className="flex-1 bg-[#F3F4F6] p-2 flex flex-col items-center">
+        <div
+            className={`flex-1 min-h-0 flex flex-col items-center p-2 ${
+                activeMode === 'manual'
+                    ? 'overflow-auto bg-[#F3F4F6]'
+                    : 'justify-center overflow-hidden bg-[#0a0d18]'
+            }`}
+        >
             {activeMode === 'manual' ? (
                 <ManualControls disabled={disabled} addAction={addAction} results={terminalResults}
                                 processes={processes} processesLoading={processesLoading}

@@ -9,22 +9,7 @@ export function StreamStatsOverlay({ stats, visible }: StreamStatsOverlayProps) 
     if (!visible || !stats) return null;
 
     return (
-        <div
-            style={{
-                position: 'absolute',
-                top: 8,
-                left: 8,
-                background: 'rgba(0, 0, 0, 0.7)',
-                color: '#fff',
-                padding: '6px 10px',
-                borderRadius: 4,
-                fontSize: 12,
-                fontFamily: 'monospace',
-                zIndex: 15,
-                pointerEvents: 'none',
-                lineHeight: 1.5,
-            }}
-        >
+        <div className="pointer-events-none absolute top-2 left-2 z-[15] rounded bg-black/70 px-2.5 py-1.5 font-mono text-xs leading-normal text-white">
             <div>Codec: {stats.codec}</div>
             <div>Encoder: {stats.encoder ?? '-'}</div>
             <div>FPS: {Math.round(stats.fps)}</div>
