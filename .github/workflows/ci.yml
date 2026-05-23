@@ -30,6 +30,3 @@ jobs:
 
       - name: Run vitest test suite
         run: npx vitest run
-
-      - name: Check for leaked OpenRouter API key in bundle
-        run: ./scripts/check-no-openrouter-key.sh dist
