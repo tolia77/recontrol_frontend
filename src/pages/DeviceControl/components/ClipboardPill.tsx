@@ -12,7 +12,6 @@ import {
   SlashIcon,
   OfflineIcon,
   LockIcon,
-  UpgradeIcon,
   BrowserIcon,
 } from './ClipboardPill.icons';
 
@@ -25,7 +24,6 @@ export interface ClipboardPillProps {
   lastRefusal:
     | { reason: ClipboardRefusalReason; at: number; source: 'remote' | 'local' }
     | null;
-  capsTimedOut: boolean;
   lastSyncAt: number | null;
   browserCaps: { canRead: boolean; canWrite: boolean; isSecureContext: boolean };
 }
@@ -40,7 +38,6 @@ const PILL_BG: Record<PillState, string> = {
   disabled: 'bg-secondary',
   disconnected: 'bg-error/60',
   'permission-required': 'bg-error/60',
-  'requires-v1.3': 'bg-secondary',
   'unsupported-browser': 'bg-secondary',
 };
 
@@ -54,7 +51,6 @@ const STATE_TO_LABEL_KEY: Record<PillState, string> = {
   disabled: 'pill.state.disabled',
   disconnected: 'pill.state.disconnected',
   'permission-required': 'pill.state.permissionRequired',
-  'requires-v1.3': 'pill.state.requiresV13',
   'unsupported-browser': 'pill.state.unsupportedBrowser',
 };
 
@@ -80,8 +76,6 @@ function StateIcon({ state, className }: { state: PillState; className?: string 
       return <OfflineIcon className={className} />;
     case 'permission-required':
       return <LockIcon className={className} />;
-    case 'requires-v1.3':
-      return <UpgradeIcon className={className} />;
     case 'unsupported-browser':
       return <BrowserIcon className={className} />;
   }
@@ -155,7 +149,6 @@ export function ClipboardPill(props: ClipboardPillProps) {
         webRtcUp: props.webRtcUp,
         browserCaps: props.browserCaps,
         cachedDesktopCaps: props.cachedDesktopCaps,
-        capsTimedOut: props.capsTimedOut,
         lastRefusal: props.lastRefusal,
         isPaused: props.isPaused,
         lastSyncAt: props.lastSyncAt,
@@ -166,7 +159,6 @@ export function ClipboardPill(props: ClipboardPillProps) {
       props.webRtcUp,
       props.browserCaps,
       props.cachedDesktopCaps,
-      props.capsTimedOut,
       props.lastRefusal,
       props.isPaused,
       props.lastSyncAt,

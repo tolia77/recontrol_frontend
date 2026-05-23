@@ -59,13 +59,6 @@ export const LockIcon: React.FC<IconProps> = ({ className = 'w-4 h-4' }) => (
   </svg>
 );
 
-export const UpgradeIcon: React.FC<IconProps> = ({ className = 'w-4 h-4' }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-    <path d="M12 19V5" />
-    <path d="M5 12l7-7 7 7" />
-  </svg>
-);
-
 export const BrowserIcon: React.FC<IconProps> = ({ className = 'w-4 h-4' }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
     <rect x="2" y="3" width="20" height="18" rx="2" />

@@ -9,7 +9,6 @@ const clipboard = {
       disconnected: 'Disconnected',
       disabled: 'Disabled',
       refusedTooLarge: 'Too large to sync',
-      requiresV13: 'Update desktop',
       unsupportedBrowser: 'Use Chrome or Edge',
     },
     tooltip: {
@@ -26,7 +25,6 @@ const clipboard = {
       disconnected: 'Reconnect to resume clipboard sync',
       disabled: 'Desktop has clipboard sync turned off',
       refusedTooLarge: 'Last copy was over 2 MB and was not sent',
-      requiresV13: 'Requires ReControl Desktop v1.3 or newer',
       unsupportedBrowser: "This browser can't sync the clipboard",
     },
   },

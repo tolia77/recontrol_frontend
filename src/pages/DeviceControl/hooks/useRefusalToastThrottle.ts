@@ -9,8 +9,8 @@ const THROTTLE_MS = 2_000;
  * Per-reason i18n key under the `clipboard:` namespace.
  *
  * Notes:
- * - `CAPS_UNKNOWN` intentionally has no toast (RESEARCH OQ 2 — the
- *   `requires-v1.3` pill state already covers this condition).
+ * - `CAPS_UNKNOWN` intentionally has no toast (RESEARCH OQ 2). It is a no-op
+ *   condition for the operator, so it is simply not surfaced.
  * - `OUTBOUND_DISABLED` is unreachable in v1.3 per the Phase 15 schema
  *   (clipboardProtocol.generated.ts:57-63) so it is omitted here. The locale
  *   file ships a defensive `toast.refused.outboundDisabled` entry; if a future
@@ -42,8 +42,8 @@ export function useRefusalToastThrottle(): (reason: ClipboardRefusalReason) => v
 
   return useCallback(
     (reason: ClipboardRefusalReason) => {
-      // RESEARCH OQ 2 — CAPS_UNKNOWN is intentionally not toasted; the pill
-      // state requires-v1.3 covers it.
+      // RESEARCH OQ 2 — CAPS_UNKNOWN is intentionally not toasted (no operator
+      // action applies). Defensive: it is also unmapped in REASON_TO_KEY below.
       if (reason === 'CAPS_UNKNOWN') return;
 
       const key = REASON_TO_KEY[reason];

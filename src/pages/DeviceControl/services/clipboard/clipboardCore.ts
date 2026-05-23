@@ -60,12 +60,6 @@ export interface PrepareOutboundInput {
    * subscribeCapabilities, or null if none received yet (D-13).
    */
   cachedDesktopCaps: ClipboardCapabilitiesEnvelope | null;
-  /**
-   * True when the CAP-07 2-second post-channel-open timer fired without a
-   * capabilities envelope arriving (D-08). Combined with cachedDesktopCaps==null
-   * this means "desktop policy unknown -- block outbound".
-   */
-  capsTimedOut: boolean;
 }
 
 function hex16ToBytes(hex: string): Uint8Array {
@@ -84,18 +78,6 @@ export async function prepareOutbound(
   nextSeq: () => number,
 ): Promise<OutboundDecision> {
   if (!input.originId) return { kind: 'skip-no-channel' };
-
-  // D-08 / Phase 15 CR-03: caps timed out and no caps cached -> block all
-  // outbound. Surface as refused-local with reason CAPS_UNKNOWN (added to the
-  // schema in Phase 15 specifically to avoid overloading MASTER_DISABLED for
-  // the "desktop policy unknown / v1.2 client" state — see CONTEXT D-01 on
-  // honest categorization). Phase 16 will render this as the dedicated
-  // "waiting for desktop / requires v1.3+" pill state.
-  // This gate runs BEFORE pause/focus/dampening because the absence of a peer
-  // policy is a stronger signal than any local listener-layer state.
-  if (input.capsTimedOut && !input.cachedDesktopCaps) {
-    return { kind: 'refused-local', reason: 'CAPS_UNKNOWN' };
-  }
 
   // D-13: cap-cache says desktop's inbound is off -> preempt before sending.
   // Browser does not separately track desktop's "master" toggle; SendCapabilities

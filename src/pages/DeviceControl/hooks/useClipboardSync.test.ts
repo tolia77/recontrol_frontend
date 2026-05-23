@@ -2,9 +2,9 @@
 //
 // Coverage: hook-level wiring of CAP-01 (caps send on open), CAP-04/05 (refusal
 // feed sourced from BOTH remote and local), CAP-06 (cache populated for
-// prepareOutbound consumption), CAP-07 (2-second timer), POLICY-04 (discrete
-// fields exposed), D-15 (pause stays browser-local; no wire activity), D-18
-// (re-advertise on permission resolve).
+// prepareOutbound consumption), POLICY-04 (discrete fields exposed), D-15
+// (pause stays browser-local; no wire activity), D-18 (re-advertise on
+// permission resolve).
 //
 // Decision logic (prepareOutbound / decideInbound) lives in clipboardCore and is
 // covered by clipboardCore.test.ts. These tests assert React-glue behavior:
@@ -145,19 +145,7 @@ describe('useClipboardSync — Phase 15 Plan 04', () => {
     expect(sent.inboundEnabled).toBe(true);
   });
 
-  it('capsTimedOut becomes true after 2s without inbound caps envelope', () => {
-    vi.useFakeTimers();
-    const h = makeHarness();
-    const { result } = renderHook(() => useClipboardSync(h.args()));
-    expect(result.current.capsTimedOut).toBe(false);
-    act(() => {
-      vi.advanceTimersByTime(2000);
-    });
-    expect(result.current.capsTimedOut).toBe(true);
-  });
-
-  it('inbound capabilities envelope clears timer and populates cache', () => {
-    vi.useFakeTimers();
+  it('inbound capabilities envelope populates cache', () => {
     const h = makeHarness();
     const { result } = renderHook(() => useClipboardSync(h.args()));
     act(() => {
@@ -176,11 +164,6 @@ describe('useClipboardSync — Phase 15 Plan 04', () => {
     });
     expect(result.current.cachedDesktopCaps).not.toBeNull();
     expect(result.current.cachedDesktopCaps?.inboundEnabled).toBe(true);
-    expect(result.current.capsTimedOut).toBe(false);
-    act(() => {
-      vi.advanceTimersByTime(5000);
-    });
-    expect(result.current.capsTimedOut).toBe(false);
   });
 
   it("inbound refused envelope sets lastRefusal source='remote'", () => {
@@ -229,7 +212,7 @@ describe('useClipboardSync — Phase 15 Plan 04', () => {
     expect(result.current.lastRefusal?.source).toBe('local');
   });
 
-  it('cleanup on channel close clears cachedDesktopCaps and capsTimedOut', () => {
+  it('cleanup on channel close clears cachedDesktopCaps', () => {
     const h = makeHarness();
     const { result, rerender } = renderHook(
       (props: { open: boolean }) => useClipboardSync(h.args({ clipboardCtlOpen: props.open })),
@@ -254,7 +237,6 @@ describe('useClipboardSync — Phase 15 Plan 04', () => {
     // Close the channel.
     rerender({ open: false });
     expect(result.current.cachedDesktopCaps).toBeNull();
-    expect(result.current.capsTimedOut).toBe(false);
 
     // Re-open: a fresh capabilities envelope is sent (prevSentCapsRef was reset).
     const sendCallsBeforeReopen = h.dc.send.mock.calls.length;
@@ -278,13 +260,12 @@ describe('useClipboardSync — Phase 15 Plan 04', () => {
     expect(result.current.isPaused).toBe(true);
   });
 
-  it('CR-01 regression: caps flip does NOT wipe cachedDesktopCaps or restart CAP-07 timer', () => {
+  it('CR-01 regression: caps flip does NOT wipe cachedDesktopCaps', () => {
     // CR-01 in 15-REVIEW.md: the previous shape listed caps.* in the inbound
-    // subscribe effect's deps, so the effect tore down (clearing the cache and
-    // restarting the timer) every time useClipboardCapability flipped from
-    // initial-false to detected. The fix splits re-advertise into a separate
-    // effect that does NOT touch subscription state.
-    vi.useFakeTimers();
+    // subscribe effect's deps, so the effect tore down (clearing the cache)
+    // every time useClipboardCapability flipped from initial-false to detected.
+    // The fix splits re-advertise into a separate effect that does NOT touch
+    // subscription state.
     const h = makeHarness();
     const initialCaps: ClipboardCapability = {
       canRead: false,
@@ -320,13 +301,6 @@ describe('useClipboardSync — Phase 15 Plan 04', () => {
     });
     expect(result.current.cachedDesktopCaps).not.toBeNull();
     expect(result.current.cachedDesktopCaps?.inboundEnabled).toBe(true);
-
-    // Advance well past the CAP-07 2s window — capsTimedOut must remain false
-    // because the timer was never restarted by the caps flip.
-    act(() => {
-      vi.advanceTimersByTime(5000);
-    });
-    expect(result.current.capsTimedOut).toBe(false);
   });
 
   it('re-advertise on permission resolve (caps flip causes fresh capabilities send)', () => {

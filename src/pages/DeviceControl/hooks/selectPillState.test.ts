@@ -28,7 +28,6 @@ function baseInput(overrides: Partial<SelectPillStateInput> = {}): SelectPillSta
     webRtcUp: true,
     browserCaps: { canRead: true, canWrite: true, isSecureContext: true },
     cachedDesktopCaps: caps(),
-    capsTimedOut: false,
     lastRefusal: null,
     isPaused: false,
     lastSyncAt: null,
@@ -66,13 +65,7 @@ describe('selectPillState precedence ladder (D-02)', () => {
     expect(r.tooltipKey).toBe('pill.tooltip.permissionRequired');
   });
 
-  it('rung 4: requires-v1.3 when capsTimedOut and no cachedDesktopCaps', () => {
-    const r = selectPillState(baseInput({ capsTimedOut: true, cachedDesktopCaps: null }));
-    expect(r.state).toBe('requires-v1.3');
-    expect(r.tooltipKey).toBe('pill.tooltip.requiresV13');
-  });
-
-  it('rung 5: disabled when both directions disabled (D-04 master-off inference)', () => {
+  it('rung 4: disabled when both directions disabled (D-04 master-off inference)', () => {
     const r = selectPillState(
       baseInput({
         cachedDesktopCaps: caps({ outboundEnabled: false, inboundEnabled: false }),
@@ -82,7 +75,7 @@ describe('selectPillState precedence ladder (D-02)', () => {
     expect(r.tooltipKey).toBe('pill.tooltip.disabled');
   });
 
-  it('rung 6: read-only when only outbound disabled', () => {
+  it('rung 5: read-only when only outbound disabled', () => {
     const r = selectPillState(
       baseInput({
         cachedDesktopCaps: caps({ outboundEnabled: false, inboundEnabled: true }),
@@ -92,7 +85,7 @@ describe('selectPillState precedence ladder (D-02)', () => {
     expect(r.tooltipKey).toBe('pill.tooltip.readOnly');
   });
 
-  it('rung 6 reverse: read-only when only inbound disabled', () => {
+  it('rung 5 reverse: read-only when only inbound disabled', () => {
     const r = selectPillState(
       baseInput({
         cachedDesktopCaps: caps({ outboundEnabled: true, inboundEnabled: false }),
@@ -101,7 +94,7 @@ describe('selectPillState precedence ladder (D-02)', () => {
     expect(r.state).toBe('read-only');
   });
 
-  it('rung 7: refused-too-large when TOO_LARGE refusal within 5s window', () => {
+  it('rung 6: refused-too-large when TOO_LARGE refusal within 5s window', () => {
     const r = selectPillState(
       baseInput({
         lastRefusal: { reason: 'TOO_LARGE', at: 8_000, source: 'local' },
@@ -112,7 +105,7 @@ describe('selectPillState precedence ladder (D-02)', () => {
     expect(r.tooltipKey).toBe('pill.tooltip.refusedTooLarge');
   });
 
-  it('rung 7 timeout: falls through after 5s', () => {
+  it('rung 6 timeout: falls through after 5s', () => {
     const r = selectPillState(
       baseInput({
         lastRefusal: { reason: 'TOO_LARGE', at: 1_000, source: 'local' },
@@ -122,7 +115,7 @@ describe('selectPillState precedence ladder (D-02)', () => {
     expect(r.state).toBe('connected-idle');
   });
 
-  it('rung 7 wrong-reason: only TOO_LARGE pins refused-too-large; PAUSED falls through', () => {
+  it('rung 6 wrong-reason: only TOO_LARGE pins refused-too-large; PAUSED falls through', () => {
     const r = selectPillState(
       baseInput({
         lastRefusal: { reason: 'PAUSED', at: 9_500, source: 'remote' },
@@ -132,13 +125,13 @@ describe('selectPillState precedence ladder (D-02)', () => {
     expect(r.state).toBe('connected-idle');
   });
 
-  it('rung 8: paused when isPaused and no higher rung matches', () => {
+  it('rung 7: paused when isPaused and no higher rung matches', () => {
     const r = selectPillState(baseInput({ isPaused: true }));
     expect(r.state).toBe('paused');
     expect(r.tooltipKey).toBe('pill.tooltip.paused');
   });
 
-  it('rung 8 outranked: disabled outranks paused (hardware/policy beats operator intent)', () => {
+  it('rung 7 outranked: disabled outranks paused (hardware/policy beats operator intent)', () => {
     const r = selectPillState(
       baseInput({
         isPaused: true,
@@ -148,18 +141,18 @@ describe('selectPillState precedence ladder (D-02)', () => {
     expect(r.state).toBe('disabled');
   });
 
-  it('rung 9: pulsing within 400ms after lastSyncAt', () => {
+  it('rung 8: pulsing within 400ms after lastSyncAt', () => {
     const r = selectPillState(baseInput({ lastSyncAt: 9_800, now: 10_000 }));
     expect(r.state).toBe('pulsing');
     expect(r.tooltipKey).toBe('pill.tooltip.pulsingJustSynced');
   });
 
-  it('rung 9 expired: connected-idle after 400ms', () => {
+  it('rung 8 expired: connected-idle after 400ms', () => {
     const r = selectPillState(baseInput({ lastSyncAt: 9_000, now: 10_000 }));
     expect(r.state).toBe('connected-idle');
   });
 
-  it('rung 10: connected-idle when nothing else matches', () => {
+  it('rung 9: connected-idle when nothing else matches', () => {
     const r = selectPillState(baseInput());
     expect(r.state).toBe('connected-idle');
     expect(r.tooltipKey).toBe('pill.tooltip.idle');
@@ -184,7 +177,6 @@ describe('selectPillState precedence ladder (D-02)', () => {
         expectedKey: 'pill.tooltip.unsupportedBrowser',
       },
       { in: { hookStatus: 'permission-required' }, expectedKey: 'pill.tooltip.permissionRequired' },
-      { in: { capsTimedOut: true, cachedDesktopCaps: null }, expectedKey: 'pill.tooltip.requiresV13' },
       {
         in: { cachedDesktopCaps: caps({ outboundEnabled: false, inboundEnabled: false }) },
         expectedKey: 'pill.tooltip.disabled',

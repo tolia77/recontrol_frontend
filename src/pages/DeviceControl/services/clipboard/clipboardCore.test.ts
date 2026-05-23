@@ -51,7 +51,6 @@ function baseInput(
     loopGate: new ClipboardLoopGate(new FakeClock()),
     originId: 'ABC',
     cachedDesktopCaps: makeCaps(),
-    capsTimedOut: false,
     ...overrides,
   };
 }
@@ -246,20 +245,6 @@ describe('prepareOutbound', () => {
     expect(result.kind).toBe('skip-no-channel');
   });
 
-  it('C19a: capsTimedOut + no cached caps -> refused-local CAPS_UNKNOWN (D-08, CR-03)', async () => {
-    seqCounter = 0;
-    const result = await prepareOutbound(
-      baseInput('hello', { capsTimedOut: true, cachedDesktopCaps: null }),
-      nextSeq,
-    );
-    expect(result.kind).toBe('refused-local');
-    if (result.kind === 'refused-local') {
-      // CR-03: Phase 15 added CAPS_UNKNOWN specifically for this state to avoid
-      // the dishonest MASTER_DISABLED overload (CONTEXT D-01).
-      expect(result.reason).toBe('CAPS_UNKNOWN');
-    }
-  });
-
   it('C19b: cap-cache says inboundEnabled=false -> refused-local INBOUND_DISABLED (D-13)', async () => {
     seqCounter = 0;
     const caps = makeCaps({ inboundEnabled: false });
@@ -270,38 +255,6 @@ describe('prepareOutbound', () => {
     expect(result.kind).toBe('refused-local');
     if (result.kind === 'refused-local') {
       expect(result.reason).toBe('INBOUND_DISABLED');
-    }
-  });
-
-  it('C19c: cap-cache inboundEnabled=false preempts even with capsTimedOut=true', async () => {
-    // D-13: if a cache exists and says no, that's the answer regardless of timer state.
-    seqCounter = 0;
-    const caps = makeCaps({ inboundEnabled: false });
-    const result = await prepareOutbound(
-      baseInput('hello', { cachedDesktopCaps: caps, capsTimedOut: true }),
-      nextSeq,
-    );
-    expect(result.kind).toBe('refused-local');
-    if (result.kind === 'refused-local') {
-      expect(result.reason).toBe('INBOUND_DISABLED');
-    }
-  });
-
-  it('C19d: caps gate ordering -- capsTimedOut blocks even when isPaused=true', async () => {
-    // D-08 ordering invariant: caps gates run BEFORE pause check.
-    seqCounter = 0;
-    const result = await prepareOutbound(
-      baseInput('hello', {
-        capsTimedOut: true,
-        cachedDesktopCaps: null,
-        isPaused: true,
-      }),
-      nextSeq,
-    );
-    expect(result.kind).toBe('refused-local');
-    if (result.kind === 'refused-local') {
-      // CR-03: timeout state now reports CAPS_UNKNOWN, not MASTER_DISABLED.
-      expect(result.reason).toBe('CAPS_UNKNOWN');
     }
   });
 

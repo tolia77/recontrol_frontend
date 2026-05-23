@@ -23,7 +23,6 @@ export interface UseClipboardSync {
   // Phase 15 D-10: discrete fields for Phase 16's selectPillState() consumption.
   cachedDesktopCaps: ClipboardCapabilitiesEnvelope | null;
   lastRefusal: { reason: ClipboardRefusalReason; at: number; source: 'remote' | 'local' } | null;
-  capsTimedOut: boolean;
 }
 
 export interface UseClipboardSyncArgs {
@@ -71,7 +70,6 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
   const [lastRefusal, setLastRefusal] = useState<
     { reason: ClipboardRefusalReason; at: number; source: 'remote' | 'local' } | null
   >(null);
-  const [capsTimedOut, setCapsTimedOut] = useState(false);
 
   const isPausedRef = useRef(isPaused);
   const seqRef = useRef(0);
@@ -82,16 +80,15 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
   // without stale-closure (Pattern F: dual state + ref mirroring).
   const cachedDesktopCapsRef = useRef(cachedDesktopCaps);
   const lastRefusalRef = useRef(lastRefusal);
-  const capsTimedOutRef = useRef(capsTimedOut);
   // D-18 re-advertise tracking: remember last advertised flag pair so we only
   // re-send when the flag combination actually flips (avoids T-15-19 flap-loop).
   const prevSentCapsRef = useRef<{ outboundEnabled: boolean; inboundEnabled: boolean } | null>(null);
   // CR-01: mirror current caps into a ref so buildCapsEnvelope is stable across
   // caps changes. The previous shape listed caps.* in buildCapsEnvelope's deps,
-  // which made the inbound-subscribe effect tear down (wiping the cache and
-  // restarting the CAP-07 timer) every time useClipboardCapability flipped from
-  // initial-false to detected. Splitting into a separate re-advertise effect
-  // (below) preserves the channel-lifecycle isolation D-06 demands.
+  // which made the inbound-subscribe effect tear down (wiping the cache) every
+  // time useClipboardCapability flipped from initial-false to detected.
+  // Splitting into a separate re-advertise effect (below) preserves the
+  // channel-lifecycle isolation D-06 demands.
   const capsRef = useRef(caps);
   useEffect(() => {
     capsRef.current = caps;
@@ -120,10 +117,6 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
     lastRefusalRef.current = lastRefusal;
   }, [lastRefusal]);
 
-  useEffect(() => {
-    capsTimedOutRef.current = capsTimedOut;
-  }, [capsTimedOut]);
-
   // Expose a stable nextSeq for prepareOutbound.
   const nextSeq = useCallback(() => {
     seqRef.current += 1;
@@ -134,8 +127,8 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
   // browser-side caps detection. Returns null if originId is not yet minted.
   // CR-01: reads `caps` via capsRef so the callback identity is stable across
   // caps flips. The inbound subscribe effect lists this in its deps and must
-  // NOT re-run when caps detection resolves -- doing so wipes the cache and
-  // restarts the CAP-07 timer (see CR-01 in 15-REVIEW.md).
+  // NOT re-run when caps detection resolves -- doing so wipes the cache (see
+  // CR-01 in 15-REVIEW.md).
   const buildCapsEnvelope = useCallback((): ClipboardCapabilitiesEnvelope | null => {
     const originId = clipboardOriginIdRef.current;
     if (!originId) return null;
@@ -204,7 +197,6 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
         loopGate,
         originId: clipboardOriginIdRef.current,
         cachedDesktopCaps: cachedDesktopCapsRef.current,
-        capsTimedOut: capsTimedOutRef.current,
       },
       nextSeq,
     );
@@ -282,15 +274,6 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
     // here).
     prevSentCapsRef.current = null;
 
-    // Phase 15 D-07 / CAP-07: 2-second timer; if no caps envelope arrives in
-    // that window, set capsTimedOut=true so prepareOutbound treats the desktop
-    // as a v1.2 client and blocks outbound (D-08). Cleared by either the
-    // capabilities-receipt handler below or effect cleanup.
-    let capsTimer: ReturnType<typeof setTimeout> | null = setTimeout(() => {
-      setCapsTimedOut(true);
-      capsTimer = null;
-    }, 2000);
-
     client.subscribe(async (env) => {
       const decision = await decideInbound(
         env,
@@ -340,16 +323,10 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
       }
     });
 
-    // Phase 15 D-06: cache desktop caps + clear timer + flip capsTimedOut back
-    // to false. Late-arriving caps unblock outbound cleanly (CONTEXT
-    // "Claude's Discretion" recommendation).
+    // Phase 15 D-06: cache desktop caps on receipt so the pill and outbound
+    // gate reflect the desktop's advertised policy.
     client.subscribeCapabilities((capsEnv: ClipboardCapabilitiesEnvelope) => {
       setCachedDesktopCaps(capsEnv);
-      setCapsTimedOut(false);
-      if (capsTimer !== null) {
-        clearTimeout(capsTimer);
-        capsTimer = null;
-      }
     });
 
     // Phase 15 D-11: refusal feed source='remote' for desktop-replied refusals.
@@ -375,23 +352,18 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
     }
 
     return () => {
-      if (capsTimer !== null) {
-        clearTimeout(capsTimer);
-        capsTimer = null;
-      }
       // D-06: cache cleared on channel close so a fresh channel re-handshakes
       // from scratch (mirrors Phase 13 D-17 reset philosophy). prevSentCapsRef
       // also reset so the next channel always re-advertises on open.
       setCachedDesktopCaps(null);
-      setCapsTimedOut(false);
       prevSentCapsRef.current = null;
       clientRef.current?.dispose();
       clientRef.current = null;
     };
     // CR-01: caps.* are intentionally NOT in this effect's dependency array.
     // The subscribe lifecycle is per-CHANNEL, not per-caps. caps flipping must
-    // not tear down the cache, restart the CAP-07 timer, or re-create the
-    // client. A separate effect below handles re-advertise on caps change.
+    // not tear down the cache or re-create the client. A separate effect below
+    // handles re-advertise on caps change.
   }, [
     connectionState,
     clipboardCtlOpen,
@@ -404,9 +376,9 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
 
   // CR-01 / D-18: dedicated re-advertise effect. Runs whenever the browser-side
   // caps detection flips and a client is currently attached, sending a fresh
-  // capabilities envelope WITHOUT touching the inbound subscription, the
-  // cached desktop caps, or the CAP-07 timer. This is the per-caps surface
-  // that the previous design conflated with channel teardown.
+  // capabilities envelope WITHOUT touching the inbound subscription or the
+  // cached desktop caps. This is the per-caps surface that the previous design
+  // conflated with channel teardown.
   useEffect(() => {
     const client = clientRef.current;
     if (!client) return;
@@ -484,6 +456,5 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
     lastSyncAt,
     cachedDesktopCaps,
     lastRefusal,
-    capsTimedOut,
   };
 }

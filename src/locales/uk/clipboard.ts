@@ -9,7 +9,6 @@ const clipboard = {
       disconnected: "Немає з'єднання",
       disabled: 'Вимкнено',
       refusedTooLarge: 'Завеликий вміст',
-      requiresV13: 'Оновіть застосунок',
       unsupportedBrowser: 'Використайте Chrome або Edge',
     },
     tooltip: {
@@ -30,7 +29,6 @@ const clipboard = {
       disconnected: "Відновіть з'єднання, щоб поновити синхронізацію",
       disabled: 'На робочому столі синхронізацію буфера вимкнено',
       refusedTooLarge: 'Останнє копіювання перевищило 2 МБ і не було надіслано',
-      requiresV13: 'Потрібен ReControl Desktop v1.3 або новіше',
       unsupportedBrowser: 'Цей браузер не може синхронізувати буфер обміну',
     },
   },

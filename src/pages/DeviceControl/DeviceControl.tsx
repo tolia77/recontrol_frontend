@@ -461,7 +461,6 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         lastSyncAt: clipboardLastSyncAt,
         cachedDesktopCaps: clipboardCachedDesktopCaps,
         lastRefusal: clipboardLastRefusal,
-        capsTimedOut: clipboardCapsTimedOut,
     } = clipboardSync;
 
     const fireRefusalToast = useRefusalToastThrottle();
@@ -745,7 +744,6 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
                     status: clipboardStatus,
                     cachedDesktopCaps: clipboardCachedDesktopCaps,
                     lastRefusal: clipboardLastRefusal,
-                    capsTimedOut: clipboardCapsTimedOut,
                     lastSyncAt: clipboardLastSyncAt,
                     browserCaps: clipboardCaps,
                 }}
