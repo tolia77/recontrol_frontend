@@ -6,7 +6,7 @@ export interface TurnCredentialsResponse {
 }
 
 export async function getTurnCredentialsRequest() {
-  return await backendInstance.get<TurnCredentialsResponse>('/turn_credentials', {
+  return await backendInstance.get<TurnCredentialsResponse>('/turn-credentials', {
     headers: { Authorization: getAccessToken() },
   });
 }

@@ -244,7 +244,7 @@ export const scenariosService = {
   // POLICY-01
   async policyPreview(id: string, deviceId: string): Promise<PolicyPreviewResponse> {
     const { data } = await backendInstance.get<PolicyPreviewResponse>(
-      `/scenarios/${id}/policy_preview`,
+      `/scenarios/${id}/policy-preview`,
       {
         params: { device_id: deviceId },
         headers: { Authorization: getAccessToken() },

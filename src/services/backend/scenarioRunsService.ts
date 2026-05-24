@@ -72,7 +72,7 @@ export interface ScenarioRunIndexResult {
 
 export const scenarioRunsService = {
   async index(params?: ScenarioRunIndexParams): Promise<ScenarioRunIndexResult> {
-    const { data } = await backendInstance.get<ScenarioRunIndexResponse>('/scenario_runs', {
+    const { data } = await backendInstance.get<ScenarioRunIndexResponse>('/scenario-runs', {
       params: {
         ...(params?.page ? { page: params.page } : {}),
         ...(params?.per_page ? { per_page: params.per_page } : {}),
@@ -83,7 +83,7 @@ export const scenarioRunsService = {
   },
 
   async show(id: string): Promise<ScenarioRun> {
-    const { data } = await backendInstance.get<ScenarioRun>(`/scenario_runs/${id}`, {
+    const { data } = await backendInstance.get<ScenarioRun>(`/scenario-runs/${id}`, {
       headers: { Authorization: getAccessToken() },
     });
     return data;
@@ -91,13 +91,13 @@ export const scenarioRunsService = {
 
   // AUDIT-05 / D-14
   async destroy(id: string): Promise<void> {
-    await backendInstance.delete(`/scenario_runs/${id}`, {
+    await backendInstance.delete(`/scenario-runs/${id}`, {
       headers: { Authorization: getAccessToken() },
     });
   },
 
   async destroyAll(): Promise<void> {
-    await backendInstance.delete('/scenario_runs/destroy_all', {
+    await backendInstance.delete('/scenario-runs/destroy-all', {
       headers: { Authorization: getAccessToken() },
     });
   },
