@@ -84,6 +84,14 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
     const pendingCommandsRef = useRef<Map<string, string>>(new Map());
 
     const [connected, setConnected] = useState(false);
+    // The live, OPEN WebSocket exposed as state (not just wsRef). Channel hooks
+    // that subscribe via React effects (AssistantChannel, ScenariosChannel) need
+    // the socket as reactive state so they deterministically re-subscribe on
+    // every reconnect. wsRef alone is a mutable ref: reassigning it on reconnect
+    // does NOT re-render, so those hooks would keep a stale (closed) socket and
+    // silently fail to re-subscribe. CommandChannel sidesteps this by subscribing
+    // imperatively in ws.onopen below; these hooks rely on this state instead.
+    const [activeSocket, setActiveSocket] = useState<WebSocket | null>(null);
     const [deviceId, setDeviceId] = useState("");
     const [deviceName, setDeviceName] = useState<string>("");
 
@@ -187,6 +195,10 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         ws.onopen = () => {
             console.log("WebSocket connected");
             setConnected(true);
+            // Expose the now-OPEN socket as state so effect-based channel hooks
+            // (AssistantChannel / ScenariosChannel) deterministically (re)subscribe
+            // on this socket. See the activeSocket declaration for full rationale.
+            setActiveSocket(ws);
             isHandlingAuthReconnect.current = false;
 
             if (reconnectTimeout.current) {
@@ -334,6 +346,10 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
         ws.onclose = async (event) => {
             console.log("WebSocket closed", event.code, event.reason);
             setConnected(false);
+            // Drop the socket from state so effect-based channel hooks unsubscribe
+            // and go idle until the next socket opens. Guard on identity so a late
+            // close from a superseded socket cannot clear a newer live one.
+            setActiveSocket(prev => (prev === ws ? null : prev));
 
             if (isHandlingAuthReconnect.current) {
                 console.log("Auth reconnect in progress, skipping default onclose logic.");
@@ -714,7 +730,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
     const assistantPanelNode = fmState.rightPaneActive === 'assistant' ? (
         <AssistantPanel
             deviceId={deviceId}
-            ws={wsRef.current}
+            ws={activeSocket}
             deviceName={deviceName || deviceId}
         />
     ) : null;
@@ -725,7 +741,7 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
     const scenariosPanelNode = fmState.rightPaneActive === 'scenarios' ? (
         <ScenariosPanel
             deviceId={deviceId}
-            ws={wsRef.current}
+            ws={activeSocket}
             deviceName={deviceName || deviceId}
         />
     ) : null;
