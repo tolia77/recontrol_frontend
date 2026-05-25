@@ -206,8 +206,8 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
         return (
             <div
                 ref={videoContainerRef}
-                className={`relative flex w-full items-center justify-center bg-[#0a0d18] shadow-[inset_0_2px_4px_0_rgb(0_0_0/0.05)] ${pixelPerfect ? 'overflow-auto' : 'overflow-hidden'}`}
-                style={{ aspectRatio }}
+                className={`relative flex items-center justify-center bg-[#0a0d18] shadow-[inset_0_2px_4px_0_rgb(0_0_0/0.05)] ${pixelPerfect ? 'w-full overflow-auto' : 'h-full w-full overflow-hidden'}`}
+                style={pixelPerfect ? { aspectRatio } : undefined}
             >
                 <video
                     ref={setVideoNode ?? videoRef}
@@ -238,14 +238,15 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
 
     // Dark 16:9 stage for the idle / connecting / failed / reconnecting states.
     const renderStage = (children: React.ReactNode) => (
-        <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden bg-[#0a0d18] shadow-[inset_0_2px_4px_0_rgb(0_0_0/0.05)]">
+        <div className="relative flex aspect-video max-h-full w-full items-center justify-center overflow-hidden bg-[#0a0d18] shadow-[inset_0_2px_4px_0_rgb(0_0_0/0.05)]">
             {children}
         </div>
     );
 
-    // Fills the stage height and caps the stream width (replaces .canvas-container).
+    // Fills the stage in both dimensions; the video fits inside via object-contain
+    // (see renderVideoStream), so the picture scales to whichever dimension binds.
     const streamFrame = (children: React.ReactNode) => (
-        <div className="flex w-full max-w-[1280px] flex-1 items-center justify-center">{children}</div>
+        <div className="flex w-full flex-1 min-h-0 items-center justify-center">{children}</div>
     );
 
     // Render stream content based on connection state
@@ -281,7 +282,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
         if (connectionState === 'reconnecting') {
             return streamFrame(
                 hasReceivedFrame && videoRef ? (
-                    <div className="relative w-full">
+                    <div className="relative h-full w-full">
                         {renderVideoStream(false)}
                         <div className="absolute inset-0 z-20 flex items-center justify-center rounded-[inherit] bg-black/60">
                             <div className="text-center text-[#D1D5DB]">
@@ -328,41 +329,45 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
     // upstream by rightPaneActive in useFileManagerState). Pick whichever is
     // present so the Splitter's right slot renders the active panel.
     const rightNode = fileManagerNode ?? assistantPanelNode ?? scenariosPanelNode;
-    const showPanel = !!rightNode && activeMode !== 'manual';
 
-    if (showPanel) {
+    // Manual mode never shows the video stream — render its controls and bail.
+    if (activeMode === 'manual') {
         return (
-            <div className="flex-1 min-h-0 bg-background flex flex-col">
-                <Splitter
-                    initialRatio={splitRatio ?? 0.5}
-                    onRatioChange={setSplitRatio ?? (() => {})}
-                    left={
-                        <div className="h-full w-full flex items-start justify-center bg-[#0a0d18] p-2 overflow-auto">
-                            {renderStreamContent()}
-                        </div>
-                    }
-                    right={<div className="h-full w-full">{rightNode}</div>}
-                />
-            </div>
-        );
-    }
-
-    return (
-        <div
-            className={`flex-1 min-h-0 flex flex-col items-center p-2 ${
-                activeMode === 'manual'
-                    ? 'overflow-auto bg-[#F3F4F6]'
-                    : 'justify-center overflow-hidden bg-[#0a0d18]'
-            }`}
-        >
-            {activeMode === 'manual' ? (
+            <div className="flex-1 min-h-0 flex flex-col items-center p-2 overflow-auto bg-[#F3F4F6]">
                 <ManualControls disabled={disabled} addAction={addAction} results={terminalResults}
                                 processes={processes} processesLoading={processesLoading}
                                 requestListProcesses={requestListProcesses} killProcess={killProcess}
                                 permissions={permissions}/>
-            ) : (
-                renderStreamContent()
-            )}
+            </div>
+        );
+    }
+
+    // Interactive mode: ALWAYS render the stream through the Splitter, whether or
+    // not a panel is open. Toggling a panel only adds/removes the Splitter's
+    // right pane; the left pane (and the live <video> inside it) keeps a stable
+    // position in the tree, so React never remounts the video element. Remounting
+    // it would drop the painted frame and black out the stream until the next
+    // frame arrives — and the desktop sends no frames while the screen is static.
+    const showPanel = !!rightNode;
+
+    return (
+        <div className="flex-1 min-h-0 bg-background flex flex-col">
+            <Splitter
+                initialRatio={splitRatio ?? 0.5}
+                onRatioChange={setSplitRatio ?? (() => {})}
+                left={
+                    <div
+                        className={
+                            showPanel
+                                ? 'h-full w-full flex items-stretch justify-center bg-[#0a0d18] p-2 overflow-auto'
+                                : 'h-full w-full flex flex-col items-center justify-center overflow-hidden bg-[#0a0d18] p-2'
+                        }
+                    >
+                        {renderStreamContent()}
+                    </div>
+                }
+                right={showPanel ? <div className="h-full w-full">{rightNode}</div> : null}
+            />
         </div>
     );
 };

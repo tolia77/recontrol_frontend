@@ -6,6 +6,13 @@ interface SplitterProps {
   /** Called once on pointer-up with the final ratio. */
   onRatioChange: (ratio: number) => void;
   left: React.ReactNode;
+  /**
+   * Right pane content, or null/undefined to collapse the right pane. When
+   * absent the left pane fills the full width and the divider is hidden.
+   * Callers keep routing the same `left` subtree through this component
+   * regardless of whether a panel is open so the left pane's DOM (e.g. a live
+   * <video> element) keeps a stable tree position and is never remounted.
+   */
   right: React.ReactNode;
 }
 
@@ -15,6 +22,10 @@ interface SplitterProps {
  * frame) so callers don't thrash localStorage. Internal `ratio` state tracks
  * the visual during-drag value; on pointer-up we hand the final value to the
  * parent, which may re-render with the stored ratio.
+ *
+ * When `right` is null/undefined the left pane spans the full width and the
+ * divider + right pane are omitted. The left pane stays the container's first
+ * child in both layouts, so toggling the right pane does not remount `left`.
  */
 export function Splitter({ initialRatio, onRatioChange, left, right }: SplitterProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -58,23 +69,32 @@ export function Splitter({ initialRatio, onRatioChange, left, right }: SplitterP
     [onRatioChange, ratio],
   );
 
+  const hasRight = right != null;
+
   return (
     <div ref={containerRef} className="flex h-full w-full">
-      <div style={{ width: `${ratio * 100}%` }} className="h-full min-w-0 overflow-hidden">
+      <div
+        style={{ width: hasRight ? `${ratio * 100}%` : '100%' }}
+        className="h-full min-w-0 overflow-hidden"
+      >
         {left}
       </div>
-      <div
-        role="separator"
-        aria-orientation="vertical"
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
-        className="w-1 bg-lightgray hover:bg-primary cursor-col-resize transition-colors flex-shrink-0"
-      />
-      <div style={{ width: `${(1 - ratio) * 100}%` }} className="h-full min-w-0 overflow-hidden">
-        {right}
-      </div>
+      {hasRight && (
+        <>
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerUp}
+            className="w-1 bg-lightgray hover:bg-primary cursor-col-resize transition-colors flex-shrink-0"
+          />
+          <div style={{ width: `${(1 - ratio) * 100}%` }} className="h-full min-w-0 overflow-hidden">
+            {right}
+          </div>
+        </>
+      )}
     </div>
   );
 }
