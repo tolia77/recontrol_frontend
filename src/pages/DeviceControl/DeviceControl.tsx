@@ -53,6 +53,28 @@ interface DevicePermissions {
     any_screen: boolean; // currently same as see_screen
 }
 
+/**
+ * Decode a JWT access token's `exp` claim and report whether it is already
+ * expired or within `skewSeconds` of expiring. Best-effort: malformed tokens
+ * are treated as expired so callers refresh rather than connect with a bad
+ * token. Access tokens are short-lived (~1 min), so this gate lets the socket
+ * refresh proactively before (re)connecting instead of eating a guaranteed
+ * unauthorized rejection and retry.
+ */
+function isAccessTokenExpired(token: string, skewSeconds = 10): boolean {
+    try {
+        const payload = token.split('.')[1];
+        if (!payload) return true;
+        const json = JSON.parse(
+            atob(payload.replace(/-/g, '+').replace(/_/g, '/')),
+        ) as { exp?: number };
+        if (typeof json.exp !== 'number') return true;
+        return Date.now() >= (json.exp - skewSeconds) * 1000;
+    } catch {
+        return true;
+    }
+}
+
 export function DeviceControl({wsUrl}: CommandWebSocketProps) {
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -146,7 +168,13 @@ export function DeviceControl({wsUrl}: CommandWebSocketProps) {
             reconnectTimeout.current = null;
         }
 
-        const token = getAccessToken();
+        // Access tokens live ~1 minute, so on a reconnect the stored token is
+        // almost always stale. Refresh proactively instead of connecting with an
+        // expired token and eating a guaranteed unauthorized rejection + retry.
+        let token = getAccessToken();
+        if (!token || isAccessTokenExpired(token)) {
+            token = await refreshAccessTokenOnce();
+        }
         if (!token) {
             console.error("No valid token available for WebSocket connection");
             return;
