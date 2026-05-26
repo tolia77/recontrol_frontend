@@ -8,6 +8,8 @@ import { useToast } from "src/components/ui";
 import type { Mode } from "src/pages/DeviceControl/types";
 import { getDeviceRequest } from "src/services/backend/devicesService";
 import { usePermissions } from "./hooks/state/usePermissions";
+import { useTerminalSession } from "./hooks/state/useTerminalSession";
+import { useStreamControls } from "./hooks/state/useStreamControls";
 import { useWebRtc } from "./hooks/useWebRtc";
 import { useStreamStats } from "./hooks/useStreamStats";
 import { useFilesChannel } from "./hooks/useFilesChannel";
@@ -89,24 +91,24 @@ export function DeviceControl({ wsUrl }: CommandWebSocketProps) {
 
   const [activeMode, setActiveMode] = useState<Mode>("interactive");
 
-  const [terminalResults, setTerminalResults] = useState<
-    { id: string; status: string; result: string }[]
-  >([]);
-  const [processes, setProcesses] = useState<
-    {
-      Pid: number;
-      Name: string;
-      MemoryMB?: number;
-      CpuTime?: string;
-      StartTime?: string;
-    }[]
-  >([]);
-  const [processesLoading, setProcessesLoading] = useState(false);
+  const {
+    terminalResults,
+    processes,
+    processesLoading,
+    appendTerminalResult,
+    setProcesses,
+    setProcessesLoading,
+  } = useTerminalSession();
 
   // stream stats and FPS state
-  const [showStats, setShowStats] = useState(false);
-  const [currentFps, setCurrentFps] = useState(24);
-  const [currentResolution, setCurrentResolution] = useState(1080);
+  const {
+    showStats,
+    setShowStats,
+    currentFps,
+    setCurrentFps,
+    currentResolution,
+    setCurrentResolution,
+  } = useStreamControls();
 
   const {
     permissions,
@@ -255,16 +257,10 @@ export function DeviceControl({ wsUrl }: CommandWebSocketProps) {
                 ((payload as Record<string, unknown>).stream as string) ||
                 "stdout";
               if (chunk) {
-                setTerminalResults((prev) => {
-                  const next = [
-                    ...prev,
-                    {
-                      id: sessionId || "stream",
-                      status: stream,
-                      result: chunk,
-                    },
-                  ];
-                  return next.slice(-100);
+                appendTerminalResult({
+                  id: sessionId || "stream",
+                  status: stream,
+                  result: chunk,
                 });
               }
               return;
@@ -277,16 +273,10 @@ export function DeviceControl({ wsUrl }: CommandWebSocketProps) {
               Object.prototype.hasOwnProperty.call(msg, "result")
             ) {
               const resultStr = stringifyResult(msg.result);
-              setTerminalResults((prev) => {
-                const next = [
-                  ...prev,
-                  {
-                    id: msg.id as string,
-                    status: msg.status as string,
-                    result: resultStr,
-                  },
-                ];
-                return next.slice(-100);
+              appendTerminalResult({
+                id: msg.id as string,
+                status: msg.status as string,
+                result: resultStr,
               });
               // detect processes list by original command id mapping
               const isProc = (
@@ -816,7 +806,7 @@ export function DeviceControl({ wsUrl }: CommandWebSocketProps) {
         onStopStream={stopWebRtc}
         connectionState={connectionState}
         showStats={showStats}
-        onToggleStats={() => setShowStats((s) => !s)}
+        onToggleStats={() => setShowStats(!showStats)}
         currentFps={currentFps}
         onFpsChange={handleFpsChange}
         currentResolution={currentResolution}
