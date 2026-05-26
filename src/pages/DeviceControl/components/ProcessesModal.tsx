@@ -2,7 +2,7 @@ import React, {useState, useMemo, useCallback} from 'react';
 import {useTranslation} from 'react-i18next';
 import type {ProcessInfo} from '../types.ts';
 import {RefreshIcon, CloseIcon} from '../icons.tsx';
-import { Modal } from '../../../components/ui';
+import { Modal, Button } from '../../../components/ui';
 
 interface ProcessesModalProps {
   open: boolean;
@@ -119,33 +119,33 @@ export const ProcessesModal: React.FC<ProcessesModalProps> = ({
 
   return (
     <Modal open={open} onClose={onClose} size="full">
-      <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between gap-2">
+      <div className="px-4 py-3 border-b border-lightgray flex items-center justify-between gap-2">
         <h5 className="text-base font-semibold">{t('manual.terminal.processesModal.title')}</h5>
         <div className="flex gap-2 items-center">
-          <button title={t('manual.terminal.processesModal.refresh')} className="btn-secondary p-2 flex items-center justify-center" onClick={onRefresh} disabled={loading}>
+          <Button variant="secondary" size="sm" title={t('manual.terminal.processesModal.refresh')} className="p-2" onClick={onRefresh} disabled={loading}>
             <RefreshIcon className="w-4 h-4" />
-          </button>
-          <button title={t('manual.terminal.processesModal.close')} className="btn-secondary p-2 flex items-center justify-center" onClick={onClose}>
+          </Button>
+          <Button variant="secondary" size="sm" title={t('manual.terminal.processesModal.close')} className="p-2" onClick={onClose}>
             <CloseIcon className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       </div>
       <div className="p-0">
         <div className="h-[480px] overflow-hidden">
           {loading ? (
-            <div className="h-full flex items-center justify-center text-sm text-gray-600">
+            <div className="h-full flex items-center justify-center text-sm text-darkgray">
               <div className="flex flex-col items-center gap-2">
                 <div className="w-8 h-8 border-4 border-lightgray border-t-primary rounded-full animate-spin" />
                 {t('manual.terminal.processesModal.loading')}
               </div>
             </div>
           ) : processes.length === 0 ? (
-            <div className="h-full flex items-center justify-center text-sm text-gray-600">{t('manual.terminal.processesModal.empty')}</div>
+            <div className="h-full flex items-center justify-center text-sm text-darkgray">{t('manual.terminal.processesModal.empty')}</div>
           ) : (
             <div className="h-full overflow-y-auto">
               <table className="min-w-full text-sm">
-                <thead className="sticky top-0 bg-white shadow-sm">
-                  <tr className="text-left text-gray-700 border-b">
+                <thead className="sticky top-0 bg-background shadow-sm">
+                  <tr className="text-left text-text border-b">
                     {headerCols.map(h => (
                       <th key={h.key} className="px-2 py-2 select-none cursor-pointer" onClick={() => toggleSort(h.key)}>
                         <span className="inline-flex items-center gap-1">
@@ -161,16 +161,16 @@ export const ProcessesModal: React.FC<ProcessesModalProps> = ({
                 </thead>
                 <tbody>
                   {sorted.map(p => (
-                    <tr key={p.Pid} className="border-b last:border-b-0 hover:bg-gray-50">
+                    <tr key={p.Pid} className="border-b last:border-b-0 hover:bg-tertiary">
                       <td className="px-2 py-2 font-mono">{p.Pid}</td>
                       <td className="px-2 py-2">{p.Name}</td>
                       <td className="px-2 py-2">{typeof p.MemoryMB === 'number' ? `${p.MemoryMB} MB` : '-'}</td>
                       <td className="px-2 py-2">{formatCpuDisplay(p.CpuTime)}</td>
                       <td className="px-2 py-2">{formatStartDisplay(p.StartTime)}</td>
                       <td className="px-2 py-2">
-                        <button className="btn-danger" onClick={() => handleKill(p.Pid)}>
+                        <Button variant="danger" size="sm" onClick={() => handleKill(p.Pid)}>
                           {t('manual.terminal.kill')}
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   ))}

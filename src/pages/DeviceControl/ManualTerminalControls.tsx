@@ -1,6 +1,7 @@
 import React, {useCallback, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {ProcessesModal} from './components/ProcessesModal.tsx';
+import { Button, Input } from 'src/components/ui';
 
 export const ManualTerminalControls: React.FC<{
     disabled: boolean;
@@ -131,22 +132,22 @@ export const ManualTerminalControls: React.FC<{
 
     return (
         <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">{t('manual.terminal.title')}</h3>
+            <h3 className="text-lg font-semibold text-text mb-2">{t('manual.terminal.title')}</h3>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
                 {/* Left: All controls */}
                 <div className="space-y-6">
                     {/* Command Execution Section */}
-                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                        <h4 className="text-sm font-medium text-gray-700 mb-3">{t('manual.terminal.commandExec')}</h4>
+                    <div className="border border-lightgray rounded-lg p-4 bg-tertiary">
+                        <h4 className="text-sm font-medium text-text mb-3">{t('manual.terminal.commandExec')}</h4>
 
                         {/* CMD Execute */}
-                        <div className="space-y-3 mb-4 pb-4 border-b border-gray-200">
+                        <div className="space-y-3 mb-4 pb-4 border-b border-lightgray">
                             <label className="flex flex-col text-sm">
-                                <span className="text-gray-600 mb-1">{t('manual.terminal.cmdCommand')}</span>
-                                <input
+                                <span className="text-darkgray mb-1">{t('manual.terminal.cmdCommand')}</span>
+                                <Input
                                     type="text"
-                                    className="small-input"
+                                    className="text-xs px-2 py-1"
                                     value={cmdInput}
                                     onChange={(e) => setCmdInput(e.target.value)}
                                     disabled={disabled}
@@ -156,33 +157,34 @@ export const ManualTerminalControls: React.FC<{
                             </label>
                             <div className="flex items-end gap-3">
                                 <label className="flex flex-col text-sm flex-1">
-                                    <span className="text-gray-600 mb-1">{t('manual.terminal.timeoutMs')}</span>
-                                    <input
+                                    <span className="text-darkgray mb-1">{t('manual.terminal.timeoutMs')}</span>
+                                    <Input
                                         type="number"
-                                        className="small-input"
+                                        className="text-xs px-2 py-1"
                                         value={cmdTimeout}
                                         onChange={(e) => setCmdTimeout(Number(e.target.value))}
                                         disabled={disabled}
                                         min={0}
                                     />
                                 </label>
-                                <button
-                                    className="btn-primary"
+                                <Button
+                                    variant="primary"
+                                    size="sm"
                                     disabled={disabled || !cmdInput.trim()}
                                     onClick={executeCmd}
                                 >
                                     {t('manual.terminal.execCmd')}
-                                </button>
+                                </Button>
                             </div>
                         </div>
 
                         {/* PowerShell Execute */}
                         <div className="space-y-3">
                             <label className="flex flex-col text-sm">
-                                <span className="text-gray-600 mb-1">{t('manual.terminal.psCommand')}</span>
-                                <input
+                                <span className="text-darkgray mb-1">{t('manual.terminal.psCommand')}</span>
+                                <Input
                                     type="text"
-                                    className="small-input"
+                                    className="text-xs px-2 py-1"
                                     value={psInput}
                                     onChange={(e) => setPsInput(e.target.value)}
                                     disabled={disabled}
@@ -192,80 +194,85 @@ export const ManualTerminalControls: React.FC<{
                             </label>
                             <div className="flex items-end gap-3">
                                 <label className="flex flex-col text-sm flex-1">
-                                    <span className="text-gray-600 mb-1">{t('manual.terminal.timeoutMs')}</span>
-                                    <input
+                                    <span className="text-darkgray mb-1">{t('manual.terminal.timeoutMs')}</span>
+                                    <Input
                                         type="number"
-                                        className="small-input"
+                                        className="text-xs px-2 py-1"
                                         value={psTimeout}
                                         onChange={(e) => setPsTimeout(Number(e.target.value))}
                                         disabled={disabled}
                                         min={0}
                                     />
                                 </label>
-                                <button
-                                    className="btn-primary"
+                                <Button
+                                    variant="primary"
+                                    size="sm"
                                     disabled={disabled || !psInput.trim()}
                                     onClick={executePowerShell}
                                 >
                                     {t('manual.terminal.execPs')}
-                                </button>
+                                </Button>
                             </div>
                         </div>
 
                         <div className="mt-3">
-                            <button
-                                className="btn-secondary"
+                            <Button
+                                variant="secondary"
+                                size="sm"
                                 disabled={disabled}
                                 onClick={abortCommand}
                             >
                                 {t('manual.terminal.abort')}
-                            </button>
+                            </Button>
                         </div>
                     </div>
 
                     {/* Process Management Section */}
-                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                        <h4 className="text-sm font-medium text-gray-700 mb-3">{t('manual.terminal.processMgmt')}</h4>
+                    <div className="border border-lightgray rounded-lg p-4 bg-tertiary">
+                        <h4 className="text-sm font-medium text-text mb-3">{t('manual.terminal.processMgmt')}</h4>
 
-                        <div className="space-y-3 mb-4 pb-4 border-b border-gray-200">
-                            <button
-                                className="btn-primary w-full"
+                        <div className="space-y-3 mb-4 pb-4 border-b border-lightgray">
+                            <Button
+                                variant="primary"
+                                size="sm"
+                                className="w-full"
                                 disabled={disabled}
                                 onClick={openProcModal}
                             >
                                 {t('manual.terminal.listProcesses')}
-                            </button>
+                            </Button>
                         </div>
 
-                        <div className="space-y-3 mb-4 pb-4 border-b border-gray-200">
+                        <div className="space-y-3 mb-4 pb-4 border-b border-lightgray">
                             <label className="flex flex-col text-sm">
-                                <span className="text-gray-600 mb-1">{t('manual.terminal.killPid')}</span>
+                                <span className="text-darkgray mb-1">{t('manual.terminal.killPid')}</span>
                                 <div className="flex gap-2">
-                                    <input
+                                    <Input
                                         type="text"
-                                        className="small-input flex-1"
+                                        className="text-xs px-2 py-1 flex-1"
                                         value={pidToKill}
                                         onChange={(e) => setPidToKill(e.target.value)}
                                         disabled={disabled}
                                         placeholder="1234"
                                     />
-                                    <button
-                                        className="btn-danger"
+                                    <Button
+                                        variant="danger"
+                                        size="sm"
                                         disabled={disabled || !pidToKill.trim()}
                                         onClick={killProcessInline}
                                     >
                                         {t('manual.terminal.kill')}
-                                    </button>
+                                    </Button>
                                 </div>
                             </label>
                         </div>
 
                         <div className="space-y-3">
                             <label className="flex flex-col text-sm">
-                                <span className="text-gray-600 mb-1">{t('manual.terminal.startProcess')}</span>
-                                <input
+                                <span className="text-darkgray mb-1">{t('manual.terminal.startProcess')}</span>
+                                <Input
                                     type="text"
-                                    className="small-input"
+                                    className="text-xs px-2 py-1"
                                     value={processPath}
                                     onChange={(e) => setProcessPath(e.target.value)}
                                     disabled={disabled}
@@ -273,85 +280,94 @@ export const ManualTerminalControls: React.FC<{
                                 />
                             </label>
                             <label className="flex flex-col text-sm">
-                                <span className="text-gray-600 mb-1">{t('manual.terminal.argsOptional')}</span>
-                                <input
+                                <span className="text-darkgray mb-1">{t('manual.terminal.argsOptional')}</span>
+                                <Input
                                     type="text"
-                                    className="small-input"
+                                    className="text-xs px-2 py-1"
                                     value={processArgs}
                                     onChange={(e) => setProcessArgs(e.target.value)}
                                     disabled={disabled}
                                     placeholder={t('manual.terminal.filePlaceholder')}
                                 />
                             </label>
-                            <button
-                                className="btn-primary w-full"
+                            <Button
+                                variant="primary"
+                                size="sm"
+                                className="w-full"
                                 disabled={disabled || !processPath.trim()}
                                 onClick={startProcess}
                             >
                                 {t('manual.terminal.startProcess')}
-                            </button>
+                            </Button>
                         </div>
                     </div>
 
                     {/* Directory & System Info Section */}
-                    <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                        <h4 className="text-sm font-medium text-gray-700 mb-3">{t('manual.terminal.directoryInfo')}</h4>
+                    <div className="border border-lightgray rounded-lg p-4 bg-tertiary">
+                        <h4 className="text-sm font-medium text-text mb-3">{t('manual.terminal.directoryInfo')}</h4>
 
-                        <div className="space-y-3 mb-4 pb-4 border-gray-200">
+                        <div className="space-y-3 mb-4 pb-4 border-lightgray">
                             <div className="flex gap-2">
-                                <button
-                                    className="btn-secondary flex-1"
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    className="flex-1"
                                     disabled={disabled}
                                     onClick={getCwd}
                                 >
                                     {t('manual.terminal.getCwd')}
-                                </button>
+                                </Button>
                             </div>
                             <label className="flex flex-col text-sm">
-                                <span className="text-gray-600 mb-1">{t('manual.terminal.setCwdLabel')}</span>
+                                <span className="text-darkgray mb-1">{t('manual.terminal.setCwdLabel')}</span>
                                 <div className="flex gap-2">
-                                    <input
+                                    <Input
                                         type="text"
-                                        className="small-input flex-1"
+                                        className="text-xs px-2 py-1 flex-1"
                                         value={newCwd}
                                         onChange={(e) => setNewCwd(e.target.value)}
                                         disabled={disabled}
                                         placeholder="C:\\Users\\Public"
                                     />
-                                    <button
-                                        className="btn-secondary"
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
                                         disabled={disabled || !newCwd.trim()}
                                         onClick={setCwd}
                                     >
                                         {t('manual.terminal.setBtn')}
-                                    </button>
+                                    </Button>
                                 </div>
                             </label>
                         </div>
 
                         <div className="flex gap-2">
-                            <button
-                                className="btn-secondary flex-1"
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                className="flex-1"
                                 disabled={disabled}
                                 onClick={whoAmI}
                             >
                                 {t('manual.terminal.whoAmI')}
-                            </button>
-                            <button
-                                className="btn-secondary flex-1"
+                            </Button>
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                className="flex-1"
                                 disabled={disabled}
                                 onClick={getUptime}
                             >
                                 {t('manual.terminal.getUptime')}
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>
 
                 {/* Right: Output panel */}
-                <div className="border border-gray-200 rounded-lg p-3 bg-white min-h-[320px]">
+                <div className="border border-lightgray rounded-lg p-3 bg-background min-h-[320px]">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-gray-600">{t('manual.terminal.output')}</span>
+                        <span className="text-sm text-darkgray">{t('manual.terminal.output')}</span>
                         {latest && (
                             <span
                                 className={`text-xs px-2 py-0.5 rounded ${latest.status === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
@@ -360,7 +376,7 @@ export const ManualTerminalControls: React.FC<{
                         )}
                     </div>
                     <pre
-                        className="text-xs leading-5 whitespace-pre-wrap break-words max-h-[520px] h-[520px] overflow-auto bg-gray-50 p-2 rounded">
+                        className="text-xs leading-5 whitespace-pre-wrap break-words max-h-[520px] h-[520px] overflow-auto bg-tertiary p-2 rounded">
 {latest ? latest.result : t('manual.terminal.outputEmpty')}
                     </pre>
                 </div>

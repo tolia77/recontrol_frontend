@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { mapButtonToBackend } from './utils/mouse.ts';
 import { useTranslation } from 'react-i18next';
+import { Button, Input } from 'src/components/ui';
 
 export const ManualMouseControls: React.FC<{
     disabled: boolean;
@@ -40,88 +41,90 @@ export const ManualMouseControls: React.FC<{
 
     return (
         <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">{t('manual.mouse.title')}</h3>
+            <h3 className="text-lg font-semibold text-text mb-4">{t('manual.mouse.title')}</h3>
 
             {/* Position Section */}
-            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">{t('manual.mouse.position')}</h4>
+            <div className="border border-lightgray rounded-lg p-4 bg-tertiary">
+                <h4 className="text-sm font-medium text-text mb-3">{t('manual.mouse.position')}</h4>
                 <div className="grid grid-cols-2 gap-3 mb-3">
                     <label className="flex flex-col text-sm">
-                        <span className="text-gray-600 mb-1">X</span>
-                        <input
+                        <span className="text-darkgray mb-1">X</span>
+                        <Input
                             type="number"
-                            className="small-input"
+                            className="text-xs px-2 py-1"
                             value={xVal}
                             onChange={(e) => setXVal(Number(e.target.value))}
                             disabled={disabled}
                         />
                     </label>
                     <label className="flex flex-col text-sm">
-                        <span className="text-gray-600 mb-1">Y</span>
-                        <input
+                        <span className="text-darkgray mb-1">Y</span>
+                        <Input
                             type="number"
-                            className="small-input"
+                            className="text-xs px-2 py-1"
                             value={yVal}
                             onChange={(e) => setYVal(Number(e.target.value))}
                             disabled={disabled}
                         />
                     </label>
                 </div>
-                <button
-                    className="btn-primary w-full"
+                <Button
+                    variant="primary"
+                    size="sm"
+                    className="w-full"
                     disabled={disabled}
                     onClick={() => send('mouse.move', { X: Math.round(xVal), Y: Math.round(yVal) })}
                 >
                     {t('manual.mouse.moveBtn')}
-                </button>
+                </Button>
             </div>
 
             {/* Click Actions Section */}
-            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">{t('manual.mouse.buttons')}</h4>
+            <div className="border border-lightgray rounded-lg p-4 bg-tertiary">
+                <h4 className="text-sm font-medium text-text mb-3">{t('manual.mouse.buttons')}</h4>
                 <div className="space-y-3">
                     {/* Left Button */}
                     <div>
-                        <p className="text-xs text-gray-600 mb-2">{t('manual.mouse.left')}</p>
+                        <p className="text-xs text-darkgray mb-2">{t('manual.mouse.left')}</p>
                         <div className="flex flex-wrap gap-2">
-                            <button className="btn-secondary small" disabled={disabled} onClick={() => sendDown(0)}>{t('manual.mouse.down')}</button>
-                            <button className="btn-secondary small" disabled={disabled} onClick={() => sendUp(0)}>{t('manual.mouse.up')}</button>
-                            <button className="btn-secondary small" disabled={disabled} onClick={() => { void clickSeq(0, 1); }}>{t('manual.mouse.click')}</button>
-                            <button className="btn-secondary small" disabled={disabled} onClick={() => { void clickSeq(0, 2); }}>{t('manual.mouse.double')}</button>
+                            <Button variant="secondary" size="sm" disabled={disabled} onClick={() => sendDown(0)}>{t('manual.mouse.down')}</Button>
+                            <Button variant="secondary" size="sm" disabled={disabled} onClick={() => sendUp(0)}>{t('manual.mouse.up')}</Button>
+                            <Button variant="secondary" size="sm" disabled={disabled} onClick={() => { void clickSeq(0, 1); }}>{t('manual.mouse.click')}</Button>
+                            <Button variant="secondary" size="sm" disabled={disabled} onClick={() => { void clickSeq(0, 2); }}>{t('manual.mouse.double')}</Button>
                         </div>
                     </div>
 
                     {/* Right Button */}
                     <div>
-                        <p className="text-xs text-gray-600 mb-2">{t('manual.mouse.right')}</p>
+                        <p className="text-xs text-darkgray mb-2">{t('manual.mouse.right')}</p>
                         <div className="flex flex-wrap gap-2">
-                            <button className="btn-secondary small" disabled={disabled} onClick={() => sendDown(2)}>{t('manual.mouse.down')}</button>
-                            <button className="btn-secondary small" disabled={disabled} onClick={() => sendUp(2)}>{t('manual.mouse.up')}</button>
-                            <button className="btn-secondary small" disabled={disabled} onClick={() => { void clickSeq(2, 1); }}>{t('manual.mouse.click')}</button>
+                            <Button variant="secondary" size="sm" disabled={disabled} onClick={() => sendDown(2)}>{t('manual.mouse.down')}</Button>
+                            <Button variant="secondary" size="sm" disabled={disabled} onClick={() => sendUp(2)}>{t('manual.mouse.up')}</Button>
+                            <Button variant="secondary" size="sm" disabled={disabled} onClick={() => { void clickSeq(2, 1); }}>{t('manual.mouse.click')}</Button>
                         </div>
                     </div>
 
                     {/* Middle Button */}
                     <div>
-                        <p className="text-xs text-gray-600 mb-2">{t('manual.mouse.middle')}</p>
+                        <p className="text-xs text-darkgray mb-2">{t('manual.mouse.middle')}</p>
                         <div className="flex flex-wrap gap-2">
-                            <button className="btn-secondary small" disabled={disabled} onClick={() => sendDown(1)}>{t('manual.mouse.down')}</button>
-                            <button className="btn-secondary small" disabled={disabled} onClick={() => sendUp(1)}>{t('manual.mouse.up')}</button>
-                            <button className="btn-secondary small" disabled={disabled} onClick={() => { void clickSeq(1, 1); }}>{t('manual.mouse.click')}</button>
+                            <Button variant="secondary" size="sm" disabled={disabled} onClick={() => sendDown(1)}>{t('manual.mouse.down')}</Button>
+                            <Button variant="secondary" size="sm" disabled={disabled} onClick={() => sendUp(1)}>{t('manual.mouse.up')}</Button>
+                            <Button variant="secondary" size="sm" disabled={disabled} onClick={() => { void clickSeq(1, 1); }}>{t('manual.mouse.click')}</Button>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Scroll Section */}
-            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">{t('manual.mouse.scroll')}</h4>
+            <div className="border border-lightgray rounded-lg p-4 bg-tertiary">
+                <h4 className="text-sm font-medium text-text mb-3">{t('manual.mouse.scroll')}</h4>
                 <div className="flex items-end gap-3">
                     <label className="flex flex-col text-sm flex-1">
-                        <span className="text-gray-600 mb-1">{t('manual.mouse.scrollClicks')}</span>
-                        <input
+                        <span className="text-darkgray mb-1">{t('manual.mouse.scrollClicks')}</span>
+                        <Input
                             type="number"
-                            className="small-input"
+                            className="text-xs px-2 py-1"
                             value={scrollClicks}
                             onChange={(e) => setScrollClicks(Math.max(1, Number(e.target.value) || 1))}
                             disabled={disabled}
@@ -129,12 +132,12 @@ export const ManualMouseControls: React.FC<{
                         />
                     </label>
                     <div className="flex gap-2">
-                        <button className="btn-secondary" disabled={disabled} onClick={() => send('mouse.scroll', { Clicks: +Math.abs(scrollClicks) })}>
+                        <Button variant="secondary" size="sm" disabled={disabled} onClick={() => send('mouse.scroll', { Clicks: +Math.abs(scrollClicks) })}>
                             {t('manual.mouse.scrollUp')}
-                        </button>
-                        <button className="btn-secondary" disabled={disabled} onClick={() => send('mouse.scroll', { Clicks: -Math.abs(scrollClicks) })}>
+                        </Button>
+                        <Button variant="secondary" size="sm" disabled={disabled} onClick={() => send('mouse.scroll', { Clicks: -Math.abs(scrollClicks) })}>
                             {t('manual.mouse.scrollDown')}
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>

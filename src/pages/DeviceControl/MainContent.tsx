@@ -268,7 +268,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
             return streamFrame(
                 renderStage(
                     <div className="relative z-[3] text-center text-[#D1D5DB]">
-                        <div className="w-8 h-8 mx-auto mb-3 border-2 border-gray-500 border-t-indigo-400 rounded-full animate-spin" />
+                        <div className="w-8 h-8 mx-auto mb-3 border-2 border-darkgray border-t-secondary rounded-full animate-spin" />
                         <span className="text-lg font-medium">Connecting...</span>
                     </div>
                 )
@@ -286,7 +286,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                         {renderVideoStream(false)}
                         <div className="absolute inset-0 z-20 flex items-center justify-center rounded-[inherit] bg-black/60">
                             <div className="text-center text-[#D1D5DB]">
-                                <div className="w-8 h-8 mx-auto mb-3 border-2 border-gray-500 border-t-indigo-400 rounded-full animate-spin" />
+                                <div className="w-8 h-8 mx-auto mb-3 border-2 border-darkgray border-t-secondary rounded-full animate-spin" />
                                 <span className="text-lg font-medium">Reconnecting...</span>
                             </div>
                         </div>
@@ -294,7 +294,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                 ) : (
                     renderStage(
                         <div className="relative z-[3] text-center text-[#D1D5DB]">
-                            <div className="w-8 h-8 mx-auto mb-3 border-2 border-gray-500 border-t-indigo-400 rounded-full animate-spin" />
+                            <div className="w-8 h-8 mx-auto mb-3 border-2 border-darkgray border-t-secondary rounded-full animate-spin" />
                             <span className="text-lg font-medium">Reconnecting...</span>
                         </div>
                     )
@@ -312,7 +312,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                         <span className="text-lg font-medium block mb-4">Connection failed</span>
                         <button
                             onClick={retryWebRtc}
-                            className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-sm font-medium transition-colors"
+                            className="px-4 py-2 bg-secondary hover:opacity-90 text-white rounded-lg text-sm font-medium transition-colors"
                         >
                             Retry Connection
                         </button>

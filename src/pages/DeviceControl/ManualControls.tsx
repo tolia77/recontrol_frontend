@@ -37,16 +37,16 @@ export const ManualControls: React.FC<{
 
     return (
         <div className="flex-1 bg-[#F3F4F6] p-8 flex flex-col items-center">
-            <div className="w-4xl bg-white rounded-lg border border-gray-200 shadow-sm">
+            <div className="w-4xl bg-background rounded-lg border border-lightgray shadow-sm">
                 {/* Section Tabs */}
-                <div className="border-b border-gray-200">
+                <div className="border-b border-lightgray">
                     <div className="flex">
                         <button
                             onClick={() => setActiveSection('mouse')}
                             className={`flex-1 py-3 px-4 text-sm font-medium transition-colors duration-200 ${
                                 activeSection === 'mouse'
                                     ? 'text-[#1E3A8A] border-b-2 border-[#1E3A8A] bg-[#D7E6FF]/30'
-                                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                                    : 'text-darkgray hover:text-text hover:bg-tertiary'
                             }`}
                         >
                             {t('manual.tabs.mouse')}
@@ -56,7 +56,7 @@ export const ManualControls: React.FC<{
                             className={`flex-1 py-3 px-4 text-sm font-medium transition-colors duration-200 ${
                                 activeSection === 'keyboard'
                                     ? 'text-[#1E3A8A] border-b-2 border-[#1E3A8A] bg-[#D7E6FF]/30'
-                                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                                    : 'text-darkgray hover:text-text hover:bg-tertiary'
                             }`}
                         >
                             {t('manual.tabs.keyboard')}
@@ -66,7 +66,7 @@ export const ManualControls: React.FC<{
                             className={`flex-1 py-3 px-4 text-sm font-medium transition-colors duration-200 ${
                                 activeSection === 'power'
                                     ? 'text-[#1E3A8A] border-b-2 border-[#1E3A8A] bg-[#D7E6FF]/30'
-                                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                                    : 'text-darkgray hover:text-text hover:bg-tertiary'
                             }`}
                         >
                             {t('manual.tabs.power')}
@@ -76,7 +76,7 @@ export const ManualControls: React.FC<{
                             className={`flex-1 py-3 px-4 text-sm font-medium transition-colors duration-200 ${
                                 activeSection === 'terminal'
                                     ? 'text-[#1E3A8A] border-b-2 border-[#1E3A8A] bg-[#D7E6FF]/30'
-                                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                                    : 'text-darkgray hover:text-text hover:bg-tertiary'
                             }`}
                         >
                             {t('manual.tabs.terminal')}
