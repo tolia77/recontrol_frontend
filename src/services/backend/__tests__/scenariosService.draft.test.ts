@@ -87,9 +87,12 @@ describe('scenariosService.createDraft', () => {
       signal?: AbortSignal;
     };
     expect(config.headers).toMatchObject({
-      Authorization: 'test-jwt',
       'Accept-Language': 'en',
     });
+    // Authorization is injected by the request interceptor in config.ts — not
+    // present in the static request config object. The interceptor mock in
+    // this test suite does not run interceptors (vi.mock strips them).
+    expect(config.headers).not.toHaveProperty('Authorization');
   });
 
   it('forwards AbortSignal so aborting before resolution rejects the promise', async () => {
