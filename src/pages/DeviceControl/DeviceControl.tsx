@@ -6,9 +6,8 @@ import { getAccessToken, getUserId } from "src/utils/auth";
 import { refreshAccessTokenOnce } from "src/services/backend/config";
 import { useToast } from "src/components/ui";
 import type { Mode } from "src/pages/DeviceControl/types";
-import { getMyDeviceSharesForDeviceRequest } from "src/services/backend/deviceSharesService";
 import { getDeviceRequest } from "src/services/backend/devicesService";
-import type { DeviceShare } from "src/types";
+import { usePermissions } from "./hooks/state/usePermissions";
 import { useWebRtc } from "./hooks/useWebRtc";
 import { useStreamStats } from "./hooks/useStreamStats";
 import { useFilesChannel } from "./hooks/useFilesChannel";
@@ -44,19 +43,6 @@ interface InnerMessage {
     | null
     | Record<string, unknown>
     | Array<unknown>;
-}
-
-// Derived permissions interface for easier gating
-interface DevicePermissions {
-  see_screen: boolean;
-  see_system_info: boolean;
-  access_mouse: boolean;
-  access_keyboard: boolean;
-  access_terminal: boolean;
-  manage_power: boolean;
-  // convenience compound flags
-  any_input: boolean; // mouse or keyboard
-  any_screen: boolean; // currently same as see_screen
 }
 
 /**
@@ -122,58 +108,14 @@ export function DeviceControl({ wsUrl }: CommandWebSocketProps) {
   const [currentFps, setCurrentFps] = useState(24);
   const [currentResolution, setCurrentResolution] = useState(1080);
 
-  // permissions state
-  const [permissionsLoading, setPermissionsLoading] = useState(false);
-  const [permissions, setPermissions] = useState<DevicePermissions | null>(
-    null,
-  );
-  const [isOwner, setIsOwner] = useState<boolean>(false);
+  const {
+    permissions,
+    permissionsLoading,
+    setIsOwner,
+    fetchPermissions,
+    canSend,
+  } = usePermissions();
   const toast = useToast();
-
-  const buildPermissions = (share: DeviceShare | null): DevicePermissions => {
-    const pg = share?.permissions_group;
-    const ownDefaults: DevicePermissions = {
-      see_screen: true,
-      see_system_info: true,
-      access_mouse: true,
-      access_keyboard: true,
-      access_terminal: true,
-      manage_power: true,
-      any_input: true,
-      any_screen: true,
-    };
-    if (!pg) return ownDefaults;
-    return {
-      see_screen: !!pg.see_screen,
-      see_system_info: !!pg.see_system_info,
-      access_mouse: !!pg.access_mouse,
-      access_keyboard: !!pg.access_keyboard,
-      access_terminal: !!pg.access_terminal,
-      manage_power: !!pg.manage_power,
-      any_input: !!pg.access_mouse || !!pg.access_keyboard,
-      any_screen: !!pg.see_screen,
-    };
-  };
-
-  const fetchPermissions = async (devId: string, ownerOverride: boolean) => {
-    if (!devId) return;
-    setPermissionsLoading(true);
-    try {
-      if (ownerOverride) {
-        setPermissions(buildPermissions(null)); // full access
-        return;
-      }
-      const res = await getMyDeviceSharesForDeviceRequest(devId);
-      const share =
-        res.data.items && res.data.items.length ? res.data.items[0] : null;
-      setPermissions(buildPermissions(share));
-    } catch (e) {
-      console.warn("Failed to load device permissions", e);
-      setPermissions(buildPermissions(null));
-    } finally {
-      setPermissionsLoading(false);
-    }
-  };
 
   const refreshAccessToken = async (): Promise<string | null> => {
     return refreshAccessTokenOnce();
@@ -505,18 +447,6 @@ export function DeviceControl({ wsUrl }: CommandWebSocketProps) {
     void init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // gating logic for outgoing commands based on permissions
-  const canSend = (type: string): boolean => {
-    if (!permissions) return false; // still loading
-    if (isOwner) return true; // owners bypass all restrictions
-    if (type.startsWith("screen.")) return permissions.see_screen;
-    if (type.startsWith("mouse.")) return permissions.access_mouse;
-    if (type.startsWith("keyboard.")) return permissions.access_keyboard;
-    if (type.startsWith("terminal.")) return permissions.access_terminal;
-    if (type.startsWith("power.")) return permissions.manage_power;
-    return true;
-  };
 
   const sendMessagePayload = (payloadObj: unknown) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
