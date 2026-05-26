@@ -8,19 +8,24 @@
  * the discriminated union's `kind` discriminator.
  */
 
-import { renderHook, act } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { renderHook, act } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useDraftGeneration } from '../useDraftGeneration';
-import { scenariosService, type DraftResponse } from 'src/services/backend/scenariosService.ts';
+import { useDraftGeneration } from "../useDraftGeneration";
+import {
+  scenariosService,
+  type DraftResponse,
+} from "src/services/backend/scenariosService.ts";
 
-vi.mock('src/services/backend/scenariosService.ts', () => ({
+vi.mock("src/services/backend/scenariosService.ts", () => ({
   scenariosService: {
     createDraft: vi.fn(),
   },
 }));
 
-const createDraftMock = scenariosService.createDraft as ReturnType<typeof vi.fn>;
+const createDraftMock = scenariosService.createDraft as ReturnType<
+  typeof vi.fn
+>;
 
 interface Deferred<T> {
   promise: Promise<T>;
@@ -38,13 +43,13 @@ function defer<T>(): Deferred<T> {
   return { promise, resolve, reject };
 }
 
-function makeDraft(name = 'mock'): DraftResponse {
+function makeDraft(name = "mock"): DraftResponse {
   return {
     draft: {
       name,
-      description: 'mock description',
+      description: "mock description",
       command_steps: [
-        { binary: 'ls', args: ['-la'], cwd: '/', description: null },
+        { binary: "ls", args: ["-la"], cwd: "/", description: null },
       ],
     },
     quota: {
@@ -65,13 +70,13 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('useDraftGeneration', () => {
-  it('1. starts in { kind: idle }', () => {
+describe("useDraftGeneration", () => {
+  it("1. starts in { kind: idle }", () => {
     const { result } = renderHook(() => useDraftGeneration());
-    expect(result.current.state).toEqual({ kind: 'idle' });
+    expect(result.current.state).toEqual({ kind: "idle" });
   });
 
-  it('2. generate() synchronously sets state to generating with a startedAt timestamp', () => {
+  it("2. generate() synchronously sets state to generating with a startedAt timestamp", () => {
     const d = defer<DraftResponse>();
     createDraftMock.mockReturnValueOnce(d.promise);
 
@@ -80,19 +85,19 @@ describe('useDraftGeneration', () => {
 
     act(() => {
       // Don't await — we want to inspect the synchronous transition.
-      void result.current.generate('p', 'en');
+      void result.current.generate("p", "en");
     });
 
-    expect(result.current.state.kind).toBe('generating');
-    if (result.current.state.kind === 'generating') {
+    expect(result.current.state.kind).toBe("generating");
+    if (result.current.state.kind === "generating") {
       expect(result.current.state.startedAt).toBeGreaterThanOrEqual(before);
       expect(result.current.state.startedAt).toBeLessThanOrEqual(Date.now());
     }
 
     // Verify the service got our prompt + locale + an AbortSignal.
     expect(createDraftMock).toHaveBeenCalledWith(
-      'p',
-      'en',
+      "p",
+      "en",
       expect.any(AbortSignal),
     );
 
@@ -103,37 +108,37 @@ describe('useDraftGeneration', () => {
     });
   });
 
-  it('3. resolve transitions to { kind: success, draft }', async () => {
+  it("3. resolve transitions to { kind: success, draft }", async () => {
     const d = defer<DraftResponse>();
     createDraftMock.mockReturnValueOnce(d.promise);
-    const draft = makeDraft('resolved');
+    const draft = makeDraft("resolved");
 
     const { result } = renderHook(() => useDraftGeneration());
 
     await act(async () => {
-      const p = result.current.generate('hello', 'en');
+      const p = result.current.generate("hello", "en");
       d.resolve(draft);
       await p;
     });
 
-    expect(result.current.state).toEqual({ kind: 'success', draft });
+    expect(result.current.state).toEqual({ kind: "success", draft });
   });
 
-  it('4a. reject with backend error envelope maps error.response.data.error → code', async () => {
+  it("4a. reject with backend error envelope maps error.response.data.error → code", async () => {
     const d = defer<DraftResponse>();
     createDraftMock.mockReturnValueOnce(d.promise);
 
     const { result } = renderHook(() => useDraftGeneration());
 
     await act(async () => {
-      const p = result.current.generate('x', 'en');
-      d.reject({ response: { data: { error: 'draft_unparseable' } } });
+      const p = result.current.generate("x", "en");
+      d.reject({ response: { data: { error: "draft_unparseable" } } });
       await p;
     });
 
-    expect(result.current.state.kind).toBe('error');
-    if (result.current.state.kind === 'error') {
-      expect(result.current.state.code).toBe('draft_unparseable');
+    expect(result.current.state.kind).toBe("error");
+    if (result.current.state.kind === "error") {
+      expect(result.current.state.code).toBe("draft_unparseable");
       expect(result.current.state.details).toBeDefined();
     }
   });
@@ -145,18 +150,18 @@ describe('useDraftGeneration', () => {
     const { result } = renderHook(() => useDraftGeneration());
 
     await act(async () => {
-      const p = result.current.generate('x', 'en');
-      d.reject(new Error('ECONNREFUSED'));
+      const p = result.current.generate("x", "en");
+      d.reject(new Error("ECONNREFUSED"));
       await p;
     });
 
-    expect(result.current.state.kind).toBe('error');
-    if (result.current.state.kind === 'error') {
-      expect(result.current.state.code).toBe('network');
+    expect(result.current.state.kind).toBe("error");
+    if (result.current.state.kind === "error") {
+      expect(result.current.state.code).toBe("network");
     }
   });
 
-  it('5. cancel() mid-generate aborts the controller AND transitions to cancelled (not error)', async () => {
+  it("5. cancel() mid-generate aborts the controller AND transitions to cancelled (not error)", async () => {
     const d = defer<DraftResponse>();
     let capturedSignal: AbortSignal | undefined;
     createDraftMock.mockImplementationOnce(
@@ -169,10 +174,10 @@ describe('useDraftGeneration', () => {
     const { result } = renderHook(() => useDraftGeneration());
 
     act(() => {
-      void result.current.generate('p', 'en');
+      void result.current.generate("p", "en");
     });
 
-    expect(result.current.state.kind).toBe('generating');
+    expect(result.current.state.kind).toBe("generating");
     expect(capturedSignal?.aborted).toBe(false);
 
     act(() => {
@@ -180,20 +185,20 @@ describe('useDraftGeneration', () => {
     });
 
     expect(capturedSignal?.aborted).toBe(true);
-    expect(result.current.state).toEqual({ kind: 'cancelled' });
+    expect(result.current.state).toEqual({ kind: "cancelled" });
 
     // Settle the promise as rejected (as axios would after an abort) — should
     // remain in 'cancelled', NOT flip to 'error'.
     await act(async () => {
-      d.reject(new DOMException('aborted', 'AbortError'));
+      d.reject(new DOMException("aborted", "AbortError"));
       // Give the catch branch a microtask to run.
       await Promise.resolve();
     });
 
-    expect(result.current.state).toEqual({ kind: 'cancelled' });
+    expect(result.current.state).toEqual({ kind: "cancelled" });
   });
 
-  it('6. a second generate() while previous is in-flight aborts the prior controller', () => {
+  it("6. a second generate() while previous is in-flight aborts the prior controller", () => {
     const d1 = defer<DraftResponse>();
     const d2 = defer<DraftResponse>();
     const signals: AbortSignal[] = [];
@@ -207,13 +212,13 @@ describe('useDraftGeneration', () => {
     const { result } = renderHook(() => useDraftGeneration());
 
     act(() => {
-      void result.current.generate('p1', 'en');
+      void result.current.generate("p1", "en");
     });
     expect(signals).toHaveLength(1);
     expect(signals[0].aborted).toBe(false);
 
     act(() => {
-      void result.current.generate('p2', 'en');
+      void result.current.generate("p2", "en");
     });
 
     // Prior controller must have been aborted by the new generate().
@@ -223,12 +228,12 @@ describe('useDraftGeneration', () => {
 
     // Settle to avoid hanging promises.
     act(() => {
-      d1.reject(new DOMException('aborted', 'AbortError'));
+      d1.reject(new DOMException("aborted", "AbortError"));
       d2.resolve(makeDraft());
     });
   });
 
-  it('7. unmount cleanup aborts the in-flight controller', () => {
+  it("7. unmount cleanup aborts the in-flight controller", () => {
     const d = defer<DraftResponse>();
     let capturedSignal: AbortSignal | undefined;
     createDraftMock.mockImplementationOnce(
@@ -241,7 +246,7 @@ describe('useDraftGeneration', () => {
     const { result, unmount } = renderHook(() => useDraftGeneration());
 
     act(() => {
-      void result.current.generate('p', 'en');
+      void result.current.generate("p", "en");
     });
 
     expect(capturedSignal?.aborted).toBe(false);
@@ -252,70 +257,70 @@ describe('useDraftGeneration', () => {
 
     // Settle to clean up.
     act(() => {
-      d.reject(new DOMException('aborted', 'AbortError'));
+      d.reject(new DOMException("aborted", "AbortError"));
     });
   });
 
-  it('8. reset() from any non-idle state transitions to { kind: idle }', async () => {
+  it("8. reset() from any non-idle state transitions to { kind: idle }", async () => {
     const d = defer<DraftResponse>();
     createDraftMock.mockReturnValueOnce(d.promise);
 
     const { result } = renderHook(() => useDraftGeneration());
 
     await act(async () => {
-      const p = result.current.generate('x', 'en');
-      d.reject({ response: { data: { error: 'draft_unsafe' } } });
+      const p = result.current.generate("x", "en");
+      d.reject({ response: { data: { error: "draft_unsafe" } } });
       await p;
     });
 
-    expect(result.current.state.kind).toBe('error');
+    expect(result.current.state.kind).toBe("error");
 
     act(() => {
       result.current.reset();
     });
-    expect(result.current.state).toEqual({ kind: 'idle' });
+    expect(result.current.state).toEqual({ kind: "idle" });
 
     // Also exercise reset from cancelled.
     const d2 = defer<DraftResponse>();
     createDraftMock.mockReturnValueOnce(d2.promise);
     act(() => {
-      void result.current.generate('y', 'en');
+      void result.current.generate("y", "en");
     });
     act(() => {
       result.current.cancel();
     });
-    expect(result.current.state.kind).toBe('cancelled');
+    expect(result.current.state.kind).toBe("cancelled");
     act(() => {
       result.current.reset();
     });
-    expect(result.current.state).toEqual({ kind: 'idle' });
+    expect(result.current.state).toEqual({ kind: "idle" });
 
     // Cleanup
     act(() => {
-      d2.reject(new DOMException('aborted', 'AbortError'));
+      d2.reject(new DOMException("aborted", "AbortError"));
     });
   });
 
-  it('9. late resolve after cancel does NOT overwrite cancelled with success', async () => {
+  it("9. late resolve after cancel does NOT overwrite cancelled with success", async () => {
     const d = defer<DraftResponse>();
     createDraftMock.mockReturnValueOnce(d.promise);
 
     const { result } = renderHook(() => useDraftGeneration());
 
     act(() => {
-      void result.current.generate('p', 'en');
+      void result.current.generate("p", "en");
     });
     act(() => {
       result.current.cancel();
     });
-    expect(result.current.state).toEqual({ kind: 'cancelled' });
+    expect(result.current.state).toEqual({ kind: "cancelled" });
 
     // Server "wins the race" and resolves after the abort.
     await act(async () => {
-      d.resolve(makeDraft('late'));
+      d.resolve(makeDraft("late"));
       await Promise.resolve();
     });
 
-    expect(result.current.state).toEqual({ kind: 'cancelled' });
+    expect(result.current.state).toEqual({ kind: "cancelled" });
   });
 });

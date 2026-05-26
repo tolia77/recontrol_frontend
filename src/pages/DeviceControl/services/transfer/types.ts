@@ -1,14 +1,14 @@
 import type {
   FilesErrorCode,
   NameConflictMode,
-} from '../files/filesProtocol.generated';
+} from "../files/filesProtocol.generated";
 
 /**
  * Direction of a transfer item from the browser's point of view.
  *  - upload:   browser -> desktop  (drag-drop a local file into the panel)
  *  - download: desktop -> browser  (Enter / double-click / context menu on a remote file)
  */
-export type TransferDirection = 'upload' | 'download';
+export type TransferDirection = "upload" | "download";
 
 /**
  * Closed union of every state a TransferItem may occupy.
@@ -20,14 +20,14 @@ export type TransferDirection = 'upload' | 'download';
  * does not need to bump every switch statement.
  */
 export type TransferState =
-  | 'queued'
-  | 'active'
-  | 'stalled' // plan 11-06 sets this; defined here so the union is closed
-  | 'cancelling' // user pressed Cancel; awaiting desktop ack
-  | 'completed'
-  | 'cancelled'
-  | 'disconnected' // plan 11-06 sets this; defined here so the union is closed
-  | 'failed';
+  | "queued"
+  | "active"
+  | "stalled" // plan 11-06 sets this; defined here so the union is closed
+  | "cancelling" // user pressed Cancel; awaiting desktop ack
+  | "completed"
+  | "cancelled"
+  | "disconnected" // plan 11-06 sets this; defined here so the union is closed
+  | "failed";
 
 /**
  * One row in the queue. Exactly one TransferItem per file (per-file enqueue,
@@ -65,7 +65,7 @@ export interface TransferItem {
    * the synthetic 'CLIENT_ERROR' literal for browser-side failures (e.g.
    * the runner threw, or the queue marked the item as a client cancellation).
    */
-  error?: { code: FilesErrorCode | 'CLIENT_ERROR'; message: string };
+  error?: { code: FilesErrorCode | "CLIENT_ERROR"; message: string };
   enqueuedAt: number;
   startedAt?: number;
   completedAt?: number;

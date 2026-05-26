@@ -1,9 +1,9 @@
-import type { FC } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Card } from 'src/components/ui/Card';
-import { Button } from 'src/components/ui/Button';
-import type { ToolRow } from './transcriptReducer';
-import { WarningTriangleIcon } from './icons';
+import type { FC } from "react";
+import { useTranslation } from "react-i18next";
+import { Card } from "src/components/ui/Card";
+import { Button } from "src/components/ui/Button";
+import type { ToolRow } from "./transcriptReducer";
+import { WarningTriangleIcon } from "./icons";
 
 /**
  * ConfirmationCard (Plan 20-08).
@@ -40,43 +40,46 @@ import { WarningTriangleIcon } from './icons';
  * enforces the 120s wall-clock; the frontend just waits).
  */
 
-const ZONE_ACCENT: Record<NonNullable<ToolRow['zone']>, string> = {
-  outside_list: 'border-l-4 border-amber bg-amber/5',
-  deny_list: 'border-l-4 border-error bg-error/5',
+const ZONE_ACCENT: Record<NonNullable<ToolRow["zone"]>, string> = {
+  outside_list: "border-l-4 border-amber bg-amber/5",
+  deny_list: "border-l-4 border-error bg-error/5",
 };
 
-const ZONE_BADGE: Record<NonNullable<ToolRow['zone']>, string> = {
-  outside_list: 'bg-amber/15 text-amber',
-  deny_list: 'bg-error/15 text-error',
+const ZONE_BADGE: Record<NonNullable<ToolRow["zone"]>, string> = {
+  outside_list: "bg-amber/15 text-amber",
+  deny_list: "bg-error/15 text-error",
 };
 
 interface ConfirmationCardProps {
   row: ToolRow;
-  onConfirm: (decision: 'allow' | 'deny') => void;
+  onConfirm: (decision: "allow" | "deny") => void;
 }
 
-export const ConfirmationCard: FC<ConfirmationCardProps> = ({ row, onConfirm }) => {
-  const { t } = useTranslation('assistant');
-  const zone = row.zone ?? 'outside_list';
+export const ConfirmationCard: FC<ConfirmationCardProps> = ({
+  row,
+  onConfirm,
+}) => {
+  const { t } = useTranslation("assistant");
+  const zone = row.zone ?? "outside_list";
   const accentClass = ZONE_ACCENT[zone];
   const badgeClass = ZONE_BADGE[zone];
-  const iconColor = zone === 'deny_list' ? 'text-error' : 'text-amber';
+  const iconColor = zone === "deny_list" ? "text-error" : "text-amber";
 
   // Localized reason; falls back to a sensible default if the locale key is
   // missing (`row.reason` is server-provided and may be a forward-compat
   // string the current locale bundle does not cover).
   const reasonKey = `confirmation.reasons.${row.reason ?? zone}`;
   const reasonFallback =
-    zone === 'deny_list'
-      ? 'This command is on the deny-list and needs explicit approval.'
-      : 'This command is outside the safe-list and needs your approval.';
+    zone === "deny_list"
+      ? "This command is on the deny-list and needs explicit approval."
+      : "This command is outside the safe-list and needs your approval.";
   const reasonText = t(reasonKey, { defaultValue: reasonFallback });
 
   const zoneLabel = t(`confirmation.zone.${zone}`, {
-    defaultValue: zone === 'deny_list' ? 'Deny-list' : 'Outside allow-list',
+    defaultValue: zone === "deny_list" ? "Deny-list" : "Outside allow-list",
   });
 
-  const argsText = row.args.map((a) => String(a)).join(' ');
+  const argsText = row.args.map((a) => String(a)).join(" ");
   const confirmationId = row.confirmationId;
   const canDecide = Boolean(confirmationId);
 
@@ -88,17 +91,17 @@ export const ConfirmationCard: FC<ConfirmationCardProps> = ({ row, onConfirm }) 
     >
       <div className="flex items-start gap-2">
         <WarningTriangleIcon
-          className={`${iconColor} w-5 h-5 mt-0.5 flex-shrink-0`}
+          className={`${iconColor} mt-0.5 h-5 w-5 flex-shrink-0`}
         />
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <span
-            className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${badgeClass}`}
+            className={`inline-block rounded px-2 py-0.5 text-xs font-semibold ${badgeClass}`}
             data-testid={`confirmation-zone-${zone}`}
           >
             {zoneLabel}
           </span>
           <p className="mt-1 text-sm">{reasonText}</p>
-          <pre className="mt-1 text-xs font-mono whitespace-pre-wrap break-all bg-white/50 rounded p-1.5">
+          <pre className="mt-1 rounded bg-white/50 p-1.5 font-mono text-xs break-all whitespace-pre-wrap">
             $ {row.command}
             {argsText && ` ${argsText}`}
           </pre>
@@ -108,22 +111,22 @@ export const ConfirmationCard: FC<ConfirmationCardProps> = ({ row, onConfirm }) 
               size="sm"
               disabled={!canDecide}
               onClick={() => {
-                if (canDecide) onConfirm('allow');
+                if (canDecide) onConfirm("allow");
               }}
               data-testid="confirmation-allow"
             >
-              {t('confirmation.allowOnce', { defaultValue: 'Allow once' })}
+              {t("confirmation.allowOnce", { defaultValue: "Allow once" })}
             </Button>
             <Button
               variant="danger"
               size="sm"
               disabled={!canDecide}
               onClick={() => {
-                if (canDecide) onConfirm('deny');
+                if (canDecide) onConfirm("deny");
               }}
               data-testid="confirmation-deny"
             >
-              {t('confirmation.deny', { defaultValue: 'Deny' })}
+              {t("confirmation.deny", { defaultValue: "Deny" })}
             </Button>
           </div>
         </div>

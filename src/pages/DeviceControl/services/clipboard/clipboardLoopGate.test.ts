@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { ClipboardLoopGate } from './clipboardLoopGate';
+import { describe, expect, it } from "vitest";
+import { ClipboardLoopGate } from "./clipboardLoopGate";
 
 class FakeClock {
   private now = 0;
@@ -13,15 +13,15 @@ class FakeClock {
 
 async function hash8(text: string): Promise<Uint8Array> {
   const encoded = new TextEncoder().encode(text);
-  const digest = await crypto.subtle.digest('SHA-256', encoded);
+  const digest = await crypto.subtle.digest("SHA-256", encoded);
   return new Uint8Array(digest).slice(0, 8);
 }
 
-describe('ClipboardLoopGate', () => {
-  it('suppresses outbound within ttl and releases after ttl', async () => {
+describe("ClipboardLoopGate", () => {
+  it("suppresses outbound within ttl and releases after ttl", async () => {
     const clock = new FakeClock();
     const gate = new ClipboardLoopGate(clock);
-    const hash = await hash8('hello');
+    const hash = await hash8("hello");
 
     gate.recordSent(hash);
     expect(gate.shouldSuppressOutbound(hash)).toBe(true);
@@ -29,10 +29,10 @@ describe('ClipboardLoopGate', () => {
     expect(gate.shouldSuppressOutbound(hash)).toBe(false);
   });
 
-  it('suppresses inbound within ttl and releases after ttl', async () => {
+  it("suppresses inbound within ttl and releases after ttl", async () => {
     const clock = new FakeClock();
     const gate = new ClipboardLoopGate(clock);
-    const hash = await hash8('inbound');
+    const hash = await hash8("inbound");
 
     gate.recordApplied(hash);
     expect(gate.shouldSuppressInbound(hash)).toBe(true);
@@ -40,10 +40,12 @@ describe('ClipboardLoopGate', () => {
     expect(gate.shouldSuppressInbound(hash)).toBe(false);
   });
 
-  it('evicts oldest entry after ring capacity', async () => {
+  it("evicts oldest entry after ring capacity", async () => {
     const clock = new FakeClock();
     const gate = new ClipboardLoopGate(clock);
-    const hashes = await Promise.all(Array.from({ length: 9 }, (_, i) => hash8(`h-${i}`)));
+    const hashes = await Promise.all(
+      Array.from({ length: 9 }, (_, i) => hash8(`h-${i}`)),
+    );
 
     for (const h of hashes) {
       gate.recordApplied(h);
@@ -54,11 +56,11 @@ describe('ClipboardLoopGate', () => {
     expect(gate.shouldSuppressInbound(hashes[8])).toBe(true);
   });
 
-  it('reset clears sent and receiver ring', async () => {
+  it("reset clears sent and receiver ring", async () => {
     const clock = new FakeClock();
     const gate = new ClipboardLoopGate(clock);
-    const sent = await hash8('sent');
-    const inbound = await hash8('inbound');
+    const sent = await hash8("sent");
+    const inbound = await hash8("inbound");
 
     gate.recordSent(sent);
     gate.recordApplied(inbound);

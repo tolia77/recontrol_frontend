@@ -1,55 +1,54 @@
 // filepath: d:\PROGRAMMING\COURSEWORK\REACT\recontrol_frontend\src\locales\en\adminUsers.ts
 const adminUsers = {
-  title: 'User Management',
-  subtitle: 'Create, update and delete users',
+  title: "User Management",
+  subtitle: "Create, update and delete users",
   table: {
-    username: 'Username',
-    email: 'Email',
-    role: 'Role',
-    created: 'Created',
-    updated: 'Updated',
-    actions: 'Actions',
-    edit: 'Edit',
-    save: 'Save',
-    cancel: 'Cancel',
-    delete: 'Delete'
+    username: "Username",
+    email: "Email",
+    role: "Role",
+    created: "Created",
+    updated: "Updated",
+    actions: "Actions",
+    edit: "Edit",
+    save: "Save",
+    cancel: "Cancel",
+    delete: "Delete",
   },
   create: {
-    title: 'Create User',
-    username: 'Username',
-    email: 'Email',
-    password: 'Password',
-    role: 'Role',
-    submit: 'Create'
+    title: "Create User",
+    username: "Username",
+    email: "Email",
+    password: "Password",
+    role: "Role",
+    submit: "Create",
   },
   roles: {
-    admin: 'Admin',
-    user: 'User'
+    admin: "Admin",
+    user: "User",
   },
   messages: {
-    loading: 'Loading users...',
-    empty: 'No users found.',
-    creating: 'Creating...',
-    updating: 'Updating...',
-    deleting: 'Deleting...',
+    loading: "Loading users...",
+    empty: "No users found.",
+    creating: "Creating...",
+    updating: "Updating...",
+    deleting: "Deleting...",
     deleteConfirm: {
-      title: 'Delete User',
-      body: 'Are you sure you want to delete this user?',
-      confirm: 'Delete',
-      cancel: 'Cancel'
+      title: "Delete User",
+      body: "Are you sure you want to delete this user?",
+      confirm: "Delete",
+      cancel: "Cancel",
     },
-    saved: 'Saved successfully',
-    created: 'User created',
-    deleted: 'User deleted'
+    saved: "Saved successfully",
+    created: "User created",
+    deleted: "User deleted",
   },
   errors: {
-    forbidden: 'Forbidden',
-    loadFailed: 'Failed to load users',
-    saveFailed: 'Failed to save user',
-    createFailed: 'Failed to create user',
-    deleteFailed: 'Failed to delete user'
+    forbidden: "Forbidden",
+    loadFailed: "Failed to load users",
+    saveFailed: "Failed to save user",
+    createFailed: "Failed to create user",
+    deleteFailed: "Failed to delete user",
   },
-  refreshLabel: 'Refresh user list'
+  refreshLabel: "Refresh user list",
 };
 export default adminUsers;
-

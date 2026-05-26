@@ -1,4 +1,4 @@
-import type { PermissionsGroup, PermissionsGroupAttributes } from 'src/types';
+import type { PermissionsGroup, PermissionsGroupAttributes } from "src/types";
 
 export interface ShareFormState {
   userEmail: string;

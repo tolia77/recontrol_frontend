@@ -1,8 +1,8 @@
-import React, {useState, useMemo, useCallback} from 'react';
-import {useTranslation} from 'react-i18next';
-import type {ProcessInfo} from '../types.ts';
-import {RefreshIcon, CloseIcon} from '../icons.tsx';
-import { Modal, Button } from '../../../components/ui';
+import React, { useState, useMemo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import type { ProcessInfo } from "../types.ts";
+import { RefreshIcon, CloseIcon } from "../icons.tsx";
+import { Modal, Button } from "../../../components/ui";
 
 interface ProcessesModalProps {
   open: boolean;
@@ -15,15 +15,19 @@ interface ProcessesModalProps {
 
 interface SortState {
   column: keyof ProcessInfo;
-  direction: 'asc' | 'desc';
+  direction: "asc" | "desc";
 }
 
-const headerCols: { key: keyof ProcessInfo; i18n: string; numeric?: boolean }[] = [
-  { key: 'Pid', i18n: 'pid', numeric: true },
-  { key: 'Name', i18n: 'name' },
-  { key: 'MemoryMB', i18n: 'memory', numeric: true },
-  { key: 'CpuTime', i18n: 'cpuTime' },
-  { key: 'StartTime', i18n: 'startTime' },
+const headerCols: {
+  key: keyof ProcessInfo;
+  i18n: string;
+  numeric?: boolean;
+}[] = [
+  { key: "Pid", i18n: "pid", numeric: true },
+  { key: "Name", i18n: "name" },
+  { key: "MemoryMB", i18n: "memory", numeric: true },
+  { key: "CpuTime", i18n: "cpuTime" },
+  { key: "StartTime", i18n: "startTime" },
 ];
 
 function parseCpuTime(cpu?: string): number {
@@ -32,10 +36,11 @@ function parseCpuTime(cpu?: string): number {
   const m = cpu.match(/^(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?/);
   if (!m) return 0;
   const [, hh, mm, ss, frac] = m;
-  const ms = (parseInt(hh, 10) * 3600 + parseInt(mm, 10) * 60 + parseInt(ss, 10)) * 1000;
+  const ms =
+    (parseInt(hh, 10) * 3600 + parseInt(mm, 10) * 60 + parseInt(ss, 10)) * 1000;
   if (frac) {
     // trim or pad fraction to milliseconds
-    const fracMs = parseInt(frac.slice(0, 3).padEnd(3, '0'), 10);
+    const fracMs = parseInt(frac.slice(0, 3).padEnd(3, "0"), 10);
     return ms + fracMs;
   }
   return ms;
@@ -53,14 +58,21 @@ function formatCpuDisplay(cpu?: string): string {
   const h = Math.floor(totalSeconds / 3600);
   const m = Math.floor((totalSeconds % 3600) / 60);
   const s = totalSeconds % 60;
-  return [h, m, s].map(v => String(v).padStart(2, '0')).join(':');
+  return [h, m, s].map((v) => String(v).padStart(2, "0")).join(":");
 }
 
 function formatStartDisplay(st?: string): string {
-  if (!st) return '-';
+  if (!st) return "-";
   const d = new Date(st);
   if (isNaN(d.getTime())) return st; // fallback
-  return d.toLocaleString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  return d.toLocaleString(undefined, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 }
 
 export const ProcessesModal: React.FC<ProcessesModalProps> = ({
@@ -71,26 +83,31 @@ export const ProcessesModal: React.FC<ProcessesModalProps> = ({
   onRefresh,
   onKill,
 }) => {
-  const { t } = useTranslation('deviceControl');
-  const [sort, setSort] = useState<SortState>({ column: 'Pid', direction: 'asc' });
+  const { t } = useTranslation("deviceControl");
+  const [sort, setSort] = useState<SortState>({
+    column: "Pid",
+    direction: "asc",
+  });
 
   const toggleSort = useCallback((col: keyof ProcessInfo) => {
-    setSort(prev => prev.column === col
-      ? { column: col, direction: prev.direction === 'asc' ? 'desc' : 'asc' }
-      : { column: col, direction: 'asc' });
+    setSort((prev) =>
+      prev.column === col
+        ? { column: col, direction: prev.direction === "asc" ? "desc" : "asc" }
+        : { column: col, direction: "asc" },
+    );
   }, []);
 
   const sorted = useMemo(() => {
     const arr = [...processes];
     arr.sort((a, b) => {
-      const dir = sort.direction === 'asc' ? 1 : -1;
+      const dir = sort.direction === "asc" ? 1 : -1;
       const col = sort.column;
       let av: unknown;
       let bv: unknown;
-      if (col === 'CpuTime') {
+      if (col === "CpuTime") {
         av = parseCpuTime(a.CpuTime);
         bv = parseCpuTime(b.CpuTime);
-      } else if (col === 'StartTime') {
+      } else if (col === "StartTime") {
         av = parseStartTime(a.StartTime);
         bv = parseStartTime(b.StartTime);
       } else {
@@ -99,11 +116,11 @@ export const ProcessesModal: React.FC<ProcessesModalProps> = ({
       }
       if (av == null) av = -Infinity;
       if (bv == null) bv = -Infinity;
-      if (typeof av === 'string' && typeof bv === 'string') {
+      if (typeof av === "string" && typeof bv === "string") {
         return av.localeCompare(bv) * dir;
       }
-      const aNum = typeof av === 'number' ? av : Number(av);
-      const bNum = typeof bv === 'number' ? bv : Number(bv);
+      const aNum = typeof av === "number" ? av : Number(av);
+      const bNum = typeof bv === "number" ? bv : Number(bv);
       if (!isNaN(aNum) && !isNaN(bNum)) {
         return (aNum < bNum ? -1 : aNum > bNum ? 1 : 0) * dir;
       }
@@ -112,64 +129,107 @@ export const ProcessesModal: React.FC<ProcessesModalProps> = ({
     return arr;
   }, [processes, sort]);
 
-  const handleKill = useCallback((pid: number) => {
-    // optimistic removal
-    onKill(pid);
-  }, [onKill]);
+  const handleKill = useCallback(
+    (pid: number) => {
+      // optimistic removal
+      onKill(pid);
+    },
+    [onKill],
+  );
 
   return (
     <Modal open={open} onClose={onClose} size="full">
-      <div className="px-4 py-3 border-b border-lightgray flex items-center justify-between gap-2">
-        <h5 className="text-base font-semibold">{t('manual.terminal.processesModal.title')}</h5>
-        <div className="flex gap-2 items-center">
-          <Button variant="secondary" size="sm" title={t('manual.terminal.processesModal.refresh')} className="p-2" onClick={onRefresh} disabled={loading}>
-            <RefreshIcon className="w-4 h-4" />
+      <div className="border-lightgray flex items-center justify-between gap-2 border-b px-4 py-3">
+        <h5 className="text-base font-semibold">
+          {t("manual.terminal.processesModal.title")}
+        </h5>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            title={t("manual.terminal.processesModal.refresh")}
+            className="p-2"
+            onClick={onRefresh}
+            disabled={loading}
+          >
+            <RefreshIcon className="h-4 w-4" />
           </Button>
-          <Button variant="secondary" size="sm" title={t('manual.terminal.processesModal.close')} className="p-2" onClick={onClose}>
-            <CloseIcon className="w-4 h-4" />
+          <Button
+            variant="secondary"
+            size="sm"
+            title={t("manual.terminal.processesModal.close")}
+            className="p-2"
+            onClick={onClose}
+          >
+            <CloseIcon className="h-4 w-4" />
           </Button>
         </div>
       </div>
       <div className="p-0">
         <div className="h-[480px] overflow-hidden">
           {loading ? (
-            <div className="h-full flex items-center justify-center text-sm text-darkgray">
+            <div className="text-darkgray flex h-full items-center justify-center text-sm">
               <div className="flex flex-col items-center gap-2">
-                <div className="w-8 h-8 border-4 border-lightgray border-t-primary rounded-full animate-spin" />
-                {t('manual.terminal.processesModal.loading')}
+                <div className="border-lightgray border-t-primary h-8 w-8 animate-spin rounded-full border-4" />
+                {t("manual.terminal.processesModal.loading")}
               </div>
             </div>
           ) : processes.length === 0 ? (
-            <div className="h-full flex items-center justify-center text-sm text-darkgray">{t('manual.terminal.processesModal.empty')}</div>
+            <div className="text-darkgray flex h-full items-center justify-center text-sm">
+              {t("manual.terminal.processesModal.empty")}
+            </div>
           ) : (
             <div className="h-full overflow-y-auto">
               <table className="min-w-full text-sm">
-                <thead className="sticky top-0 bg-background shadow-sm">
-                  <tr className="text-left text-text border-b">
-                    {headerCols.map(h => (
-                      <th key={h.key} className="px-2 py-2 select-none cursor-pointer" onClick={() => toggleSort(h.key)}>
+                <thead className="bg-background sticky top-0 shadow-sm">
+                  <tr className="text-text border-b text-left">
+                    {headerCols.map((h) => (
+                      <th
+                        key={h.key}
+                        className="cursor-pointer px-2 py-2 select-none"
+                        onClick={() => toggleSort(h.key)}
+                      >
                         <span className="inline-flex items-center gap-1">
                           {t(`manual.terminal.processesModal.${h.i18n}`)}
                           {sort.column === h.key && (
-                            <span className="text-xs">{sort.direction === 'asc' ? '▲' : '▼'}</span>
+                            <span className="text-xs">
+                              {sort.direction === "asc" ? "▲" : "▼"}
+                            </span>
                           )}
                         </span>
                       </th>
                     ))}
-                    <th className="px-2 py-2">{t('manual.terminal.processesModal.actions')}</th>
+                    <th className="px-2 py-2">
+                      {t("manual.terminal.processesModal.actions")}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {sorted.map(p => (
-                    <tr key={p.Pid} className="border-b last:border-b-0 hover:bg-tertiary">
+                  {sorted.map((p) => (
+                    <tr
+                      key={p.Pid}
+                      className="hover:bg-tertiary border-b last:border-b-0"
+                    >
                       <td className="px-2 py-2 font-mono">{p.Pid}</td>
                       <td className="px-2 py-2">{p.Name}</td>
-                      <td className="px-2 py-2">{typeof p.MemoryMB === 'number' ? `${p.MemoryMB} MB` : '-'}</td>
-                      <td className="px-2 py-2">{formatCpuDisplay(p.CpuTime)}</td>
-                      <td className="px-2 py-2">{formatStartDisplay(p.StartTime)}</td>
                       <td className="px-2 py-2">
-                        <Button variant="danger" size="sm" onClick={() => handleKill(p.Pid)}>
-                          {t('manual.terminal.kill')}
+                        {typeof p.MemoryMB === "number"
+                          ? `${p.MemoryMB} MB`
+                          : "-"}
+                      </td>
+                      <td className="px-2 py-2">
+                        {formatCpuDisplay(p.CpuTime)}
+                      </td>
+                      <td className="px-2 py-2">
+                        {formatStartDisplay(p.StartTime)}
+                      </td>
+                      <td className="px-2 py-2">
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => handleKill(p.Pid)}
+                        >
+                          {t("manual.terminal.kill")}
                         </Button>
                       </td>
                     </tr>

@@ -1,21 +1,26 @@
-import type { ReactNode, HTMLAttributes } from 'react';
+import type { ReactNode, HTMLAttributes } from "react";
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
-  padding?: 'none' | 'sm' | 'md' | 'lg';
+  padding?: "none" | "sm" | "md" | "lg";
 }
 
 const paddingClasses = {
-  none: '',
-  sm: 'p-3',
-  md: 'p-5',
-  lg: 'p-6',
+  none: "",
+  sm: "p-3",
+  md: "p-5",
+  lg: "p-6",
 };
 
-export function Card({ children, padding = 'md', className = '', ...props }: CardProps) {
+export function Card({
+  children,
+  padding = "md",
+  className = "",
+  ...props
+}: CardProps) {
   return (
-    <div 
-      className={`bg-background rounded-lg shadow-sm border border-lightgray ${paddingClasses[padding]} ${className}`}
+    <div
+      className={`bg-background border-lightgray rounded-lg border shadow-sm ${paddingClasses[padding]} ${className}`}
       {...props}
     >
       {children}
@@ -31,10 +36,10 @@ interface CardHeaderProps {
 
 export function CardHeader({ title, subtitle, action }: CardHeaderProps) {
   return (
-    <div className="flex items-start justify-between mb-4">
+    <div className="mb-4 flex items-start justify-between">
       <div>
-        <h2 className="text-lg font-semibold text-text">{title}</h2>
-        {subtitle && <p className="text-sm text-darkgray mt-0.5">{subtitle}</p>}
+        <h2 className="text-text text-lg font-semibold">{title}</h2>
+        {subtitle && <p className="text-darkgray mt-0.5 text-sm">{subtitle}</p>}
       </div>
       {action}
     </div>
@@ -42,4 +47,3 @@ export function CardHeader({ title, subtitle, action }: CardHeaderProps) {
 }
 
 export default Card;
-

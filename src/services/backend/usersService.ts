@@ -19,9 +19,12 @@ export type UserUpdateSelf = {
   password?: string;
 };
 
-export async function updateUserSelfRequest(userId: string, payload: UserUpdateSelf) {
+export async function updateUserSelfRequest(
+  userId: string,
+  payload: UserUpdateSelf,
+) {
   return await backendInstance.patch<UserResponse>(`/users/${userId}`, {
-    user: payload
+    user: payload,
   });
 }
 
@@ -30,14 +33,29 @@ export async function listUsersRequest() {
   return await backendInstance.get<UserResponse[]>(`/users`);
 }
 
-export type UserCreateAdmin = { username: string; email: string; password: string; role: string };
+export type UserCreateAdmin = {
+  username: string;
+  email: string;
+  password: string;
+  role: string;
+};
 export async function createUserAdminRequest(payload: UserCreateAdmin) {
   return await backendInstance.post<UserResponse>(`/users`, { user: payload });
 }
 
-export type UserUpdateAdmin = { username?: string; email?: string; password?: string; role?: string };
-export async function updateUserAdminRequest(userId: number | string, payload: UserUpdateAdmin) {
-  return await backendInstance.patch<UserResponse>(`/users/${userId}`, { user: payload });
+export type UserUpdateAdmin = {
+  username?: string;
+  email?: string;
+  password?: string;
+  role?: string;
+};
+export async function updateUserAdminRequest(
+  userId: number | string,
+  payload: UserUpdateAdmin,
+) {
+  return await backendInstance.patch<UserResponse>(`/users/${userId}`, {
+    user: payload,
+  });
 }
 
 export async function deleteUserAdminRequest(userId: number | string) {

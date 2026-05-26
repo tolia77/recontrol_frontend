@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import type { InviteShareFormProps } from './types';
-import { PermissionsEditor } from './components/PermissionsEditor';
-import { LoadGroupPanel } from './components/LoadGroupPanel';
-import { SaveGroupPanel } from './components/SaveGroupPanel';
-import { Input, Button } from 'src/components/ui';
+import React, { useState } from "react";
+import type { InviteShareFormProps } from "./types";
+import { PermissionsEditor } from "./components/PermissionsEditor";
+import { LoadGroupPanel } from "./components/LoadGroupPanel";
+import { SaveGroupPanel } from "./components/SaveGroupPanel";
+import { Input, Button } from "src/components/ui";
 
 export const InviteShareForm: React.FC<InviteShareFormProps> = ({
   t,
@@ -19,14 +19,19 @@ export const InviteShareForm: React.FC<InviteShareFormProps> = ({
   const [showSavePanel, setShowSavePanel] = useState(false);
 
   return (
-    <form onSubmit={onSubmit} className="mb-6 p-4 border border-lightgray rounded-lg">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+    <form
+      onSubmit={onSubmit}
+      className="border-lightgray mb-6 rounded-lg border p-4"
+    >
+      <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
           <Input
-            label={t('form.userEmail')}
+            label={t("form.userEmail")}
             type="email"
             value={shareForm.userEmail}
-            onChange={(e) => onChange({ ...shareForm, userEmail: e.target.value })}
+            onChange={(e) =>
+              onChange({ ...shareForm, userEmail: e.target.value })
+            }
             required
           />
         </div>
@@ -39,14 +44,14 @@ export const InviteShareForm: React.FC<InviteShareFormProps> = ({
             size="sm"
             onClick={() => setShowLoadPanel(!showLoadPanel)}
           >
-            {t('form.loadGroup')}
+            {t("form.loadGroup")}
           </Button>
           <Button
             type="button"
             size="sm"
             onClick={() => setShowSavePanel(!showSavePanel)}
           >
-            {t('form.saveGroup')}
+            {t("form.saveGroup")}
           </Button>
         </div>
 
@@ -55,7 +60,9 @@ export const InviteShareForm: React.FC<InviteShareFormProps> = ({
             t={t}
             groups={permissionsGroups}
             value={shareForm.permissionsGroupId}
-            onChange={(id) => onChange({ ...shareForm, permissionsGroupId: id })}
+            onChange={(id) =>
+              onChange({ ...shareForm, permissionsGroupId: id })
+            }
             onLoad={onLoadGroup}
           />
         )}
@@ -63,8 +70,13 @@ export const InviteShareForm: React.FC<InviteShareFormProps> = ({
         {showSavePanel && (
           <SaveGroupPanel
             t={t}
-            name={shareForm.newGroup.name ?? ''}
-            onChange={(name) => onChange({ ...shareForm, newGroup: { ...shareForm.newGroup, name } })}
+            name={shareForm.newGroup.name ?? ""}
+            onChange={(name) =>
+              onChange({
+                ...shareForm,
+                newGroup: { ...shareForm.newGroup, name },
+              })
+            }
             onSave={onSaveGroup}
           />
         )}
@@ -80,22 +92,27 @@ export const InviteShareForm: React.FC<InviteShareFormProps> = ({
             access_terminal: !!shareForm.newGroup.access_terminal,
             manage_power: !!shareForm.newGroup.manage_power,
           }}
-          onChange={(next) => onChange({ ...shareForm, newGroup: { ...shareForm.newGroup, ...next } })}
+          onChange={(next) =>
+            onChange({
+              ...shareForm,
+              newGroup: { ...shareForm.newGroup, ...next },
+            })
+          }
         />
 
         <div className="md:col-span-2">
           <Input
-            label={t('form.expiresAt')}
+            label={t("form.expiresAt")}
             type="datetime-local"
             value={shareForm.expiresAt}
-            onChange={(e) => onChange({ ...shareForm, expiresAt: e.target.value })}
+            onChange={(e) =>
+              onChange({ ...shareForm, expiresAt: e.target.value })
+            }
           />
         </div>
       </div>
       <div className="flex justify-end">
-        <Button type="submit">
-          {t('form.sendInvitation')}
-        </Button>
+        <Button type="submit">{t("form.sendInvitation")}</Button>
       </div>
     </form>
   );

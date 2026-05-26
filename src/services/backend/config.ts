@@ -1,5 +1,5 @@
-import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import { getRefreshToken, saveTokens, getAccessToken } from 'src/utils/auth';
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
+import { getRefreshToken, saveTokens, getAccessToken } from "src/utils/auth";
 
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
@@ -10,7 +10,7 @@ interface ErrorResponseData {
 }
 
 export const backendInstance = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL
+  baseURL: import.meta.env.VITE_BACKEND_URL,
 });
 
 // ── Request interceptor ────────────────────────────────────────────────────
@@ -39,7 +39,7 @@ export async function refreshAccessTokenOnce(): Promise<string | null> {
       const res = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/auth/refresh`,
         {},
-        { headers: { 'Refresh-Token': refreshToken } }
+        { headers: { "Refresh-Token": refreshToken } },
       );
 
       const tokens = res.data ?? {};
@@ -62,13 +62,20 @@ export async function refreshAccessTokenOnce(): Promise<string | null> {
 
 // ── Response interceptor ───────────────────────────────────────────────────
 backendInstance.interceptors.response.use(
-  response => response,
+  (response) => response,
   async (error: AxiosError<ErrorResponseData>) => {
-    const originalRequest = error.config as ExtendedAxiosRequestConfig | undefined;
+    const originalRequest = error.config as
+      | ExtendedAxiosRequestConfig
+      | undefined;
     const status = error.response?.status;
     const messageText = error.response?.data?.error;
 
-    if (status === 401 && messageText === 'Unauthorized' && originalRequest && !originalRequest._retry) {
+    if (
+      status === 401 &&
+      messageText === "Unauthorized" &&
+      originalRequest &&
+      !originalRequest._retry
+    ) {
       originalRequest._retry = true;
 
       const newAccess = await refreshAccessTokenOnce();
@@ -81,5 +88,5 @@ backendInstance.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );

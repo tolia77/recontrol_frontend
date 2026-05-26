@@ -1,4 +1,4 @@
-import type { Row, ToolRow } from './transcriptReducer';
+import type { Row, ToolRow } from "./transcriptReducer";
 
 /**
  * Serialize a list of transcript rows into a single Markdown string.
@@ -22,41 +22,41 @@ import type { Row, ToolRow } from './transcriptReducer';
 export function copyAsMarkdown(rows: Row[]): string {
   const parts: string[] = [];
   for (const row of rows) {
-    if (row.kind === 'operator') {
-      parts.push(`> ${row.text.replace(/\n/g, '\n> ')}`);
-    } else if (row.kind === 'assistant') {
+    if (row.kind === "operator") {
+      parts.push(`> ${row.text.replace(/\n/g, "\n> ")}`);
+    } else if (row.kind === "assistant") {
       parts.push(row.markdown);
-    } else if (row.kind === 'tool') {
+    } else if (row.kind === "tool") {
       parts.push(serializeToolRow(row));
     }
   }
-  return parts.join('\n\n');
+  return parts.join("\n\n");
 }
 
 function serializeToolRow(row: ToolRow): string {
-  const argsText = row.args.map((a) => String(a)).join(' ');
-  const cmdLine = `$ ${row.command}${argsText ? ` ${argsText}` : ''}`;
+  const argsText = row.args.map((a) => String(a)).join(" ");
+  const cmdLine = `$ ${row.command}${argsText ? ` ${argsText}` : ""}`;
   const elapsed =
     row.endedAt !== undefined
       ? ` (ran in ${((row.endedAt - row.startedAt) / 1000).toFixed(1)}s)`
-      : '';
+      : "";
   const header = `**[${row.state}]**${elapsed}`;
 
-  const lines: string[] = [header, '```bash', cmdLine];
+  const lines: string[] = [header, "```bash", cmdLine];
   const stdout = row.result?.stdout?.trim();
   if (stdout) {
-    lines.push('');
+    lines.push("");
     lines.push(stdout);
   }
   const stderr = row.result?.stderr?.trim();
   if (stderr) {
-    lines.push('');
+    lines.push("");
     lines.push(`# stderr:\n${stderr}`);
   }
   if (row.result?.error) {
-    lines.push('');
+    lines.push("");
     lines.push(`# error: ${row.result.error}`);
   }
-  lines.push('```');
-  return lines.join('\n');
+  lines.push("```");
+  return lines.join("\n");
 }

@@ -24,7 +24,7 @@ import {
   expect,
   it,
   vi,
-} from 'vitest';
+} from "vitest";
 import {
   act,
   cleanup,
@@ -32,27 +32,27 @@ import {
   render,
   screen,
   waitFor,
-} from '@testing-library/react';
-import i18next from 'i18next';
-import { initReactI18next } from 'react-i18next';
+} from "@testing-library/react";
+import i18next from "i18next";
+import { initReactI18next } from "react-i18next";
 
-import scenariosEn from 'src/locales/en/scenarios.ts';
-import { ToastProvider } from 'src/components/ui';
-import type { ScenarioRunBroadcast } from '../../../hooks/useScenarioRunChannel';
+import scenariosEn from "src/locales/en/scenarios.ts";
+import { ToastProvider } from "src/components/ui";
+import type { ScenarioRunBroadcast } from "../../../hooks/useScenarioRunChannel";
 import type {
   DraftResponse,
   Scenario,
   ScenarioCreatePayload,
-} from 'src/services/backend/scenariosService.ts';
+} from "src/services/backend/scenariosService.ts";
 
 // -----------------------------------------------------------------------------
 // Mocks (mirrors ScenariosPanel.ai.test.tsx — must precede component import)
 // -----------------------------------------------------------------------------
 
-vi.mock('src/services/backend/scenariosService.ts', async () => {
+vi.mock("src/services/backend/scenariosService.ts", async () => {
   const actual = await vi.importActual<
-    typeof import('src/services/backend/scenariosService.ts')
-  >('src/services/backend/scenariosService.ts');
+    typeof import("src/services/backend/scenariosService.ts")
+  >("src/services/backend/scenariosService.ts");
   return {
     ...actual,
     scenariosService: {
@@ -68,10 +68,10 @@ vi.mock('src/services/backend/scenariosService.ts', async () => {
   };
 });
 
-vi.mock('src/services/backend/scenarioRunsService.ts', async () => {
+vi.mock("src/services/backend/scenarioRunsService.ts", async () => {
   const actual = await vi.importActual<
-    typeof import('src/services/backend/scenarioRunsService.ts')
-  >('src/services/backend/scenarioRunsService.ts');
+    typeof import("src/services/backend/scenarioRunsService.ts")
+  >("src/services/backend/scenarioRunsService.ts");
   return {
     ...actual,
     scenarioRunsService: {
@@ -83,7 +83,7 @@ vi.mock('src/services/backend/scenarioRunsService.ts', async () => {
   };
 });
 
-vi.mock('../../../hooks/useScenarioRunChannel', () => ({
+vi.mock("../../../hooks/useScenarioRunChannel", () => ({
   useScenarioRunChannel: (
     ws: WebSocket | null,
     onBroadcast: (msg: ScenarioRunBroadcast) => void,
@@ -94,23 +94,23 @@ vi.mock('../../../hooks/useScenarioRunChannel', () => ({
   },
 }));
 
-vi.mock('src/i18n.ts', () => ({
-  default: { language: 'en' },
+vi.mock("src/i18n.ts", () => ({
+  default: { language: "en" },
 }));
 
 type HookState =
-  | { kind: 'idle' }
-  | { kind: 'generating'; startedAt: number }
-  | { kind: 'success'; draft: DraftResponse }
-  | { kind: 'error'; code: string; details: unknown }
-  | { kind: 'cancelled' };
+  | { kind: "idle" }
+  | { kind: "generating"; startedAt: number }
+  | { kind: "success"; draft: DraftResponse }
+  | { kind: "error"; code: string; details: unknown }
+  | { kind: "cancelled" };
 
-let hookState: HookState = { kind: 'idle' };
+let hookState: HookState = { kind: "idle" };
 const generateSpy = vi.fn();
 const cancelSpy = vi.fn();
 const resetSpy = vi.fn();
 
-vi.mock('../useDraftGeneration', () => ({
+vi.mock("../useDraftGeneration", () => ({
   useDraftGeneration: () => ({
     state: hookState,
     generate: generateSpy,
@@ -119,9 +119,9 @@ vi.mock('../useDraftGeneration', () => ({
   }),
 }));
 
-import { scenariosService } from 'src/services/backend/scenariosService.ts';
-import { scenarioRunsService } from 'src/services/backend/scenarioRunsService.ts';
-import ScenariosPanel from '../ScenariosPanel';
+import { scenariosService } from "src/services/backend/scenariosService.ts";
+import { scenarioRunsService } from "src/services/backend/scenarioRunsService.ts";
+import ScenariosPanel from "../ScenariosPanel";
 
 const mockedCreate = vi.mocked(scenariosService.create);
 const mockedIndex = vi.mocked(scenariosService.index);
@@ -133,17 +133,17 @@ const mockedRunsIndex = vi.mocked(scenarioRunsService.index);
 
 function makeScenario(overrides: Partial<Scenario> = {}): Scenario {
   return {
-    id: 'scen-1',
-    user_id: 'user-1',
-    name: 'Diagnose nginx',
+    id: "scen-1",
+    user_id: "user-1",
+    name: "Diagnose nginx",
     description: null,
-    command_steps: [{ id: 'cs-0', binary: 'ls', args: ['-la'], cwd: '/' }],
+    command_steps: [{ id: "cs-0", binary: "ls", args: ["-la"], cwd: "/" }],
     pinned_device_id: null,
     is_shared: false,
     created_via_ai: false,
     owner_email: null,
-    created_at: '2026-05-19T00:00:00Z',
-    updated_at: '2026-05-19T00:00:00Z',
+    created_at: "2026-05-19T00:00:00Z",
+    updated_at: "2026-05-19T00:00:00Z",
     last_run_at: null,
     run_count: 0,
     ...overrides,
@@ -153,14 +153,14 @@ function makeScenario(overrides: Partial<Scenario> = {}): Scenario {
 function makeDraftResponse(totalTokens: number): DraftResponse {
   return {
     draft: {
-      name: 'AI nginx diag',
-      description: 'AI-suggested diagnostic',
+      name: "AI nginx diag",
+      description: "AI-suggested diagnostic",
       command_steps: [
         {
-          binary: 'systemctl',
-          args: ['status', 'nginx'],
-          cwd: '/',
-          description: 'Check service',
+          binary: "systemctl",
+          args: ["status", "nginx"],
+          cwd: "/",
+          description: "Check service",
         },
       ],
     },
@@ -187,7 +187,7 @@ function triggerSuccess(
   rerender: (ui: React.ReactElement) => void,
   draft: DraftResponse,
 ): void {
-  hookState = { kind: 'success', draft };
+  hookState = { kind: "success", draft };
   rerender(
     <ToastProvider>
       <ScenariosPanel
@@ -206,16 +206,16 @@ function triggerSuccess(
 beforeAll(async () => {
   if (!i18next.isInitialized) {
     await i18next.use(initReactI18next).init({
-      lng: 'en',
-      fallbackLng: 'en',
-      ns: ['scenarios'],
-      defaultNS: 'scenarios',
+      lng: "en",
+      fallbackLng: "en",
+      ns: ["scenarios"],
+      defaultNS: "scenarios",
       resources: { en: { scenarios: scenariosEn } },
       interpolation: { escapeValue: false },
       react: { useSuspense: false },
     });
   } else {
-    await i18next.changeLanguage('en');
+    await i18next.changeLanguage("en");
   }
 });
 
@@ -239,10 +239,10 @@ function ensureStorageStubs(): void {
   };
   try {
     if (
-      typeof localStorage === 'undefined' ||
-      typeof localStorage.getItem !== 'function'
+      typeof localStorage === "undefined" ||
+      typeof localStorage.getItem !== "function"
     ) {
-      Object.defineProperty(globalThis, 'localStorage', {
+      Object.defineProperty(globalThis, "localStorage", {
         configurable: true,
         value: memoryStorage(),
       });
@@ -252,10 +252,10 @@ function ensureStorageStubs(): void {
   }
   try {
     if (
-      typeof sessionStorage === 'undefined' ||
-      typeof sessionStorage.getItem !== 'function'
+      typeof sessionStorage === "undefined" ||
+      typeof sessionStorage.getItem !== "function"
     ) {
-      Object.defineProperty(globalThis, 'sessionStorage', {
+      Object.defineProperty(globalThis, "sessionStorage", {
         configurable: true,
         value: memoryStorage(),
       });
@@ -275,7 +275,7 @@ beforeEach(() => {
   generateSpy.mockReset();
   cancelSpy.mockReset();
   resetSpy.mockReset();
-  hookState = { kind: 'idle' };
+  hookState = { kind: "idle" };
 });
 
 afterEach(() => {
@@ -287,24 +287,24 @@ afterEach(() => {
 // Tests (Plan 23-11 / AI-10)
 // -----------------------------------------------------------------------------
 
-describe('ScenariosPanel — AI-10 token persistence', () => {
-  it('[Accept and save] forwards usage.total_tokens as created_via_ai_token_count', async () => {
-    sessionStorage.setItem('scenarios_panel_segment', 'ai');
+describe("ScenariosPanel — AI-10 token persistence", () => {
+  it("[Accept and save] forwards usage.total_tokens as created_via_ai_token_count", async () => {
+    sessionStorage.setItem("scenarios_panel_segment", "ai");
     mockedCreate.mockResolvedValue({
       scenario: makeScenario({ created_via_ai: true }),
     });
 
     const { rerender } = renderPanel();
     await waitFor(() =>
-      expect(screen.getByTestId('scenarios-ai-segment')).toBeDefined(),
+      expect(screen.getByTestId("scenarios-ai-segment")).toBeDefined(),
     );
 
     act(() => triggerSuccess(rerender, makeDraftResponse(1234)));
     await waitFor(() =>
-      expect(screen.getByTestId('draft-review-accept')).toBeDefined(),
+      expect(screen.getByTestId("draft-review-accept")).toBeDefined(),
     );
 
-    fireEvent.click(screen.getByTestId('draft-review-accept'));
+    fireEvent.click(screen.getByTestId("draft-review-accept"));
     await waitFor(() => expect(mockedCreate).toHaveBeenCalled());
 
     const payload = mockedCreate.mock.calls[0][0] as ScenarioCreatePayload;
@@ -312,46 +312,46 @@ describe('ScenariosPanel — AI-10 token persistence', () => {
     expect(payload.created_via_ai_token_count).toBe(1234);
   });
 
-  it('forwards a different token count (proves the value is not hardcoded)', async () => {
-    sessionStorage.setItem('scenarios_panel_segment', 'ai');
+  it("forwards a different token count (proves the value is not hardcoded)", async () => {
+    sessionStorage.setItem("scenarios_panel_segment", "ai");
     mockedCreate.mockResolvedValue({
       scenario: makeScenario({ created_via_ai: true }),
     });
 
     const { rerender } = renderPanel();
     await waitFor(() =>
-      expect(screen.getByTestId('scenarios-ai-segment')).toBeDefined(),
+      expect(screen.getByTestId("scenarios-ai-segment")).toBeDefined(),
     );
 
     act(() => triggerSuccess(rerender, makeDraftResponse(5678)));
     await waitFor(() =>
-      expect(screen.getByTestId('draft-review-accept')).toBeDefined(),
+      expect(screen.getByTestId("draft-review-accept")).toBeDefined(),
     );
 
-    fireEvent.click(screen.getByTestId('draft-review-accept'));
+    fireEvent.click(screen.getByTestId("draft-review-accept"));
     await waitFor(() => expect(mockedCreate).toHaveBeenCalled());
 
     const payload = mockedCreate.mock.calls[0][0] as ScenarioCreatePayload;
     expect(payload.created_via_ai_token_count).toBe(5678);
   });
 
-  it('forwards usage.total_tokens === 0 when backend reported zero (defensive)', async () => {
-    sessionStorage.setItem('scenarios_panel_segment', 'ai');
+  it("forwards usage.total_tokens === 0 when backend reported zero (defensive)", async () => {
+    sessionStorage.setItem("scenarios_panel_segment", "ai");
     mockedCreate.mockResolvedValue({
       scenario: makeScenario({ created_via_ai: true }),
     });
 
     const { rerender } = renderPanel();
     await waitFor(() =>
-      expect(screen.getByTestId('scenarios-ai-segment')).toBeDefined(),
+      expect(screen.getByTestId("scenarios-ai-segment")).toBeDefined(),
     );
 
     act(() => triggerSuccess(rerender, makeDraftResponse(0)));
     await waitFor(() =>
-      expect(screen.getByTestId('draft-review-accept')).toBeDefined(),
+      expect(screen.getByTestId("draft-review-accept")).toBeDefined(),
     );
 
-    fireEvent.click(screen.getByTestId('draft-review-accept'));
+    fireEvent.click(screen.getByTestId("draft-review-accept"));
     await waitFor(() => expect(mockedCreate).toHaveBeenCalled());
 
     const payload = mockedCreate.mock.calls[0][0] as ScenarioCreatePayload;

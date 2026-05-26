@@ -1,8 +1,8 @@
-import type { RefObject } from 'react';
-import { ChunkHeader } from '../files/ChunkHeader';
-import { FilesChannelError } from '../files';
-import type { FilesChannelRequest } from '../../hooks/useFilesChannel';
-import type { RunUploadFn } from './types';
+import type { RefObject } from "react";
+import { ChunkHeader } from "../files/ChunkHeader";
+import { FilesChannelError } from "../files";
+import type { FilesChannelRequest } from "../../hooks/useFilesChannel";
+import type { RunUploadFn } from "./types";
 
 /**
  * Browser-side upload runner.
@@ -82,20 +82,20 @@ export function createRunUpload(deps: CreateRunUploadDeps): RunUploadFn {
     const file = deps.getFile(item.id);
     if (!file) {
       queue.updateItem(item.id, {
-        state: 'failed',
-        error: { code: 'CLIENT_ERROR', message: 'File reference lost.' },
+        state: "failed",
+        error: { code: "CLIENT_ERROR", message: "File reference lost." },
         completedAt: Date.now(),
       });
       return;
     }
     const dc = deps.filesDataRef.current;
     const request = deps.getRequest();
-    if (!dc || !request || dc.readyState !== 'open') {
+    if (!dc || !request || dc.readyState !== "open") {
       queue.updateItem(item.id, {
-        state: 'failed',
+        state: "failed",
         error: {
-          code: 'CHANNEL_NOT_OPEN',
-          message: 'files-data channel not open.',
+          code: "CHANNEL_NOT_OPEN",
+          message: "files-data channel not open.",
         },
         completedAt: Date.now(),
       });
@@ -110,25 +110,25 @@ export function createRunUpload(deps: CreateRunUploadDeps): RunUploadFn {
           parentPath: string;
           name: string;
           size: number;
-          mode: 'fail' | 'replace' | 'skip' | 'keepBoth';
+          mode: "fail" | "replace" | "skip" | "keepBoth";
         },
         BeginResp
-      >('files.upload.begin', {
+      >("files.upload.begin", {
         parentPath: item.parentPath,
         name: item.name,
         size: item.size,
-        mode: item.conflictMode ?? 'fail',
+        mode: item.conflictMode ?? "fail",
       });
     } catch (err: unknown) {
       const info =
         err instanceof FilesChannelError
           ? err.info
           : {
-              code: 'CLIENT_ERROR' as const,
+              code: "CLIENT_ERROR" as const,
               message: err instanceof Error ? err.message : String(err),
             };
       queue.updateItem(item.id, {
-        state: 'failed',
+        state: "failed",
         error: { code: info.code, message: info.message },
         completedAt: Date.now(),
       });
@@ -141,10 +141,10 @@ export function createRunUpload(deps: CreateRunUploadDeps): RunUploadFn {
     const waitForLow = (): Promise<void> =>
       new Promise((resolve) => {
         const onLow = () => {
-          dc.removeEventListener('bufferedamountlow', onLow);
+          dc.removeEventListener("bufferedamountlow", onLow);
           resolve();
         };
-        dc.addEventListener('bufferedamountlow', onLow);
+        dc.addEventListener("bufferedamountlow", onLow);
       });
 
     let seq = 0;
@@ -153,14 +153,14 @@ export function createRunUpload(deps: CreateRunUploadDeps): RunUploadFn {
 
     // Best-effort cancel: short timeout, advance regardless of ack outcome.
     const sendCancel = async (
-      reason: 'user' | 'desktop_error' | 'disconnect' | 'stalled',
+      reason: "user" | "desktop_error" | "disconnect" | "stalled",
     ): Promise<void> => {
       try {
         await request<
           { transferId: number; reason: string },
           Record<string, never>
         >(
-          'files.transfer.cancel',
+          "files.transfer.cancel",
           { transferId: begin.transferId, reason },
           CANCEL_TIMEOUT_MS,
         );
@@ -177,10 +177,10 @@ export function createRunUpload(deps: CreateRunUploadDeps): RunUploadFn {
           break;
         }
         // Pitfall 2 (dc.send on closing channel).
-        if (dc.readyState !== 'open') {
+        if (dc.readyState !== "open") {
           throw new FilesChannelError({
-            code: 'CHANNEL_NOT_OPEN',
-            message: 'files-data closed mid-upload.',
+            code: "CHANNEL_NOT_OPEN",
+            message: "files-data closed mid-upload.",
           });
         }
 
@@ -198,10 +198,10 @@ export function createRunUpload(deps: CreateRunUploadDeps): RunUploadFn {
             cancelled = true;
             break;
           }
-          if (dc.readyState !== 'open') {
+          if (dc.readyState !== "open") {
             throw new FilesChannelError({
-              code: 'CHANNEL_NOT_OPEN',
-              message: 'files-data closed mid-upload.',
+              code: "CHANNEL_NOT_OPEN",
+              message: "files-data closed mid-upload.",
             });
           }
         }
@@ -210,7 +210,7 @@ export function createRunUpload(deps: CreateRunUploadDeps): RunUploadFn {
           dc.send(frame);
         } catch (err: unknown) {
           throw new FilesChannelError({
-            code: 'CHANNEL_NOT_OPEN',
+            code: "CHANNEL_NOT_OPEN",
             message: `dc.send failed: ${err instanceof Error ? err.message : String(err)}`,
           });
         }
@@ -221,11 +221,11 @@ export function createRunUpload(deps: CreateRunUploadDeps): RunUploadFn {
       }
 
       if (cancelled) {
-        await sendCancel('user');
+        await sendCancel("user");
         queue.updateItem(item.id, {
-          state: 'cancelled',
+          state: "cancelled",
           completedAt: Date.now(),
-          error: { code: 'CANCELLED', message: 'Cancelled.' },
+          error: { code: "CANCELLED", message: "Cancelled." },
         });
         return;
       }
@@ -234,24 +234,24 @@ export function createRunUpload(deps: CreateRunUploadDeps): RunUploadFn {
       const drainStart = Date.now();
       while (dc.bufferedAmount > 0) {
         if (queue.isCancelled(item.id)) {
-          await sendCancel('user');
+          await sendCancel("user");
           queue.updateItem(item.id, {
-            state: 'cancelled',
+            state: "cancelled",
             completedAt: Date.now(),
-            error: { code: 'CANCELLED', message: 'Cancelled.' },
+            error: { code: "CANCELLED", message: "Cancelled." },
           });
           return;
         }
-        if (dc.readyState !== 'open') {
+        if (dc.readyState !== "open") {
           throw new FilesChannelError({
-            code: 'CHANNEL_NOT_OPEN',
-            message: 'files-data closed during drain.',
+            code: "CHANNEL_NOT_OPEN",
+            message: "files-data closed during drain.",
           });
         }
         if (Date.now() - drainStart > DRAIN_TIMEOUT_MS) {
           throw new FilesChannelError({
-            code: 'TIMEOUT',
-            message: 'bufferedAmount drain exceeded 60s.',
+            code: "TIMEOUT",
+            message: "bufferedAmount drain exceeded 60s.",
           });
         }
         await new Promise((r) => setTimeout(r, DRAIN_POLL_MS));
@@ -266,13 +266,13 @@ export function createRunUpload(deps: CreateRunUploadDeps): RunUploadFn {
         { transferId: number; expectedBytes: number },
         CompleteResp
       >(
-        'files.upload.complete',
+        "files.upload.complete",
         { transferId: begin.transferId, expectedBytes: file.size },
         completeTimeoutMs,
       );
       void resp; // resp.path is the final filename; not currently surfaced in queue UI.
       queue.updateItem(item.id, {
-        state: 'completed',
+        state: "completed",
         completedAt: Date.now(),
         bytesSoFar: file.size,
       });
@@ -281,18 +281,18 @@ export function createRunUpload(deps: CreateRunUploadDeps): RunUploadFn {
         err instanceof FilesChannelError
           ? err.info
           : {
-              code: 'CLIENT_ERROR' as const,
+              code: "CLIENT_ERROR" as const,
               message: err instanceof Error ? err.message : String(err),
             };
       // Best-effort cancel so the desktop's .partial is reaped immediately
       // rather than via the 5-min sweeper threshold.
-      await sendCancel('desktop_error');
+      await sendCancel("desktop_error");
       const wasCancelled = queue.isCancelled(item.id);
       queue.updateItem(item.id, {
-        state: wasCancelled ? 'cancelled' : 'failed',
+        state: wasCancelled ? "cancelled" : "failed",
         error: {
-          code: wasCancelled ? 'CANCELLED' : info.code,
-          message: wasCancelled ? 'Cancelled.' : info.message,
+          code: wasCancelled ? "CANCELLED" : info.code,
+          message: wasCancelled ? "Cancelled." : info.message,
         },
         completedAt: Date.now(),
       });

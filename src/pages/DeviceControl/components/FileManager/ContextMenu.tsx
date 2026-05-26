@@ -1,5 +1,5 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { ContextMenuItem, ContextMenuState } from './types';
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import type { ContextMenuItem, ContextMenuState } from "./types";
 
 interface ContextMenuProps {
   state: ContextMenuState | null;
@@ -28,7 +28,10 @@ interface ContextMenuProps {
  */
 export function ContextMenu({ state, onClose }: ContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
-  const [adjusted, setAdjusted] = useState<{ left: number; top: number } | null>(null);
+  const [adjusted, setAdjusted] = useState<{
+    left: number;
+    top: number;
+  } | null>(null);
 
   // Measure + flip after the menu paints.
   useLayoutEffect(() => {
@@ -58,13 +61,13 @@ export function ContextMenu({ state, onClose }: ContextMenuProps) {
   useEffect(() => {
     if (!state) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         e.preventDefault();
         onClose();
       }
     };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
   }, [state, onClose]);
 
   if (!state) return null;
@@ -92,7 +95,7 @@ export function ContextMenu({ state, onClose }: ContextMenuProps) {
       <div
         ref={menuRef}
         role="menu"
-        className="fixed z-50 min-w-[180px] bg-background border border-lightgray rounded-md shadow-lg py-1"
+        className="bg-background border-lightgray fixed z-50 min-w-[180px] rounded-md border py-1 shadow-lg"
         style={{ left, top }}
         // Stop click bubbling so clicks INSIDE the menu don't hit the overlay.
         onClick={(e) => e.stopPropagation()}
@@ -103,20 +106,20 @@ export function ContextMenu({ state, onClose }: ContextMenuProps) {
             return (
               <hr
                 key={`sep-${idx}`}
-                className="my-1 border-t border-lightgray"
+                className="border-lightgray my-1 border-t"
               />
             );
           }
           const cls = [
-            'block w-full text-left px-3 py-1.5 text-sm transition-colors',
+            "block w-full text-left px-3 py-1.5 text-sm transition-colors",
             item.disabled
-              ? 'opacity-50 cursor-not-allowed text-darkgray'
-              : 'hover:bg-tertiary cursor-pointer',
-            item.danger && !item.disabled ? 'text-error' : '',
-            item.danger && item.disabled ? 'text-error/50' : '',
+              ? "opacity-50 cursor-not-allowed text-darkgray"
+              : "hover:bg-tertiary cursor-pointer",
+            item.danger && !item.disabled ? "text-error" : "",
+            item.danger && item.disabled ? "text-error/50" : "",
           ]
             .filter(Boolean)
-            .join(' ');
+            .join(" ");
           return (
             <button
               key={`${item.label}-${idx}`}

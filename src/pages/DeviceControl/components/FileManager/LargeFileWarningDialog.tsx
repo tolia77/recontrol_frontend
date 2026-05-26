@@ -1,5 +1,5 @@
-import { ConfirmModal } from 'src/components/ui';
-import { useTranslation } from 'react-i18next';
+import { ConfirmModal } from "src/components/ui";
+import { useTranslation } from "react-i18next";
 
 /**
  * Per-file >100 MiB warning gate (TRANSFER-06).
@@ -22,7 +22,7 @@ interface LargeFileWarningDialogProps {
   open: boolean;
   fileName: string;
   sizeBytes: number;
-  direction: 'upload' | 'download';
+  direction: "upload" | "download";
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -35,23 +35,23 @@ export function LargeFileWarningDialog({
   onConfirm,
   onCancel,
 }: LargeFileWarningDialogProps) {
-  const { t } = useTranslation('fileManager');
+  const { t } = useTranslation("fileManager");
   const sizeMb = Math.round(sizeBytes / 1_000_000);
   const action =
-    direction === 'upload'
-      ? t('dialogs.largeFileWarning.upload')
-      : t('dialogs.largeFileWarning.download');
+    direction === "upload"
+      ? t("dialogs.largeFileWarning.upload")
+      : t("dialogs.largeFileWarning.download");
   return (
     <ConfirmModal
       open={open}
-      title={t('dialogs.largeFileWarning.title', { direction })}
+      title={t("dialogs.largeFileWarning.title", { direction })}
       body={
         <p>
-          {t('dialogs.largeFileWarning.body', { sizeMb, fileName, action })}
+          {t("dialogs.largeFileWarning.body", { sizeMb, fileName, action })}
         </p>
       }
       confirmLabel={action}
-      cancelLabel={t('dialogs.cancel')}
+      cancelLabel={t("dialogs.cancel")}
       dangerous={false}
       onConfirm={onConfirm}
       onCancel={onCancel}

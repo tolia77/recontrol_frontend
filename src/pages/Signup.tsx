@@ -1,21 +1,21 @@
-import { useState } from 'react';
-import logoFull from 'src/assets/img/logo-full.svg';
-import { Link, useNavigate } from 'react-router';
-import { registerRequest } from 'src/services/backend/authService';
-import { saveTokens, saveUserId } from 'src/utils/auth';
-import { getErrorMessage } from 'src/utils/getErrorMessage';
-import { useTranslation, Trans } from 'react-i18next';
-import { Button } from 'src/components/ui/Button';
-import { Input } from 'src/components/ui';
+import { useState } from "react";
+import logoFull from "src/assets/img/logo-full.svg";
+import { Link, useNavigate } from "react-router";
+import { registerRequest } from "src/services/backend/authService";
+import { saveTokens, saveUserId } from "src/utils/auth";
+import { getErrorMessage } from "src/utils/getErrorMessage";
+import { useTranslation, Trans } from "react-i18next";
+import { Button } from "src/components/ui/Button";
+import { Input } from "src/components/ui";
 
 function Signup() {
-  const { t } = useTranslation('auth');
+  const { t } = useTranslation("auth");
   const navigate = useNavigate();
 
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -24,7 +24,9 @@ function Signup() {
     setErrors([]);
 
     if (password !== confirmPassword) {
-      setErrors([t('signup.errors.passwordMismatch', 'Passwords do not match')]);
+      setErrors([
+        t("signup.errors.passwordMismatch", "Passwords do not match"),
+      ]);
       return;
     }
 
@@ -34,13 +36,14 @@ function Signup() {
       const res = await registerRequest(username, email, password);
       saveTokens(res.data.access_token, res.data.refresh_token);
       saveUserId(res.data.user_id);
-      navigate('/dashboard');
+      navigate("/dashboard");
     } catch (error: unknown) {
-      const status = (error as { response?: { status?: number } }).response?.status;
+      const status = (error as { response?: { status?: number } }).response
+        ?.status;
       if (status === 400) {
-        setErrors([t('signup.errors.invalidInput')]);
+        setErrors([t("signup.errors.invalidInput")]);
       } else {
-        setErrors([getErrorMessage(error) || t('signup.errors.failed')]);
+        setErrors([getErrorMessage(error) || t("signup.errors.failed")]);
       }
     } finally {
       setLoading(false);
@@ -48,22 +51,24 @@ function Signup() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-tertiary/30 to-background">
+    <main className="from-tertiary/30 to-background flex min-h-screen items-center justify-center bg-gradient-to-b">
       <div className="flex flex-col items-center space-y-8 p-8">
         <img src={logoFull} alt="logo" className="h-16" />
-        <h1 className="text-3xl font-bold text-primary">{t('signup.title')}</h1>
+        <h1 className="text-primary text-3xl font-bold">{t("signup.title")}</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-4 min-w-[350px]">
+        <form onSubmit={handleSubmit} className="min-w-[350px] space-y-4">
           {errors.length > 0 && (
-            <div className="p-3 bg-error/10 border border-error/20 rounded-lg space-y-1">
-              {errors.map(err => (
-                <p key={err} className="text-error text-sm">{err}</p>
+            <div className="bg-error/10 border-error/20 space-y-1 rounded-lg border p-3">
+              {errors.map((err) => (
+                <p key={err} className="text-error text-sm">
+                  {err}
+                </p>
               ))}
             </div>
           )}
 
           <Input
-            label={t('signup.username')}
+            label={t("signup.username")}
             type="text"
             id="username"
             name="username"
@@ -74,7 +79,7 @@ function Signup() {
           />
 
           <Input
-            label={t('signup.email')}
+            label={t("signup.email")}
             type="email"
             id="email"
             name="email"
@@ -85,7 +90,7 @@ function Signup() {
           />
 
           <Input
-            label={t('signup.password')}
+            label={t("signup.password")}
             type="password"
             id="password"
             name="password"
@@ -96,7 +101,7 @@ function Signup() {
           />
 
           <Input
-            label={t('signup.confirm')}
+            label={t("signup.confirm")}
             type="password"
             id="confirmPassword"
             name="confirmPassword"
@@ -107,15 +112,20 @@ function Signup() {
           />
 
           <Button type="submit" loading={loading} className="w-full">
-            {t('signup.submit')}
+            {t("signup.submit")}
           </Button>
 
-          <p className="text-sm text-center">
+          <p className="text-center text-sm">
             <Trans
               ns="auth"
               i18nKey="signup.haveAccount"
               components={{
-                loginLink: <Link className="text-secondary hover:underline" to="/login" />
+                loginLink: (
+                  <Link
+                    className="text-secondary hover:underline"
+                    to="/login"
+                  />
+                ),
               }}
             />
           </p>

@@ -2,14 +2,14 @@ import { backendInstance } from "src/services/backend/config.ts";
 
 // D-12: per-step snapshot written by Scenario#before_save.
 export interface ClassifiedIntentAtSave {
-  decision: 'allow' | 'needs_confirm' | 'deny';
+  decision: "allow" | "needs_confirm" | "deny";
   reason: string;
   policy_version: string;
 }
 
 // D-10: verdict embedded in create/update response per step (not persisted; in-memory).
 export interface VerdictAtSave {
-  decision: 'allow' | 'needs_confirm' | 'deny';
+  decision: "allow" | "needs_confirm" | "deny";
   reason: string;
 }
 
@@ -57,7 +57,10 @@ export interface ScenarioCreatePayload {
   // alongside `created_via_ai: true`.
   created_via_ai_token_count?: number;
   command_steps: Array<
-    Omit<CommandStep, 'id' | 'classified_intent_at_save' | 'verdict_at_save'> & { id?: string }
+    Omit<
+      CommandStep,
+      "id" | "classified_intent_at_save" | "verdict_at_save"
+    > & { id?: string }
   >;
 }
 
@@ -66,7 +69,7 @@ export type ScenarioUpdatePayload = Partial<ScenarioCreatePayload>;
 export interface PolicyPreviewStep {
   step_index: number;
   id: string;
-  decision: 'allow' | 'needs_confirm' | 'deny';
+  decision: "allow" | "needs_confirm" | "deny";
   reason: string;
   classified_intent?: ClassifiedIntentAtSave;
   resolved_binary: string | null;
@@ -81,7 +84,7 @@ export interface PolicyPreviewResponse {
 // D-10: 422 deny envelope (one entry per denied step).
 export interface PolicyDenyError {
   step_index: number;
-  decision: 'deny';
+  decision: "deny";
   reason: string;
 }
 
@@ -162,14 +165,19 @@ interface ScenarioIndexResponse {
 
 export const scenariosService = {
   async index(params?: ScenarioIndexParams): Promise<Scenario[]> {
-    const { data } = await backendInstance.get<ScenarioIndexResponse>('/scenarios', {
-      params: {
-        ...(params?.q ? { q: params.q } : {}),
-        ...(params?.pinned_device_id ? { pinned_device_id: params.pinned_device_id } : {}),
-        ...(params?.page ? { page: params.page } : {}),
-        ...(params?.per_page ? { per_page: params.per_page } : {}),
+    const { data } = await backendInstance.get<ScenarioIndexResponse>(
+      "/scenarios",
+      {
+        params: {
+          ...(params?.q ? { q: params.q } : {}),
+          ...(params?.pinned_device_id
+            ? { pinned_device_id: params.pinned_device_id }
+            : {}),
+          ...(params?.page ? { page: params.page } : {}),
+          ...(params?.per_page ? { per_page: params.per_page } : {}),
+        },
       },
-    });
+    );
     return data.scenarios;
   },
 
@@ -180,8 +188,8 @@ export const scenariosService = {
 
   async create(payload: ScenarioCreatePayload): Promise<ScenarioWriteResponse> {
     const { data } = await backendInstance.post<ScenarioWriteResponse>(
-      '/scenarios',
-      { scenario: payload }
+      "/scenarios",
+      { scenario: payload },
     );
     return data;
   },
@@ -196,25 +204,28 @@ export const scenariosService = {
   async createDraft(
     prompt: string,
     locale: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<DraftResponse> {
     const { data } = await backendInstance.post<DraftResponse>(
-      '/scenarios/drafts',
+      "/scenarios/drafts",
       { prompt },
       {
         headers: {
-          'Accept-Language': locale,
+          "Accept-Language": locale,
         },
         signal,
-      }
+      },
     );
     return data;
   },
 
-  async update(id: string, payload: ScenarioUpdatePayload): Promise<ScenarioWriteResponse> {
+  async update(
+    id: string,
+    payload: ScenarioUpdatePayload,
+  ): Promise<ScenarioWriteResponse> {
     const { data } = await backendInstance.patch<ScenarioWriteResponse>(
       `/scenarios/${id}`,
-      { scenario: payload }
+      { scenario: payload },
     );
     return data;
   },
@@ -226,18 +237,21 @@ export const scenariosService = {
   async duplicate(id: string): Promise<ScenarioWriteResponse> {
     const { data } = await backendInstance.post<ScenarioWriteResponse>(
       `/scenarios/${id}/duplicate`,
-      {}
+      {},
     );
     return data;
   },
 
   // POLICY-01
-  async policyPreview(id: string, deviceId: string): Promise<PolicyPreviewResponse> {
+  async policyPreview(
+    id: string,
+    deviceId: string,
+  ): Promise<PolicyPreviewResponse> {
     const { data } = await backendInstance.get<PolicyPreviewResponse>(
       `/scenarios/${id}/policy-preview`,
       {
         params: { device_id: deviceId },
-      }
+      },
     );
     return data;
   },

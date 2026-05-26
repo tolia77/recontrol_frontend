@@ -4,7 +4,7 @@ import type {
   RunUploadFn,
   TransferItem,
   TransferQueueAPI,
-} from './types';
+} from "./types";
 
 /**
  * Maximum number of terminal-state entries retained in completed history.
@@ -13,11 +13,11 @@ import type {
  */
 const HISTORY_LIMIT = 10;
 
-const TERMINAL: ReadonlySet<TransferItem['state']> = new Set([
-  'completed',
-  'cancelled',
-  'failed',
-  'disconnected',
+const TERMINAL: ReadonlySet<TransferItem["state"]> = new Set([
+  "completed",
+  "cancelled",
+  "failed",
+  "disconnected",
 ]);
 
 /**
@@ -88,21 +88,21 @@ export class TransferQueue implements TransferQueueAPI {
     const idx = this.items.findIndex((i) => i.id === id);
     if (idx === -1) return;
     const cur = this.items[idx];
-    if (cur.state === 'queued') {
+    if (cur.state === "queued") {
       // Not yet started -- skip 'cancelling' and go straight to terminal.
       this.items[idx] = {
         ...cur,
-        state: 'cancelled',
+        state: "cancelled",
         completedAt: Date.now(),
-        error: { code: 'CANCELLED', message: 'Cancelled.' },
+        error: { code: "CANCELLED", message: "Cancelled." },
       };
       this.cancelledIds.delete(id);
       this.pruneCompletedHistory();
       this.notify();
       return;
     }
-    if (cur.state === 'active' || cur.state === 'stalled') {
-      this.updateItem(id, { state: 'cancelling' });
+    if (cur.state === "active" || cur.state === "stalled") {
+      this.updateItem(id, { state: "cancelling" });
     }
   }
 
@@ -171,16 +171,16 @@ export class TransferQueue implements TransferQueueAPI {
    */
   private async tick(): Promise<void> {
     if (this.activeId !== null) return;
-    const next = this.items.find((i) => i.state === 'queued');
+    const next = this.items.find((i) => i.state === "queued");
     if (!next) return;
     this.activeId = next.id;
     this.updateItem(next.id, {
-      state: 'active',
+      state: "active",
       startedAt: Date.now(),
     });
 
     try {
-      if (next.direction === 'upload') {
+      if (next.direction === "upload") {
         await this.runUpload(next, this);
       } else {
         await this.runDownload(next, this);
@@ -190,7 +190,7 @@ export class TransferQueue implements TransferQueueAPI {
       const after = this.items.find((i) => i.id === next.id);
       if (after && !TERMINAL.has(after.state)) {
         this.updateItem(next.id, {
-          state: 'completed',
+          state: "completed",
           completedAt: Date.now(),
           bytesSoFar: after.size,
         });
@@ -199,10 +199,10 @@ export class TransferQueue implements TransferQueueAPI {
       const msg = err instanceof Error ? err.message : String(err);
       const wasCancelled = this.cancelledIds.has(next.id);
       this.updateItem(next.id, {
-        state: wasCancelled ? 'cancelled' : 'failed',
+        state: wasCancelled ? "cancelled" : "failed",
         error: {
-          code: wasCancelled ? 'CANCELLED' : 'CLIENT_ERROR',
-          message: wasCancelled ? 'Cancelled.' : msg,
+          code: wasCancelled ? "CANCELLED" : "CLIENT_ERROR",
+          message: wasCancelled ? "Cancelled." : msg,
         },
         completedAt: Date.now(),
       });
@@ -246,7 +246,7 @@ export class TransferQueue implements TransferQueueAPI {
         // A throwing listener must NOT prevent siblings from firing.
         // Mirrors the FilesChannelClient.onEvent dispatch loop pattern from
         // plan 11-01.
-        console.error('[transfer-queue] listener threw', err);
+        console.error("[transfer-queue] listener threw", err);
       }
     }
   }

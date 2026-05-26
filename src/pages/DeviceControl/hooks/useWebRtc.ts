@@ -1,10 +1,19 @@
-import { useRef, useCallback, useState, useEffect } from 'react';
-import { FilesChannelClient, FilesDataChannel } from '../services/files';
-import { ClipboardLoopGate, createClipboardChannelHandle, type ClipboardChannelHandle } from '../services/clipboard';
-import { getTurnCredentialsRequest } from 'src/services/backend/turnService';
-import type React from 'react';
+import { useRef, useCallback, useState, useEffect } from "react";
+import { FilesChannelClient, FilesDataChannel } from "../services/files";
+import {
+  ClipboardLoopGate,
+  createClipboardChannelHandle,
+  type ClipboardChannelHandle,
+} from "../services/clipboard";
+import { getTurnCredentialsRequest } from "src/services/backend/turnService";
+import type React from "react";
 
-export type WebRtcConnectionState = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'failed';
+export type WebRtcConnectionState =
+  | "idle"
+  | "connecting"
+  | "connected"
+  | "reconnecting"
+  | "failed";
 
 interface UseWebRtcOptions {
   sendMessage: (command: string, payload: Record<string, unknown>) => void;
@@ -17,7 +26,10 @@ export interface UseWebRtcReturn {
   startWebRtc: () => void;
   stopWebRtc: () => void;
   retryWebRtc: () => void;
-  handleSignalingMessage: (command: string, payload: Record<string, unknown>) => void;
+  handleSignalingMessage: (
+    command: string,
+    payload: Record<string, unknown>,
+  ) => void;
   connectionState: WebRtcConnectionState;
   hasReceivedFrame: boolean;
   desktopStats: { framesSkipped: number; encoder?: string } | null;
@@ -49,7 +61,7 @@ export interface UseWebRtcReturn {
 // vars). Same-LAN peers still connect via host candidates; cross-NAT peers
 // behind symmetric NATs will fail without TURN, which matches pre-TURN behavior.
 const FALLBACK_ICE_SERVERS: RTCIceServer[] = [
-  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: "stun:stun.l.google.com:19302" },
 ];
 
 const MAX_BACKOFF_MS = 8000;
@@ -59,10 +71,15 @@ async function fetchIceServers(): Promise<RTCIceServer[]> {
   try {
     const { data } = await getTurnCredentialsRequest();
     if (data?.ice_servers?.length) return data.ice_servers;
-    console.warn('[webrtc] /turn_credentials returned empty list, falling back to STUN-only');
+    console.warn(
+      "[webrtc] /turn_credentials returned empty list, falling back to STUN-only",
+    );
     return FALLBACK_ICE_SERVERS;
   } catch (err) {
-    console.warn('[webrtc] /turn_credentials failed, falling back to STUN-only:', err);
+    console.warn(
+      "[webrtc] /turn_credentials failed, falling back to STUN-only:",
+      err,
+    );
     return FALLBACK_ICE_SERVERS;
   }
 }
@@ -80,13 +97,19 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
   const filesDataChannelRef = useRef<FilesDataChannel | null>(null);
   const clipboardRef = useRef<RTCDataChannel | null>(null);
   const clipboardHandleRef = useRef<ClipboardChannelHandle | null>(null);
-  const clipboardLoopGateRef = useRef<ClipboardLoopGate>(new ClipboardLoopGate());
+  const clipboardLoopGateRef = useRef<ClipboardLoopGate>(
+    new ClipboardLoopGate(),
+  );
   const clipboardOriginIdRef = useRef<string | null>(null);
   const lastRemoteApplyTimeRef = useRef<number>(0);
 
-  const [connectionState, setConnectionState] = useState<WebRtcConnectionState>('idle');
+  const [connectionState, setConnectionState] =
+    useState<WebRtcConnectionState>("idle");
   const [hasReceivedFrame, setHasReceivedFrame] = useState(false);
-  const [desktopStats, setDesktopStats] = useState<{ framesSkipped: number; encoder?: string } | null>(null);
+  const [desktopStats, setDesktopStats] = useState<{
+    framesSkipped: number;
+    encoder?: string;
+  } | null>(null);
   // Mirrors the files-ctl RTCDataChannel readyState as React state so consumers
   // (useFilesChannel) can react to it without polling. The 'open' event for
   // file-ctl can fire ~100ms AFTER pc.connectionState transitions to
@@ -152,7 +175,8 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     filesCtlRef.current = null;
     filesDataRef.current = null;
     setFilesCtlOpen(false);
-    delete (window as unknown as { __filesCtl?: FilesChannelClient }).__filesCtl;
+    delete (window as unknown as { __filesCtl?: FilesChannelClient })
+      .__filesCtl;
 
     const pc = pcRef.current;
     if (pc) {
@@ -185,7 +209,7 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
 
     pc.onicecandidate = (event) => {
       if (event.candidate) {
-        sendMessage('webrtc.ice_candidate', {
+        sendMessage("webrtc.ice_candidate", {
           candidate: event.candidate.candidate,
           sdpMid: event.candidate.sdpMid,
           sdpMLineIndex: event.candidate.sdpMLineIndex,
@@ -204,46 +228,63 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     pc.onconnectionstatechange = () => {
       const state = pc.connectionState;
 
-      if (state === 'connected') {
-        setConnectionState('connected');
+      if (state === "connected") {
+        setConnectionState("connected");
         wasConnectedRef.current = true;
         isReconnectingRef.current = false;
         retryCountRef.current = 0;
         clearReconnectTimer();
         // Video element may have just mounted -- try attaching the stream
         setTimeout(attachStream, 50);
-      } else if (state === 'failed' || state === 'disconnected' || state === 'closed') {
+      } else if (
+        state === "failed" ||
+        state === "disconnected" ||
+        state === "closed"
+      ) {
         // Only attempt reconnect if we were previously connected or connecting
         if (wasConnectedRef.current && !isReconnectingRef.current) {
           attemptReconnect();
         } else if (!isReconnectingRef.current) {
           // Never connected, go to failed
-          setConnectionState('failed');
+          setConnectionState("failed");
         }
       }
     };
 
     // Add a recvonly transceiver to receive video from the desktop client
-    const transceiver = pc.addTransceiver('video', { direction: 'recvonly' });
+    const transceiver = pc.addTransceiver("video", { direction: "recvonly" });
 
     // Prefer H.264 codec, VP8 fallback, preserve RTX/RED/FEC
-    const capabilities = RTCRtpReceiver.getCapabilities('video');
+    const capabilities = RTCRtpReceiver.getCapabilities("video");
     if (capabilities) {
-      const h264Codecs = capabilities.codecs.filter(c => c.mimeType === 'video/H264');
-      const vp8Codecs = capabilities.codecs.filter(c => c.mimeType === 'video/VP8');
-      const otherCodecs = capabilities.codecs.filter(c =>
-        c.mimeType !== 'video/H264' && c.mimeType !== 'video/VP8'
+      const h264Codecs = capabilities.codecs.filter(
+        (c) => c.mimeType === "video/H264",
       );
-      transceiver.setCodecPreferences([...h264Codecs, ...vp8Codecs, ...otherCodecs]);
+      const vp8Codecs = capabilities.codecs.filter(
+        (c) => c.mimeType === "video/VP8",
+      );
+      const otherCodecs = capabilities.codecs.filter(
+        (c) => c.mimeType !== "video/H264" && c.mimeType !== "video/VP8",
+      );
+      transceiver.setCodecPreferences([
+        ...h264Codecs,
+        ...vp8Codecs,
+        ...otherCodecs,
+      ]);
     }
 
     pc.ondatachannel = (event) => {
-      if (event.channel.label === 'stats') {
+      if (event.channel.label === "stats") {
         event.channel.onmessage = (msg) => {
           try {
             const data = JSON.parse(msg.data);
-            setDesktopStats({ framesSkipped: data.skipped, encoder: data.encoder });
-          } catch { /* ignore parse errors */ }
+            setDesktopStats({
+              framesSkipped: data.skipped,
+              encoder: data.encoder,
+            });
+          } catch {
+            /* ignore parse errors */
+          }
         };
       }
     };
@@ -260,40 +301,42 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     // VERIFIED or UNVERIFIED. Do not add desktop-side createDataChannel calls
     // for these labels without rechecking Spike A.
     try {
-      const filesCtl = pc.createDataChannel('files-ctl', { ordered: true });
+      const filesCtl = pc.createDataChannel("files-ctl", { ordered: true });
       filesCtlRef.current = filesCtl;
-      filesCtl.addEventListener('open', () => {
-        console.log('[files-ctl] open');
+      filesCtl.addEventListener("open", () => {
+        console.log("[files-ctl] open");
         filesClientRef.current = new FilesChannelClient(filesCtl);
         // Expose on window so Plan 09-05's browser-console demo can call
         // window.__filesCtl.request('files.list', { path: '...' }).
-        (window as unknown as { __filesCtl?: FilesChannelClient }).__filesCtl = filesClientRef.current;
+        (window as unknown as { __filesCtl?: FilesChannelClient }).__filesCtl =
+          filesClientRef.current;
         setFilesCtlOpen(true);
       });
-      filesCtl.addEventListener('close', () => {
-        console.log('[files-ctl] closed');
+      filesCtl.addEventListener("close", () => {
+        console.log("[files-ctl] closed");
         filesClientRef.current?.dispose();
         filesClientRef.current = null;
         setFilesCtlOpen(false);
-        delete (window as unknown as { __filesCtl?: FilesChannelClient }).__filesCtl;
+        delete (window as unknown as { __filesCtl?: FilesChannelClient })
+          .__filesCtl;
       });
 
-      const filesData = pc.createDataChannel('files-data', { ordered: true });
-      filesData.binaryType = 'arraybuffer';
+      const filesData = pc.createDataChannel("files-data", { ordered: true });
+      filesData.binaryType = "arraybuffer";
       filesDataRef.current = filesData;
-      filesData.addEventListener('open', () => {
-        console.log('[files-data] open');
+      filesData.addEventListener("open", () => {
+        console.log("[files-data] open");
         filesDataChannelRef.current = new FilesDataChannel(filesData);
       });
-      filesData.addEventListener('close', () => {
-        console.log('[files-data] closed');
+      filesData.addEventListener("close", () => {
+        console.log("[files-data] closed");
         filesDataChannelRef.current?.dispose();
         filesDataChannelRef.current = null;
       });
 
-      const clipboard = pc.createDataChannel('clipboard', { ordered: true });
+      const clipboard = pc.createDataChannel("clipboard", { ordered: true });
       clipboardRef.current = clipboard;
-      clipboard.addEventListener('open', () => {
+      clipboard.addEventListener("open", () => {
         const originId = crypto.randomUUID();
         clipboardOriginIdRef.current = originId;
         clipboardLoopGateRef.current.reset();
@@ -309,7 +352,7 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
         // (re-)wire its inbound subscription. Fires after pc.connectionState='connected'.
         setClipboardCtlOpen(true);
       });
-      clipboard.addEventListener('close', () => {
+      clipboard.addEventListener("close", () => {
         clipboardHandleRef.current?.dispose();
         clipboardHandleRef.current = null;
         clipboardRef.current = null;
@@ -318,25 +361,30 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
         clipboardOriginIdRef.current = null;
         clipboardLoopGateRef.current.reset();
         setClipboardCtlOpen(false);
-        console.log('[clipboard] closed');
+        console.log("[clipboard] closed");
       });
     } catch (err) {
       // Defensive: should never happen in a fresh RTCPeerConnection, but if it
       // does, log and continue so the primary video flow is not blocked.
-      console.error('[files-ctl/data] createDataChannel failed, video will still work:', err);
+      console.error(
+        "[files-ctl/data] createDataChannel failed, video will still work:",
+        err,
+      );
     }
 
-    pc.createOffer().then((offer) => {
-      return pc.setLocalDescription(offer).then(() => {
-        sendMessage('webrtc.offer', { sdp: offer.sdp });
+    pc.createOffer()
+      .then((offer) => {
+        return pc.setLocalDescription(offer).then(() => {
+          sendMessage("webrtc.offer", { sdp: offer.sdp });
+        });
+      })
+      .catch((err) => {
+        // Without this, a rejection in createOffer/setLocalDescription dies as
+        // an unhandled promise rejection and the UI stays stuck on 'connecting'
+        // with no clue why.
+        console.error("[webrtc] createOffer/setLocalDescription failed:", err);
+        setConnectionState("failed");
       });
-    }).catch((err) => {
-      // Without this, a rejection in createOffer/setLocalDescription dies as
-      // an unhandled promise rejection and the UI stays stuck on 'connecting'
-      // with no clue why.
-      console.error('[webrtc] createOffer/setLocalDescription failed:', err);
-      setConnectionState('failed');
-    });
   }, [sendMessage, cleanupPeerConnection, attachStream, clearReconnectTimer]);
 
   const attemptReconnect = useCallback(() => {
@@ -349,7 +397,7 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     const elapsed = now - reconnectStartRef.current;
     if (elapsed >= TOTAL_TIMEOUT_MS) {
       // Timeout reached -- go to failed
-      setConnectionState('failed');
+      setConnectionState("failed");
       isReconnectingRef.current = false;
       reconnectStartRef.current = 0;
       retryCountRef.current = 0;
@@ -358,10 +406,13 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     }
 
     isReconnectingRef.current = true;
-    setConnectionState('reconnecting');
+    setConnectionState("reconnecting");
 
     // Exponential backoff: 1s, 2s, 4s, 8s max
-    const backoff = Math.min(1000 * Math.pow(2, retryCountRef.current), MAX_BACKOFF_MS);
+    const backoff = Math.min(
+      1000 * Math.pow(2, retryCountRef.current),
+      MAX_BACKOFF_MS,
+    );
     retryCountRef.current += 1;
 
     clearReconnectTimer();
@@ -370,7 +421,7 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
       // Check timeout again before retrying
       const elapsedNow = Date.now() - reconnectStartRef.current;
       if (elapsedNow >= TOTAL_TIMEOUT_MS) {
-        setConnectionState('failed');
+        setConnectionState("failed");
         isReconnectingRef.current = false;
         reconnectStartRef.current = 0;
         retryCountRef.current = 0;
@@ -389,7 +440,7 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     retryCountRef.current = 0;
     setHasReceivedFrame(false);
     setDesktopStats(null);
-    setConnectionState('connecting');
+    setConnectionState("connecting");
     void createPeerConnection();
   }, [createPeerConnection, clearReconnectTimer]);
 
@@ -399,9 +450,9 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     wasConnectedRef.current = false;
     reconnectStartRef.current = 0;
     retryCountRef.current = 0;
-    sendMessage('webrtc.stop', {});
+    sendMessage("webrtc.stop", {});
     cleanupPeerConnection();
-    setConnectionState('idle');
+    setConnectionState("idle");
     setHasReceivedFrame(false);
     setDesktopStats(null);
   }, [sendMessage, cleanupPeerConnection, clearReconnectTimer]);
@@ -412,24 +463,31 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     wasConnectedRef.current = false;
     reconnectStartRef.current = 0;
     retryCountRef.current = 0;
-    setConnectionState('connecting');
+    setConnectionState("connecting");
     void createPeerConnection();
   }, [createPeerConnection, clearReconnectTimer]);
 
-  const handleSignalingMessage = useCallback((command: string, payload: Record<string, unknown>) => {
-    const pc = pcRef.current;
-    if (!pc) return;
+  const handleSignalingMessage = useCallback(
+    (command: string, payload: Record<string, unknown>) => {
+      const pc = pcRef.current;
+      if (!pc) return;
 
-    if (command === 'webrtc.answer') {
-      const sdp = payload.sdp as string;
-      pc.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp }));
-    } else if (command === 'webrtc.ice_candidate') {
-      const candidate = payload.candidate as string;
-      const sdpMid = (payload.sdpMid as string) || '0';
-      const sdpMLineIndex = (payload.sdpMLineIndex as number) || 0;
-      pc.addIceCandidate(new RTCIceCandidate({ candidate, sdpMid, sdpMLineIndex }));
-    }
-  }, []);
+      if (command === "webrtc.answer") {
+        const sdp = payload.sdp as string;
+        pc.setRemoteDescription(
+          new RTCSessionDescription({ type: "answer", sdp }),
+        );
+      } else if (command === "webrtc.ice_candidate") {
+        const candidate = payload.candidate as string;
+        const sdpMid = (payload.sdpMid as string) || "0";
+        const sdpMLineIndex = (payload.sdpMLineIndex as number) || 0;
+        pc.addIceCandidate(
+          new RTCIceCandidate({ candidate, sdpMid, sdpMLineIndex }),
+        );
+      }
+    },
+    [],
+  );
 
   // Track first frame via video element events
   useEffect(() => {
@@ -440,15 +498,15 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
       setHasReceivedFrame(true);
     };
 
-    video.addEventListener('playing', onPlaying);
+    video.addEventListener("playing", onPlaying);
     return () => {
-      video.removeEventListener('playing', onPlaying);
+      video.removeEventListener("playing", onPlaying);
     };
   }, [connectionState]);
 
   // Re-attach stream whenever connectionState becomes connected (video element may have just mounted)
   useEffect(() => {
-    if (connectionState === 'connected') {
+    if (connectionState === "connected") {
       const timer = setTimeout(attachStream, 100);
       return () => clearTimeout(timer);
     }

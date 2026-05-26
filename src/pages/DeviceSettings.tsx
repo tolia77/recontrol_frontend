@@ -1,28 +1,41 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router';
-import { getDeviceRequest, updateDeviceRequest, deleteDeviceRequest } from 'src/services/backend/devicesService';
+import { useState, useEffect, useCallback } from "react";
+import { useParams, useNavigate } from "react-router";
+import {
+  getDeviceRequest,
+  updateDeviceRequest,
+  deleteDeviceRequest,
+} from "src/services/backend/devicesService";
 import {
   listDeviceSharesRequest,
   createDeviceShareRequest,
   deleteDeviceShareRequest,
-  updateDeviceShareRequest
-} from 'src/services/backend/deviceSharesService';
+  updateDeviceShareRequest,
+} from "src/services/backend/deviceSharesService";
 import {
   listPermissionsGroupsRequest,
-  createPermissionsGroupRequest
-} from 'src/services/backend/permissionsGroupsService';
-import { useTranslation } from 'react-i18next';
-import { useToast } from 'src/components/ui/Toast';
-import { LoadingState, EmptyState } from 'src/components/ui';
-import { DeviceInfoForm } from './DeviceSettings/DeviceInfoForm';
-import { InviteShareForm } from './DeviceSettings/InviteShareForm';
-import { SharesList } from './DeviceSettings/SharesList';
-import { EditShareForm } from './DeviceSettings/EditShareForm';
-import type { ShareFormState, DeviceInfoFormState, EditShareFormState } from './DeviceSettings/types';
-import type { Device, DeviceShare, PermissionsGroup, DeviceShareCreatePayload } from 'src/types';
+  createPermissionsGroupRequest,
+} from "src/services/backend/permissionsGroupsService";
+import { useTranslation } from "react-i18next";
+import { useToast } from "src/components/ui/Toast";
+import { LoadingState, EmptyState } from "src/components/ui";
+import { DeviceInfoForm } from "./DeviceSettings/DeviceInfoForm";
+import { InviteShareForm } from "./DeviceSettings/InviteShareForm";
+import { SharesList } from "./DeviceSettings/SharesList";
+import { EditShareForm } from "./DeviceSettings/EditShareForm";
+import type {
+  ShareFormState,
+  DeviceInfoFormState,
+  EditShareFormState,
+} from "./DeviceSettings/types";
+import type {
+  Device,
+  DeviceShare,
+  PermissionsGroup,
+  DeviceShareCreatePayload,
+} from "src/types";
 
 const DeviceSettings = () => {
-  const { t } = useTranslation('deviceSettings');
+  const { t } = useTranslation("deviceSettings");
   const { deviceId } = useParams<{ deviceId: string }>();
   const navigate = useNavigate();
   const toast = useToast();
@@ -31,22 +44,26 @@ const DeviceSettings = () => {
   const [shares, setShares] = useState<DeviceShare[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [deviceForm, setDeviceForm] = useState<DeviceInfoFormState>({ name: '' });
+  const [deviceForm, setDeviceForm] = useState<DeviceInfoFormState>({
+    name: "",
+  });
   const [shareForm, setShareForm] = useState<ShareFormState>({
-    userEmail: '',
-    permissionsGroupId: '',
-    expiresAt: '',
+    userEmail: "",
+    permissionsGroupId: "",
+    expiresAt: "",
     newGroup: {
-      name: '',
+      name: "",
       see_screen: false,
       see_system_info: false,
       access_mouse: false,
       access_keyboard: false,
       access_terminal: false,
-      manage_power: false
-    }
+      manage_power: false,
+    },
   });
-  const [permissionsGroups, setPermissionsGroups] = useState<PermissionsGroup[]>([]);
+  const [permissionsGroups, setPermissionsGroups] = useState<
+    PermissionsGroup[]
+  >([]);
   const [showShareForm, setShowShareForm] = useState(false);
   const [editForm, setEditForm] = useState<EditShareFormState | null>(null);
   const [editOriginalGroup, setEditOriginalGroup] = useState<{
@@ -64,7 +81,7 @@ const DeviceSettings = () => {
       setDevice(response.data);
       setDeviceForm({ name: response.data.name });
     } catch {
-      toast.error(t('errors.loadDetails'));
+      toast.error(t("errors.loadDetails"));
     } finally {
       setLoading(false);
     }
@@ -75,7 +92,7 @@ const DeviceSettings = () => {
       const response = await listDeviceSharesRequest(deviceId!);
       setShares(response.data.items || []);
     } catch {
-      console.error('Failed to load shares');
+      console.error("Failed to load shares");
     }
   }, [deviceId]);
 
@@ -84,7 +101,7 @@ const DeviceSettings = () => {
       const response = await listPermissionsGroupsRequest();
       setPermissionsGroups(response.data.items || []);
     } catch {
-      console.error('Failed to load permissions groups');
+      console.error("Failed to load permissions groups");
     }
   }, []);
 
@@ -100,34 +117,38 @@ const DeviceSettings = () => {
   const handleDeviceUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await updateDeviceRequest(deviceId!, { name: deviceForm.name });
+      const response = await updateDeviceRequest(deviceId!, {
+        name: deviceForm.name,
+      });
       setDevice(response.data);
-      toast.success(t('info.updated'));
+      toast.success(t("info.updated"));
     } catch {
-      toast.error(t('info.updateError'));
+      toast.error(t("info.updateError"));
     }
   };
 
   const handleLoadGroupIntoEditor = () => {
     if (!shareForm.permissionsGroupId) {
-      toast.warning(t('form.selectPermissions'));
+      toast.warning(t("form.selectPermissions"));
       return;
     }
-    const group = permissionsGroups.find(g => g.id === shareForm.permissionsGroupId);
+    const group = permissionsGroups.find(
+      (g) => g.id === shareForm.permissionsGroupId,
+    );
     if (!group) return;
-    setShareForm(prev => ({
+    setShareForm((prev) => ({
       ...prev,
       newGroup: {
-        name: `${group.name} ${t('form.cloneSuffix')}`.trim(),
+        name: `${group.name} ${t("form.cloneSuffix")}`.trim(),
         see_screen: !!group.see_screen,
         see_system_info: !!group.see_system_info,
         access_mouse: !!group.access_mouse,
         access_keyboard: !!group.access_keyboard,
         access_terminal: !!group.access_terminal,
         manage_power: !!group.manage_power,
-      }
+      },
     }));
-    toast.info(t('form.loadedGroup'));
+    toast.info(t("form.loadedGroup"));
   };
 
   const handleSaveCurrentGroup = async () => {
@@ -138,10 +159,10 @@ const DeviceSettings = () => {
       access_mouse,
       access_keyboard,
       access_terminal,
-      manage_power
+      manage_power,
     } = shareForm.newGroup;
     if (!name?.trim()) {
-      toast.warning(t('sharing.nameRequired'));
+      toast.warning(t("sharing.nameRequired"));
       return;
     }
     try {
@@ -155,22 +176,22 @@ const DeviceSettings = () => {
         manage_power: manage_power ?? null,
       });
       await loadPermissionsGroups();
-      toast.success(t('form.groupSaved'));
+      toast.success(t("form.groupSaved"));
     } catch {
-      toast.error(t('form.groupSaveError'));
+      toast.error(t("form.groupSaveError"));
     }
   };
 
   const handleShareSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!shareForm.userEmail) {
-      toast.warning(t('sharing.emailRequired'));
+      toast.warning(t("sharing.emailRequired"));
       return;
     }
     const payload: DeviceShareCreatePayload = {
       device_id: deviceId!,
       user_email: shareForm.userEmail || undefined,
-      expires_at: shareForm.expiresAt || undefined
+      expires_at: shareForm.expiresAt || undefined,
     };
     if (shareForm.permissionsGroupId) {
       payload.permissions_group_id = shareForm.permissionsGroupId;
@@ -181,41 +202,41 @@ const DeviceSettings = () => {
         access_mouse: shareForm.newGroup.access_mouse,
         access_keyboard: shareForm.newGroup.access_keyboard,
         access_terminal: shareForm.newGroup.access_terminal,
-        manage_power: shareForm.newGroup.manage_power
+        manage_power: shareForm.newGroup.manage_power,
       };
     }
     try {
       await createDeviceShareRequest(payload);
       setShareForm({
-        userEmail: '',
-        permissionsGroupId: '',
-        expiresAt: '',
+        userEmail: "",
+        permissionsGroupId: "",
+        expiresAt: "",
         newGroup: {
-          name: '',
+          name: "",
           see_screen: false,
           see_system_info: false,
           access_mouse: false,
           access_keyboard: false,
           access_terminal: false,
-          manage_power: false
-        }
+          manage_power: false,
+        },
       });
       setShowShareForm(false);
       loadShares();
-      toast.success(t('sharing.userInvited'));
+      toast.success(t("sharing.userInvited"));
     } catch {
-      toast.error(t('sharing.inviteError'));
+      toast.error(t("sharing.inviteError"));
     }
   };
 
   const handleDeleteShare = async (shareId: string) => {
-    if (!confirm(t('sharing.removeConfirm'))) return;
+    if (!confirm(t("sharing.removeConfirm"))) return;
     try {
       await deleteDeviceShareRequest(shareId);
       loadShares();
-      toast.success(t('sharing.removed'));
+      toast.success(t("sharing.removed"));
     } catch {
-      toast.error(t('sharing.removeError'));
+      toast.error(t("sharing.removeError"));
     }
   };
 
@@ -231,12 +252,12 @@ const DeviceSettings = () => {
     setEditOriginalGroup(originalPerms);
     setEditForm({
       shareId: share.id,
-      permissionsGroupId: share.permissions_group?.id || '',
-      expiresAt: share.expires_at ? share.expires_at.substring(0, 16) : '',
+      permissionsGroupId: share.permissions_group?.id || "",
+      expiresAt: share.expires_at ? share.expires_at.substring(0, 16) : "",
       newGroup: {
-        name: share.permissions_group?.name || '',
-        ...originalPerms
-      }
+        name: share.permissions_group?.name || "",
+        ...originalPerms,
+      },
     });
     setShowShareForm(false);
   };
@@ -259,14 +280,17 @@ const DeviceSettings = () => {
       expires_at: editForm.expiresAt || undefined,
       device_id: deviceId!,
     };
-    const changed = editOriginalGroup && (
-      editOriginalGroup.see_screen !== editForm.newGroup.see_screen ||
-      editOriginalGroup.see_system_info !== editForm.newGroup.see_system_info ||
-      editOriginalGroup.access_mouse !== editForm.newGroup.access_mouse ||
-      editOriginalGroup.access_keyboard !== editForm.newGroup.access_keyboard ||
-      editOriginalGroup.access_terminal !== editForm.newGroup.access_terminal ||
-      editOriginalGroup.manage_power !== editForm.newGroup.manage_power
-    );
+    const changed =
+      editOriginalGroup &&
+      (editOriginalGroup.see_screen !== editForm.newGroup.see_screen ||
+        editOriginalGroup.see_system_info !==
+          editForm.newGroup.see_system_info ||
+        editOriginalGroup.access_mouse !== editForm.newGroup.access_mouse ||
+        editOriginalGroup.access_keyboard !==
+          editForm.newGroup.access_keyboard ||
+        editOriginalGroup.access_terminal !==
+          editForm.newGroup.access_terminal ||
+        editOriginalGroup.manage_power !== editForm.newGroup.manage_power);
     if (editForm.permissionsGroupId && !changed) {
       payload.permissions_group_id = editForm.permissionsGroupId;
     } else {
@@ -285,31 +309,36 @@ const DeviceSettings = () => {
       setEditForm(null);
       setEditOriginalGroup(null);
       await loadShares();
-      toast.success(t('sharing.updated'));
+      toast.success(t("sharing.updated"));
     } catch {
-      toast.error(t('sharing.updateShareError'));
+      toast.error(t("sharing.updateShareError"));
     }
   };
 
   const handleDeleteDevice = async () => {
-    if (!confirm(t('info.deleteConfirm'))) return;
+    if (!confirm(t("info.deleteConfirm"))) return;
     try {
       await deleteDeviceRequest(deviceId!);
-      toast.success(t('info.deleted'));
-      navigate('/devices');
+      toast.success(t("info.deleted"));
+      navigate("/devices");
     } catch {
-      toast.error(t('info.deleteError'));
+      toast.error(t("info.deleteError"));
     }
   };
 
-  if (loading) return <LoadingState message={t('loading')} />;
-  if (!device) return <div className="p-6"><EmptyState title={t('notFound')} /></div>;
+  if (loading) return <LoadingState message={t("loading")} />;
+  if (!device)
+    return (
+      <div className="p-6">
+        <EmptyState title={t("notFound")} />
+      </div>
+    );
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="mx-auto max-w-4xl p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-text">{t('title')}</h1>
-        <p className="text-gray-600">{t('subtitle')}</p>
+        <h1 className="text-text text-2xl font-bold">{t("title")}</h1>
+        <p className="text-gray-600">{t("subtitle")}</p>
       </div>
 
       <DeviceInfoForm
@@ -317,18 +346,18 @@ const DeviceSettings = () => {
         deviceForm={deviceForm}
         onChange={setDeviceForm}
         onSubmit={handleDeviceUpdate}
-        onCancel={() => navigate('/devices')}
+        onCancel={() => navigate("/devices")}
       />
 
       <div className="space-y-6">
-        <div className="bg-background rounded-lg shadow p-6 border border-lightgray">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">{t('sharing.section')}</h2>
+        <div className="bg-background border-lightgray rounded-lg border p-6 shadow">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold">{t("sharing.section")}</h2>
             <button
               onClick={() => setShowShareForm(!showShareForm)}
-              className="px-4 py-2 bg-primary text-white rounded-md hover:opacity-90 transition-opacity"
+              className="bg-primary rounded-md px-4 py-2 text-white transition-opacity hover:opacity-90"
             >
-              {showShareForm ? t('sharing.cancelInvite') : t('sharing.invite')}
+              {showShareForm ? t("sharing.cancelInvite") : t("sharing.invite")}
             </button>
           </div>
 
@@ -353,10 +382,12 @@ const DeviceSettings = () => {
               onSubmit={handleEditSubmit}
               onLoadGroup={() => {
                 if (!editForm.permissionsGroupId) {
-                  toast.warning(t('form.selectPermissions'));
+                  toast.warning(t("form.selectPermissions"));
                   return;
                 }
-                const group = permissionsGroups.find(g => g.id === editForm.permissionsGroupId);
+                const group = permissionsGroups.find(
+                  (g) => g.id === editForm.permissionsGroupId,
+                );
                 if (!group) return;
                 const updatedPerms = {
                   see_screen: !!group.see_screen,
@@ -367,14 +398,17 @@ const DeviceSettings = () => {
                   manage_power: !!group.manage_power,
                 };
                 setEditOriginalGroup(updatedPerms);
-                setEditForm(prev => prev && ({
-                  ...prev,
-                  newGroup: {
-                    name: `${group.name} ${t('form.cloneSuffix')}`.trim(),
-                    ...updatedPerms
-                  }
-                }));
-                toast.info(t('form.loadedGroup'));
+                setEditForm(
+                  (prev) =>
+                    prev && {
+                      ...prev,
+                      newGroup: {
+                        name: `${group.name} ${t("form.cloneSuffix")}`.trim(),
+                        ...updatedPerms,
+                      },
+                    },
+                );
+                toast.info(t("form.loadedGroup"));
               }}
               onSaveGroup={handleSaveCurrentGroup}
               onCancel={() => {
@@ -384,14 +418,19 @@ const DeviceSettings = () => {
             />
           )}
 
-          <SharesList t={t} shares={shares} onDelete={handleDeleteShare} onEdit={beginEditShare} />
+          <SharesList
+            t={t}
+            shares={shares}
+            onDelete={handleDeleteShare}
+            onEdit={beginEditShare}
+          />
         </div>
 
         <button
           onClick={handleDeleteDevice}
-          className="px-4 py-2 rounded-lg bg-error text-white hover:opacity-90 transition-opacity"
+          className="bg-error rounded-lg px-4 py-2 text-white transition-opacity hover:opacity-90"
         >
-          {t('info.deleteDevice')}
+          {t("info.deleteDevice")}
         </button>
       </div>
     </div>

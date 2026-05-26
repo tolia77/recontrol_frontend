@@ -1,4 +1,4 @@
-import type { FC } from 'react';
+import type { FC } from "react";
 
 // Hand-rolled to match the project convention (no `lucide-react`); color comes
 // from the caller's `text-*` Tailwind class which drives `stroke="currentColor"`.
@@ -12,7 +12,9 @@ export interface IconProps {
  * Sidebar toggle icon for the AssistantPanel (chat bubble shape).
  * Used in Sidebar.tsx; sibling of FilesToggleIcon.
  */
-export const AssistantToggleIcon: FC<IconProps> = ({ className = 'w-4 h-4' }) => (
+export const AssistantToggleIcon: FC<IconProps> = ({
+  className = "w-4 h-4",
+}) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
@@ -35,7 +37,9 @@ export const AssistantToggleIcon: FC<IconProps> = ({ className = 'w-4 h-4' }) =>
  * Warning triangle icon for ConfirmationCard zone-tinted accent (D-04).
  * Rendered alongside the zone badge in the confirmation card body.
  */
-export const WarningTriangleIcon: FC<IconProps> = ({ className = 'w-4 h-4' }) => (
+export const WarningTriangleIcon: FC<IconProps> = ({
+  className = "w-4 h-4",
+}) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"

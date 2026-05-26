@@ -1,26 +1,26 @@
 import { backendInstance } from "src/services/backend/config.ts";
 
 export type ScenarioRunStatus =
-  | 'running'
-  | 'completed'
-  | 'failed'
-  | 'user_stopped'
-  | 'policy_deny'
-  | 'tab_closed'
-  | 'access_revoked'
-  | 'abandoned'
-  | 'error';
+  | "running"
+  | "completed"
+  | "failed"
+  | "user_stopped"
+  | "policy_deny"
+  | "tab_closed"
+  | "access_revoked"
+  | "abandoned"
+  | "error";
 
 // Per-step status enum sourced from `recontrol_backend/app/models/scenario_run_step.rb`
 // (STATUSES = %w[running success failed skipped policy_denied timeout]).
 // Consumed by Plan 22.09 ScenariosHistory glyph timeline + Plan 22.10 HistoryDetail.
 export type ScenarioRunStepStatus =
-  | 'running'
-  | 'success'
-  | 'failed'
-  | 'skipped'
-  | 'policy_denied'
-  | 'timeout';
+  | "running"
+  | "success"
+  | "failed"
+  | "skipped"
+  | "policy_denied"
+  | "timeout";
 
 export interface ScenarioRunStep {
   id: string;
@@ -70,18 +70,25 @@ export interface ScenarioRunIndexResult {
 }
 
 export const scenarioRunsService = {
-  async index(params?: ScenarioRunIndexParams): Promise<ScenarioRunIndexResult> {
-    const { data } = await backendInstance.get<ScenarioRunIndexResponse>('/scenario-runs', {
-      params: {
-        ...(params?.page ? { page: params.page } : {}),
-        ...(params?.per_page ? { per_page: params.per_page } : {}),
+  async index(
+    params?: ScenarioRunIndexParams,
+  ): Promise<ScenarioRunIndexResult> {
+    const { data } = await backendInstance.get<ScenarioRunIndexResponse>(
+      "/scenario-runs",
+      {
+        params: {
+          ...(params?.page ? { page: params.page } : {}),
+          ...(params?.per_page ? { per_page: params.per_page } : {}),
+        },
       },
-    });
+    );
     return { runs: data.scenario_runs, total: data.meta.total };
   },
 
   async show(id: string): Promise<ScenarioRun> {
-    const { data } = await backendInstance.get<ScenarioRun>(`/scenario-runs/${id}`);
+    const { data } = await backendInstance.get<ScenarioRun>(
+      `/scenario-runs/${id}`,
+    );
     return data;
   },
 
@@ -91,6 +98,6 @@ export const scenarioRunsService = {
   },
 
   async destroyAll(): Promise<void> {
-    await backendInstance.delete('/scenario-runs/destroy-all');
+    await backendInstance.delete("/scenario-runs/destroy-all");
   },
 };

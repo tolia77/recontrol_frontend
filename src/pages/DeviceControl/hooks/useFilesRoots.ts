@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
-import type { FileEntry, FilesListRootsResponse } from '../services/files';
-import { FilesChannelError } from '../services/files';
-import type { UseFilesChannel } from './useFilesChannel';
+import { useCallback, useEffect, useState } from "react";
+import type { FileEntry, FilesListRootsResponse } from "../services/files";
+import { FilesChannelError } from "../services/files";
+import type { UseFilesChannel } from "./useFilesChannel";
 
 export interface UseFilesRootsReturn {
   roots: FileEntry[] | null;
@@ -40,7 +40,7 @@ export function useFilesRoots(channel: UseFilesChannel): UseFilesRootsReturn {
     setError(null);
     setRoots(null);
     request<Record<string, never>, FilesListRootsResponse>(
-      'files.listRoots',
+      "files.listRoots",
       {},
     )
       .then((res) => {
@@ -54,8 +54,8 @@ export function useFilesRoots(channel: UseFilesChannel): UseFilesRootsReturn {
         } else {
           setError(
             new FilesChannelError({
-              code: 'INTERNAL_ERROR',
-              message: (err as Error)?.message ?? 'Unknown error',
+              code: "INTERNAL_ERROR",
+              message: (err as Error)?.message ?? "Unknown error",
             }),
           );
         }
@@ -65,7 +65,8 @@ export function useFilesRoots(channel: UseFilesChannel): UseFilesRootsReturn {
     };
   }, [channel.request, nonce]);
 
-  const isLoading = roots === null && error === null && channel.request !== null;
+  const isLoading =
+    roots === null && error === null && channel.request !== null;
   const isEmpty = roots !== null && roots.length === 0;
 
   return { roots, isLoading, error, isEmpty, refetch };

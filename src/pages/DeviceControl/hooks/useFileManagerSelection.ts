@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { FileEntry } from '../services/files';
-import type { SelectionState } from '../components/FileManager/types';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { FileEntry } from "../services/files";
+import type { SelectionState } from "../components/FileManager/types";
 
 /**
  * Windows-Explorer-style multi-selection state machine, keyed by entry.path.

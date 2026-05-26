@@ -1,9 +1,9 @@
-import { useCallback } from 'react';
-import type { FilesChannelClient, FilesDataChannel } from '../services/files';
-import { FilesChannelError } from '../services/files';
-import type { UseWebRtcReturn } from './useWebRtc';
+import { useCallback } from "react";
+import type { FilesChannelClient, FilesDataChannel } from "../services/files";
+import { FilesChannelError } from "../services/files";
+import type { UseWebRtcReturn } from "./useWebRtc";
 
-export type FilesChannelStatus = 'closed' | 'opening' | 'open' | 'failed';
+export type FilesChannelStatus = "closed" | "opening" | "open" | "failed";
 
 /**
  * Typed request function. Mirrors FilesChannelClient.request so callers can
@@ -23,7 +23,7 @@ export interface UseFilesChannel {
    * invocation time so reconnects pick up the new channel without panel-side
    * rewiring. May be null while the channel is closed; callers must guard.
    */
-  filesDataRef: UseWebRtcReturn['filesDataRef'];
+  filesDataRef: UseWebRtcReturn["filesDataRef"];
   /**
    * Live FilesChannelClient (the files-ctl JSON wrapper). Exposed to Plan
    * 11-05's runDownload so it can subscribe to server-push events
@@ -55,11 +55,11 @@ export interface UseFilesChannel {
  * `channel.request` in their dependency array don't re-fire on every render.
  */
 export function useFilesChannel(
-  filesClientRef: UseWebRtcReturn['filesClientRef'],
-  connectionState: UseWebRtcReturn['connectionState'],
-  filesDataRef: UseWebRtcReturn['filesDataRef'],
-  filesDataChannelRef: UseWebRtcReturn['filesDataChannelRef'],
-  filesCtlOpen: UseWebRtcReturn['filesCtlOpen'],
+  filesClientRef: UseWebRtcReturn["filesClientRef"],
+  connectionState: UseWebRtcReturn["connectionState"],
+  filesDataRef: UseWebRtcReturn["filesDataRef"],
+  filesDataChannelRef: UseWebRtcReturn["filesDataChannelRef"],
+  filesCtlOpen: UseWebRtcReturn["filesCtlOpen"],
 ): UseFilesChannel {
   // Derive status directly from the live signals: WebRTC connection state and
   // the files-ctl data channel's open state. The data channel's 'open' event
@@ -67,11 +67,11 @@ export function useFilesChannel(
   // can't decide 'open' vs 'failed' from a one-shot timeout - we just stay in
   // 'opening' until filesCtlOpen flips true.
   const status: FilesChannelStatus =
-    connectionState !== 'connected'
-      ? 'closed'
+    connectionState !== "connected"
+      ? "closed"
       : filesCtlOpen
-      ? 'open'
-      : 'opening';
+        ? "open"
+        : "opening";
 
   const request = useCallback<FilesChannelRequest>(
     <TPayload, TResult>(
@@ -83,8 +83,8 @@ export function useFilesChannel(
       if (!client) {
         return Promise.reject(
           new FilesChannelError({
-            code: 'CHANNEL_NOT_OPEN',
-            message: 'files-ctl channel is not open',
+            code: "CHANNEL_NOT_OPEN",
+            message: "files-ctl channel is not open",
           }),
         );
       }
@@ -95,9 +95,9 @@ export function useFilesChannel(
 
   return {
     status,
-    request: status === 'open' ? request : null,
+    request: status === "open" ? request : null,
     filesDataRef,
-    filesClient: status === 'open' ? filesClientRef.current : null,
-    filesDataChannel: status === 'open' ? filesDataChannelRef.current : null,
+    filesClient: status === "open" ? filesClientRef.current : null,
+    filesDataChannel: status === "open" ? filesDataChannelRef.current : null,
   };
 }

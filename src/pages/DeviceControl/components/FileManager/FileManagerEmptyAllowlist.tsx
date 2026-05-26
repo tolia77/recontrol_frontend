@@ -1,5 +1,5 @@
-import { useTranslation } from 'react-i18next';
-import { FolderIcon } from './icons';
+import { useTranslation } from "react-i18next";
+import { FolderIcon } from "./icons";
 
 /**
  * ALLOW-05 empty-state. Rendered when `files.listRoots` resolves to an empty
@@ -8,28 +8,28 @@ import { FolderIcon } from './icons';
  * to ask the desktop user (CONTEXT locked).
  */
 export function FileManagerEmptyAllowlist() {
-  const { t } = useTranslation('fileManager');
+  const { t } = useTranslation("fileManager");
   return (
-    <div className="h-full w-full flex flex-col items-center justify-center text-center p-8 bg-background">
+    <div className="bg-background flex h-full w-full flex-col items-center justify-center p-8 text-center">
       <div className="relative mb-4">
-        <FolderIcon className="w-20 h-20 text-lightgray" />
-        <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-error flex items-center justify-center text-white text-lg font-bold shadow">
+        <FolderIcon className="text-lightgray h-20 w-20" />
+        <div className="bg-error absolute -right-1 -bottom-1 flex h-8 w-8 items-center justify-center rounded-full text-lg font-bold text-white shadow">
           !
         </div>
       </div>
-      <h3 className="text-lg font-semibold text-text mb-2">
-        {t('emptyAllowlist.title')}
+      <h3 className="text-text mb-2 text-lg font-semibold">
+        {t("emptyAllowlist.title")}
       </h3>
-      <p className="text-sm text-darkgray max-w-md mb-6">
-        {t('emptyAllowlist.description')}
+      <p className="text-darkgray mb-6 max-w-md text-sm">
+        {t("emptyAllowlist.description")}
       </p>
       <button
         type="button"
         disabled
-        title={t('emptyAllowlist.ctaTooltip')}
-        className="px-4 py-2 rounded-lg bg-secondary text-white text-sm font-medium opacity-50 cursor-not-allowed"
+        title={t("emptyAllowlist.ctaTooltip")}
+        className="bg-secondary cursor-not-allowed rounded-lg px-4 py-2 text-sm font-medium text-white opacity-50"
       >
-        {t('emptyAllowlist.cta')}
+        {t("emptyAllowlist.cta")}
       </button>
     </div>
   );

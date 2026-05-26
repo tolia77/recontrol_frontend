@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   DndContext,
   PointerSensor,
@@ -8,22 +8,22 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
-} from '@dnd-kit/core';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+} from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import {
   SortableContext,
   arrayMove,
   verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
+} from "@dnd-kit/sortable";
 import {
   scenariosService,
   type CommandStep,
   type ScenarioCreatePayload,
   type VerdictAtSave,
-} from 'src/services/backend/scenariosService';
-import StepRow from './StepRow';
-import DirtyGuardModal from './DirtyGuardModal';
-import type { ScenariosSegment } from './scenariosReducer';
+} from "src/services/backend/scenariosService";
+import StepRow from "./StepRow";
+import DirtyGuardModal from "./DirtyGuardModal";
+import type { ScenariosSegment } from "./scenariosReducer";
 
 // AI-draft prefill shape (D-12 — no `id` field; UUIDs assigned at save time
 // via Scenario#before_validation). Matches DraftResponse['draft'] from
@@ -45,7 +45,7 @@ export interface ScenarioEditorProps {
   // policy-preview / pre-approve gate (P22) — the editor itself does not
   // currently call /policy_preview (D-09: save-time evaluate only).
   deviceId: string;
-  editingId: string | 'new';
+  editingId: string | "new";
   onClose: () => void;
   // Phase 23 / Plan 23-09: optional AI-draft prefill. When present AND
   // `editingId === 'new'`, the initial form state is seeded from `prefill`
@@ -62,10 +62,10 @@ export interface ScenarioEditorProps {
 function blankStep(): CommandStep {
   return {
     id: crypto.randomUUID(),
-    binary: '',
+    binary: "",
     args: [],
-    cwd: '/',
-    description: '',
+    cwd: "/",
+    description: "",
   };
 }
 
@@ -74,7 +74,7 @@ function blankStep(): CommandStep {
 // we omit them from the payload for steps that have not yet been persisted
 // (heuristic: no classified_intent_at_save snapshot). Persisted steps keep
 // their ids so reorders / edits map to the existing rows.
-type PayloadStep = ScenarioCreatePayload['command_steps'][number];
+type PayloadStep = ScenarioCreatePayload["command_steps"][number];
 
 function toPayloadStep(s: CommandStep): PayloadStep {
   const looksClientGenerated = !s.classified_intent_at_save;
@@ -125,9 +125,9 @@ export default function ScenarioEditor({
   prefill,
   backTarget,
 }: ScenarioEditorProps) {
-  const { t } = useTranslation('scenarios');
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+  const { t } = useTranslation("scenarios");
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [pinnedDeviceId, setPinnedDeviceId] = useState<string | null>(null);
   const [isShared, setIsShared] = useState(false);
   const [steps, setSteps] = useState<CommandStep[]>(() => [blankStep()]);
@@ -138,7 +138,7 @@ export default function ScenarioEditor({
   const [loading, setLoading] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [showDirtyModal, setShowDirtyModal] = useState(false);
-  const initialSnapshotRef = useRef<string>('');
+  const initialSnapshotRef = useRef<string>("");
 
   // Hydrate from server (or seed a blank scenario when creating).
   useEffect(() => {
@@ -147,22 +147,22 @@ export default function ScenarioEditor({
       setTopError(null);
       setNameError(null);
       setVerdicts({});
-      if (editingId === 'new') {
+      if (editingId === "new") {
         // Phase 23 / Plan 23-09: AI-draft prefill seeds the initial form
         // state. Each prefilled step is wrapped in a client-side
         // crypto.randomUUID() so the editor's @dnd-kit + dirty-state guard
         // can key off `id`. The UUID is intentionally dropped at save time
         // by toPayloadStep — server's Scenario#before_validation assigns
         // canonical UUIDs (D-12).
-        const seedName = prefill?.name ?? '';
-        const seedDescription = prefill?.description ?? '';
+        const seedName = prefill?.name ?? "";
+        const seedDescription = prefill?.description ?? "";
         const seedSteps: CommandStep[] = prefill
           ? prefill.command_steps.map((s) => ({
               id: crypto.randomUUID(),
               binary: s.binary,
               args: [...s.args],
               cwd: s.cwd,
-              description: s.description ?? '',
+              description: s.description ?? "",
             }))
           : [blankStep()];
         if (cancelled) return;
@@ -186,20 +186,20 @@ export default function ScenarioEditor({
         const s = await scenariosService.show(editingId);
         if (cancelled) return;
         setName(s.name);
-        setDescription(s.description ?? '');
+        setDescription(s.description ?? "");
         setPinnedDeviceId(s.pinned_device_id);
         setIsShared(s.is_shared);
         setSteps(s.command_steps);
         initialSnapshotRef.current = snapshotPayload(
           s.name,
-          s.description ?? '',
+          s.description ?? "",
           s.pinned_device_id,
           s.is_shared,
           s.command_steps,
         );
         setDirty(false);
       } catch {
-        if (!cancelled) setTopError(t('editor.errors.policyDenied'));
+        if (!cancelled) setTopError(t("editor.errors.policyDenied"));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -248,7 +248,7 @@ export default function ScenarioEditor({
   const addStep = () => {
     setTopError(null);
     if (steps.length >= 20) {
-      setTopError(t('editor.errors.stepsTooMany'));
+      setTopError(t("editor.errors.stepsTooMany"));
       return;
     }
     setSteps([...steps, blankStep()]);
@@ -260,7 +260,7 @@ export default function ScenarioEditor({
   const duplicateStep = (i: number) => {
     setTopError(null);
     if (steps.length >= 20) {
-      setTopError(t('editor.errors.stepsTooMany'));
+      setTopError(t("editor.errors.stepsTooMany"));
       return;
     }
     // LIB-07 boundary: drop server-only snapshots from the copy so the
@@ -279,7 +279,7 @@ export default function ScenarioEditor({
   const removeStep = (i: number) => {
     setTopError(null);
     if (steps.length <= 1) {
-      setTopError(t('editor.errors.stepsEmpty'));
+      setTopError(t("editor.errors.stepsEmpty"));
       return;
     }
     setSteps(steps.filter((_, idx) => idx !== i));
@@ -296,7 +296,7 @@ export default function ScenarioEditor({
     setVerdicts({});
     // SHARE-03 client-side hint — server validates too.
     if (isShared && !pinnedDeviceId) {
-      setTopError(t('editor.errors.policyDenied'));
+      setTopError(t("editor.errors.policyDenied"));
       return;
     }
     setSaving(true);
@@ -310,7 +310,7 @@ export default function ScenarioEditor({
         command_steps: payloadSteps,
       };
       const result =
-        editingId === 'new'
+        editingId === "new"
           ? await scenariosService.create(payload)
           : await scenariosService.update(editingId, payload);
       // D-10: render verdict badges per step.
@@ -321,12 +321,12 @@ export default function ScenarioEditor({
       setVerdicts(v);
       setSteps(result.scenario.command_steps);
       setName(result.scenario.name);
-      setDescription(result.scenario.description ?? '');
+      setDescription(result.scenario.description ?? "");
       setPinnedDeviceId(result.scenario.pinned_device_id);
       setIsShared(result.scenario.is_shared);
       initialSnapshotRef.current = snapshotPayload(
         result.scenario.name,
-        result.scenario.description ?? '',
+        result.scenario.description ?? "",
         result.scenario.pinned_device_id,
         result.scenario.is_shared,
         result.scenario.command_steps,
@@ -350,16 +350,16 @@ export default function ScenarioEditor({
         for (const e of data.errors.command_steps) {
           const step = steps[e.step_index];
           if (step) {
-            denyMap[step.id] = { decision: 'deny', reason: e.reason };
+            denyMap[step.id] = { decision: "deny", reason: e.reason };
           }
         }
         setVerdicts(denyMap);
-        setTopError(t('editor.errors.policyDenied'));
+        setTopError(t("editor.errors.policyDenied"));
       } else if (data?.errors?.name?.length) {
         // LIB-04 inline rename collision.
-        setNameError(t('editor.errors.nameTaken'));
+        setNameError(t("editor.errors.nameTaken"));
       } else {
-        setTopError(t('editor.errors.policyDenied'));
+        setTopError(t("editor.errors.policyDenied"));
       }
     } finally {
       setSaving(false);
@@ -369,70 +369,70 @@ export default function ScenarioEditor({
   return (
     <div className="flex h-full flex-col" data-testid="scenario-editor">
       {/* D-01: header with [← Back to library] */}
-      <div className="flex items-center gap-2 border-b border-lightgray px-4 py-2">
+      <div className="border-lightgray flex items-center gap-2 border-b px-4 py-2">
         <button
           type="button"
           className="rounded px-2 py-1 text-sm hover:bg-gray-100"
           onClick={requestClose}
           data-testid="editor-back"
         >
-          {backTarget === 'ai'
-            ? t('editor.backToAI')
-            : t('editor.backToLibrary')}
+          {backTarget === "ai"
+            ? t("editor.backToAI")
+            : t("editor.backToLibrary")}
         </button>
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto p-3">
-        <label className="block text-xs text-darkgray">
-          {t('editor.nameLabel')}
+        <label className="text-darkgray block text-xs">
+          {t("editor.nameLabel")}
         </label>
         <input
           type="text"
           value={name}
           maxLength={80}
           onChange={(e) => setName(e.target.value)}
-          placeholder={t('editor.namePlaceholder')}
-          className="w-full rounded border border-lightgray px-2 py-1 text-sm"
+          placeholder={t("editor.namePlaceholder")}
+          className="border-lightgray w-full rounded border px-2 py-1 text-sm"
           data-testid="editor-name"
           disabled={loading || saving}
         />
         {nameError && (
           <div
-            className="mt-1 text-xs text-error"
+            className="text-error mt-1 text-xs"
             data-testid="editor-name-error"
           >
             {nameError}
           </div>
         )}
 
-        <label className="mt-2 block text-xs text-darkgray">
-          {t('editor.descriptionLabel')}
+        <label className="text-darkgray mt-2 block text-xs">
+          {t("editor.descriptionLabel")}
         </label>
         <textarea
           value={description}
           maxLength={500}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder={t('editor.descriptionPlaceholder')}
+          placeholder={t("editor.descriptionPlaceholder")}
           rows={2}
-          className="w-full rounded border border-lightgray px-2 py-1 text-sm"
+          className="border-lightgray w-full rounded border px-2 py-1 text-sm"
           data-testid="editor-description"
           disabled={loading || saving}
         />
 
         <div className="mt-2 flex items-center gap-2">
-          <label className="text-xs text-darkgray">
-            {t('editor.pinDeviceLabel')}
+          <label className="text-darkgray text-xs">
+            {t("editor.pinDeviceLabel")}
           </label>
           <input
             type="text"
-            value={pinnedDeviceId ?? ''}
+            value={pinnedDeviceId ?? ""}
             onChange={(e) => setPinnedDeviceId(e.target.value || null)}
-            placeholder={t('editor.pinDevicePlaceholder')}
-            className="rounded border border-lightgray px-2 py-1 text-sm"
+            placeholder={t("editor.pinDevicePlaceholder")}
+            className="border-lightgray rounded border px-2 py-1 text-sm"
             data-testid="editor-pin-device"
             disabled={loading || saving}
           />
-          <label className="ml-auto inline-flex items-center gap-1 text-xs text-darkgray">
+          <label className="text-darkgray ml-auto inline-flex items-center gap-1 text-xs">
             <input
               type="checkbox"
               checked={isShared}
@@ -440,18 +440,18 @@ export default function ScenarioEditor({
               disabled={!pinnedDeviceId || loading || saving}
               data-testid="editor-is-shared"
             />
-            {t('editor.shareToggleLabel')}
+            {t("editor.shareToggleLabel")}
           </label>
         </div>
         {isShared && !pinnedDeviceId && (
-          <div className="text-xs text-amber" data-testid="editor-share-hint">
-            {t('editor.sharePinRequired')}
+          <div className="text-amber text-xs" data-testid="editor-share-hint">
+            {t("editor.sharePinRequired")}
           </div>
         )}
 
         {topError && (
           <div
-            className="mt-2 rounded bg-error/10 px-2 py-1 text-sm text-error"
+            className="bg-error/10 text-error mt-2 rounded px-2 py-1 text-sm"
             data-testid="editor-top-error"
           >
             {topError}
@@ -487,18 +487,18 @@ export default function ScenarioEditor({
           </DndContext>
           <button
             type="button"
-            className="mt-2 rounded border border-dashed border-lightgray px-2 py-1 text-sm hover:bg-gray-50 disabled:opacity-50"
+            className="border-lightgray mt-2 rounded border border-dashed px-2 py-1 text-sm hover:bg-gray-50 disabled:opacity-50"
             onClick={addStep}
             disabled={saving || loading}
             data-testid="editor-add-step"
           >
-            {t('editor.steps.addStep')}
+            {t("editor.steps.addStep")}
           </button>
         </div>
       </div>
 
       {/* D-02: sticky bottom bar */}
-      <div className="sticky bottom-0 flex items-center justify-end gap-2 border-t border-lightgray bg-white px-4 py-2">
+      <div className="border-lightgray sticky bottom-0 flex items-center justify-end gap-2 border-t bg-white px-4 py-2">
         <button
           type="button"
           className="rounded px-3 py-1 text-sm hover:bg-gray-100 disabled:opacity-50"
@@ -506,18 +506,16 @@ export default function ScenarioEditor({
           data-testid="editor-cancel"
           disabled={saving}
         >
-          {t('editor.bottomBar.cancel')}
+          {t("editor.bottomBar.cancel")}
         </button>
         <button
           type="button"
-          className="rounded bg-primary px-3 py-1 text-sm text-white hover:opacity-90 disabled:opacity-50"
+          className="bg-primary rounded px-3 py-1 text-sm text-white hover:opacity-90 disabled:opacity-50"
           onClick={handleSave}
           disabled={saving || loading}
           data-testid="editor-save"
         >
-          {saving
-            ? t('editor.bottomBar.saving')
-            : t('editor.bottomBar.save')}
+          {saving ? t("editor.bottomBar.saving") : t("editor.bottomBar.save")}
         </button>
       </div>
 

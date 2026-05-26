@@ -1,6 +1,6 @@
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
 
-import { Button, Modal } from '../../../../components/ui';
+import { Button, Modal } from "../../../../components/ui";
 
 export interface DirtyGuardModalProps {
   open: boolean;
@@ -16,7 +16,7 @@ export default function DirtyGuardModal({
   onDiscard,
   onKeepEditing,
 }: DirtyGuardModalProps) {
-  const { t } = useTranslation('scenarios');
+  const { t } = useTranslation("scenarios");
   return (
     <Modal
       open={open}
@@ -25,12 +25,8 @@ export default function DirtyGuardModal({
       suppressEsc
       suppressOverlayClick
     >
-      <Modal.Header>
-        {t('editor.dirtyModal.title')}
-      </Modal.Header>
-      <Modal.Body>
-        {t('editor.dirtyModal.body')}
-      </Modal.Body>
+      <Modal.Header>{t("editor.dirtyModal.title")}</Modal.Header>
+      <Modal.Body>{t("editor.dirtyModal.body")}</Modal.Body>
       <Modal.Footer>
         <button
           type="button"
@@ -38,7 +34,7 @@ export default function DirtyGuardModal({
           onClick={onKeepEditing}
           data-testid="dirty-guard-keep"
         >
-          {t('editor.dirtyModal.keepEditing')}
+          {t("editor.dirtyModal.keepEditing")}
         </button>
         <Button
           variant="danger"
@@ -46,7 +42,7 @@ export default function DirtyGuardModal({
           onClick={onDiscard}
           data-testid="dirty-guard-discard"
         >
-          {t('editor.dirtyModal.discard')}
+          {t("editor.dirtyModal.discard")}
         </Button>
       </Modal.Footer>
     </Modal>

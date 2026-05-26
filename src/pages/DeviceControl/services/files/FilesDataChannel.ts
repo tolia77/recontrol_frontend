@@ -1,5 +1,5 @@
-import { ChunkHeader } from './ChunkHeader';
-import type { DownloadTransfer } from '../transfer/DownloadTransfer';
+import { ChunkHeader } from "./ChunkHeader";
+import type { DownloadTransfer } from "../transfer/DownloadTransfer";
 
 /**
  * Frontend-side binary-channel handler for `files-data`.
@@ -26,8 +26,8 @@ export class FilesDataChannel {
 
   constructor(dc: RTCDataChannel) {
     this.dc = dc;
-    dc.binaryType = 'arraybuffer';
-    dc.addEventListener('message', this.onMessage);
+    dc.binaryType = "arraybuffer";
+    dc.addEventListener("message", this.onMessage);
   }
 
   /**
@@ -53,7 +53,7 @@ export class FilesDataChannel {
 
   private onMessage = (ev: MessageEvent): void => {
     if (!(ev.data instanceof ArrayBuffer)) {
-      console.warn('[files-data] unexpected non-binary message');
+      console.warn("[files-data] unexpected non-binary message");
       return;
     }
     if (ev.data.byteLength < ChunkHeader.SIZE) {
@@ -77,7 +77,7 @@ export class FilesDataChannel {
    * channel lifecycle is driven by pc.close() on the RTCPeerConnection.
    */
   dispose(): void {
-    this.dc.removeEventListener('message', this.onMessage);
+    this.dc.removeEventListener("message", this.onMessage);
     this.downloads.clear();
   }
 }

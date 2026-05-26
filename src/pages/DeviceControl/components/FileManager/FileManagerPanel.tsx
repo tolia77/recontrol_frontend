@@ -1,45 +1,45 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { MouseEvent, RefObject } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useToast, ConfirmModal } from 'src/components/ui';
-import type { UseFilesChannel } from '../../hooks/useFilesChannel';
-import { useFilesRoots } from '../../hooks/useFilesRoots';
-import { useFileManagerSelection } from '../../hooks/useFileManagerSelection';
-import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
-import { FilesChannelError } from '../../services/files';
-import type { FileEntry, NameConflictMode } from '../../services/files';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { MouseEvent, RefObject } from "react";
+import { useTranslation } from "react-i18next";
+import { useToast, ConfirmModal } from "src/components/ui";
+import type { UseFilesChannel } from "../../hooks/useFilesChannel";
+import { useFilesRoots } from "../../hooks/useFilesRoots";
+import { useFileManagerSelection } from "../../hooks/useFileManagerSelection";
+import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
+import { FilesChannelError } from "../../services/files";
+import type { FileEntry, NameConflictMode } from "../../services/files";
 import type {
   ContextMenuItem,
   ContextMenuState,
   FileManagerState,
   SortColumn,
   SortState,
-} from './types';
-import { FileManagerToolbar } from './FileManagerToolbar';
-import { FileManagerBreadcrumb } from './FileManagerBreadcrumb';
-import { FileManagerSidebar } from './FileManagerSidebar';
-import { FileManagerListing } from './FileManagerListing';
-import { FileManagerStatusBar } from './FileManagerStatusBar';
-import { FileManagerEmptyAllowlist } from './FileManagerEmptyAllowlist';
-import { ContextMenu } from './ContextMenu';
-import { FolderPickerModal } from './FolderPickerModal';
-import { TransferQueuePanel } from './TransferQueuePanel';
-import { DropZoneOverlay } from './DropZoneOverlay';
-import { LargeFileWarningDialog } from './LargeFileWarningDialog';
-import { DownloadBlockedDialog } from './DownloadBlockedDialog';
-import { NameConflictDialog } from './NameConflictDialog';
+} from "./types";
+import { FileManagerToolbar } from "./FileManagerToolbar";
+import { FileManagerBreadcrumb } from "./FileManagerBreadcrumb";
+import { FileManagerSidebar } from "./FileManagerSidebar";
+import { FileManagerListing } from "./FileManagerListing";
+import { FileManagerStatusBar } from "./FileManagerStatusBar";
+import { FileManagerEmptyAllowlist } from "./FileManagerEmptyAllowlist";
+import { ContextMenu } from "./ContextMenu";
+import { FolderPickerModal } from "./FolderPickerModal";
+import { TransferQueuePanel } from "./TransferQueuePanel";
+import { DropZoneOverlay } from "./DropZoneOverlay";
+import { LargeFileWarningDialog } from "./LargeFileWarningDialog";
+import { DownloadBlockedDialog } from "./DownloadBlockedDialog";
+import { NameConflictDialog } from "./NameConflictDialog";
 import type {
   DownloadTransfer,
   TransferItem,
   TransferQueue,
-} from '../../services/transfer';
+} from "../../services/transfer";
 import {
   detectSeparator,
   isAncestor,
   joinPath,
   parentPath,
-} from './utils/pathUtils';
-import { mapFilesErrorToMessage } from './utils/errors';
+} from "./utils/pathUtils";
+import { mapFilesErrorToMessage } from "./utils/errors";
 
 /**
  * 100 MiB upload-warning threshold (TRANSFER-06). The CONTEXT-locked check is
@@ -73,7 +73,7 @@ interface WarningPrompt {
 }
 
 interface ConflictPrompt {
-  operation: 'upload' | 'move' | 'copy';
+  operation: "upload" | "move" | "copy";
   fileName: string;
   destinationPath: string;
   resolve: (choice: { mode: NameConflictMode; applyToAll: boolean }) => void;
@@ -110,7 +110,7 @@ export function FileManagerPanel({
   filesByItemIdRef,
   activeDownloadRef,
 }: FileManagerPanelProps) {
-  const { t } = useTranslation('fileManager');
+  const { t } = useTranslation("fileManager");
   const rootsResult = useFilesRoots(channel);
 
   const toast = useToast();
@@ -133,24 +133,21 @@ export function FileManagerPanel({
   // Pending delete confirm: paths + display names captured at the moment the
   // user invoked Delete (so the dialog body stays stable even if entries
   // change underneath us mid-confirmation).
-  const [confirm, setConfirm] = useState<
-    | {
-        kind: 'delete';
-        paths: string[];
-        names: string[];
-        // Local pending value for the "Don't ask again" checkbox. Only
-        // flushed to suppressSingleDeleteConfirm when the user actually
-        // confirms the delete -- otherwise cancelling the dialog must NOT
-        // persist the flag. (Prior bug: the checkbox wrote straight to
-        // suppressSingleDeleteConfirm, so closing the modal without
-        // deleting still suppressed every future single-file delete.)
-        suppressOnConfirm: boolean;
-      }
-    | null
-  >(null);
+  const [confirm, setConfirm] = useState<{
+    kind: "delete";
+    paths: string[];
+    names: string[];
+    // Local pending value for the "Don't ask again" checkbox. Only
+    // flushed to suppressSingleDeleteConfirm when the user actually
+    // confirms the delete -- otherwise cancelling the dialog must NOT
+    // persist the flag. (Prior bug: the checkbox wrote straight to
+    // suppressSingleDeleteConfirm, so closing the modal without
+    // deleting still suppressed every future single-file delete.)
+    suppressOnConfirm: boolean;
+  } | null>(null);
   // ----- Plan 10-05: move / copy flow state -----
   // FolderPickerModal mode -- non-null while the picker is open.
-  const [picker, setPicker] = useState<null | { kind: 'move' | 'copy' }>(null);
+  const [picker, setPicker] = useState<null | { kind: "move" | "copy" }>(null);
   // In-flight gate for the sequential move/copy loop. Mirrors `isDeleting`
   // semantics. Passed to FolderPickerModal as `isBusy` so its Confirm /
   // Cancel buttons stay disabled and Esc / overlay-click cancellation are
@@ -165,7 +162,9 @@ export function FileManagerPanel({
   const rightColumnRef = useRef<HTMLDivElement>(null);
   // Upload warning / conflict prompts are Promise-backed dialog gates used by
   // the batch state machines below.
-  const [warningPrompt, setWarningPrompt] = useState<WarningPrompt | null>(null);
+  const [warningPrompt, setWarningPrompt] = useState<WarningPrompt | null>(
+    null,
+  );
   const [conflictPrompt, setConflictPrompt] = useState<ConflictPrompt | null>(
     null,
   );
@@ -188,9 +187,7 @@ export function FileManagerPanel({
   // and try again." Set when channel.status transitions OUT of 'open' while
   // a transfer is active; cleared when the user clicks the X dismiss button
   // OR when a new transfer starts (queue.activeId becomes non-null).
-  const [disconnectBanner, setDisconnectBanner] = useState<string | null>(
-    null,
-  );
+  const [disconnectBanner, setDisconnectBanner] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
 
   // When roots arrive for the first time and we don't have a currentPath yet,
@@ -227,10 +224,10 @@ export function FileManagerPanel({
       if (state.sort.column === col) {
         setSort({
           column: col,
-          direction: state.sort.direction === 'asc' ? 'desc' : 'asc',
+          direction: state.sort.direction === "asc" ? "desc" : "asc",
         });
       } else {
-        setSort({ column: col, direction: 'asc' });
+        setSort({ column: col, direction: "asc" });
       }
     },
     [state.sort, setSort],
@@ -252,23 +249,23 @@ export function FileManagerPanel({
     (
       file: File,
       parentPath: string,
-      conflictMode: NameConflictMode = 'fail',
+      conflictMode: NameConflictMode = "fail",
     ): string => {
       const id =
-        typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        typeof crypto !== "undefined" && "randomUUID" in crypto
           ? crypto.randomUUID()
           : `upload-${Date.now()}-${Math.random().toString(36).slice(2)}`;
       filesByItemIdRef.current?.set(id, file);
       const item: TransferItem = {
         id,
         transferId: null,
-        direction: 'upload',
+        direction: "upload",
         name: file.name,
         parentPath,
         size: file.size,
         bytesSoFar: 0,
         conflictMode,
-        state: 'queued',
+        state: "queued",
         enqueuedAt: Date.now(),
       };
       queue.enqueue(item);
@@ -284,10 +281,10 @@ export function FileManagerPanel({
           const item = snap.items.find((it) => it.id === itemId);
           if (!item) return;
           if (
-            item.state === 'completed' ||
-            item.state === 'cancelled' ||
-            item.state === 'failed' ||
-            item.state === 'disconnected'
+            item.state === "completed" ||
+            item.state === "cancelled" ||
+            item.state === "failed" ||
+            item.state === "disconnected"
           ) {
             off();
             resolve(item);
@@ -307,7 +304,7 @@ export function FileManagerPanel({
 
   const requestConflictDecision = useCallback(
     (
-      operation: 'upload' | 'move' | 'copy',
+      operation: "upload" | "move" | "copy",
       fileName: string,
       destinationPath: string,
     ): Promise<{ mode: NameConflictMode; applyToAll: boolean }> =>
@@ -324,11 +321,11 @@ export function FileManagerPanel({
     (files: File[]) => {
       if (files.length === 0) return;
       if (!state.currentPath) {
-        toast.info(t('panel.navigateToFolderFirst'));
+        toast.info(t("panel.navigateToFolderFirst"));
         return;
       }
       if (uploadBatchRunningRef.current) {
-        toast.info(t('panel.uploadBatchInProgress'));
+        toast.info(t("panel.uploadBatchInProgress"));
         return;
       }
 
@@ -344,29 +341,32 @@ export function FileManagerPanel({
               if (!approved) continue;
             }
 
-            let mode: NameConflictMode = rememberedMode ?? 'fail';
+            let mode: NameConflictMode = rememberedMode ?? "fail";
             while (true) {
               const itemId = enqueueFile(file, targetParent, mode);
               const result = await waitForTerminalState(itemId);
 
               if (
-                result.state === 'failed' &&
-                result.error?.code === 'NAME_CONFLICT'
+                result.state === "failed" &&
+                result.error?.code === "NAME_CONFLICT"
               ) {
                 const sep = detectSeparator(targetParent);
-                const destinationPath = joinPath([targetParent, file.name], sep);
+                const destinationPath = joinPath(
+                  [targetParent, file.name],
+                  sep,
+                );
                 const choice = await requestConflictDecision(
-                  'upload',
+                  "upload",
                   file.name,
                   destinationPath,
                 );
-                console.debug('[files] conflict choice', {
-                  operation: 'upload',
+                console.debug("[files] conflict choice", {
+                  operation: "upload",
                   mode: choice.mode,
                   destinationPath,
                 });
                 if (choice.applyToAll) rememberedMode = choice.mode;
-                if (choice.mode === 'skip') break;
+                if (choice.mode === "skip") break;
                 mode = choice.mode;
                 continue;
               }
@@ -417,7 +417,7 @@ export function FileManagerPanel({
     if (!el) return;
 
     const hasFiles = (e: DragEvent): boolean =>
-      Array.from(e.dataTransfer?.types ?? []).includes('Files');
+      Array.from(e.dataTransfer?.types ?? []).includes("Files");
 
     const onEnter = (e: DragEvent) => {
       if (!hasFiles(e)) return;
@@ -428,7 +428,7 @@ export function FileManagerPanel({
     const onOver = (e: DragEvent) => {
       if (!hasFiles(e)) return;
       e.preventDefault();
-      if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+      if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
     };
     const onLeave = () => {
       dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
@@ -440,14 +440,14 @@ export function FileManagerPanel({
       setDragActive(false);
 
       if (!state.currentPath) {
-        toast.info(t('panel.navigateToFolderFirst'));
+        toast.info(t("panel.navigateToFolderFirst"));
         return;
       }
       // Folder detection (Pitfall 5: webkitGetAsEntry returns null for non-
       // file items, so filter kind === 'file' BEFORE calling it).
       const items = Array.from(e.dataTransfer?.items ?? []);
       const entries = items
-        .filter((i) => i.kind === 'file')
+        .filter((i) => i.kind === "file")
         .map((i) => {
           const item = i as DataTransferItem & {
             webkitGetAsEntry?: () => FileSystemEntry | null;
@@ -457,7 +457,7 @@ export function FileManagerPanel({
         .filter((entry): entry is FileSystemEntry => entry !== null);
 
       if (entries.some((entry) => entry.isDirectory)) {
-        toast.info(t('panel.folderUploadUnsupported'));
+        toast.info(t("panel.folderUploadUnsupported"));
         return;
       }
 
@@ -465,15 +465,15 @@ export function FileManagerPanel({
       if (files.length > 0) handleUploadFiles(files);
     };
 
-    el.addEventListener('dragenter', onEnter);
-    el.addEventListener('dragover', onOver);
-    el.addEventListener('dragleave', onLeave);
-    el.addEventListener('drop', onDrop);
+    el.addEventListener("dragenter", onEnter);
+    el.addEventListener("dragover", onOver);
+    el.addEventListener("dragleave", onLeave);
+    el.addEventListener("drop", onDrop);
     return () => {
-      el.removeEventListener('dragenter', onEnter);
-      el.removeEventListener('dragover', onOver);
-      el.removeEventListener('dragleave', onLeave);
-      el.removeEventListener('drop', onDrop);
+      el.removeEventListener("dragenter", onEnter);
+      el.removeEventListener("dragover", onOver);
+      el.removeEventListener("dragleave", onLeave);
+      el.removeEventListener("drop", onDrop);
     };
   }, [state.currentPath, toast, t, handleUploadFiles]);
 
@@ -488,18 +488,18 @@ export function FileManagerPanel({
     (entry: FileEntry) => {
       if (!state.currentPath) return; // file rows imply we're inside a folder
       const id =
-        typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        typeof crypto !== "undefined" && "randomUUID" in crypto
           ? crypto.randomUUID()
           : `download-${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const item: TransferItem = {
         id,
         transferId: null,
-        direction: 'download',
+        direction: "download",
         name: entry.name,
         parentPath: state.currentPath,
         size: entry.sizeBytes,
         bytesSoFar: 0,
-        state: 'queued',
+        state: "queued",
         enqueuedAt: Date.now(),
       };
       queue.enqueue(item);
@@ -522,7 +522,7 @@ export function FileManagerPanel({
       if (entry.sizeBytes > LARGE_FILE_THRESHOLD) {
         const hasFsa =
           typeof (window as { showSaveFilePicker?: unknown })
-            .showSaveFilePicker === 'function';
+            .showSaveFilePicker === "function";
         if (!hasFsa) {
           setDownloadBlocked({ name: entry.name, size: entry.sizeBytes });
           return;
@@ -555,10 +555,7 @@ export function FileManagerPanel({
     const parent = parentPath(state.currentPath, sep);
     if (parent === null) return;
     // Clamp at the active root: never navigate above an allowlisted root.
-    if (
-      parent === activeRootPath ||
-      isAncestor(activeRootPath, parent)
-    ) {
+    if (parent === activeRootPath || isAncestor(activeRootPath, parent)) {
       setCurrentPath(parent);
     } else {
       // Parent would be outside the allowlisted root -- snap to the root.
@@ -593,7 +590,7 @@ export function FileManagerPanel({
     async (paths: string[]) => {
       const request = channel.request;
       if (!request) {
-        toast.error(t('panel.filesChannelDisconnected'));
+        toast.error(t("panel.filesChannelDisconnected"));
         return;
       }
       setIsDeleting(true);
@@ -601,7 +598,7 @@ export function FileManagerPanel({
         for (const p of paths) {
           try {
             await request<{ path: string }, Record<string, never>>(
-              'files.delete',
+              "files.delete",
               { path: p },
             );
           } catch (err: unknown) {
@@ -633,7 +630,7 @@ export function FileManagerPanel({
       await performDelete(paths);
     } else {
       setConfirm({
-        kind: 'delete',
+        kind: "delete",
         paths,
         names,
         suppressOnConfirm: false,
@@ -649,12 +646,12 @@ export function FileManagerPanel({
   // ----- Move to… / Copy to… : open the FolderPickerModal -----
   const handleMoveTo = useCallback(() => {
     if (selection.state.selected.size === 0) return;
-    setPicker({ kind: 'move' });
+    setPicker({ kind: "move" });
   }, [selection.state.selected.size]);
 
   const handleCopyTo = useCallback(() => {
     if (selection.state.selected.size === 0) return;
-    setPicker({ kind: 'copy' });
+    setPicker({ kind: "copy" });
   }, [selection.state.selected.size]);
 
   const copyPathToClipboard = useCallback(
@@ -662,33 +659,33 @@ export function FileManagerPanel({
       try {
         if (navigator.clipboard?.writeText) {
           await navigator.clipboard.writeText(path);
-          toast.success(t('panel.pathCopied'));
+          toast.success(t("panel.pathCopied"));
           return;
         }
       } catch {
         // Fall back to execCommand below.
       }
 
-      const textarea = document.createElement('textarea');
+      const textarea = document.createElement("textarea");
       textarea.value = path;
-      textarea.setAttribute('readonly', 'true');
-      textarea.style.position = 'fixed';
-      textarea.style.left = '-9999px';
+      textarea.setAttribute("readonly", "true");
+      textarea.style.position = "fixed";
+      textarea.style.left = "-9999px";
       document.body.appendChild(textarea);
       textarea.select();
       textarea.setSelectionRange(0, textarea.value.length);
 
       try {
-        const copied = document.execCommand('copy');
+        const copied = document.execCommand("copy");
         if (copied) {
-          toast.success(t('panel.pathCopied'));
+          toast.success(t("panel.pathCopied"));
           return;
         }
       } finally {
         document.body.removeChild(textarea);
       }
 
-      toast.error(t('panel.couldNotCopyPath'));
+      toast.error(t("panel.couldNotCopyPath"));
     },
     [toast, t],
   );
@@ -703,10 +700,10 @@ export function FileManagerPanel({
   // responses; a complete in-UI ancestor check is Phase 12 hardening.
   const pickerDisallowedPaths = useMemo<string[]>(() => {
     const out = new Set<string>();
-    if (picker?.kind === 'move') {
+    if (picker?.kind === "move") {
       if (state.currentPath) out.add(state.currentPath);
       for (const p of selection.state.selected) out.add(p);
-    } else if (picker?.kind === 'copy') {
+    } else if (picker?.kind === "copy") {
       for (const p of selection.state.selected) out.add(p);
     }
     return Array.from(out);
@@ -717,10 +714,10 @@ export function FileManagerPanel({
   // stays clean and the desktop is never hammered. Wraps the loop in
   // try/finally so isOperating is always reset.
   const performMoveOrCopy = useCallback(
-    async (kind: 'move' | 'copy', dstParent: string) => {
+    async (kind: "move" | "copy", dstParent: string) => {
       const request = channel.request;
       if (!request) {
-        toast.error(t('panel.filesChannelDisconnected'));
+        toast.error(t("panel.filesChannelDisconnected"));
         return;
       }
       const srcs = Array.from(selection.state.selected);
@@ -730,16 +727,15 @@ export function FileManagerPanel({
       try {
         let rememberedMode: NameConflictMode | null = null;
         for (const src of srcs) {
-          const name =
-            namesByPath.get(src) ?? src.split(/[\\/]/).pop() ?? src;
+          const name = namesByPath.get(src) ?? src.split(/[\\/]/).pop() ?? src;
           const dst = joinPath([dstParent, name], sep);
-          let mode: NameConflictMode = rememberedMode ?? 'fail';
+          let mode: NameConflictMode = rememberedMode ?? "fail";
           while (true) {
             try {
               await request<
                 { src: string; dst: string; mode: NameConflictMode },
                 { src: string; dst: string }
-              >(kind === 'move' ? 'files.move' : 'files.copy', {
+              >(kind === "move" ? "files.move" : "files.copy", {
                 src,
                 dst,
                 mode,
@@ -748,16 +744,16 @@ export function FileManagerPanel({
             } catch (err: unknown) {
               if (
                 err instanceof FilesChannelError &&
-                err.info.code === 'NAME_CONFLICT'
+                err.info.code === "NAME_CONFLICT"
               ) {
                 const choice = await requestConflictDecision(kind, name, dst);
-                console.debug('[files] conflict choice', {
+                console.debug("[files] conflict choice", {
                   operation: kind,
                   mode: choice.mode,
                   destinationPath: dst,
                 });
                 if (choice.applyToAll) rememberedMode = choice.mode;
-                if (choice.mode === 'skip') break;
+                if (choice.mode === "skip") break;
                 mode = choice.mode;
                 continue;
               }
@@ -774,7 +770,14 @@ export function FileManagerPanel({
         setIsOperating(false);
       }
     },
-    [channel.request, selection, visibleEntries, toast, t, requestConflictDecision],
+    [
+      channel.request,
+      selection,
+      visibleEntries,
+      toast,
+      t,
+      requestConflictDecision,
+    ],
   );
 
   // ----- mkdir commit / cancel -----
@@ -792,7 +795,7 @@ export function FileManagerPanel({
         return;
       }
       request<{ parentPath: string; name: string }, MkdirResponse>(
-        'files.mkdir',
+        "files.mkdir",
         { parentPath: state.currentPath, name },
       )
         .then(() => {
@@ -825,13 +828,13 @@ export function FileManagerPanel({
       const trimmed = newName.trim();
       // No-op: if user pressed Enter without changing the name, just cancel.
       const currentName =
-        visibleEntries.find((e) => e.path === path)?.name ?? '';
+        visibleEntries.find((e) => e.path === path)?.name ?? "";
       if (trimmed.length === 0 || trimmed === currentName) {
         setRenamingPath(null);
         return;
       }
       request<{ path: string; newName: string }, RenameResponse>(
-        'files.rename',
+        "files.rename",
         { path, newName },
       )
         .then(() => {
@@ -872,34 +875,34 @@ export function FileManagerPanel({
       // preserved for both branches.
       const baseItems: ContextMenuItem[] = [
         {
-          label: t('panel.contextMenu.copyPath'),
+          label: t("panel.contextMenu.copyPath"),
           onSelect: () => {
             void copyPathToClipboard(entry.path);
           },
         },
-        { separator: true, label: '', onSelect: () => {} },
+        { separator: true, label: "", onSelect: () => {} },
         {
-          label: t('panel.contextMenu.rename'),
+          label: t("panel.contextMenu.rename"),
           onSelect: () => {
             const target = entry.path;
             setNewFolderPending(false);
             setRenamingPath(target);
           },
         },
-        { separator: true, label: '', onSelect: () => {} },
+        { separator: true, label: "", onSelect: () => {} },
         {
-          label: t('panel.contextMenu.delete'),
+          label: t("panel.contextMenu.delete"),
           danger: true,
           onSelect: () => {
             void handleRequestDelete();
           },
         },
         {
-          label: t('panel.contextMenu.moveTo'),
+          label: t("panel.contextMenu.moveTo"),
           onSelect: handleMoveTo,
         },
         {
-          label: t('panel.contextMenu.copyTo'),
+          label: t("panel.contextMenu.copyTo"),
           onSelect: handleCopyTo,
         },
       ];
@@ -907,10 +910,10 @@ export function FileManagerPanel({
         ? baseItems
         : [
             {
-              label: t('panel.contextMenu.download'),
+              label: t("panel.contextMenu.download"),
               onSelect: () => triggerDownload(entry),
             },
-            { separator: true, label: '', onSelect: () => {} },
+            { separator: true, label: "", onSelect: () => {} },
             ...baseItems,
           ];
       setContextMenu({ x: e.clientX, y: e.clientY, items });
@@ -936,7 +939,7 @@ export function FileManagerPanel({
         y: e.clientY,
         items: [
           {
-            label: t('panel.contextMenu.newFolder'),
+            label: t("panel.contextMenu.newFolder"),
             disabled: !canMkdir,
             onSelect: handleNewFolder,
           },
@@ -953,7 +956,8 @@ export function FileManagerPanel({
   // ----- Keyboard handler (focus-guarded) -----
   const keyboard = useKeyboardShortcuts({
     rootRef,
-    enabled: channel.status === 'open' && renamingPath === null && !newFolderPending,
+    enabled:
+      channel.status === "open" && renamingPath === null && !newFolderPending,
     entries: visibleEntries,
     selection,
     onRefresh: handleRefresh,
@@ -969,7 +973,7 @@ export function FileManagerPanel({
   const initialFocusedRef = useRef(false);
   useEffect(() => {
     if (initialFocusedRef.current) return;
-    if (channel.status !== 'open') return;
+    if (channel.status !== "open") return;
     if (!rootRef.current) return;
     rootRef.current.focus();
     initialFocusedRef.current = true;
@@ -988,7 +992,7 @@ export function FileManagerPanel({
     const prev = prevStatusRef.current;
     const curr = channel.status;
     prevStatusRef.current = curr;
-    if (prev === 'open' && curr !== 'open') {
+    if (prev === "open" && curr !== "open") {
       const snap = queue.getSnapshot();
       const active = snap.items.find((i) => i.id === snap.activeId);
       if (active) {
@@ -997,15 +1001,15 @@ export function FileManagerPanel({
         // row's terminal state is unambiguous and renders the red bar.
         queue.cancelById(active.id);
         queue.updateItem(active.id, {
-          state: 'disconnected',
+          state: "disconnected",
           error: {
-            code: 'CHANNEL_NOT_OPEN',
-            message: t('panel.disconnectedDuringTransferShort'),
+            code: "CHANNEL_NOT_OPEN",
+            message: t("panel.disconnectedDuringTransferShort"),
           },
           completedAt: Date.now(),
         });
       }
-      setDisconnectBanner(t('panel.disconnectedDuringTransfer'));
+      setDisconnectBanner(t("panel.disconnectedDuringTransfer"));
     }
   }, [channel.status, queue, t]);
 
@@ -1033,8 +1037,8 @@ export function FileManagerPanel({
       const seen = seenCompletedUploadsRef.current;
       let shouldRefresh = false;
       for (const item of snap.items) {
-        if (item.direction !== 'upload') continue;
-        if (item.state !== 'completed') continue;
+        if (item.direction !== "upload") continue;
+        if (item.state !== "completed") continue;
         if (seen.has(item.id)) continue;
         seen.add(item.id);
         if (item.parentPath === state.currentPath) {
@@ -1067,14 +1071,14 @@ export function FileManagerPanel({
         return;
       }
 
-      if (active.direction === 'download') {
+      if (active.direction === "download") {
         const t = activeDownloadRef.current;
         if (!t) return;
         const ageMs = Date.now() - t.lastChunkAtMs;
-        if (ageMs > 10_000 && active.state === 'active') {
-          queue.updateItem(active.id, { state: 'stalled' });
-        } else if (ageMs <= 10_000 && active.state === 'stalled') {
-          queue.updateItem(active.id, { state: 'active' });
+        if (ageMs > 10_000 && active.state === "active") {
+          queue.updateItem(active.id, { state: "stalled" });
+        } else if (ageMs <= 10_000 && active.state === "stalled") {
+          queue.updateItem(active.id, { state: "active" });
         }
         return;
       }
@@ -1084,17 +1088,14 @@ export function FileManagerPanel({
       // moves between ticks AND the row is currently 'stalled', flip back
       // to 'active'. Track previous bytesSoFar in a ref keyed by item.id
       // so a fresh active-id resets the baseline cleanly.
-      if (active.direction === 'upload') {
+      if (active.direction === "upload") {
         const prev = prevBytesRef.current;
         if (prev.id !== active.id) {
           prevBytesRef.current = { id: active.id, bytes: active.bytesSoFar };
           return;
         }
-        if (
-          active.bytesSoFar > prev.bytes &&
-          active.state === 'stalled'
-        ) {
-          queue.updateItem(active.id, { state: 'active' });
+        if (active.bytesSoFar > prev.bytes && active.state === "stalled") {
+          queue.updateItem(active.id, { state: "active" });
         }
         prevBytesRef.current = { id: active.id, bytes: active.bytesSoFar };
       }
@@ -1110,30 +1111,30 @@ export function FileManagerPanel({
   useEffect(() => {
     const client = channel.filesClient;
     if (!client) return;
-    const off = client.onEvent('files.transfer.error', (payload) => {
+    const off = client.onEvent("files.transfer.error", (payload) => {
       const p = payload as {
         transferId: number;
         error: { code: string };
       };
-      if (!p || p.error?.code !== 'STALLED') return;
+      if (!p || p.error?.code !== "STALLED") return;
       const snap = queue.getSnapshot();
       const item = snap.items.find((i) => i.transferId === p.transferId);
-      if (!item || item.direction !== 'upload') return;
-      if (item.state !== 'active') return;
-      queue.updateItem(item.id, { state: 'stalled' });
+      if (!item || item.direction !== "upload") return;
+      if (item.state !== "active") return;
+      queue.updateItem(item.id, { state: "stalled" });
     });
     return off;
   }, [channel.filesClient, queue]);
 
   // Handle channel-closed placeholder.
-  if (channel.status === 'closed' || channel.status === 'failed') {
+  if (channel.status === "closed" || channel.status === "failed") {
     return (
       <div
         ref={rootRef}
         tabIndex={0}
-        className="outline-none flex h-full w-full bg-background text-text items-center justify-center p-8 text-center text-darkgray text-sm"
+        className="bg-background text-text text-darkgray flex h-full w-full items-center justify-center p-8 text-center text-sm outline-none"
       >
-        {t('channelDisconnected')}
+        {t("channelDisconnected")}
       </div>
     );
   }
@@ -1144,7 +1145,7 @@ export function FileManagerPanel({
       <div
         ref={rootRef}
         tabIndex={0}
-        className="outline-none flex h-full w-full bg-background text-text"
+        className="bg-background text-text flex h-full w-full outline-none"
       >
         <FileManagerEmptyAllowlist />
       </div>
@@ -1156,18 +1157,20 @@ export function FileManagerPanel({
       ref={rootRef}
       tabIndex={0}
       onKeyDown={keyboard.onKeyDown}
-      className="outline-none flex h-full w-full bg-background text-text"
+      className="bg-background text-text flex h-full w-full outline-none"
     >
       <FileManagerSidebar
         roots={rootsResult.roots}
         isLoading={rootsResult.isLoading}
-        error={rootsResult.error ? t('sidebar.couldNotLoadSharedFolders') : null}
+        error={
+          rootsResult.error ? t("sidebar.couldNotLoadSharedFolders") : null
+        }
         currentPath={state.currentPath}
         onSelectRoot={handleSelectRoot}
       />
       <div
         ref={rightColumnRef}
-        className="flex-1 flex flex-col min-w-0 min-h-0 relative"
+        className="relative flex min-h-0 min-w-0 flex-1 flex-col"
       >
         <FileManagerToolbar
           showHidden={state.showHidden}
@@ -1223,28 +1226,26 @@ export function FileManagerPanel({
       </div>
       <ContextMenu state={contextMenu} onClose={handleContextMenuClose} />
       <ConfirmModal
-        open={confirm?.kind === 'delete'}
-        title={t('dialogs.delete.title')}
+        open={confirm?.kind === "delete"}
+        title={t("dialogs.delete.title")}
         body={
           confirm && confirm.paths.length === 1 ? (
-            <p>
-              {t('dialogs.delete.singleBody', { name: confirm.names[0] })}
-            </p>
+            <p>{t("dialogs.delete.singleBody", { name: confirm.names[0] })}</p>
           ) : confirm ? (
             <>
               <p>
-                {t('dialogs.delete.multipleBody', {
+                {t("dialogs.delete.multipleBody", {
                   count: confirm.names.length,
                 })}
               </p>
-              <ul className="mt-2 text-sm list-disc pl-5">
+              <ul className="mt-2 list-disc pl-5 text-sm">
                 {confirm.names.slice(0, 5).map((n) => (
                   <li key={n}>{n}</li>
                 ))}
               </ul>
               {confirm.names.length > 5 && (
-                <p className="mt-1 text-sm text-darkgray">
-                  {t('dialogs.delete.andMore', {
+                <p className="text-darkgray mt-1 text-sm">
+                  {t("dialogs.delete.andMore", {
                     count: confirm.names.length - 5,
                   })}
                 </p>
@@ -1252,16 +1253,14 @@ export function FileManagerPanel({
             </>
           ) : null
         }
-        confirmLabel={t('dialogs.delete.confirm')}
-        cancelLabel={t('dialogs.cancel')}
+        confirmLabel={t("dialogs.delete.confirm")}
+        cancelLabel={t("dialogs.cancel")}
         dangerous
         isBusy={isDeleting}
         checkbox={
-          confirm &&
-          confirm.paths.length === 1 &&
-          !suppressSingleDeleteConfirm
+          confirm && confirm.paths.length === 1 && !suppressSingleDeleteConfirm
             ? {
-                label: t('dialogs.delete.suppressSingleDeleteConfirm'),
+                label: t("dialogs.delete.suppressSingleDeleteConfirm"),
                 checked: confirm.suppressOnConfirm,
                 onChange: (next) =>
                   setConfirm((prev) =>
@@ -1285,14 +1284,14 @@ export function FileManagerPanel({
       <FolderPickerModal
         open={picker !== null}
         title={
-          picker?.kind === 'move'
-            ? t('dialogs.folderPicker.moveTitle')
-            : t('dialogs.folderPicker.copyTitle')
+          picker?.kind === "move"
+            ? t("dialogs.folderPicker.moveTitle")
+            : t("dialogs.folderPicker.copyTitle")
         }
         confirmLabel={
-          picker?.kind === 'move'
-            ? t('dialogs.folderPicker.moveConfirm')
-            : t('dialogs.folderPicker.copyConfirm')
+          picker?.kind === "move"
+            ? t("dialogs.folderPicker.moveConfirm")
+            : t("dialogs.folderPicker.copyConfirm")
         }
         channel={channel}
         disallowedPaths={pickerDisallowedPaths}
@@ -1309,7 +1308,7 @@ export function FileManagerPanel({
       />
       <LargeFileWarningDialog
         open={warningPrompt !== null}
-        fileName={warningPrompt?.file.name ?? ''}
+        fileName={warningPrompt?.file.name ?? ""}
         sizeBytes={warningPrompt?.file.size ?? 0}
         direction="upload"
         onConfirm={handleWarningConfirm}
@@ -1317,9 +1316,9 @@ export function FileManagerPanel({
       />
       <NameConflictDialog
         open={conflictPrompt !== null}
-        operation={conflictPrompt?.operation ?? 'upload'}
-        fileName={conflictPrompt?.fileName ?? ''}
-        destinationPath={conflictPrompt?.destinationPath ?? ''}
+        operation={conflictPrompt?.operation ?? "upload"}
+        fileName={conflictPrompt?.fileName ?? ""}
+        destinationPath={conflictPrompt?.destinationPath ?? ""}
         onDecide={(mode, applyToAll) => {
           setConflictPrompt((prev) => {
             if (!prev) return prev;
@@ -1330,13 +1329,13 @@ export function FileManagerPanel({
       />
       <DownloadBlockedDialog
         open={downloadBlocked !== null}
-        fileName={downloadBlocked?.name ?? ''}
+        fileName={downloadBlocked?.name ?? ""}
         sizeBytes={downloadBlocked?.size ?? 0}
         onClose={() => setDownloadBlocked(null)}
       />
       <LargeFileWarningDialog
         open={pendingDownloadWarn !== null}
-        fileName={pendingDownloadWarn?.name ?? ''}
+        fileName={pendingDownloadWarn?.name ?? ""}
         sizeBytes={pendingDownloadWarn?.sizeBytes ?? 0}
         direction="download"
         onConfirm={() => {

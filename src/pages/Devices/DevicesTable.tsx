@@ -1,33 +1,33 @@
-import DeviceRow from 'src/pages/Devices/DeviceRow';
-import type { Device } from 'src/types';
-import { useTranslation } from 'react-i18next';
+import DeviceRow from "src/pages/Devices/DeviceRow";
+import type { Device } from "src/types";
+import { useTranslation } from "react-i18next";
 
 interface DeviceTableProps {
   devices: Device[];
 }
 
 function DevicesTable({ devices }: DeviceTableProps) {
-  const { t } = useTranslation('devices');
+  const { t } = useTranslation("devices");
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-lightgray bg-white shadow-sm">
-      <table className="w-full min-w-[700px] md:min-w-0 table-auto border-collapse">
+    <div className="border-lightgray overflow-x-auto rounded-xl border bg-white shadow-sm">
+      <table className="w-full min-w-[700px] table-auto border-collapse md:min-w-0">
         <thead>
           <tr>
-            <th className="border-b border-lightgray p-4 text-left text-xl font-medium leading-7 text-text">
-              {t('table.name')}
+            <th className="border-lightgray text-text border-b p-4 text-left text-xl leading-7 font-medium">
+              {t("table.name")}
             </th>
-            <th className="border-b border-lightgray p-4 text-left text-xl font-medium leading-7 text-text">
-              {t('table.status')}
+            <th className="border-lightgray text-text border-b p-4 text-left text-xl leading-7 font-medium">
+              {t("table.status")}
             </th>
-            <th className="border-b border-lightgray p-4 text-left text-xl font-medium leading-7 text-text">
-              {t('table.lastSeen')}
+            <th className="border-lightgray text-text border-b p-4 text-left text-xl leading-7 font-medium">
+              {t("table.lastSeen")}
             </th>
-            <th className="border-b border-lightgray p-4 text-left text-xl font-medium leading-7 text-text">
-              {t('table.owner')}
+            <th className="border-lightgray text-text border-b p-4 text-left text-xl leading-7 font-medium">
+              {t("table.owner")}
             </th>
-            <th className="border-b border-lightgray p-4 text-left text-xl font-medium leading-7 text-text">
-              {t('table.actions')}
+            <th className="border-lightgray text-text border-b p-4 text-left text-xl leading-7 font-medium">
+              {t("table.actions")}
             </th>
           </tr>
         </thead>

@@ -1,5 +1,5 @@
-import { FilesChannelError } from '../../../services/files';
-import type { TFunction } from 'i18next';
+import { FilesChannelError } from "../../../services/files";
+import type { TFunction } from "i18next";
 
 /**
  * Map a {@link FilesChannelError} (or any unknown thrown value) to a single
@@ -25,33 +25,36 @@ import type { TFunction } from 'i18next';
  *
  * Anything not matching falls through to `err.message || 'Unknown error'`.
  */
-export function mapFilesErrorToMessage(err: unknown, t: TFunction<'fileManager'>): string {
+export function mapFilesErrorToMessage(
+  err: unknown,
+  t: TFunction<"fileManager">,
+): string {
   if (!(err instanceof FilesChannelError)) {
-    return t('errors.unexpected');
+    return t("errors.unexpected");
   }
   const { code, data } = err.info;
 
-  if (code === 'INVALID_NAME') {
+  if (code === "INVALID_NAME") {
     const reason = (data as { reason?: string } | undefined)?.reason;
     switch (reason) {
-      case 'RESERVED':
-        return t('errors.invalidName.reserved');
-      case 'ILLEGAL_CHAR':
-        return t('errors.invalidName.illegalChar');
-      case 'TOO_LONG':
-        return t('errors.invalidName.tooLong');
-      case 'EMPTY':
-        return t('errors.invalidName.empty');
-      case 'DOT_ONLY':
-        return t('errors.invalidName.dotOnly');
-      case 'TRAILING_SPACE_OR_DOT':
-        return t('errors.invalidName.trailingSpaceOrDot');
+      case "RESERVED":
+        return t("errors.invalidName.reserved");
+      case "ILLEGAL_CHAR":
+        return t("errors.invalidName.illegalChar");
+      case "TOO_LONG":
+        return t("errors.invalidName.tooLong");
+      case "EMPTY":
+        return t("errors.invalidName.empty");
+      case "DOT_ONLY":
+        return t("errors.invalidName.dotOnly");
+      case "TRAILING_SPACE_OR_DOT":
+        return t("errors.invalidName.trailingSpaceOrDot");
       default:
-        return t('errors.invalidName.fallback');
+        return t("errors.invalidName.fallback");
     }
   }
 
   const key = `errors.codes.${code}` as const;
   const translated = t(key);
-  return translated === key ? t('errors.unknownOperation') : translated;
+  return translated === key ? t("errors.unknownOperation") : translated;
 }

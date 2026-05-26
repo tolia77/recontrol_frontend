@@ -3,7 +3,7 @@ import type {
   ClipboardCapabilitiesEnvelope,
   ClipboardRefusedEnvelope,
   ClipboardRefusalReason,
-} from './clipboardProtocol.generated';
+} from "./clipboardProtocol.generated";
 
 // WR-01: validate inbound `refused` reason strings against the schema enum
 // before dispatching. Without this gate, a malicious or buggy peer can stuff
@@ -12,14 +12,15 @@ import type {
 // duplicated as a Set rather than imported from the generated file because
 // the generated module exports only types, not runtime values; keep the two
 // in lockstep (a CI grep on the generated file would catch drift).
-const VALID_REFUSAL_REASONS: ReadonlySet<ClipboardRefusalReason> = new Set<ClipboardRefusalReason>([
-  'TOO_LARGE',
-  'INBOUND_DISABLED',
-  'MASTER_DISABLED',
-  'PAUSED',
-  'NON_TEXT',
-  'CAPS_UNKNOWN',
-]);
+const VALID_REFUSAL_REASONS: ReadonlySet<ClipboardRefusalReason> =
+  new Set<ClipboardRefusalReason>([
+    "TOO_LARGE",
+    "INBOUND_DISABLED",
+    "MASTER_DISABLED",
+    "PAUSED",
+    "NON_TEXT",
+    "CAPS_UNKNOWN",
+  ]);
 
 type SetHandler = (env: ClipboardSetEnvelope) => void;
 type CapabilitiesHandler = (env: ClipboardCapabilitiesEnvelope) => void;
@@ -48,12 +49,12 @@ export class ClipboardChannelClient {
 
   constructor(dc: RTCDataChannel) {
     this.dc = dc;
-    dc.addEventListener('message', this.onMessage);
+    dc.addEventListener("message", this.onMessage);
   }
 
   private onMessage = (ev: MessageEvent): void => {
     if (this.disposed) return;
-    if (typeof ev.data !== 'string') return;
+    if (typeof ev.data !== "string") return;
     let env: unknown;
     try {
       env = JSON.parse(ev.data);
@@ -61,53 +62,58 @@ export class ClipboardChannelClient {
       return;
     }
     const e = env as { kind?: string } | null;
-    if (!e || typeof e !== 'object') return;
+    if (!e || typeof e !== "object") return;
     switch (e.kind) {
-      case 'set': {
+      case "set": {
         const s = e as Partial<ClipboardSetEnvelope>;
-        if (typeof s.originId !== 'string' || typeof s.contentHash !== 'string') return;
+        if (typeof s.originId !== "string" || typeof s.contentHash !== "string")
+          return;
         for (const h of this.setHandlers) {
           try {
             h(s as ClipboardSetEnvelope);
           } catch (err) {
-            console.warn('[clipboard] set handler threw:', err);
+            console.warn("[clipboard] set handler threw:", err);
           }
         }
         return;
       }
-      case 'capabilities': {
+      case "capabilities": {
         const c = e as Partial<ClipboardCapabilitiesEnvelope>;
         if (
-          typeof c.originId !== 'string' ||
-          typeof c.outboundEnabled !== 'boolean' ||
-          typeof c.inboundEnabled !== 'boolean' ||
-          typeof c.maxBytes !== 'number'
+          typeof c.originId !== "string" ||
+          typeof c.outboundEnabled !== "boolean" ||
+          typeof c.inboundEnabled !== "boolean" ||
+          typeof c.maxBytes !== "number"
         )
           return;
         for (const h of this.capabilitiesHandlers) {
           try {
             h(c as ClipboardCapabilitiesEnvelope);
           } catch (err) {
-            console.warn('[clipboard] caps handler threw:', err);
+            console.warn("[clipboard] caps handler threw:", err);
           }
         }
         return;
       }
-      case 'refused': {
+      case "refused": {
         const r = e as Partial<ClipboardRefusedEnvelope>;
-        if (typeof r.originId !== 'string' || typeof r.reason !== 'string') return;
+        if (typeof r.originId !== "string" || typeof r.reason !== "string")
+          return;
         // WR-01: drop refused envelopes whose reason is not in the schema enum.
         // Permitting arbitrary strings would let a peer poison lastRefusal.reason
         // and silently break Phase 16's i18n toast lookup.
         if (!VALID_REFUSAL_REASONS.has(r.reason as ClipboardRefusalReason)) {
-          console.warn('[clipboard] dropped refused with unknown reason:', r.reason);
+          console.warn(
+            "[clipboard] dropped refused with unknown reason:",
+            r.reason,
+          );
           return;
         }
         for (const h of this.refusedHandlers) {
           try {
             h(r as ClipboardRefusedEnvelope);
           } catch (err) {
-            console.warn('[clipboard] refused handler threw:', err);
+            console.warn("[clipboard] refused handler threw:", err);
           }
         }
         return;
@@ -140,24 +146,26 @@ export class ClipboardChannelClient {
 
   send(envelope: ClipboardSetEnvelope | ClipboardCapabilitiesEnvelope): void {
     if (this.disposed) return;
-    if (this.dc.readyState !== 'open') {
+    if (this.dc.readyState !== "open") {
       // WR-11: log instead of silently dropping. The loop gate has already
       // recorded the hash via prepareOutbound, so a silent drop here would
       // leave the local peer believing the remote received the change.
-      console.warn(`[clipboard] send dropped: channel readyState=${this.dc.readyState}`);
+      console.warn(
+        `[clipboard] send dropped: channel readyState=${this.dc.readyState}`,
+      );
       return;
     }
     try {
       this.dc.send(JSON.stringify(envelope));
     } catch (err) {
-      console.warn('[clipboard] send failed:', err);
+      console.warn("[clipboard] send failed:", err);
     }
   }
 
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
-    this.dc.removeEventListener('message', this.onMessage);
+    this.dc.removeEventListener("message", this.onMessage);
     this.setHandlers.clear();
     this.capabilitiesHandlers.clear();
     this.refusedHandlers.clear();

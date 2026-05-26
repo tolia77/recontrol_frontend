@@ -26,7 +26,7 @@ function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
 
 function copyHash(hash8: Uint8Array): Uint8Array {
   if (hash8.length !== 8) {
-    throw new Error('hash must be exactly 8 bytes');
+    throw new Error("hash must be exactly 8 bytes");
   }
   return new Uint8Array(hash8);
 }
@@ -61,7 +61,10 @@ export class ClipboardLoopGate {
 
   recordApplied(hash8: Uint8Array): void {
     this.pruneExpired();
-    this.recentApplied.push({ hash8: copyHash(hash8), atMs: this.clock.nowMs() });
+    this.recentApplied.push({
+      hash8: copyHash(hash8),
+      atMs: this.clock.nowMs(),
+    });
     while (this.recentApplied.length > RING_CAPACITY) {
       this.recentApplied.shift();
     }

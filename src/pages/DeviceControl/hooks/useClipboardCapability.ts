@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { detectCapability } from '../services/clipboard';
+import { useEffect, useState } from "react";
+import { detectCapability } from "../services/clipboard";
 
 export interface ClipboardCapability {
   canRead: boolean;
@@ -21,8 +21,9 @@ export function useClipboardCapability(): ClipboardCapability {
     isSecureContext: false,
   });
   useEffect(() => {
-    const isSecure = typeof window !== 'undefined' && (window.isSecureContext ?? false);
-    const nav = typeof navigator !== 'undefined' ? navigator : undefined;
+    const isSecure =
+      typeof window !== "undefined" && (window.isSecureContext ?? false);
+    const nav = typeof navigator !== "undefined" ? navigator : undefined;
     setCaps(detectCapability(nav, isSecure));
   }, []);
   return caps;

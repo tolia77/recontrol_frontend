@@ -1,6 +1,6 @@
-import { useRef } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Modal } from 'src/components/ui';
+import { useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { Modal } from "src/components/ui";
 
 /**
  * Modal shown when a user attempts to download a file > 100 MiB on a browser
@@ -30,7 +30,7 @@ export function DownloadBlockedDialog({
   sizeBytes,
   onClose,
 }: DownloadBlockedDialogProps) {
-  const { t } = useTranslation('fileManager');
+  const { t } = useTranslation("fileManager");
   const okRef = useRef<HTMLButtonElement>(null);
 
   // Decimal MB display matches user mental model (1 MB = 1 million bytes in
@@ -45,11 +45,11 @@ export function DownloadBlockedDialog({
       size="md"
       initialFocusRef={okRef as React.RefObject<HTMLElement | null>}
     >
-      <Modal.Header>{t('dialogs.downloadBlocked.title')}</Modal.Header>
+      <Modal.Header>{t("dialogs.downloadBlocked.title")}</Modal.Header>
       <Modal.Body>
-        <p className="text-sm text-text/80 mb-2 break-all">{fileName}</p>
-        <p className="text-sm text-text/80">
-          {t('dialogs.downloadBlocked.body', { sizeMb })}
+        <p className="text-text/80 mb-2 text-sm break-all">{fileName}</p>
+        <p className="text-text/80 text-sm">
+          {t("dialogs.downloadBlocked.body", { sizeMb })}
         </p>
       </Modal.Body>
       <Modal.Footer>
@@ -57,9 +57,9 @@ export function DownloadBlockedDialog({
           ref={okRef}
           type="button"
           onClick={onClose}
-          className="px-4 py-2 bg-accent text-white rounded-md hover:opacity-90"
+          className="bg-accent rounded-md px-4 py-2 text-white hover:opacity-90"
         >
-          {t('dialogs.ok')}
+          {t("dialogs.ok")}
         </button>
       </Modal.Footer>
     </Modal>

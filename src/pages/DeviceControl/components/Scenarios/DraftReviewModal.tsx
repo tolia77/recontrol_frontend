@@ -17,19 +17,19 @@
  * modal re-opens (e.g. operator hits Edit Draft, returns via dirty guard).
  */
 
-import { useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
-import { Button } from 'src/components/ui/Button.tsx';
+import { Button } from "src/components/ui/Button.tsx";
 import type {
   DraftResponse,
   DraftStep,
   DryIntentWarning,
-} from 'src/services/backend/scenariosService.ts';
+} from "src/services/backend/scenariosService.ts";
 
 export interface DraftReviewModalProps {
   open: boolean;
-  draft: DraftResponse['draft'] | null;
+  draft: DraftResponse["draft"] | null;
   loading?: boolean;
   onAccept: () => void;
   onEdit: () => void;
@@ -42,13 +42,13 @@ export interface DraftReviewModalProps {
 // (`⚠ <display>`); the tooltip text comes from `t(message_key)` which is
 // localized per the locale keys shipped in Plan 23-07.
 const PATTERN_DISPLAY_NAMES: Record<string, string> = {
-  find_delete: 'find -delete',
-  dd_of_dev: 'dd of=/dev/',
-  chmod_777_recursive: 'chmod -R 777',
-  mkfs: 'mkfs',
-  truncate_zero: 'truncate -s 0',
-  redirect_to_system: '> /system path',
-  rm_rf_root_adjacent: 'rm -rf',
+  find_delete: "find -delete",
+  dd_of_dev: "dd of=/dev/",
+  chmod_777_recursive: "chmod -R 777",
+  mkfs: "mkfs",
+  truncate_zero: "truncate -s 0",
+  redirect_to_system: "> /system path",
+  rm_rf_root_adjacent: "rm -rf",
 };
 
 function patternDisplayName(pattern: string): string {
@@ -62,7 +62,10 @@ function truncate80(text: string): string {
 }
 
 function formatBinaryArgs(step: DraftStep): string {
-  const argLine = step.args.length > 0 ? `${step.binary} ${step.args.join(' ')}` : step.binary;
+  const argLine =
+    step.args.length > 0
+      ? `${step.binary} ${step.args.join(" ")}`
+      : step.binary;
   return truncate80(argLine);
 }
 
@@ -71,13 +74,13 @@ interface DryIntentBadgeProps {
 }
 
 function DryIntentBadge({ warning }: DryIntentBadgeProps) {
-  const { t } = useTranslation('scenarios');
+  const { t } = useTranslation("scenarios");
   const tooltip = t(warning.message_key);
   const display = patternDisplayName(warning.pattern);
   return (
     <span
       data-testid={`draft-review-dry-intent-${warning.pattern}`}
-      className="bg-amber-50 text-amber-700 px-2 py-0.5 rounded font-medium text-caption-small"
+      className="text-caption-small rounded bg-amber-50 px-2 py-0.5 font-medium text-amber-700"
       title={tooltip}
       aria-label={`Warning: ${tooltip}`}
     >
@@ -95,16 +98,16 @@ export default function DraftReviewModal({
   onRegenerate,
   onCancel,
 }: DraftReviewModalProps) {
-  const { t } = useTranslation('scenarios');
+  const { t } = useTranslation("scenarios");
 
   // ESC dismisses while open — mirrors PolicyPreviewModal lines 91-100.
   useEffect(() => {
     if (!open) return undefined;
     const handler = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') onCancel();
+      if (e.key === "Escape") onCancel();
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, [open, onCancel]);
 
   if (!open || !draft) return null;
@@ -118,19 +121,22 @@ export default function DraftReviewModal({
       data-testid="draft-review-backdrop"
       role="dialog"
       aria-modal="true"
-      aria-label={t('ai.draftReviewTitle')}
+      aria-label={t("ai.draftReviewTitle")}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
       onClick={handleBackdropClick}
     >
       <div
         data-testid="draft-review-card"
-        className="bg-background rounded-lg shadow-lg flex flex-col max-h-[70vh] w-full max-w-2xl mx-4"
+        className="bg-background mx-4 flex max-h-[70vh] w-full max-w-2xl flex-col rounded-lg shadow-lg"
       >
         {/* Header */}
-        <header className="border-b border-lightgray px-6 py-4">
+        <header className="border-lightgray border-b px-6 py-4">
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">
-              <h3 className="text-lg font-medium text-text" data-testid="draft-review-name">
+              <h3
+                className="text-text text-lg font-medium"
+                data-testid="draft-review-name"
+              >
                 {draft.name}
               </h3>
               {draft.description && (
@@ -143,26 +149,26 @@ export default function DraftReviewModal({
               )}
             </div>
             <span
-              className="text-caption-small bg-tertiary text-primary px-2 py-0.5 rounded-full whitespace-nowrap"
+              className="text-caption-small bg-tertiary text-primary rounded-full px-2 py-0.5 whitespace-nowrap"
               data-testid="draft-review-ai-chip"
             >
-              {t('ai.draftReviewTitle')}
+              {t("ai.draftReviewTitle")}
             </span>
           </div>
         </header>
 
         {/* Body — scrollable per-step rows */}
-        <div className="overflow-y-auto flex-1 px-6 py-4">
+        <div className="flex-1 overflow-y-auto px-6 py-4">
           {draft.command_steps.map((step, idx) => {
             const isLast = idx === draft.command_steps.length - 1;
             return (
               <div
                 key={idx}
                 data-testid={`draft-review-step-${idx}`}
-                className={`py-3 ${isLast ? '' : 'border-b border-lightgray'}`}
+                className={`py-3 ${isLast ? "" : "border-lightgray border-b"}`}
               >
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-body-small font-medium text-darkgray">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-body-small text-darkgray font-medium">
                     Step {idx + 1}
                   </span>
                   {step.dry_intent_warning && (
@@ -170,7 +176,7 @@ export default function DraftReviewModal({
                   )}
                 </div>
                 <div
-                  className="text-body-small text-text font-mono mt-1"
+                  className="text-body-small text-text mt-1 font-mono"
                   data-testid={`draft-review-step-${idx}-cmd`}
                 >
                   {formatBinaryArgs(step)}
@@ -189,7 +195,7 @@ export default function DraftReviewModal({
         </div>
 
         {/* Sticky footer */}
-        <div className="border-t border-lightgray px-6 py-4 flex items-center justify-between bg-background">
+        <div className="border-lightgray bg-background flex items-center justify-between border-t px-6 py-4">
           <Button
             variant="secondary"
             size="sm"
@@ -197,7 +203,7 @@ export default function DraftReviewModal({
             data-testid="draft-review-discard"
             type="button"
           >
-            {t('ai.discardDraft')}
+            {t("ai.discardDraft")}
           </Button>
           <div className="flex items-center gap-2">
             <Button
@@ -207,7 +213,7 @@ export default function DraftReviewModal({
               data-testid="draft-review-regenerate"
               type="button"
             >
-              {t('ai.regenerate')}
+              {t("ai.regenerate")}
             </Button>
             <Button
               variant="secondary"
@@ -216,7 +222,7 @@ export default function DraftReviewModal({
               data-testid="draft-review-edit"
               type="button"
             >
-              {t('ai.editDraft')}
+              {t("ai.editDraft")}
             </Button>
             <Button
               variant="primary"
@@ -227,7 +233,7 @@ export default function DraftReviewModal({
               data-testid="draft-review-accept"
               type="button"
             >
-              {t('ai.acceptAndSave')}
+              {t("ai.acceptAndSave")}
             </Button>
           </div>
         </div>

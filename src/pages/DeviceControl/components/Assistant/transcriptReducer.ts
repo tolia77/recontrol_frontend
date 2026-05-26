@@ -1,4 +1,4 @@
-import type { AssistantBroadcast } from '../../hooks/useAssistantChannel';
+import type { AssistantBroadcast } from "../../hooks/useAssistantChannel";
 
 /**
  * Transcript reducer (Plan 20-07).
@@ -33,36 +33,36 @@ import type { AssistantBroadcast } from '../../hooks/useAssistantChannel';
  */
 
 export type AssistantMsgRow = {
-  kind: 'assistant';
+  kind: "assistant";
   id: string;
   markdown: string;
   isStreaming: boolean;
 };
 
 export type OperatorRow = {
-  kind: 'operator';
+  kind: "operator";
   id: string;
   text: string;
   ts: number;
 };
 
 export type ToolRowState =
-  | 'awaiting_confirmation'
-  | 'pending'
-  | 'running'
-  | 'done'
-  | 'error'
-  | 'denied';
+  | "awaiting_confirmation"
+  | "pending"
+  | "running"
+  | "done"
+  | "error"
+  | "denied";
 
 export type ToolRow = {
-  kind: 'tool';
+  kind: "tool";
   toolCallId: string;
   confirmationId?: string;
   label: string;
   command: string;
   args: unknown[];
   cwd?: string;
-  zone?: 'deny_list' | 'outside_list';
+  zone?: "deny_list" | "outside_list";
   reason?: string;
   state: ToolRowState;
   startedAt: number;
@@ -79,11 +79,11 @@ export type ToolRow = {
 export type Row = AssistantMsgRow | OperatorRow | ToolRow;
 
 export type PanelStatus =
-  | 'idle'
-  | 'streaming'
-  | 'awaiting_confirmation'
-  | 'halted_quota'
-  | 'error';
+  | "idle"
+  | "streaming"
+  | "awaiting_confirmation"
+  | "halted_quota"
+  | "error";
 
 export interface TranscriptState {
   rows: Row[];
@@ -103,13 +103,13 @@ export const initialTranscriptState: TranscriptState = {
   rows: [],
   sessionToken: null,
   stepCount: 0,
-  status: 'idle',
+  status: "idle",
   quotaWarningShown: false,
 };
 
 export type TranscriptAction =
-  | { type: 'submit_prompt'; text: string; sessionToken: string }
-  | { type: 'broadcast'; broadcast: AssistantBroadcast };
+  | { type: "submit_prompt"; text: string; sessionToken: string }
+  | { type: "broadcast"; broadcast: AssistantBroadcast };
 
 // Tiny id generator for client-side row keys. uuid is overkill for ephemeral
 // React keys that never leave the browser. Monotonic-enough for our purposes.
@@ -129,7 +129,7 @@ function makeId(): string {
  * broadcast that will never arrive.
  */
 function isSyntheticErrorEvent(b: AssistantBroadcast): boolean {
-  return b.type === 'error' && b.session_token === '';
+  return b.type === "error" && b.session_token === "";
 }
 
 export function transcriptReducer(
@@ -137,9 +137,9 @@ export function transcriptReducer(
   action: TranscriptAction,
 ): TranscriptState {
   switch (action.type) {
-    case 'submit_prompt': {
+    case "submit_prompt": {
       const operatorRow: OperatorRow = {
-        kind: 'operator',
+        kind: "operator",
         id: makeId(),
         text: action.text,
         ts: Date.now(),
@@ -148,12 +148,12 @@ export function transcriptReducer(
         rows: [...state.rows, operatorRow],
         sessionToken: action.sessionToken,
         stepCount: 0,
-        status: 'streaming',
+        status: "streaming",
         quotaWarningShown: false,
       };
     }
 
-    case 'broadcast': {
+    case "broadcast": {
       const msg = action.broadcast;
 
       // STREAM-04: drop broadcasts whose session_token mismatches the
@@ -167,9 +167,9 @@ export function transcriptReducer(
       }
 
       switch (msg.type) {
-        case 'token': {
+        case "token": {
           const last = state.rows[state.rows.length - 1];
-          if (last && last.kind === 'assistant' && last.isStreaming) {
+          if (last && last.kind === "assistant" && last.isStreaming) {
             const updated: AssistantMsgRow = {
               ...last,
               markdown: last.markdown + msg.content,
@@ -180,7 +180,7 @@ export function transcriptReducer(
             };
           }
           const newRow: AssistantMsgRow = {
-            kind: 'assistant',
+            kind: "assistant",
             id: makeId(),
             markdown: msg.content,
             isStreaming: true,
@@ -188,11 +188,11 @@ export function transcriptReducer(
           return {
             ...state,
             rows: [...state.rows, newRow],
-            status: 'streaming',
+            status: "streaming",
           };
         }
 
-        case 'requires_confirmation': {
+        case "requires_confirmation": {
           // D-11: requires_confirmation carries tool_call_id; rows key on it
           // directly so an earlier `tool_call_start` for the same call shares
           // this row. AgentRunner emits tool_call_start before invoking the
@@ -201,7 +201,7 @@ export function transcriptReducer(
           // mutate it back into `awaiting_confirmation` rather than appending
           // a duplicate row that would never receive its tool_call_result.
           const existingIdx = state.rows.findIndex(
-            (r) => r.kind === 'tool' && r.toolCallId === msg.tool_call_id,
+            (r) => r.kind === "tool" && r.toolCallId === msg.tool_call_id,
           );
           if (existingIdx >= 0) {
             const rows = state.rows.slice();
@@ -215,12 +215,12 @@ export function transcriptReducer(
               cwd: msg.cwd,
               zone: msg.zone,
               reason: msg.reason,
-              state: 'awaiting_confirmation',
+              state: "awaiting_confirmation",
             };
-            return { ...state, rows, status: 'awaiting_confirmation' };
+            return { ...state, rows, status: "awaiting_confirmation" };
           }
           const newRow: ToolRow = {
-            kind: 'tool',
+            kind: "tool",
             toolCallId: msg.tool_call_id,
             confirmationId: msg.confirmation_id,
             label: msg.label,
@@ -229,19 +229,19 @@ export function transcriptReducer(
             cwd: msg.cwd,
             zone: msg.zone,
             reason: msg.reason,
-            state: 'awaiting_confirmation',
+            state: "awaiting_confirmation",
             startedAt: Date.now(),
           };
           return {
             ...state,
             rows: [...state.rows, newRow],
-            status: 'awaiting_confirmation',
+            status: "awaiting_confirmation",
           };
         }
 
-        case 'tool_call_start': {
+        case "tool_call_start": {
           const existingIdx = state.rows.findIndex(
-            (r) => r.kind === 'tool' && r.toolCallId === msg.tool_call_id,
+            (r) => r.kind === "tool" && r.toolCallId === msg.tool_call_id,
           );
           if (existingIdx >= 0) {
             // Operator-allowed confirmation: existing row transitions
@@ -250,14 +250,14 @@ export function transcriptReducer(
             const existing = rows[existingIdx] as ToolRow;
             rows[existingIdx] = {
               ...existing,
-              state: 'running',
+              state: "running",
               startedAt: Date.now(),
             };
             return {
               ...state,
               rows,
               stepCount: state.stepCount + 1,
-              status: 'streaming',
+              status: "streaming",
             };
           }
           // Auto-allowed tool: insert a new row in running state. The wire
@@ -268,37 +268,37 @@ export function transcriptReducer(
             | { binary?: string; args?: unknown[] }
             | undefined;
           const newRow: ToolRow = {
-            kind: 'tool',
+            kind: "tool",
             toolCallId: msg.tool_call_id,
             label: msg.label,
             command: argsField?.binary ?? msg.name,
             args: argsField?.args ?? [],
             cwd: msg.cwd,
-            state: 'running',
+            state: "running",
             startedAt: Date.now(),
           };
           return {
             ...state,
             rows: [...state.rows, newRow],
             stepCount: state.stepCount + 1,
-            status: 'streaming',
+            status: "streaming",
           };
         }
 
-        case 'tool_call_result': {
+        case "tool_call_result": {
           const idx = state.rows.findIndex(
-            (r) => r.kind === 'tool' && r.toolCallId === msg.tool_call_id,
+            (r) => r.kind === "tool" && r.toolCallId === msg.tool_call_id,
           );
           if (idx < 0) return state;
           const existing = state.rows[idx] as ToolRow;
           const errorVal = msg.result?.error;
-          const isDeny = errorVal === 'denied_by_operator';
+          const isDeny = errorVal === "denied_by_operator";
           const isError = !!errorVal && !isDeny;
           const nextState: ToolRowState = isDeny
-            ? 'denied'
+            ? "denied"
             : isError
-              ? 'error'
-              : 'done';
+              ? "error"
+              : "done";
           const rows = state.rows.slice();
           rows[idx] = {
             ...existing,
@@ -309,40 +309,40 @@ export function transcriptReducer(
           return { ...state, rows };
         }
 
-        case 'quota_warning': {
+        case "quota_warning": {
           // Side effect (Toast) handled by the panel via useEffect on this
           // flag. The reducer just sets the once-per-cycle flag.
           if (state.quotaWarningShown) return state;
           return { ...state, quotaWarningShown: true };
         }
 
-        case 'done': {
+        case "done": {
           // First done wins; subsequent done events are idempotent.
           if (
-            state.status !== 'streaming' &&
-            state.status !== 'awaiting_confirmation'
+            state.status !== "streaming" &&
+            state.status !== "awaiting_confirmation"
           ) {
             return state;
           }
           const nextStatus: PanelStatus =
-            msg.stop_reason === 'quota' ? 'halted_quota' : 'idle';
+            msg.stop_reason === "quota" ? "halted_quota" : "idle";
           return {
             ...state,
             status: nextStatus,
             rows: state.rows.map((r) =>
-              r.kind === 'assistant' && r.isStreaming
+              r.kind === "assistant" && r.isStreaming
                 ? { ...r, isStreaming: false }
                 : r,
             ),
           };
         }
 
-        case 'error': {
+        case "error": {
           return {
             ...state,
-            status: 'error',
+            status: "error",
             rows: state.rows.map((r) =>
-              r.kind === 'assistant' && r.isStreaming
+              r.kind === "assistant" && r.isStreaming
                 ? { ...r, isStreaming: false }
                 : r,
             ),

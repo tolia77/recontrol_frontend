@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { ChevronDownIcon } from '../icons';
-import { ResolutionControl } from './ResolutionControl';
-import { FpsControls } from './FpsControls';
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { ChevronDownIcon } from "../icons";
+import { ResolutionControl } from "./ResolutionControl";
+import { FpsControls } from "./FpsControls";
 
 interface QualityPopoverProps {
   currentResolution: number;
@@ -32,23 +32,24 @@ export function QualityPopover({
   onToggleStats,
   disabled,
 }: QualityPopoverProps) {
-  const { t } = useTranslation('deviceControl');
+  const { t } = useTranslation("deviceControl");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
     const onPointerDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
     };
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === "Escape") setOpen(false);
     };
-    document.addEventListener('mousedown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.removeEventListener('mousedown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
     };
   }, [open]);
 
@@ -59,20 +60,22 @@ export function QualityPopover({
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className="flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-100 px-2.5 py-1 font-mono text-xs text-text transition-colors hover:bg-gray-200"
+        className="text-text flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-100 px-2.5 py-1 font-mono text-xs transition-colors hover:bg-gray-200"
       >
         <span>{`${currentResolution}p · ${currentFps}fps`}</span>
-        <ChevronDownIcon className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDownIcon
+          className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`}
+        />
       </button>
 
       {open && (
         <div
           role="dialog"
-          aria-label={t('topbar.quality.title')}
-          className="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-gray-200 bg-white p-3 shadow-lg"
+          aria-label={t("topbar.quality.title")}
+          className="absolute top-full right-0 z-50 mt-2 w-64 rounded-xl border border-gray-200 bg-white p-3 shadow-lg"
         >
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-darkgray">
-            {t('topbar.quality.title')}
+          <h3 className="text-darkgray mb-2 text-xs font-semibold tracking-wide uppercase">
+            {t("topbar.quality.title")}
           </h3>
           <div className="space-y-3 rounded-lg bg-gray-800 p-3">
             <div className="flex items-center justify-between">
@@ -83,7 +86,11 @@ export function QualityPopover({
               />
             </div>
             <div className="flex items-center justify-between">
-              <FpsControls currentFps={currentFps} onFpsChange={onFpsChange} disabled={disabled} />
+              <FpsControls
+                currentFps={currentFps}
+                onFpsChange={onFpsChange}
+                disabled={disabled}
+              />
             </div>
             <div className="flex items-center justify-between">
               <button
@@ -92,11 +99,11 @@ export function QualityPopover({
                 aria-pressed={showStats}
                 className={`rounded px-2 py-0.5 text-xs font-medium transition-colors ${
                   showStats
-                    ? 'bg-indigo-500 text-white'
-                    : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                    ? "bg-indigo-500 text-white"
+                    : "bg-white/10 text-gray-300 hover:bg-white/20"
                 }`}
               >
-                {showStats ? t('sidebar.hideStats') : t('sidebar.showStats')}
+                {showStats ? t("sidebar.hideStats") : t("sidebar.showStats")}
               </button>
             </div>
           </div>

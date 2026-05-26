@@ -1,17 +1,17 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type {
   FileManagerState,
   SortState,
-} from '../components/FileManager/types';
+} from "../components/FileManager/types";
 
-const STORAGE_VERSION = 'v1';
+const STORAGE_VERSION = "v1";
 
 const DEFAULT_STATE: FileManagerState = {
   panelOpen: false,
   splitRatio: 0.5,
   rightPaneActive: null,
   currentPath: null,
-  sort: { column: 'name', direction: 'asc' },
+  sort: { column: "name", direction: "asc" },
   showHidden: false,
 };
 
@@ -56,13 +56,13 @@ function loadInitialState(deviceId: string): FileManagerState {
   // ignore the legacy `panelOpen=true` key entirely -- both used to make the
   // Files panel auto-open on every visit, which surprised operators. The panel
   // is now only ever opened by an explicit toggle within a session.
-  const rightPaneActive: 'files' | 'assistant' | 'scenarios' | null = null;
+  const rightPaneActive: "files" | "assistant" | "scenarios" | null = null;
 
   return {
-    panelOpen: rightPaneActive === 'files',
+    panelOpen: rightPaneActive === "files",
     splitRatio: readField<number>(
       deviceId,
-      'splitRatio',
+      "splitRatio",
       DEFAULT_STATE.splitRatio,
       (s) => {
         const n = Number.parseFloat(s);
@@ -73,36 +73,31 @@ function loadInitialState(deviceId: string): FileManagerState {
     rightPaneActive,
     currentPath: readField<string | null>(
       deviceId,
-      'currentPath',
+      "currentPath",
       DEFAULT_STATE.currentPath,
-      (s) => (s === '' ? null : s),
+      (s) => (s === "" ? null : s),
     ),
-    sort: readField<SortState>(
-      deviceId,
-      'sort',
-      DEFAULT_STATE.sort,
-      (s) => {
-        try {
-          const parsed = JSON.parse(s) as SortState;
-          if (
-            parsed &&
-            typeof parsed === 'object' &&
-            typeof parsed.column === 'string' &&
-            (parsed.direction === 'asc' || parsed.direction === 'desc')
-          ) {
-            return parsed;
-          }
-          return DEFAULT_STATE.sort;
-        } catch {
-          return DEFAULT_STATE.sort;
+    sort: readField<SortState>(deviceId, "sort", DEFAULT_STATE.sort, (s) => {
+      try {
+        const parsed = JSON.parse(s) as SortState;
+        if (
+          parsed &&
+          typeof parsed === "object" &&
+          typeof parsed.column === "string" &&
+          (parsed.direction === "asc" || parsed.direction === "desc")
+        ) {
+          return parsed;
         }
-      },
-    ),
+        return DEFAULT_STATE.sort;
+      } catch {
+        return DEFAULT_STATE.sort;
+      }
+    }),
     showHidden: readField<boolean>(
       deviceId,
-      'showHidden',
+      "showHidden",
       DEFAULT_STATE.showHidden,
-      (s) => s === 'true',
+      (s) => s === "true",
     ),
   };
 }
@@ -111,7 +106,7 @@ export interface UseFileManagerStateReturn {
   state: FileManagerState;
   setPanelOpen: (v: boolean) => void;
   setSplitRatio: (v: number) => void;
-  setRightPaneActive: (v: 'files' | 'assistant' | 'scenarios' | null) => void;
+  setRightPaneActive: (v: "files" | "assistant" | "scenarios" | null) => void;
   setCurrentPath: (v: string | null) => void;
   setSort: (v: SortState) => void;
   setShowHidden: (v: boolean) => void;
@@ -122,8 +117,12 @@ export interface UseFileManagerStateReturn {
  * separate key so a schema bump for one field invalidates only that slice.
  * Setters write to localStorage synchronously before state updates.
  */
-export function useFileManagerState(deviceId: string): UseFileManagerStateReturn {
-  const [state, setState] = useState<FileManagerState>(() => loadInitialState(deviceId));
+export function useFileManagerState(
+  deviceId: string,
+): UseFileManagerStateReturn {
+  const [state, setState] = useState<FileManagerState>(() =>
+    loadInitialState(deviceId),
+  );
 
   // Re-hydrate whenever the deviceId changes (e.g., user navigates to a
   // different device within the same browser tab).
@@ -133,9 +132,11 @@ export function useFileManagerState(deviceId: string): UseFileManagerStateReturn
 
   const setPanelOpen = useCallback(
     (v: boolean) => {
-      writeField(deviceId, 'panelOpen', v ? 'true' : 'false');
-      const newActive: 'files' | 'assistant' | 'scenarios' | null = v ? 'files' : null;
-      writeField(deviceId, 'rightPaneActive', newActive ?? '');
+      writeField(deviceId, "panelOpen", v ? "true" : "false");
+      const newActive: "files" | "assistant" | "scenarios" | null = v
+        ? "files"
+        : null;
+      writeField(deviceId, "rightPaneActive", newActive ?? "");
       setState((prev) => ({
         ...prev,
         panelOpen: v,
@@ -146,12 +147,12 @@ export function useFileManagerState(deviceId: string): UseFileManagerStateReturn
   );
 
   const setRightPaneActive = useCallback(
-    (v: 'files' | 'assistant' | 'scenarios' | null) => {
-      writeField(deviceId, 'rightPaneActive', v ?? '');
+    (v: "files" | "assistant" | "scenarios" | null) => {
+      writeField(deviceId, "rightPaneActive", v ?? "");
       setState((prev) => ({
         ...prev,
         rightPaneActive: v,
-        panelOpen: v === 'files',
+        panelOpen: v === "files",
       }));
     },
     [deviceId],
@@ -160,7 +161,7 @@ export function useFileManagerState(deviceId: string): UseFileManagerStateReturn
   const setSplitRatio = useCallback(
     (v: number) => {
       const clamped = Math.min(0.9, Math.max(0.1, v));
-      writeField(deviceId, 'splitRatio', String(clamped));
+      writeField(deviceId, "splitRatio", String(clamped));
       setState((prev) => ({ ...prev, splitRatio: clamped }));
     },
     [deviceId],
@@ -168,7 +169,7 @@ export function useFileManagerState(deviceId: string): UseFileManagerStateReturn
 
   const setCurrentPath = useCallback(
     (v: string | null) => {
-      writeField(deviceId, 'currentPath', v ?? '');
+      writeField(deviceId, "currentPath", v ?? "");
       setState((prev) => ({ ...prev, currentPath: v }));
     },
     [deviceId],
@@ -176,7 +177,7 @@ export function useFileManagerState(deviceId: string): UseFileManagerStateReturn
 
   const setSort = useCallback(
     (v: SortState) => {
-      writeField(deviceId, 'sort', JSON.stringify(v));
+      writeField(deviceId, "sort", JSON.stringify(v));
       setState((prev) => ({ ...prev, sort: v }));
     },
     [deviceId],
@@ -184,7 +185,7 @@ export function useFileManagerState(deviceId: string): UseFileManagerStateReturn
 
   const setShowHidden = useCallback(
     (v: boolean) => {
-      writeField(deviceId, 'showHidden', v ? 'true' : 'false');
+      writeField(deviceId, "showHidden", v ? "true" : "false");
       setState((prev) => ({ ...prev, showHidden: v }));
     },
     [deviceId],

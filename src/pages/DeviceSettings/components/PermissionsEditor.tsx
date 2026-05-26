@@ -1,5 +1,5 @@
 // filepath: src/pages/DeviceSettings/components/PermissionsEditor.tsx
-import React from 'react';
+import React from "react";
 
 export interface PermissionsEditorProps {
   t: any;
@@ -11,25 +11,31 @@ export interface PermissionsEditorProps {
     access_terminal: boolean;
     manage_power: boolean;
   };
-  onChange: (next: PermissionsEditorProps['value']) => void;
+  onChange: (next: PermissionsEditorProps["value"]) => void;
 }
 
-export const PermissionsEditor: React.FC<PermissionsEditorProps> = ({ t, value, onChange }) => {
-  const toggle = (key: keyof PermissionsEditorProps['value']) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange({ ...value, [key]: e.target.checked });
-  };
+export const PermissionsEditor: React.FC<PermissionsEditorProps> = ({
+  t,
+  value,
+  onChange,
+}) => {
+  const toggle =
+    (key: keyof PermissionsEditorProps["value"]) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onChange({ ...value, [key]: e.target.checked });
+    };
 
   const items = [
-    { key: 'see_screen', label: t('form.perms.see_screen') },
-    { key: 'see_system_info', label: t('form.perms.see_system_info') },
-    { key: 'access_mouse', label: t('form.perms.access_mouse') },
-    { key: 'access_keyboard', label: t('form.perms.access_keyboard') },
-    { key: 'access_terminal', label: t('form.perms.access_terminal') },
-    { key: 'manage_power', label: t('form.perms.manage_power') },
+    { key: "see_screen", label: t("form.perms.see_screen") },
+    { key: "see_system_info", label: t("form.perms.see_system_info") },
+    { key: "access_mouse", label: t("form.perms.access_mouse") },
+    { key: "access_keyboard", label: t("form.perms.access_keyboard") },
+    { key: "access_terminal", label: t("form.perms.access_terminal") },
+    { key: "manage_power", label: t("form.perms.manage_power") },
   ] as const;
 
   return (
-    <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:col-span-2">
       {items.map((perm) => (
         <label key={perm.key} className="inline-flex items-center space-x-2">
           <input
@@ -44,4 +50,3 @@ export const PermissionsEditor: React.FC<PermissionsEditorProps> = ({ t, value, 
     </div>
   );
 };
-

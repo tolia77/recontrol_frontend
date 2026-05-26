@@ -23,18 +23,21 @@
 //     prop. `vi.stubGlobal('WebSocket', MockWebSocket)` is used to expose the
 //     class's static `OPEN` constant so the hook's `ws.readyState !==
 //     WebSocket.OPEN` guard sees a consistent value.
-import { renderHook, act } from '@testing-library/react';
-import { useReducer, useRef } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { renderHook, act } from "@testing-library/react";
+import { useReducer, useRef } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useAssistantChannel, type AssistantBroadcast } from './useAssistantChannel';
+import {
+  useAssistantChannel,
+  type AssistantBroadcast,
+} from "./useAssistantChannel";
 import {
   initialTranscriptState,
   transcriptReducer,
   type TranscriptState,
-} from '../components/Assistant/transcriptReducer';
+} from "../components/Assistant/transcriptReducer";
 
-const ASSISTANT_IDENTIFIER = JSON.stringify({ channel: 'AssistantChannel' });
+const ASSISTANT_IDENTIFIER = JSON.stringify({ channel: "AssistantChannel" });
 
 /**
  * MockWebSocket — minimal WebSocket-compatible double for hook lifecycle
@@ -63,22 +66,30 @@ class MockWebSocket {
     this.sent.push(payload);
   }
 
-  addEventListener(type: string, listener: EventListenerOrEventListenerObject): void {
-    if (type === 'message') {
+  addEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+  ): void {
+    if (type === "message") {
       this.messageListeners.push(listener as (ev: MessageEvent) => void);
-    } else if (type === 'close') {
+    } else if (type === "close") {
       this.closeListeners.push(listener as (ev: CloseEvent) => void);
-    } else if (type === 'open') {
+    } else if (type === "open") {
       this.openListeners.push(listener as (ev: Event) => void);
     }
   }
 
-  removeEventListener(type: string, listener: EventListenerOrEventListenerObject): void {
-    if (type === 'message') {
-      this.messageListeners = this.messageListeners.filter((l) => l !== listener);
-    } else if (type === 'close') {
+  removeEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+  ): void {
+    if (type === "message") {
+      this.messageListeners = this.messageListeners.filter(
+        (l) => l !== listener,
+      );
+    } else if (type === "close") {
       this.closeListeners = this.closeListeners.filter((l) => l !== listener);
-    } else if (type === 'open') {
+    } else if (type === "open") {
       this.openListeners = this.openListeners.filter((l) => l !== listener);
     }
   }
@@ -86,13 +97,13 @@ class MockWebSocket {
   /** Flip readyState to OPEN and fire any 'open' listeners (CONNECTING→OPEN). */
   fireOpen(): void {
     this.readyState = MockWebSocket.OPEN;
-    const ev = new Event('open');
+    const ev = new Event("open");
     this.openListeners.slice().forEach((l) => l(ev));
   }
 
   close(): void {
     this.readyState = MockWebSocket.CLOSED;
-    const ev = new CloseEvent('close');
+    const ev = new CloseEvent("close");
     // Slice() to guard against listeners that mutate the array during dispatch.
     this.closeListeners.slice().forEach((l) => l(ev));
   }
@@ -102,8 +113,11 @@ class MockWebSocket {
    * inner payload exactly as `recontrol_backend/app/channels/assistant_channel.rb`
    * does: `{ identifier: '{"channel":"AssistantChannel"}', message: <inner> }`.
    */
-  dispatchBroadcast(inner: object, identifier: string = ASSISTANT_IDENTIFIER): void {
-    const event = new MessageEvent('message', {
+  dispatchBroadcast(
+    inner: object,
+    identifier: string = ASSISTANT_IDENTIFIER,
+  ): void {
+    const event = new MessageEvent("message", {
       data: JSON.stringify({ identifier, message: inner }),
     });
     this.messageListeners.slice().forEach((l) => l(event));
@@ -120,26 +134,29 @@ function useChannelWithReducer(ws: WebSocket | null): {
   state: TranscriptState;
   broadcasts: AssistantBroadcast[];
 } {
-  const [state, dispatchTranscript] = useReducer(transcriptReducer, initialTranscriptState);
+  const [state, dispatchTranscript] = useReducer(
+    transcriptReducer,
+    initialTranscriptState,
+  );
   // useRef so the recorder persists across re-renders (a fresh `[]` per render
   // would lose history when the hook fires events between renders).
   const broadcastsRef = useRef<AssistantBroadcast[]>([]);
   // Mirror what AssistantPanel.tsx does in production (see 20-09 wiring).
   useAssistantChannel(ws, (msg) => {
     broadcastsRef.current.push(msg);
-    dispatchTranscript({ type: 'broadcast', broadcast: msg });
+    dispatchTranscript({ type: "broadcast", broadcast: msg });
   });
   return { state, broadcasts: broadcastsRef.current };
 }
 
-describe('useAssistantChannel — VERIFY-04 stream-drop', () => {
+describe("useAssistantChannel — VERIFY-04 stream-drop", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     // Expose MockWebSocket's static `OPEN` to the hook's
     // `ws.readyState !== WebSocket.OPEN` guard via the global. jsdom does not
     // ship a WebSocket; without this stub the hook's reference to the global
     // `WebSocket` constant throws ReferenceError during the lifecycle effect.
-    vi.stubGlobal('WebSocket', MockWebSocket);
+    vi.stubGlobal("WebSocket", MockWebSocket);
   });
 
   afterEach(() => {
@@ -148,12 +165,15 @@ describe('useAssistantChannel — VERIFY-04 stream-drop', () => {
     vi.restoreAllMocks();
   });
 
-  it('VERIFY-04: WebSocket close while streaming flips reducer status to error within 5s', () => {
+  it("VERIFY-04: WebSocket close while streaming flips reducer status to error within 5s", () => {
     const ws = new MockWebSocket();
 
-    const { result } = renderHook(({ socket }) => useChannelWithReducer(socket), {
-      initialProps: { socket: ws as unknown as WebSocket },
-    });
+    const { result } = renderHook(
+      ({ socket }) => useChannelWithReducer(socket),
+      {
+        initialProps: { socket: ws as unknown as WebSocket },
+      },
+    );
 
     // Seed the reducer into the `submit_prompt` → streaming flow first so the
     // reducer's session_token filter accepts subsequent token broadcasts. The
@@ -175,15 +195,15 @@ describe('useAssistantChannel — VERIFY-04 stream-drop', () => {
       // session_token; see transcriptReducer.ts STREAM-04 branch.)
       // seq starts at 1 to match backend's post-increment convention.
       ws.dispatchBroadcast({
-        type: 'token',
+        type: "token",
         seq: 1,
-        session_token: 'sess-verify-04',
-        content: 'hello',
+        session_token: "sess-verify-04",
+        content: "hello",
       });
     });
 
     // Reducer should now be in `streaming` after the token broadcast.
-    expect(result.current.state.status).toBe('streaming');
+    expect(result.current.state.status).toBe("streaming");
 
     // TCP drop mid-stream: backend cannot emit STREAM-06 ensure-block
     // terminator. The hook must synthesize `connection_lost` so the reducer
@@ -201,32 +221,35 @@ describe('useAssistantChannel — VERIFY-04 stream-drop', () => {
       vi.advanceTimersByTime(5_000);
     });
 
-    expect(result.current.state.status).toBe('error');
+    expect(result.current.state.status).toBe("error");
   });
 
-  it('VERIFY-04: 500ms gap-close timer is cleared on socket close (no spurious stream_out_of_order)', () => {
+  it("VERIFY-04: 500ms gap-close timer is cleared on socket close (no spurious stream_out_of_order)", () => {
     const ws = new MockWebSocket();
 
-    const { result } = renderHook(({ socket }) => useChannelWithReducer(socket), {
-      initialProps: { socket: ws as unknown as WebSocket },
-    });
+    const { result } = renderHook(
+      ({ socket }) => useChannelWithReducer(socket),
+      {
+        initialProps: { socket: ws as unknown as WebSocket },
+      },
+    );
 
     // Open a seq gap: send seq=5 with no seq=1..4 preceding it. The hook
     // arms a 500ms gap-close timer that would otherwise fire a synthetic
     // `{type:'error', source:'stream_out_of_order'}` broadcast.
     act(() => {
       ws.dispatchBroadcast({
-        type: 'token',
+        type: "token",
         seq: 5,
-        session_token: 'sess-gap',
-        content: 'out-of-order',
+        session_token: "sess-gap",
+        content: "out-of-order",
       });
     });
 
     // Confirm the buffered message did NOT flush yet (seqs 1..4 missing) — no
     // token row exists and the reducer is still idle.
     expect(result.current.state.rows).toHaveLength(0);
-    expect(result.current.state.status).toBe('idle');
+    expect(result.current.state.status).toBe("idle");
 
     // Close the socket BEFORE the 500ms gap-close fires. Hook cleanup MUST
     // clear the pending gap-close timer so the synthetic stream_out_of_order
@@ -243,39 +266,42 @@ describe('useAssistantChannel — VERIFY-04 stream-drop', () => {
     });
 
     const oooErrors = result.current.broadcasts.filter(
-      (b) => b.type === 'error' && b.source === 'stream_out_of_order',
+      (b) => b.type === "error" && b.source === "stream_out_of_order",
     );
     expect(oooErrors).toHaveLength(0);
 
     // The connection_lost error from close should be the only error emitted.
     const connectionErrors = result.current.broadcasts.filter(
-      (b) => b.type === 'error' && b.source === 'connection_lost',
+      (b) => b.type === "error" && b.source === "connection_lost",
     );
     expect(connectionErrors).toHaveLength(1);
   });
 
-  it('VERIFY-04: status `error` is idempotent under further fake-timer advance after close', () => {
+  it("VERIFY-04: status `error` is idempotent under further fake-timer advance after close", () => {
     const ws = new MockWebSocket();
 
-    const { result } = renderHook(({ socket }) => useChannelWithReducer(socket), {
-      initialProps: { socket: ws as unknown as WebSocket },
-    });
+    const { result } = renderHook(
+      ({ socket }) => useChannelWithReducer(socket),
+      {
+        initialProps: { socket: ws as unknown as WebSocket },
+      },
+    );
 
     // Drive the reducer into streaming, then close mid-stream.
     act(() => {
       ws.dispatchBroadcast({
-        type: 'token',
+        type: "token",
         seq: 1,
-        session_token: 'sess-idem',
-        content: 'tok',
+        session_token: "sess-idem",
+        content: "tok",
       });
     });
-    expect(result.current.state.status).toBe('streaming');
+    expect(result.current.state.status).toBe("streaming");
 
     act(() => {
       ws.close();
     });
-    expect(result.current.state.status).toBe('error');
+    expect(result.current.state.status).toBe("error");
 
     // Capture a state snapshot BEFORE further advance; the reducer must not
     // regress out of `error` no matter how much time passes, and no
@@ -286,11 +312,11 @@ describe('useAssistantChannel — VERIFY-04 stream-drop', () => {
       vi.advanceTimersByTime(10_000);
     });
 
-    expect(result.current.state.status).toBe('error');
+    expect(result.current.state.status).toBe("error");
     expect(result.current.broadcasts.length).toBe(broadcastsBefore);
   });
 
-  it('subscribes when the socket transitions from CONNECTING to OPEN', () => {
+  it("subscribes when the socket transitions from CONNECTING to OPEN", () => {
     // Regression for the production bug where AssistantPanel mounts before
     // wsRef.current finishes its TCP handshake: the original hook returned
     // early when readyState !== OPEN and never re-ran because the WebSocket
@@ -312,8 +338,11 @@ describe('useAssistantChannel — VERIFY-04 stream-drop', () => {
     });
 
     expect(ws.sent).toHaveLength(1);
-    const frame = JSON.parse(ws.sent[0]) as { command: string; identifier: string };
-    expect(frame.command).toBe('subscribe');
+    const frame = JSON.parse(ws.sent[0]) as {
+      command: string;
+      identifier: string;
+    };
+    expect(frame.command).toBe("subscribe");
     expect(frame.identifier).toBe(ASSISTANT_IDENTIFIER);
   });
 });

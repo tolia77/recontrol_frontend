@@ -1,15 +1,17 @@
-import { Spinner } from './Spinner';
+import { Spinner } from "./Spinner";
 
 interface LoadingStateProps {
   message?: string;
   className?: string;
 }
 
-export function LoadingState({ message, className = '' }: LoadingStateProps) {
+export function LoadingState({ message, className = "" }: LoadingStateProps) {
   return (
-    <div className={`flex flex-col items-center justify-center py-12 gap-3 ${className}`}>
+    <div
+      className={`flex flex-col items-center justify-center gap-3 py-12 ${className}`}
+    >
       <Spinner size="lg" />
-      {message && <p className="text-sm text-darkgray">{message}</p>}
+      {message && <p className="text-darkgray text-sm">{message}</p>}
     </div>
   );
 }

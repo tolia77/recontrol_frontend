@@ -1,6 +1,9 @@
-import type { Device } from './device';
-import type { User } from './user';
-import type { PermissionsGroup, PermissionsGroupAttributes } from './permissions';
+import type { Device } from "./device";
+import type { User } from "./user";
+import type {
+  PermissionsGroup,
+  PermissionsGroupAttributes,
+} from "./permissions";
 
 export interface DeviceShare {
   id: string;
@@ -11,9 +14,19 @@ export interface DeviceShare {
   expires_at: string | null;
   created_at: string;
   updated_at: string;
-  device?: Pick<Device, 'id' | 'name'>;
-  user?: Pick<User, 'id' | 'username' | 'email'>;
-  permissions_group?: Pick<PermissionsGroup, 'id' | 'name' | 'see_screen' | 'see_system_info' | 'access_mouse' | 'access_keyboard' | 'access_terminal' | 'manage_power'>;
+  device?: Pick<Device, "id" | "name">;
+  user?: Pick<User, "id" | "username" | "email">;
+  permissions_group?: Pick<
+    PermissionsGroup,
+    | "id"
+    | "name"
+    | "see_screen"
+    | "see_system_info"
+    | "access_mouse"
+    | "access_keyboard"
+    | "access_terminal"
+    | "manage_power"
+  >;
 }
 
 export interface DeviceShareCreatePayload {

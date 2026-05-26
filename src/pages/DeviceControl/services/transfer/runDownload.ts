@@ -1,11 +1,14 @@
-import { DownloadTransfer } from './DownloadTransfer';
-import { FilesChannelError } from '../files';
-import type { FilesChannelClient } from '../files/FilesChannelClient';
-import type { FilesDataChannel } from '../files/FilesDataChannel';
-import type { FilesChannelRequest } from '../../hooks/useFilesChannel';
-import type { FilesErrorCode } from '../files/filesProtocol.generated';
-import type { RunDownloadFn } from './types';
-import { detectSeparator, joinPath } from '../../components/FileManager/utils/pathUtils';
+import { DownloadTransfer } from "./DownloadTransfer";
+import { FilesChannelError } from "../files";
+import type { FilesChannelClient } from "../files/FilesChannelClient";
+import type { FilesDataChannel } from "../files/FilesDataChannel";
+import type { FilesChannelRequest } from "../../hooks/useFilesChannel";
+import type { FilesErrorCode } from "../files/filesProtocol.generated";
+import type { RunDownloadFn } from "./types";
+import {
+  detectSeparator,
+  joinPath,
+} from "../../components/FileManager/utils/pathUtils";
 
 /**
  * Browser-side download runner.
@@ -89,8 +92,11 @@ export function createRunDownload(deps: CreateRunDownloadDeps): RunDownloadFn {
     const filesData = deps.getFilesDataChannel();
     if (!request || !filesClient || !filesData) {
       queue.updateItem(item.id, {
-        state: 'failed',
-        error: { code: 'CHANNEL_NOT_OPEN', message: 'files channels not open.' },
+        state: "failed",
+        error: {
+          code: "CHANNEL_NOT_OPEN",
+          message: "files channels not open.",
+        },
         completedAt: Date.now(),
       });
       return;
@@ -102,7 +108,7 @@ export function createRunDownload(deps: CreateRunDownloadDeps): RunDownloadFn {
     let begin: BeginResp;
     try {
       begin = await request<{ path: string }, BeginResp>(
-        'files.download.begin',
+        "files.download.begin",
         { path: sourcePath },
       );
     } catch (err: unknown) {
@@ -110,11 +116,11 @@ export function createRunDownload(deps: CreateRunDownloadDeps): RunDownloadFn {
         err instanceof FilesChannelError
           ? err.info
           : {
-              code: 'CLIENT_ERROR' as const,
+              code: "CLIENT_ERROR" as const,
               message: err instanceof Error ? err.message : String(err),
             };
       queue.updateItem(item.id, {
-        state: 'failed',
+        state: "failed",
         error: { code: info.code, message: info.message },
         completedAt: Date.now(),
       });
@@ -139,16 +145,16 @@ export function createRunDownload(deps: CreateRunDownloadDeps): RunDownloadFn {
 
     // -------- 3. Race: complete | error | cancel --------
     type Winner =
-      | { kind: 'complete' }
-      | { kind: 'error'; payload: ErrorPayload }
-      | { kind: 'cancel' };
+      | { kind: "complete" }
+      | { kind: "error"; payload: ErrorPayload }
+      | { kind: "cancel" };
 
     const completePromise = new Promise<Winner>((resolve) => {
-      const off = filesClient.onEvent('files.download.complete', (payload) => {
+      const off = filesClient.onEvent("files.download.complete", (payload) => {
         const p = payload as CompletePayload;
         if (p && p.transferId === begin.transferId) {
           off();
-          resolve({ kind: 'complete' });
+          resolve({ kind: "complete" });
         }
       });
     });
@@ -161,18 +167,18 @@ export function createRunDownload(deps: CreateRunDownloadDeps): RunDownloadFn {
     // download stall interval (FileManagerPanel) when DownloadTransfer's
     // lastChunkAtMs starts updating again.
     const errorPromise = new Promise<Winner>((resolve) => {
-      const off = filesClient.onEvent('files.transfer.error', (payload) => {
+      const off = filesClient.onEvent("files.transfer.error", (payload) => {
         const p = payload as ErrorPayload;
         if (!p || p.transferId !== begin.transferId) return;
-        if (p.error.code === 'STALLED') {
+        if (p.error.code === "STALLED") {
           // Non-fatal: surface as row state; do NOT off() / resolve. Another
           // STALLED can fire later (separate stall episode) and we want to
           // keep listening through the lifetime of the transfer.
-          queue.updateItem(item.id, { state: 'stalled' });
+          queue.updateItem(item.id, { state: "stalled" });
           return;
         }
         off();
-        resolve({ kind: 'error', payload: p });
+        resolve({ kind: "error", payload: p });
       });
     });
     const cancelPromise = (async (): Promise<Winner> => {
@@ -180,11 +186,11 @@ export function createRunDownload(deps: CreateRunDownloadDeps): RunDownloadFn {
       while (!queue.isCancelled(item.id)) {
         await new Promise((r) => setTimeout(r, CANCEL_POLL_MS));
         // Bail if the transfer state machine self-cancelled (offset mismatch).
-        if (transfer.currentState === 'cancelled') {
-          return { kind: 'cancel' };
+        if (transfer.currentState === "cancelled") {
+          return { kind: "cancel" };
         }
       }
-      return { kind: 'cancel' };
+      return { kind: "cancel" };
     })();
 
     const winner = await Promise.race([
@@ -202,7 +208,7 @@ export function createRunDownload(deps: CreateRunDownloadDeps): RunDownloadFn {
     // interval becomes a no-op for this transferId immediately).
     deps.onActiveChange?.(null);
 
-    if (winner.kind === 'complete') {
+    if (winner.kind === "complete") {
       // Cancel-discard contract one more time: cancel may have arrived between
       // the last chunk and the complete event. Promise.race resolved 'complete'
       // first only because the cancel poll runs at 100ms; the user could have
@@ -214,17 +220,17 @@ export function createRunDownload(deps: CreateRunDownloadDeps): RunDownloadFn {
             { transferId: number; reason: string },
             Record<string, never>
           >(
-            'files.transfer.cancel',
-            { transferId: begin.transferId, reason: 'user' },
+            "files.transfer.cancel",
+            { transferId: begin.transferId, reason: "user" },
             CANCEL_TIMEOUT_MS,
           );
         } catch {
           /* desktop sweeper / CancelAll will reap; advance the queue. */
         }
         queue.updateItem(item.id, {
-          state: 'cancelled',
+          state: "cancelled",
           completedAt: Date.now(),
-          error: { code: 'CANCELLED', message: 'Cancelled.' },
+          error: { code: "CANCELLED", message: "Cancelled." },
         });
         return;
       }
@@ -232,7 +238,7 @@ export function createRunDownload(deps: CreateRunDownloadDeps): RunDownloadFn {
       // turn the complete event landed (Pitfall 8 -- Safari user-gesture).
       transfer.finalize();
       queue.updateItem(item.id, {
-        state: 'completed',
+        state: "completed",
         completedAt: Date.now(),
         bytesSoFar: begin.size,
       });
@@ -240,24 +246,24 @@ export function createRunDownload(deps: CreateRunDownloadDeps): RunDownloadFn {
       return;
     }
 
-    if (winner.kind === 'cancel') {
+    if (winner.kind === "cancel") {
       transfer.cancel();
       try {
         await request<
           { transferId: number; reason: string },
           Record<string, never>
         >(
-          'files.transfer.cancel',
-          { transferId: begin.transferId, reason: 'user' },
+          "files.transfer.cancel",
+          { transferId: begin.transferId, reason: "user" },
           CANCEL_TIMEOUT_MS,
         );
       } catch {
         /* best-effort; advance regardless. */
       }
       queue.updateItem(item.id, {
-        state: 'cancelled',
+        state: "cancelled",
         completedAt: Date.now(),
-        error: { code: 'CANCELLED', message: 'Cancelled.' },
+        error: { code: "CANCELLED", message: "Cancelled." },
       });
       return;
     }
@@ -265,7 +271,7 @@ export function createRunDownload(deps: CreateRunDownloadDeps): RunDownloadFn {
     // winner.kind === 'error'
     transfer.cancel();
     queue.updateItem(item.id, {
-      state: 'failed',
+      state: "failed",
       error: {
         code: winner.payload.error.code,
         message: winner.payload.error.message,

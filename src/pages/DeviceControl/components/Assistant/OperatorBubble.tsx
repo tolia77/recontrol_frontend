@@ -1,4 +1,4 @@
-import type { FC } from 'react';
+import type { FC } from "react";
 
 /**
  * Left-aligned plain-text bubble for operator-authored messages.
@@ -12,7 +12,7 @@ export interface OperatorBubbleProps {
 
 export const OperatorBubble: FC<OperatorBubbleProps> = ({ text }) => (
   <div className="flex justify-start">
-    <div className="max-w-[80%] rounded-lg bg-tertiary text-text px-3 py-2 text-sm whitespace-pre-wrap break-words">
+    <div className="bg-tertiary text-text max-w-[80%] rounded-lg px-3 py-2 text-sm break-words whitespace-pre-wrap">
       {text}
     </div>
   </div>

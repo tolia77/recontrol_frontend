@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
 interface EmptyStateProps {
   title: string;
@@ -7,13 +7,18 @@ interface EmptyStateProps {
   className?: string;
 }
 
-export function EmptyState({ title, icon, action, className = '' }: EmptyStateProps) {
+export function EmptyState({
+  title,
+  icon,
+  action,
+  className = "",
+}: EmptyStateProps) {
   return (
     <div
-      className={`flex flex-col items-center justify-center py-8 gap-3 text-center ${className}`}
+      className={`flex flex-col items-center justify-center gap-3 py-8 text-center ${className}`}
     >
       {icon}
-      <p className="text-sm text-darkgray">{title}</p>
+      <p className="text-darkgray text-sm">{title}</p>
       {action}
     </div>
   );

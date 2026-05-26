@@ -21,7 +21,11 @@ export class SpeedTracker {
     this.minSamplesForEta = options?.minSamplesForEta ?? 2;
   }
 
-  update(bytesSoFar: number, totalBytes: number, nowMs = Date.now()): SpeedEstimate {
+  update(
+    bytesSoFar: number,
+    totalBytes: number,
+    nowMs = Date.now(),
+  ): SpeedEstimate {
     if (this.lastTimestampMs === null || this.lastBytesSoFar === null) {
       this.lastTimestampMs = nowMs;
       this.lastBytesSoFar = bytesSoFar;
@@ -39,7 +43,8 @@ export class SpeedTracker {
       this.emaBytesPerSecond =
         this.emaBytesPerSecond === null
           ? instantBytesPerSecond
-          : this.emaBytesPerSecond + (instantBytesPerSecond - this.emaBytesPerSecond) * this.alpha;
+          : this.emaBytesPerSecond +
+            (instantBytesPerSecond - this.emaBytesPerSecond) * this.alpha;
       this.sampleCount += 1;
     }
 

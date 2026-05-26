@@ -1,10 +1,10 @@
 // filepath: src/pages/DeviceSettings/EditShareForm.tsx
-import React, { useState } from 'react';
-import type { EditShareFormProps } from './types';
-import { PermissionsEditor } from './components/PermissionsEditor';
-import { LoadGroupPanel } from './components/LoadGroupPanel';
-import { SaveGroupPanel } from './components/SaveGroupPanel';
-import { Input, Button } from 'src/components/ui';
+import React, { useState } from "react";
+import type { EditShareFormProps } from "./types";
+import { PermissionsEditor } from "./components/PermissionsEditor";
+import { LoadGroupPanel } from "./components/LoadGroupPanel";
+import { SaveGroupPanel } from "./components/SaveGroupPanel";
+import { Input, Button } from "src/components/ui";
 
 export const EditShareForm: React.FC<EditShareFormProps> = ({
   t,
@@ -20,13 +20,22 @@ export const EditShareForm: React.FC<EditShareFormProps> = ({
   const [showSavePanel, setShowSavePanel] = useState(false);
 
   return (
-    <form onSubmit={onSubmit} className="mb-6 p-4 border border-blue-200 rounded-lg bg-blue-50">
-      <div className="flex justify-between items-center mb-3">
-        <h3 className="font-semibold">{t('sharing.editShare')}</h3>
-        <button type="button" onClick={onCancel} className="text-sm text-darkgray hover:underline">{t('sharing.cancelEdit')}</button>
+    <form
+      onSubmit={onSubmit}
+      className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4"
+    >
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="font-semibold">{t("sharing.editShare")}</h3>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="text-darkgray text-sm hover:underline"
+        >
+          {t("sharing.cancelEdit")}
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="flex gap-2 md:col-span-2">
           <Button
             type="button"
@@ -34,14 +43,14 @@ export const EditShareForm: React.FC<EditShareFormProps> = ({
             size="sm"
             onClick={() => setShowLoadPanel(!showLoadPanel)}
           >
-            {t('form.loadGroup')}
+            {t("form.loadGroup")}
           </Button>
           <Button
             type="button"
             size="sm"
             onClick={() => setShowSavePanel(!showSavePanel)}
           >
-            {t('form.saveGroup')}
+            {t("form.saveGroup")}
           </Button>
         </div>
 
@@ -58,8 +67,13 @@ export const EditShareForm: React.FC<EditShareFormProps> = ({
         {showSavePanel && (
           <SaveGroupPanel
             t={t}
-            name={editForm.newGroup.name ?? ''}
-            onChange={(name) => onChange({ ...editForm, newGroup: { ...editForm.newGroup, name } })}
+            name={editForm.newGroup.name ?? ""}
+            onChange={(name) =>
+              onChange({
+                ...editForm,
+                newGroup: { ...editForm.newGroup, name },
+              })
+            }
             onSave={onSaveGroup}
           />
         )}
@@ -74,21 +88,30 @@ export const EditShareForm: React.FC<EditShareFormProps> = ({
             access_terminal: !!editForm.newGroup.access_terminal,
             manage_power: !!editForm.newGroup.manage_power,
           }}
-          onChange={(next) => onChange({ ...editForm, newGroup: { ...editForm.newGroup, ...next } })}
+          onChange={(next) =>
+            onChange({
+              ...editForm,
+              newGroup: { ...editForm.newGroup, ...next },
+            })
+          }
         />
 
         <div className="md:col-span-2">
           <Input
-            label={t('form.expiresAt')}
+            label={t("form.expiresAt")}
             type="datetime-local"
             value={editForm.expiresAt}
-            onChange={(e) => onChange({ ...editForm, expiresAt: e.target.value })}
+            onChange={(e) =>
+              onChange({ ...editForm, expiresAt: e.target.value })
+            }
           />
         </div>
       </div>
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="secondary" onClick={onCancel}>{t('sharing.cancelEdit')}</Button>
-        <Button type="submit">{t('sharing.saveChanges')}</Button>
+        <Button type="button" variant="secondary" onClick={onCancel}>
+          {t("sharing.cancelEdit")}
+        </Button>
+        <Button type="submit">{t("sharing.saveChanges")}</Button>
       </div>
     </form>
   );

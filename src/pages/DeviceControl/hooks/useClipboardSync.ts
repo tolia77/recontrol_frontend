@@ -1,19 +1,23 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ClipboardLoopGate } from '../services/clipboard';
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { ClipboardLoopGate } from "../services/clipboard";
 import {
   bindFocusVisibilityListeners,
   decideInbound,
   prepareOutbound,
-} from '../services/clipboard';
-import { ClipboardChannelClient } from '../services/clipboard';
+} from "../services/clipboard";
+import { ClipboardChannelClient } from "../services/clipboard";
 import type {
   ClipboardCapabilitiesEnvelope,
   ClipboardRefusalReason,
-} from '../services/clipboard/clipboardProtocol.generated';
-import type { ClipboardCapability } from './useClipboardCapability';
-import type { WebRtcConnectionState } from './useWebRtc';
+} from "../services/clipboard/clipboardProtocol.generated";
+import type { ClipboardCapability } from "./useClipboardCapability";
+import type { WebRtcConnectionState } from "./useWebRtc";
 
-export type ClipboardSyncStatus = 'idle' | 'permission-required' | 'unsupported' | 'paused';
+export type ClipboardSyncStatus =
+  | "idle"
+  | "permission-required"
+  | "unsupported"
+  | "paused";
 
 export interface UseClipboardSync {
   isPaused: boolean;
@@ -22,7 +26,11 @@ export interface UseClipboardSync {
   lastSyncAt: number | null;
   // Phase 15 D-10: discrete fields for Phase 16's selectPillState() consumption.
   cachedDesktopCaps: ClipboardCapabilitiesEnvelope | null;
-  lastRefusal: { reason: ClipboardRefusalReason; at: number; source: 'remote' | 'local' } | null;
+  lastRefusal: {
+    reason: ClipboardRefusalReason;
+    at: number;
+    source: "remote" | "local";
+  } | null;
 }
 
 export interface UseClipboardSyncArgs {
@@ -48,7 +56,11 @@ export interface UseClipboardSyncArgs {
   caps?: ClipboardCapability;
 }
 
-const DEFAULT_CAPS: ClipboardCapability = { canRead: false, canWrite: false, isSecureContext: false };
+const DEFAULT_CAPS: ClipboardCapability = {
+  canRead: false,
+  canWrite: false,
+  isSecureContext: false,
+};
 
 export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
   const {
@@ -62,14 +74,17 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
   } = args;
 
   const [isPaused, setIsPaused] = useState(false);
-  const [status, setStatus] = useState<ClipboardSyncStatus>('idle');
+  const [status, setStatus] = useState<ClipboardSyncStatus>("idle");
   const [lastSyncAt, setLastSyncAt] = useState<number | null>(null);
 
   // Phase 15: three new discrete fields for Phase 16's pill (D-10).
-  const [cachedDesktopCaps, setCachedDesktopCaps] = useState<ClipboardCapabilitiesEnvelope | null>(null);
-  const [lastRefusal, setLastRefusal] = useState<
-    { reason: ClipboardRefusalReason; at: number; source: 'remote' | 'local' } | null
-  >(null);
+  const [cachedDesktopCaps, setCachedDesktopCaps] =
+    useState<ClipboardCapabilitiesEnvelope | null>(null);
+  const [lastRefusal, setLastRefusal] = useState<{
+    reason: ClipboardRefusalReason;
+    at: number;
+    source: "remote" | "local";
+  } | null>(null);
 
   const isPausedRef = useRef(isPaused);
   const seqRef = useRef(0);
@@ -82,7 +97,10 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
   const lastRefusalRef = useRef(lastRefusal);
   // D-18 re-advertise tracking: remember last advertised flag pair so we only
   // re-send when the flag combination actually flips (avoids T-15-19 flap-loop).
-  const prevSentCapsRef = useRef<{ outboundEnabled: boolean; inboundEnabled: boolean } | null>(null);
+  const prevSentCapsRef = useRef<{
+    outboundEnabled: boolean;
+    inboundEnabled: boolean;
+  } | null>(null);
   // CR-01: mirror current caps into a ref so buildCapsEnvelope is stable across
   // caps changes. The previous shape listed caps.* in buildCapsEnvelope's deps,
   // which made the inbound-subscribe effect tear down (wiping the cache) every
@@ -98,7 +116,10 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
   // focused on another window (a VM, the desktop client itself), the apply
   // throws NotAllowedError and the inbound text is dropped. Stash the latest
   // failed apply here and retry from the focus / copy / cut listeners below.
-  const pendingInboundRef = useRef<{ text: string; hashBytes: Uint8Array } | null>(null);
+  const pendingInboundRef = useRef<{
+    text: string;
+    hashBytes: Uint8Array;
+  } | null>(null);
 
   // Keep refs in sync with state so async callbacks read live values.
   useEffect(() => {
@@ -129,21 +150,22 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
   // caps flips. The inbound subscribe effect lists this in its deps and must
   // NOT re-run when caps detection resolves -- doing so wipes the cache (see
   // CR-01 in 15-REVIEW.md).
-  const buildCapsEnvelope = useCallback((): ClipboardCapabilitiesEnvelope | null => {
-    const originId = clipboardOriginIdRef.current;
-    if (!originId) return null;
-    const c = capsRef.current;
-    return {
-      kind: 'capabilities',
-      originId,
-      outboundEnabled: c.canRead && c.isSecureContext,
-      inboundEnabled: c.canWrite && c.isSecureContext,
-      maxBytes: 2_000_000,
-      protocolVersion: '1.0',
-      seq: nextSeq(),
-      ts: Date.now(),
-    };
-  }, [clipboardOriginIdRef, nextSeq]);
+  const buildCapsEnvelope =
+    useCallback((): ClipboardCapabilitiesEnvelope | null => {
+      const originId = clipboardOriginIdRef.current;
+      if (!originId) return null;
+      const c = capsRef.current;
+      return {
+        kind: "capabilities",
+        originId,
+        outboundEnabled: c.canRead && c.isSecureContext,
+        inboundEnabled: c.canWrite && c.isSecureContext,
+        maxBytes: 2_000_000,
+        protocolVersion: "1.0",
+        seq: nextSeq(),
+        ts: Date.now(),
+      };
+    }, [clipboardOriginIdRef, nextSeq]);
 
   const togglePause = useCallback(() => setIsPaused((p) => !p), []);
 
@@ -153,20 +175,20 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
   // so `[args, nextSeq]` would re-bind focus/visibilitychange listeners on every
   // render -- the unsubscribe-resubscribe window can drop a focus event.
   const maybeReadAndPush = useCallback(async () => {
-    if (connectionState !== 'connected') return;
+    if (connectionState !== "connected") return;
     const dc = clipboardCtlRef.current;
-    if (!dc || dc.readyState !== 'open') return;
+    if (!dc || dc.readyState !== "open") return;
 
     let raw: string | null = null;
     try {
-      if (typeof navigator?.clipboard?.readText !== 'function') {
-        setStatus('unsupported');
+      if (typeof navigator?.clipboard?.readText !== "function") {
+        setStatus("unsupported");
         return;
       }
       // POLICY-06 listener-layer: pause gates BEFORE readText to avoid
       // unnecessary permission prompts while paused.
       if (isPausedRef.current) return;
-      if (document.visibilityState !== 'visible') return;
+      if (document.visibilityState !== "visible") return;
       if (!document.hasFocus()) return; // Pitfall 13
       // DEGRADE-04 dampening pre-check: avoid readText immediately after a remote
       // apply (reduces permission-prompt churn on browsers that prompt every read).
@@ -176,13 +198,15 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
         // on every focus event during the 1s post-remote-write dampening
         // window -- in normal use that's once per paste -- and the prior level
         // was spamming the production console with no operator value.
-        console.debug('[clipboard] skipped focus-read due to recent remote write');
+        console.debug(
+          "[clipboard] skipped focus-read due to recent remote write",
+        );
         return;
       }
       raw = await navigator.clipboard.readText();
     } catch {
       // D-12: catch readText rejection -> permission-required. NO permissions.query.
-      setStatus('permission-required');
+      setStatus("permission-required");
       return;
     }
 
@@ -191,7 +215,7 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
         rawText: raw,
         isPaused: isPausedRef.current,
         hasFocus: document.hasFocus(),
-        visibilityVisible: document.visibilityState === 'visible',
+        visibilityVisible: document.visibilityState === "visible",
         nowMs: Date.now(),
         lastRemoteApplyTimeMs: lastRemoteApplyTimeRef.current,
         loopGate,
@@ -201,11 +225,11 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
       nextSeq,
     );
 
-    if (decision.kind === 'send') {
+    if (decision.kind === "send") {
       if (clientRef.current) {
         clientRef.current.send(decision.envelope);
         setLastSyncAt(Date.now());
-        if (statusRef.current === 'permission-required') setStatus('idle');
+        if (statusRef.current === "permission-required") setStatus("idle");
         // D-18 re-advertise on permission resolve: a successful readText+send
         // proves canRead is now actually true; if our flag pair flipped from the
         // last advertised, send a fresh capabilities envelope so the desktop
@@ -227,14 +251,14 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
           }
         }
       }
-    } else if (decision.kind === 'refused-local') {
+    } else if (decision.kind === "refused-local") {
       // D-13 / D-14: surface local refusal to the pill feed. source='local'
       // disambiguates from desktop-replied refused for any future direction-
       // specific UX in Phase 16.
       setLastRefusal({
         reason: decision.reason as ClipboardRefusalReason,
         at: Date.now(),
-        source: 'local',
+        source: "local",
       });
     }
     // CR-01: caps.* read via capsRef so this callback's identity is stable.
@@ -255,10 +279,10 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
   // clipboardCtlRef.current once and never re-ran when the ref's inner value
   // changed -- silently dropping all inbound clipboard messages.
   useEffect(() => {
-    if (connectionState !== 'connected') return;
+    if (connectionState !== "connected") return;
     if (!clipboardCtlOpen) return;
     const dc = clipboardCtlRef.current;
-    if (!dc || dc.readyState !== 'open') return;
+    if (!dc || dc.readyState !== "open") return;
 
     if (clientRef.current) clientRef.current.dispose();
     const client = new ClipboardChannelClient(dc);
@@ -281,18 +305,18 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
         isPausedRef.current,
         loopGate,
       );
-      if (decision.kind !== 'apply') return;
+      if (decision.kind !== "apply") return;
       // Pitfall 1: RECORD FIRST, THEN WRITE (T-14-34).
       loopGate.recordApplied(decision.hashBytes);
       try {
-        if (typeof navigator?.clipboard?.writeText !== 'function') {
-          setStatus('unsupported');
+        if (typeof navigator?.clipboard?.writeText !== "function") {
+          setStatus("unsupported");
           return;
         }
         await navigator.clipboard.writeText(decision.text);
         lastRemoteApplyTimeRef.current = Date.now();
         setLastSyncAt(Date.now());
-        if (statusRef.current === 'permission-required') setStatus('idle');
+        if (statusRef.current === "permission-required") setStatus("idle");
         // D-18 re-advertise: writeText resolved cleanly -> canWrite is actually
         // true. Re-send caps envelope if the flag pair flipped from the last
         // advertised value.
@@ -318,8 +342,11 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
         // didn't happen, so the OS clipboard event we were suppressing won't
         // fire) and stash the text for retry on focus regain.
         loopGate.reset();
-        pendingInboundRef.current = { text: decision.text, hashBytes: decision.hashBytes };
-        setStatus('permission-required');
+        pendingInboundRef.current = {
+          text: decision.text,
+          hashBytes: decision.hashBytes,
+        };
+        setStatus("permission-required");
       }
     });
 
@@ -334,7 +361,7 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
       setLastRefusal({
         reason: refusedEnv.reason as ClipboardRefusalReason,
         at: Date.now(),
-        source: 'remote',
+        source: "remote",
       });
     });
 
@@ -405,15 +432,15 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
   const flushPendingInbound = useCallback(async () => {
     const pending = pendingInboundRef.current;
     if (!pending) return;
-    if (typeof navigator?.clipboard?.writeText !== 'function') return;
-    if (!document.hasFocus() || document.visibilityState !== 'visible') return;
+    if (typeof navigator?.clipboard?.writeText !== "function") return;
+    if (!document.hasFocus() || document.visibilityState !== "visible") return;
     loopGate.recordApplied(pending.hashBytes);
     try {
       await navigator.clipboard.writeText(pending.text);
       pendingInboundRef.current = null;
       lastRemoteApplyTimeRef.current = Date.now();
       setLastSyncAt(Date.now());
-      if (statusRef.current === 'permission-required') setStatus('idle');
+      if (statusRef.current === "permission-required") setStatus("idle");
     } catch {
       loopGate.reset();
     }
@@ -428,27 +455,30 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
   // any pending inbound apply BEFORE the outbound read so we don't echo the
   // browser's stale clipboard back to the desktop.
   useEffect(() => {
-    if (connectionState !== 'connected') return;
+    if (connectionState !== "connected") return;
     const onTrigger = (): void => {
       void (async () => {
         await flushPendingInbound();
         void maybeReadAndPush();
       })();
     };
-    const cleanup = bindFocusVisibilityListeners({ window, document }, onTrigger);
+    const cleanup = bindFocusVisibilityListeners(
+      { window, document },
+      onTrigger,
+    );
     const onCopyOrCut = (): void => {
       setTimeout(onTrigger, 0);
     };
-    document.addEventListener('copy', onCopyOrCut);
-    document.addEventListener('cut', onCopyOrCut);
+    document.addEventListener("copy", onCopyOrCut);
+    document.addEventListener("cut", onCopyOrCut);
     return () => {
       cleanup();
-      document.removeEventListener('copy', onCopyOrCut);
-      document.removeEventListener('cut', onCopyOrCut);
+      document.removeEventListener("copy", onCopyOrCut);
+      document.removeEventListener("cut", onCopyOrCut);
     };
   }, [connectionState, maybeReadAndPush, flushPendingInbound]);
 
-  const effectiveStatus: ClipboardSyncStatus = isPaused ? 'paused' : status;
+  const effectiveStatus: ClipboardSyncStatus = isPaused ? "paused" : status;
   return {
     isPaused,
     togglePause,

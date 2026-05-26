@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   scenariosService,
   type Scenario,
-} from 'src/services/backend/scenariosService';
-import { getUserId } from 'src/utils/auth';
-import { ConfirmModal } from 'src/components/ui';
-import ScenariosRow from './ScenariosRow';
+} from "src/services/backend/scenariosService";
+import { getUserId } from "src/utils/auth";
+import { ConfirmModal } from "src/components/ui";
+import ScenariosRow from "./ScenariosRow";
 
 export interface ScenariosLibraryProps {
   deviceId: string;
@@ -27,21 +27,21 @@ export default function ScenariosLibrary({
   onRun,
   activeRunDeviceId = null,
 }: ScenariosLibraryProps) {
-  const { t } = useTranslation('scenarios');
+  const { t } = useTranslation("scenarios");
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [q, setQ] = useState('');
-  const [debouncedQ, setDebouncedQ] = useState('');
+  const [q, setQ] = useState("");
+  const [debouncedQ, setDebouncedQ] = useState("");
   // The library lives inside DeviceControl which is scoped to a single device.
   // The pinned-device filter dropdown therefore offers exactly two values in
   // P21: "" (all visible scenarios) and the currently-controlled device id.
   // Full multi-device picker is a v1.6+ enhancement (CONTEXT "Claude's
   // Discretion": "list devices the operator has access to ...").
-  const [pinnedFilter, setPinnedFilter] = useState<string>('');
+  const [pinnedFilter, setPinnedFilter] = useState<string>("");
   // Pending-delete target: null means no dialog open; non-null means confirm modal open.
   const [deleteTarget, setDeleteTarget] = useState<Scenario | null>(null);
-  const currentUserId = getUserId() ?? '';
+  const currentUserId = getUserId() ?? "";
 
   // LIB-03: 200ms debounce per CONTEXT "Claude's Discretion".
   useEffect(() => {
@@ -62,7 +62,7 @@ export default function ScenariosLibrary({
         if (!cancelled) setScenarios(data);
       })
       .catch(() => {
-        if (!cancelled) setError(t('library.empty'));
+        if (!cancelled) setError(t("library.empty"));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -82,7 +82,7 @@ export default function ScenariosLibrary({
       });
       setScenarios(data);
     } catch {
-      setError(t('library.empty'));
+      setError(t("library.empty"));
     } finally {
       setLoading(false);
     }
@@ -96,7 +96,7 @@ export default function ScenariosLibrary({
       await scenariosService.destroy(target.id);
       await reload();
     } catch {
-      setError(t('library.empty'));
+      setError(t("library.empty"));
     }
   };
 
@@ -112,7 +112,7 @@ export default function ScenariosLibrary({
       await reload();
       onEdit(result.scenario.id);
     } catch {
-      setError(t('library.empty'));
+      setError(t("library.empty"));
     }
   };
 
@@ -123,30 +123,30 @@ export default function ScenariosLibrary({
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          className="rounded bg-primary px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
+          className="bg-primary rounded px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
           onClick={onNew}
           data-testid="scenarios-new-button"
         >
-          {t('library.newButton')}
+          {t("library.newButton")}
         </button>
         <input
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder={t('library.searchPlaceholder')}
-          className="min-w-[12ch] flex-1 rounded border border-lightgray px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          placeholder={t("library.searchPlaceholder")}
+          className="border-lightgray focus:ring-primary/20 min-w-[12ch] flex-1 rounded border px-2 py-1.5 text-sm focus:ring-2 focus:outline-none"
           data-testid="scenarios-search-input"
         />
         <select
           value={pinnedFilter}
           onChange={(e) => setPinnedFilter(e.target.value)}
-          className="rounded border border-lightgray px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="border-lightgray focus:ring-primary/20 rounded border px-2 py-1.5 text-sm focus:ring-2 focus:outline-none"
           data-testid="scenarios-pinned-filter"
         >
-          <option value="">{t('library.pinnedDeviceFilter')}</option>
+          <option value="">{t("library.pinnedDeviceFilter")}</option>
           {deviceId && (
             <option value={deviceId}>
-              {t('library.pinnedDeviceChip', { device: deviceId.slice(0, 8) })}
+              {t("library.pinnedDeviceChip", { device: deviceId.slice(0, 8) })}
             </option>
           )}
         </select>
@@ -157,7 +157,7 @@ export default function ScenariosLibrary({
         </div>
       )}
       {error && !loading && (
-        <div className="text-sm text-error" data-testid="scenarios-error">
+        <div className="text-error text-sm" data-testid="scenarios-error">
           {error}
         </div>
       )}
@@ -167,8 +167,8 @@ export default function ScenariosLibrary({
           data-testid="scenarios-empty"
         >
           {debouncedQ || pinnedFilter
-            ? t('library.emptyFiltered')
-            : t('library.empty')}
+            ? t("library.emptyFiltered")
+            : t("library.empty")}
         </div>
       )}
       <ul className="flex flex-col gap-1" data-testid="scenarios-list">
@@ -190,10 +190,10 @@ export default function ScenariosLibrary({
       <ConfirmModal
         open={deleteTarget !== null}
         dangerous
-        title={t('library.deleteConfirm.title')}
-        body={t('library.deleteConfirm.body', { name: deleteTarget?.name })}
-        confirmLabel={t('library.deleteConfirm.confirm')}
-        cancelLabel={t('library.deleteConfirm.cancel')}
+        title={t("library.deleteConfirm.title")}
+        body={t("library.deleteConfirm.body", { name: deleteTarget?.name })}
+        confirmLabel={t("library.deleteConfirm.confirm")}
+        cancelLabel={t("library.deleteConfirm.cancel")}
         onConfirm={performDelete}
         onCancel={() => setDeleteTarget(null)}
       />

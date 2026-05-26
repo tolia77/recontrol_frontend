@@ -1,14 +1,18 @@
-import { useTranslation } from 'react-i18next';
-import { generateUUID } from 'src/utils/uuid';
-import { Button } from 'src/components/ui/Button';
+import { useTranslation } from "react-i18next";
+import { generateUUID } from "src/utils/uuid";
+import { Button } from "src/components/ui/Button";
 
 interface QuickActionsProps {
   disabled: boolean;
-  addAction: (action: { id: string; type: string; payload: Record<string, unknown> }) => void;
+  addAction: (action: {
+    id: string;
+    type: string;
+    payload: Record<string, unknown>;
+  }) => void;
 }
 
 export function QuickActions({ disabled, addAction }: QuickActionsProps) {
-  const { t } = useTranslation('deviceControl');
+  const { t } = useTranslation("deviceControl");
 
   return (
     <div className="quick-actions mt-6">
@@ -17,25 +21,25 @@ export function QuickActions({ disabled, addAction }: QuickActionsProps) {
           onClick={() =>
             addAction({
               id: generateUUID(),
-              type: 'screen.start',
+              type: "screen.start",
               payload: {},
             })
           }
           disabled={disabled}
         >
-          {t('manual.quick.startStream')}
+          {t("manual.quick.startStream")}
         </Button>
         <Button
           onClick={() =>
             addAction({
               id: generateUUID(),
-              type: 'screen.stop',
+              type: "screen.stop",
               payload: {},
             })
           }
           disabled={disabled}
         >
-          {t('manual.quick.stopStream')}
+          {t("manual.quick.stopStream")}
         </Button>
       </div>
     </div>

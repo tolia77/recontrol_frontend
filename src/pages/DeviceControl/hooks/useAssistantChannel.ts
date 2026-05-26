@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from "react";
 
-const ASSISTANT_IDENTIFIER = JSON.stringify({ channel: 'AssistantChannel' });
+const ASSISTANT_IDENTIFIER = JSON.stringify({ channel: "AssistantChannel" });
 const GAP_CLOSE_TIMEOUT_MS = 500;
 
 /**
@@ -11,9 +11,9 @@ const GAP_CLOSE_TIMEOUT_MS = 500;
  * silently by the reducer (STREAM-03 forward-compat).
  */
 export type AssistantBroadcast =
-  | { type: 'token'; seq: number; session_token: string; content: string }
+  | { type: "token"; seq: number; session_token: string; content: string }
   | {
-      type: 'tool_call_start';
+      type: "tool_call_start";
       seq: number;
       session_token: string;
       tool_call_id: string;
@@ -23,7 +23,7 @@ export type AssistantBroadcast =
       cwd?: string;
     }
   | {
-      type: 'tool_call_result';
+      type: "tool_call_result";
       seq: number;
       session_token: string;
       tool_call_id: string;
@@ -36,7 +36,7 @@ export type AssistantBroadcast =
       };
     }
   | {
-      type: 'requires_confirmation';
+      type: "requires_confirmation";
       seq: number;
       session_token: string;
       confirmation_id: string;
@@ -46,13 +46,33 @@ export type AssistantBroadcast =
       args: unknown[];
       cwd?: string;
       reason: string;
-      zone: 'deny_list' | 'outside_list';
+      zone: "deny_list" | "outside_list";
     }
-  | { type: 'quota_warning'; seq: number; session_token: string; percent: number }
-  | { type: 'done'; seq: number; session_token: string; stop_reason: string; message?: string }
-  | { type: 'error'; seq: number; session_token: string; source: string; message?: string };
+  | {
+      type: "quota_warning";
+      seq: number;
+      session_token: string;
+      percent: number;
+    }
+  | {
+      type: "done";
+      seq: number;
+      session_token: string;
+      stop_reason: string;
+      message?: string;
+    }
+  | {
+      type: "error";
+      seq: number;
+      session_token: string;
+      source: string;
+      message?: string;
+    };
 
-export type AssistantDispatchAction = 'run_prompt' | 'stop_loop' | 'confirm_tool_call';
+export type AssistantDispatchAction =
+  | "run_prompt"
+  | "stop_loop"
+  | "confirm_tool_call";
 
 export interface UseAssistantChannelReturn {
   dispatch: (action: AssistantDispatchAction, data?: object) => void;
@@ -111,7 +131,7 @@ export function useAssistantChannel(
         onBroadcastRef.current(msg);
       } catch (err) {
         // Reducer errors must not crash the hook; log and continue.
-        console.warn('useAssistantChannel: onBroadcast threw', err);
+        console.warn("useAssistantChannel: onBroadcast threw", err);
       }
     }
 
@@ -122,15 +142,18 @@ export function useAssistantChannel(
         // close; the close handler already delivered `connection_lost`.
         if (closedRef.current) return;
         const errorEvent: AssistantBroadcast = {
-          type: 'error',
+          type: "error",
           seq: expectedSeqRef.current,
-          session_token: '',
-          source: 'stream_out_of_order',
+          session_token: "",
+          source: "stream_out_of_order",
         };
         try {
           onBroadcastRef.current(errorEvent);
         } catch (err) {
-          console.warn('useAssistantChannel: onBroadcast threw on gap-close error', err);
+          console.warn(
+            "useAssistantChannel: onBroadcast threw on gap-close error",
+            err,
+          );
         }
       }, GAP_CLOSE_TIMEOUT_MS);
     } else if (bufferRef.current.size === 0 && gapTimerRef.current !== null) {
@@ -148,7 +171,11 @@ export function useAssistantChannel(
   // We attach an `open` listener as a wake-up to catch that case.
   useEffect(() => {
     if (!ws) return;
-    if (ws.readyState === WebSocket.CLOSING || ws.readyState === WebSocket.CLOSED) return;
+    if (
+      ws.readyState === WebSocket.CLOSING ||
+      ws.readyState === WebSocket.CLOSED
+    )
+      return;
 
     closedRef.current = false;
     bufferRef.current = new Map();
@@ -162,7 +189,12 @@ export function useAssistantChannel(
     const sendSubscribe = (): void => {
       if (subscribed) return;
       if (ws.readyState !== WebSocket.OPEN) return;
-      ws.send(JSON.stringify({ command: 'subscribe', identifier: ASSISTANT_IDENTIFIER }));
+      ws.send(
+        JSON.stringify({
+          command: "subscribe",
+          identifier: ASSISTANT_IDENTIFIER,
+        }),
+      );
       subscribed = true;
     };
 
@@ -176,11 +208,15 @@ export function useAssistantChannel(
         return; // not JSON; ignore
       }
       if (data.identifier !== ASSISTANT_IDENTIFIER) return;
-      if (data.type === 'confirm_subscription' || data.type === 'reject_subscription') return;
-      if (data.type === 'ping' || data.type === 'welcome') return;
+      if (
+        data.type === "confirm_subscription" ||
+        data.type === "reject_subscription"
+      )
+        return;
+      if (data.type === "ping" || data.type === "welcome") return;
 
       const inner = data.message;
-      if (!inner || typeof inner !== 'object') return;
+      if (!inner || typeof inner !== "object") return;
       const broadcast = inner as AssistantBroadcast;
 
       // Per-run reorder-buffer reset. Backend AgentRunner allocates a fresh
@@ -190,7 +226,7 @@ export function useAssistantChannel(
       // forever waiting for a seq that never arrives. AssistantChannel emits
       // `accepted` (transmit, seqless) before any seq broadcasts of a new
       // run — use it as the reset marker.
-      if ((broadcast as { type?: string }).type === 'accepted') {
+      if ((broadcast as { type?: string }).type === "accepted") {
         bufferRef.current = new Map();
         expectedSeqRef.current = 1;
         if (gapTimerRef.current !== null) {
@@ -199,7 +235,7 @@ export function useAssistantChannel(
         }
       }
 
-      if (typeof (broadcast as { seq?: unknown }).seq === 'number') {
+      if (typeof (broadcast as { seq?: unknown }).seq === "number") {
         bufferRef.current.set((broadcast as { seq: number }).seq, broadcast);
         flushInOrder();
       } else {
@@ -208,7 +244,10 @@ export function useAssistantChannel(
         try {
           onBroadcastRef.current(broadcast);
         } catch (err) {
-          console.warn('useAssistantChannel: onBroadcast threw on seqless event', err);
+          console.warn(
+            "useAssistantChannel: onBroadcast threw on seqless event",
+            err,
+          );
         }
       }
     };
@@ -223,21 +262,21 @@ export function useAssistantChannel(
       // Synthesize a connection_lost error so the reducer can leave streaming.
       // VERIFY-04: React reaches error state within 5s of socket close.
       const errorEvent: AssistantBroadcast = {
-        type: 'error',
+        type: "error",
         seq: expectedSeqRef.current,
-        session_token: '',
-        source: 'connection_lost',
+        session_token: "",
+        source: "connection_lost",
       };
       try {
         onBroadcastRef.current(errorEvent);
       } catch (err) {
-        console.warn('useAssistantChannel: onBroadcast threw on close', err);
+        console.warn("useAssistantChannel: onBroadcast threw on close", err);
       }
     };
 
-    ws.addEventListener('open', onOpen);
-    ws.addEventListener('message', onMessage);
-    ws.addEventListener('close', onClose);
+    ws.addEventListener("open", onOpen);
+    ws.addEventListener("message", onMessage);
+    ws.addEventListener("close", onClose);
 
     // Already open at mount → subscribe immediately. Otherwise the `open`
     // listener handles it when the CONNECTING socket transitions.
@@ -246,14 +285,19 @@ export function useAssistantChannel(
     return () => {
       try {
         if (subscribed && ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ command: 'unsubscribe', identifier: ASSISTANT_IDENTIFIER }));
+          ws.send(
+            JSON.stringify({
+              command: "unsubscribe",
+              identifier: ASSISTANT_IDENTIFIER,
+            }),
+          );
         }
       } catch {
         // swallow — socket may already be closing
       }
-      ws.removeEventListener('open', onOpen);
-      ws.removeEventListener('message', onMessage);
-      ws.removeEventListener('close', onClose);
+      ws.removeEventListener("open", onOpen);
+      ws.removeEventListener("message", onMessage);
+      ws.removeEventListener("close", onClose);
       if (gapTimerRef.current !== null) {
         window.clearTimeout(gapTimerRef.current);
         gapTimerRef.current = null;
@@ -266,7 +310,7 @@ export function useAssistantChannel(
       if (!ws || ws.readyState !== WebSocket.OPEN) return;
       ws.send(
         JSON.stringify({
-          command: 'message',
+          command: "message",
           identifier: ASSISTANT_IDENTIFIER,
           data: JSON.stringify({ action, ...data }),
         }),

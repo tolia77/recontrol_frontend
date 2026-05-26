@@ -16,7 +16,7 @@
 //   - run_clear: full reset
 //   - cross-run defense: broadcast with mismatched run_id is ignored entirely
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 
 import {
   scenariosReducer,
@@ -25,20 +25,23 @@ import {
   type ScenariosState,
   type ScenariosAction,
   type ActiveRun,
-} from './scenariosReducer';
-import type { ScenarioRunBroadcast } from '../../hooks/useScenarioRunChannel';
+} from "./scenariosReducer";
+import type { ScenarioRunBroadcast } from "../../hooks/useScenarioRunChannel";
 
 // ----------------------------------------------------------------------------
 // Helpers
 // ----------------------------------------------------------------------------
 
-function launch(state: ScenariosState, overrides?: Partial<ActiveRun>): ScenariosState {
+function launch(
+  state: ScenariosState,
+  overrides?: Partial<ActiveRun>,
+): ScenariosState {
   const action: ScenariosAction = {
-    type: 'run_launch',
-    runId: overrides?.runId ?? 'run-1',
-    scenarioId: overrides?.scenarioId ?? 's-1',
-    scenarioName: overrides?.scenarioName ?? 'Test',
-    deviceId: overrides?.deviceId ?? 'd-1',
+    type: "run_launch",
+    runId: overrides?.runId ?? "run-1",
+    scenarioId: overrides?.scenarioId ?? "s-1",
+    scenarioName: overrides?.scenarioName ?? "Test",
+    deviceId: overrides?.deviceId ?? "d-1",
     stepCount: overrides?.stepCount ?? 3,
     startedAt: overrides?.startedAt ?? 1_700_000_000_000,
   };
@@ -49,28 +52,28 @@ function broadcast(
   state: ScenariosState,
   msg: ScenarioRunBroadcast,
 ): ScenariosState {
-  return scenariosReducer(state, { type: 'broadcast', broadcast: msg });
+  return scenariosReducer(state, { type: "broadcast", broadcast: msg });
 }
 
 // ----------------------------------------------------------------------------
 // mapStopReasonToStatus
 // ----------------------------------------------------------------------------
 
-describe('mapStopReasonToStatus', () => {
-  it('maps each of the eight terminal reasons to the matching ActiveRunStatus', () => {
-    expect(mapStopReasonToStatus('completed')).toBe('completed');
-    expect(mapStopReasonToStatus('failed')).toBe('failed');
-    expect(mapStopReasonToStatus('user_stopped')).toBe('user_stopped');
-    expect(mapStopReasonToStatus('policy_deny')).toBe('policy_deny');
-    expect(mapStopReasonToStatus('access_revoked')).toBe('access_revoked');
-    expect(mapStopReasonToStatus('tab_closed')).toBe('tab_closed');
-    expect(mapStopReasonToStatus('abandoned')).toBe('abandoned');
-    expect(mapStopReasonToStatus('error')).toBe('error');
+describe("mapStopReasonToStatus", () => {
+  it("maps each of the eight terminal reasons to the matching ActiveRunStatus", () => {
+    expect(mapStopReasonToStatus("completed")).toBe("completed");
+    expect(mapStopReasonToStatus("failed")).toBe("failed");
+    expect(mapStopReasonToStatus("user_stopped")).toBe("user_stopped");
+    expect(mapStopReasonToStatus("policy_deny")).toBe("policy_deny");
+    expect(mapStopReasonToStatus("access_revoked")).toBe("access_revoked");
+    expect(mapStopReasonToStatus("tab_closed")).toBe("tab_closed");
+    expect(mapStopReasonToStatus("abandoned")).toBe("abandoned");
+    expect(mapStopReasonToStatus("error")).toBe("error");
   });
 
   it('maps unknown stop_reason to "error" as a fallback', () => {
-    expect(mapStopReasonToStatus('garbage')).toBe('error');
-    expect(mapStopReasonToStatus('')).toBe('error');
+    expect(mapStopReasonToStatus("garbage")).toBe("error");
+    expect(mapStopReasonToStatus("")).toBe("error");
   });
 });
 
@@ -78,10 +81,10 @@ describe('mapStopReasonToStatus', () => {
 // initialScenariosState
 // ----------------------------------------------------------------------------
 
-describe('initialScenariosState', () => {
+describe("initialScenariosState", () => {
   it('has activeRun=null and segment="library"', () => {
     expect(initialScenariosState.activeRun).toBeNull();
-    expect(initialScenariosState.segment).toBe('library');
+    expect(initialScenariosState.segment).toBe("library");
   });
 });
 
@@ -89,31 +92,34 @@ describe('initialScenariosState', () => {
 // segment_set
 // ----------------------------------------------------------------------------
 
-describe('segment_set', () => {
-  it('toggles between library and history', () => {
+describe("segment_set", () => {
+  it("toggles between library and history", () => {
     let s = initialScenariosState;
-    s = scenariosReducer(s, { type: 'segment_set', segment: 'history' });
-    expect(s.segment).toBe('history');
-    s = scenariosReducer(s, { type: 'segment_set', segment: 'library' });
-    expect(s.segment).toBe('library');
+    s = scenariosReducer(s, { type: "segment_set", segment: "history" });
+    expect(s.segment).toBe("history");
+    s = scenariosReducer(s, { type: "segment_set", segment: "library" });
+    expect(s.segment).toBe("library");
   });
 
-  it('returns the same state object when segment is unchanged', () => {
+  it("returns the same state object when segment is unchanged", () => {
     const s = initialScenariosState;
-    const next = scenariosReducer(s, { type: 'segment_set', segment: 'library' });
+    const next = scenariosReducer(s, {
+      type: "segment_set",
+      segment: "library",
+    });
     expect(next).toBe(s);
   });
 
   it('accepts the "ai" segment (Phase 23 widening)', () => {
     let s: ScenariosState = initialScenariosState;
-    s = scenariosReducer(s, { type: 'segment_set', segment: 'ai' });
-    expect(s.segment).toBe('ai');
+    s = scenariosReducer(s, { type: "segment_set", segment: "ai" });
+    expect(s.segment).toBe("ai");
     // Round-trip through library + history to prove the widened union has
     // no exhaustiveness regressions in the segment_set branch.
-    s = scenariosReducer(s, { type: 'segment_set', segment: 'history' });
-    expect(s.segment).toBe('history');
-    s = scenariosReducer(s, { type: 'segment_set', segment: 'ai' });
-    expect(s.segment).toBe('ai');
+    s = scenariosReducer(s, { type: "segment_set", segment: "history" });
+    expect(s.segment).toBe("history");
+    s = scenariosReducer(s, { type: "segment_set", segment: "ai" });
+    expect(s.segment).toBe("ai");
   });
 });
 
@@ -121,15 +127,15 @@ describe('segment_set', () => {
 // run_launch
 // ----------------------------------------------------------------------------
 
-describe('run_launch', () => {
+describe("run_launch", () => {
   it('initializes activeRun with status="running", empty skipped, and transcript sessionToken=runId', () => {
-    const s = launch(initialScenariosState, { runId: 'r-abc', stepCount: 5 });
+    const s = launch(initialScenariosState, { runId: "r-abc", stepCount: 5 });
     const run = s.activeRun!;
-    expect(run.runId).toBe('r-abc');
+    expect(run.runId).toBe("r-abc");
     expect(run.stepCount).toBe(5);
-    expect(run.status).toBe('running');
+    expect(run.status).toBe("running");
     expect(run.skipped).toEqual([]);
-    expect(run.transcript.sessionToken).toBe('r-abc');
+    expect(run.transcript.sessionToken).toBe("r-abc");
     expect(run.transcript.rows).toEqual([]);
   });
 });
@@ -138,37 +144,37 @@ describe('run_launch', () => {
 // broadcast — run_started
 // ----------------------------------------------------------------------------
 
-describe('broadcast — run_started', () => {
-  it('is a no-op when activeRun already matches the broadcast run_id', () => {
-    const s1 = launch(initialScenariosState, { runId: 'r-x' });
+describe("broadcast — run_started", () => {
+  it("is a no-op when activeRun already matches the broadcast run_id", () => {
+    const s1 = launch(initialScenariosState, { runId: "r-x" });
     const s2 = broadcast(s1, {
-      type: 'run_started',
+      type: "run_started",
       seq: 1,
-      session_token: 'r-x',
-      run_id: 'r-x',
-      scenario_id: 's-1',
-      started_at: '2026-05-17T00:00:00Z',
+      session_token: "r-x",
+      run_id: "r-x",
+      scenario_id: "s-1",
+      started_at: "2026-05-17T00:00:00Z",
       step_count: 3,
     });
     // Same reference — no state change.
     expect(s2).toBe(s1);
   });
 
-  it('initializes activeRun from the broadcast when activeRun is null', () => {
+  it("initializes activeRun from the broadcast when activeRun is null", () => {
     const s = broadcast(initialScenariosState, {
-      type: 'run_started',
+      type: "run_started",
       seq: 1,
-      session_token: 'r-y',
-      run_id: 'r-y',
-      scenario_id: 's-y',
-      started_at: '2026-05-17T01:00:00Z',
+      session_token: "r-y",
+      run_id: "r-y",
+      scenario_id: "s-y",
+      started_at: "2026-05-17T01:00:00Z",
       step_count: 2,
     });
     expect(s.activeRun).not.toBeNull();
-    expect(s.activeRun!.runId).toBe('r-y');
+    expect(s.activeRun!.runId).toBe("r-y");
     expect(s.activeRun!.stepCount).toBe(2);
-    expect(s.activeRun!.status).toBe('running');
-    expect(s.activeRun!.transcript.sessionToken).toBe('r-y');
+    expect(s.activeRun!.status).toBe("running");
+    expect(s.activeRun!.transcript.sessionToken).toBe("r-y");
   });
 });
 
@@ -176,52 +182,52 @@ describe('broadcast — run_started', () => {
 // broadcast — scenario_step_skipped
 // ----------------------------------------------------------------------------
 
-describe('broadcast — scenario_step_skipped', () => {
-  it('appends to skipped[] preserving order', () => {
+describe("broadcast — scenario_step_skipped", () => {
+  it("appends to skipped[] preserving order", () => {
     let s = launch(initialScenariosState);
     s = broadcast(s, {
-      type: 'scenario_step_skipped',
+      type: "scenario_step_skipped",
       seq: 5,
-      session_token: 'run-1',
-      run_id: 'run-1',
+      session_token: "run-1",
+      run_id: "run-1",
       step_index: 2,
-      reason: 'previous_step_failed',
+      reason: "previous_step_failed",
     });
     s = broadcast(s, {
-      type: 'scenario_step_skipped',
+      type: "scenario_step_skipped",
       seq: 6,
-      session_token: 'run-1',
-      run_id: 'run-1',
+      session_token: "run-1",
+      run_id: "run-1",
       step_index: 3,
-      reason: 'previous_step_failed',
+      reason: "previous_step_failed",
     });
     expect(s.activeRun!.skipped).toEqual([
-      { stepIndex: 2, reason: 'previous_step_failed' },
-      { stepIndex: 3, reason: 'previous_step_failed' },
+      { stepIndex: 2, reason: "previous_step_failed" },
+      { stepIndex: 3, reason: "previous_step_failed" },
     ]);
   });
 
-  it('is ignored when activeRun is null', () => {
+  it("is ignored when activeRun is null", () => {
     const s = broadcast(initialScenariosState, {
-      type: 'scenario_step_skipped',
+      type: "scenario_step_skipped",
       seq: 1,
-      session_token: 'whatever',
-      run_id: 'run-stale',
+      session_token: "whatever",
+      run_id: "run-stale",
       step_index: 0,
-      reason: 'user_stopped',
+      reason: "user_stopped",
     });
     expect(s).toBe(initialScenariosState);
   });
 
-  it('is ignored when run_id mismatches the current activeRun', () => {
-    const before = launch(initialScenariosState, { runId: 'run-A' });
+  it("is ignored when run_id mismatches the current activeRun", () => {
+    const before = launch(initialScenariosState, { runId: "run-A" });
     const after = broadcast(before, {
-      type: 'scenario_step_skipped',
+      type: "scenario_step_skipped",
       seq: 1,
-      session_token: 'run-A',
-      run_id: 'run-B', // mismatched
+      session_token: "run-A",
+      run_id: "run-B", // mismatched
       step_index: 0,
-      reason: 'user_stopped',
+      reason: "user_stopped",
     });
     expect(after).toBe(before);
   });
@@ -231,51 +237,51 @@ describe('broadcast — scenario_step_skipped', () => {
 // transcript delegation
 // ----------------------------------------------------------------------------
 
-describe('broadcast — tool_call_start delegation', () => {
-  it('grows the transcript.rows by one ToolRow in running state', () => {
+describe("broadcast — tool_call_start delegation", () => {
+  it("grows the transcript.rows by one ToolRow in running state", () => {
     let s = launch(initialScenariosState);
     s = broadcast(s, {
-      type: 'tool_call_start',
+      type: "tool_call_start",
       seq: 2,
-      session_token: 'run-1',
-      tool_call_id: 'tc-1',
-      name: 'run_command',
-      label: 'echo hi',
-      args: { binary: 'echo', args: ['hi'] },
+      session_token: "run-1",
+      tool_call_id: "tc-1",
+      name: "run_command",
+      label: "echo hi",
+      args: { binary: "echo", args: ["hi"] },
     });
     expect(s.activeRun!.transcript.rows).toHaveLength(1);
     const row = s.activeRun!.transcript.rows[0];
-    expect(row.kind).toBe('tool');
-    if (row.kind === 'tool') {
-      expect(row.state).toBe('running');
-      expect(row.toolCallId).toBe('tc-1');
+    expect(row.kind).toBe("tool");
+    if (row.kind === "tool") {
+      expect(row.state).toBe("running");
+      expect(row.toolCallId).toBe("tc-1");
     }
   });
 });
 
-describe('broadcast — tool_call_result delegation', () => {
-  it('transitions the matching ToolRow to done state with the result populated', () => {
+describe("broadcast — tool_call_result delegation", () => {
+  it("transitions the matching ToolRow to done state with the result populated", () => {
     let s = launch(initialScenariosState);
     s = broadcast(s, {
-      type: 'tool_call_start',
+      type: "tool_call_start",
       seq: 2,
-      session_token: 'run-1',
-      tool_call_id: 'tc-1',
-      name: 'run_command',
-      label: 'l',
+      session_token: "run-1",
+      tool_call_id: "tc-1",
+      name: "run_command",
+      label: "l",
       args: {},
     });
     s = broadcast(s, {
-      type: 'tool_call_result',
+      type: "tool_call_result",
       seq: 3,
-      session_token: 'run-1',
-      tool_call_id: 'tc-1',
-      result: { exit: 0, stdout: 'hi' },
+      session_token: "run-1",
+      tool_call_id: "tc-1",
+      result: { exit: 0, stdout: "hi" },
     });
     const row = s.activeRun!.transcript.rows[0];
-    expect(row.kind).toBe('tool');
-    if (row.kind === 'tool') {
-      expect(row.state).toBe('done');
+    expect(row.kind).toBe("tool");
+    if (row.kind === "tool") {
+      expect(row.state).toBe("done");
       expect(row.result?.exit).toBe(0);
     }
   });
@@ -285,38 +291,38 @@ describe('broadcast — tool_call_result delegation', () => {
 // done idempotent
 // ----------------------------------------------------------------------------
 
-describe('broadcast — done idempotent', () => {
-  it('first done sets terminal status; second done is ignored', () => {
+describe("broadcast — done idempotent", () => {
+  it("first done sets terminal status; second done is ignored", () => {
     let s = launch(initialScenariosState);
     s = broadcast(s, {
-      type: 'done',
+      type: "done",
       seq: 9,
-      session_token: 'run-1',
-      stop_reason: 'completed',
+      session_token: "run-1",
+      stop_reason: "completed",
     });
-    expect(s.activeRun!.status).toBe('completed');
+    expect(s.activeRun!.status).toBe("completed");
 
     const before = s;
     s = broadcast(s, {
-      type: 'done',
+      type: "done",
       seq: 10,
-      session_token: 'run-1',
-      stop_reason: 'failed',
+      session_token: "run-1",
+      stop_reason: "failed",
     });
     expect(s).toBe(before); // no-op — terminal already
-    expect(s.activeRun!.status).toBe('completed');
+    expect(s.activeRun!.status).toBe("completed");
   });
 
-  it('records failed_step_index when present on done', () => {
+  it("records failed_step_index when present on done", () => {
     let s = launch(initialScenariosState);
     s = broadcast(s, {
-      type: 'done',
+      type: "done",
       seq: 9,
-      session_token: 'run-1',
-      stop_reason: 'failed',
+      session_token: "run-1",
+      stop_reason: "failed",
       failed_step_index: 2,
     });
-    expect(s.activeRun!.status).toBe('failed');
+    expect(s.activeRun!.status).toBe("failed");
     expect(s.activeRun!.failedStepIndex).toBe(2);
   });
 });
@@ -325,37 +331,37 @@ describe('broadcast — done idempotent', () => {
 // error broadcast
 // ----------------------------------------------------------------------------
 
-describe('broadcast — error sets status to error when activeRun present', () => {
-  it('transitions activeRun.status to error', () => {
+describe("broadcast — error sets status to error when activeRun present", () => {
+  it("transitions activeRun.status to error", () => {
     let s = launch(initialScenariosState);
     s = broadcast(s, {
-      type: 'error',
-      message: 'connection_lost',
-      source: 'connection_lost',
+      type: "error",
+      message: "connection_lost",
+      source: "connection_lost",
     });
-    expect(s.activeRun!.status).toBe('error');
+    expect(s.activeRun!.status).toBe("error");
   });
 
-  it('is a no-op when activeRun is null', () => {
+  it("is a no-op when activeRun is null", () => {
     const s = broadcast(initialScenariosState, {
-      type: 'error',
-      message: 'run_in_progress',
+      type: "error",
+      message: "run_in_progress",
     });
     expect(s).toBe(initialScenariosState);
   });
 
-  it('is a no-op when activeRun.status is already terminal', () => {
+  it("is a no-op when activeRun.status is already terminal", () => {
     let s = launch(initialScenariosState);
     s = broadcast(s, {
-      type: 'done',
+      type: "done",
       seq: 9,
-      session_token: 'run-1',
-      stop_reason: 'completed',
+      session_token: "run-1",
+      stop_reason: "completed",
     });
     const before = s;
-    s = broadcast(s, { type: 'error', message: 'whatever' });
+    s = broadcast(s, { type: "error", message: "whatever" });
     expect(s).toBe(before);
-    expect(s.activeRun!.status).toBe('completed');
+    expect(s.activeRun!.status).toBe("completed");
   });
 });
 
@@ -363,28 +369,30 @@ describe('broadcast — error sets status to error when activeRun present', () =
 // run_stop_requested
 // ----------------------------------------------------------------------------
 
-describe('run_stop_requested transitions running -> stopping', () => {
-  it('flips running to stopping', () => {
+describe("run_stop_requested transitions running -> stopping", () => {
+  it("flips running to stopping", () => {
     let s = launch(initialScenariosState);
-    s = scenariosReducer(s, { type: 'run_stop_requested' });
-    expect(s.activeRun!.status).toBe('stopping');
+    s = scenariosReducer(s, { type: "run_stop_requested" });
+    expect(s.activeRun!.status).toBe("stopping");
   });
 
-  it('is a no-op on terminal status', () => {
+  it("is a no-op on terminal status", () => {
     let s = launch(initialScenariosState);
     s = broadcast(s, {
-      type: 'done',
+      type: "done",
       seq: 1,
-      session_token: 'run-1',
-      stop_reason: 'completed',
+      session_token: "run-1",
+      stop_reason: "completed",
     });
     const before = s;
-    s = scenariosReducer(s, { type: 'run_stop_requested' });
+    s = scenariosReducer(s, { type: "run_stop_requested" });
     expect(s).toBe(before);
   });
 
-  it('is a no-op when activeRun is null', () => {
-    const s = scenariosReducer(initialScenariosState, { type: 'run_stop_requested' });
+  it("is a no-op when activeRun is null", () => {
+    const s = scenariosReducer(initialScenariosState, {
+      type: "run_stop_requested",
+    });
     expect(s).toBe(initialScenariosState);
   });
 });
@@ -393,15 +401,15 @@ describe('run_stop_requested transitions running -> stopping', () => {
 // run_clear
 // ----------------------------------------------------------------------------
 
-describe('run_clear sets activeRun to null', () => {
-  it('full reset from a populated activeRun', () => {
+describe("run_clear sets activeRun to null", () => {
+  it("full reset from a populated activeRun", () => {
     let s = launch(initialScenariosState);
-    s = scenariosReducer(s, { type: 'run_clear' });
+    s = scenariosReducer(s, { type: "run_clear" });
     expect(s.activeRun).toBeNull();
   });
 
-  it('is a no-op when activeRun is already null', () => {
-    const s = scenariosReducer(initialScenariosState, { type: 'run_clear' });
+  it("is a no-op when activeRun is already null", () => {
+    const s = scenariosReducer(initialScenariosState, { type: "run_clear" });
     expect(s).toBe(initialScenariosState);
   });
 });
@@ -410,16 +418,16 @@ describe('run_clear sets activeRun to null', () => {
 // cross-run defense
 // ----------------------------------------------------------------------------
 
-describe('cross-run defense', () => {
-  it('broadcast with mismatched run_id leaves state untouched (no skipped append, no transcript change)', () => {
-    let s = launch(initialScenariosState, { runId: 'current-run' });
+describe("cross-run defense", () => {
+  it("broadcast with mismatched run_id leaves state untouched (no skipped append, no transcript change)", () => {
+    let s = launch(initialScenariosState, { runId: "current-run" });
     s = broadcast(s, {
-      type: 'tool_call_start',
+      type: "tool_call_start",
       seq: 2,
-      session_token: 'current-run',
-      tool_call_id: 'tc-1',
-      name: 'run_command',
-      label: 'l',
+      session_token: "current-run",
+      tool_call_id: "tc-1",
+      name: "run_command",
+      label: "l",
       args: {},
     });
     expect(s.activeRun!.transcript.rows).toHaveLength(1);
@@ -427,12 +435,12 @@ describe('cross-run defense', () => {
     const before = s;
     // Late-arriving broadcast from a previous run.
     s = broadcast(s, {
-      type: 'scenario_step_skipped',
+      type: "scenario_step_skipped",
       seq: 99,
-      session_token: 'previous-run',
-      run_id: 'previous-run',
+      session_token: "previous-run",
+      run_id: "previous-run",
       step_index: 1,
-      reason: 'user_stopped',
+      reason: "user_stopped",
     });
     expect(s).toBe(before);
     expect(s.activeRun!.skipped).toEqual([]);

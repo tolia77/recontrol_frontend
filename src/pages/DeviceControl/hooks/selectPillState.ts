@@ -1,8 +1,8 @@
 import type {
   ClipboardCapabilitiesEnvelope,
   ClipboardRefusalReason,
-} from '../services/clipboard/clipboardProtocol.generated';
-import type { ClipboardCapability } from './useClipboardCapability';
+} from "../services/clipboard/clipboardProtocol.generated";
+import type { ClipboardCapability } from "./useClipboardCapability";
 
 /**
  * Phase 16 D-01: nine distinct pill states (PILL-02 + DEGRADE-05). Visual
@@ -10,24 +10,28 @@ import type { ClipboardCapability } from './useClipboardCapability';
  * plan 16-03).
  */
 export type PillState =
-  | 'connected-idle'
-  | 'pulsing'
-  | 'paused'
-  | 'read-only'
-  | 'permission-required'
-  | 'disconnected'
-  | 'disabled'
-  | 'refused-too-large'
-  | 'unsupported-browser';
+  | "connected-idle"
+  | "pulsing"
+  | "paused"
+  | "read-only"
+  | "permission-required"
+  | "disconnected"
+  | "disabled"
+  | "refused-too-large"
+  | "unsupported-browser";
 
 export interface SelectPillStateInput {
   webRtcUp: boolean;
   browserCaps: ClipboardCapability;
   cachedDesktopCaps: ClipboardCapabilitiesEnvelope | null;
-  lastRefusal: { reason: ClipboardRefusalReason; at: number; source: 'remote' | 'local' } | null;
+  lastRefusal: {
+    reason: ClipboardRefusalReason;
+    at: number;
+    source: "remote" | "local";
+  } | null;
   isPaused: boolean;
   lastSyncAt: number | null;
-  hookStatus: 'idle' | 'permission-required' | 'unsupported' | 'paused';
+  hookStatus: "idle" | "permission-required" | "unsupported" | "paused";
   /** Injected current time so tests can pin time deterministically (D-03). */
   now: number;
 }
@@ -61,17 +65,26 @@ const PULSE_WINDOW_MS = 400;
 export function selectPillState(input: SelectPillStateInput): PillStateResult {
   // Rung 1
   if (!input.webRtcUp) {
-    return { state: 'disconnected', tooltipKey: 'pill.tooltip.disconnected' };
+    return { state: "disconnected", tooltipKey: "pill.tooltip.disconnected" };
   }
 
   // Rung 2: DEGRADE-05 — feature-presence missing OR insecure context.
-  if ((!input.browserCaps.canRead && !input.browserCaps.canWrite) || !input.browserCaps.isSecureContext) {
-    return { state: 'unsupported-browser', tooltipKey: 'pill.tooltip.unsupportedBrowser' };
+  if (
+    (!input.browserCaps.canRead && !input.browserCaps.canWrite) ||
+    !input.browserCaps.isSecureContext
+  ) {
+    return {
+      state: "unsupported-browser",
+      tooltipKey: "pill.tooltip.unsupportedBrowser",
+    };
   }
 
   // Rung 3
-  if (input.hookStatus === 'permission-required') {
-    return { state: 'permission-required', tooltipKey: 'pill.tooltip.permissionRequired' };
+  if (input.hookStatus === "permission-required") {
+    return {
+      state: "permission-required",
+      tooltipKey: "pill.tooltip.permissionRequired",
+    };
   }
 
   // Rung 4: D-04 — master-off inferred from both directions disabled.
@@ -79,35 +92,42 @@ export function selectPillState(input: SelectPillStateInput): PillStateResult {
     input.cachedDesktopCaps?.outboundEnabled === false &&
     input.cachedDesktopCaps?.inboundEnabled === false
   ) {
-    return { state: 'disabled', tooltipKey: 'pill.tooltip.disabled' };
+    return { state: "disabled", tooltipKey: "pill.tooltip.disabled" };
   }
 
   // Rung 5: exactly one of the two directions disabled.
   if (
     input.cachedDesktopCaps &&
-    input.cachedDesktopCaps.outboundEnabled !== input.cachedDesktopCaps.inboundEnabled
+    input.cachedDesktopCaps.outboundEnabled !==
+      input.cachedDesktopCaps.inboundEnabled
   ) {
-    return { state: 'read-only', tooltipKey: 'pill.tooltip.readOnly' };
+    return { state: "read-only", tooltipKey: "pill.tooltip.readOnly" };
   }
 
   // Rung 6: only TOO_LARGE pins this state, and only within the 5s hold window.
   if (
-    input.lastRefusal?.reason === 'TOO_LARGE' &&
+    input.lastRefusal?.reason === "TOO_LARGE" &&
     input.now - input.lastRefusal.at < REFUSAL_HOLD_MS
   ) {
-    return { state: 'refused-too-large', tooltipKey: 'pill.tooltip.refusedTooLarge' };
+    return {
+      state: "refused-too-large",
+      tooltipKey: "pill.tooltip.refusedTooLarge",
+    };
   }
 
   // Rung 7
   if (input.isPaused) {
-    return { state: 'paused', tooltipKey: 'pill.tooltip.paused' };
+    return { state: "paused", tooltipKey: "pill.tooltip.paused" };
   }
 
   // Rung 8: 400ms pulse window after the most recent successful sync.
-  if (input.lastSyncAt != null && input.now - input.lastSyncAt < PULSE_WINDOW_MS) {
-    return { state: 'pulsing', tooltipKey: 'pill.tooltip.pulsingJustSynced' };
+  if (
+    input.lastSyncAt != null &&
+    input.now - input.lastSyncAt < PULSE_WINDOW_MS
+  ) {
+    return { state: "pulsing", tooltipKey: "pill.tooltip.pulsingJustSynced" };
   }
 
   // Rung 9
-  return { state: 'connected-idle', tooltipKey: 'pill.tooltip.idle' };
+  return { state: "connected-idle", tooltipKey: "pill.tooltip.idle" };
 }

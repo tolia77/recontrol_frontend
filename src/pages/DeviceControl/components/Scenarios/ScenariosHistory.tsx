@@ -1,17 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
-import { Button, useToast } from '../../../../components/ui';
+import { Button, useToast } from "../../../../components/ui";
 import {
   scenarioRunsService,
   type ScenarioRun,
   type ScenarioRunStatus,
-} from '../../../../services/backend/scenarioRunsService';
-import {
-  STATUS_BADGE_CLASS,
-  buildExitCodeTimeline,
-} from './exitCodeGlyphs';
-import MassDeleteConfirmModal from './MassDeleteConfirmModal';
+} from "../../../../services/backend/scenarioRunsService";
+import { STATUS_BADGE_CLASS, buildExitCodeTimeline } from "./exitCodeGlyphs";
+import MassDeleteConfirmModal from "./MassDeleteConfirmModal";
 
 // AUDIT-03 + AUDIT-05 (mass-delete arm) visible surface. Plan 22.10 wires the
 // onSelectRun callback into the panel's mode router to open HistoryDetail.
@@ -23,11 +20,11 @@ export interface ScenariosHistoryProps {
 }
 
 function relativeTimestamp(dateIso: string | null): string {
-  if (!dateIso) return '';
+  if (!dateIso) return "";
   const diff = Date.now() - new Date(dateIso).getTime();
-  if (Number.isNaN(diff)) return '';
+  if (Number.isNaN(diff)) return "";
   const minutes = Math.floor(diff / 60_000);
-  if (minutes < 1) return 'just now';
+  if (minutes < 1) return "just now";
   if (minutes < 60) return `${minutes}m ago`;
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
@@ -36,10 +33,10 @@ function relativeTimestamp(dateIso: string | null): string {
 }
 
 function durationLabel(run: ScenarioRun): string {
-  if (!run.started_at || !run.ended_at) return '—';
+  if (!run.started_at || !run.ended_at) return "—";
   const ms =
     new Date(run.ended_at).getTime() - new Date(run.started_at).getTime();
-  if (!Number.isFinite(ms) || ms < 0) return '—';
+  if (!Number.isFinite(ms) || ms < 0) return "—";
   const totalSec = Math.floor(ms / 1000);
   if (totalSec < 60) return `${totalSec}s`;
   const m = Math.floor(totalSec / 60);
@@ -53,21 +50,21 @@ interface HistoryRowProps {
 }
 
 function HistoryRow({ run, onSelect }: HistoryRowProps) {
-  const { t } = useTranslation('scenarios');
+  const { t } = useTranslation("scenarios");
   const statusKey = run.status as ScenarioRunStatus;
-  const badgeClass = STATUS_BADGE_CLASS[statusKey] ?? '';
+  const badgeClass = STATUS_BADGE_CLASS[statusKey] ?? "";
   const timeline = buildExitCodeTimeline(run, run.steps);
 
   return (
     <li
-      className="flex cursor-pointer items-start gap-3 border-b border-lightgray px-3 py-2 hover:bg-gray-50"
+      className="border-lightgray flex cursor-pointer items-start gap-3 border-b px-3 py-2 hover:bg-gray-50"
       onClick={() => onSelect(run.id)}
       role="button"
       aria-label={t(`history.runStatus.${statusKey}`)}
       data-testid={`history-row-${run.id}`}
       tabIndex={0}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           onSelect(run.id);
         }
@@ -80,10 +77,10 @@ function HistoryRow({ run, onSelect }: HistoryRowProps) {
         {t(`history.runStatus.${statusKey}`)}
       </span>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <span className="truncate text-sm font-medium text-primary">
+        <span className="text-primary truncate text-sm font-medium">
           {run.scenario_name_snapshot}
         </span>
-        <div className="flex items-center gap-2 text-xs text-darkgray">
+        <div className="text-darkgray flex items-center gap-2 text-xs">
           {run.device_id && (
             <span className="rounded bg-gray-100 px-2 py-0.5 font-mono">
               {run.device_id.slice(0, 8)}
@@ -97,10 +94,10 @@ function HistoryRow({ run, onSelect }: HistoryRowProps) {
             data-testid="history-row-glyphs"
           >
             {timeline.map((entry) =>
-              entry.key === 'overflow' ? (
+              entry.key === "overflow" ? (
                 <span
                   key={entry.key}
-                  className="ml-1 rounded bg-gray-100 px-2 py-1 text-xs text-darkgray"
+                  className="text-darkgray ml-1 rounded bg-gray-100 px-2 py-1 text-xs"
                 >
                   {entry.glyph}
                 </span>
@@ -113,15 +110,17 @@ function HistoryRow({ run, onSelect }: HistoryRowProps) {
           </div>
         )}
       </div>
-      <span className="shrink-0 text-xs text-darkgray">
+      <span className="text-darkgray shrink-0 text-xs">
         {relativeTimestamp(run.started_at)}
       </span>
     </li>
   );
 }
 
-export default function ScenariosHistory({ onSelectRun }: ScenariosHistoryProps) {
-  const { t } = useTranslation('scenarios');
+export default function ScenariosHistory({
+  onSelectRun,
+}: ScenariosHistoryProps) {
+  const { t } = useTranslation("scenarios");
   const toast = useToast();
   const [runs, setRuns] = useState<ScenarioRun[]>([]);
   const [total, setTotal] = useState<number>(0);
@@ -147,7 +146,7 @@ export default function ScenariosHistory({ onSelectRun }: ScenariosHistoryProps)
         setTotal(result.total);
       })
       .catch(() => {
-        if (!cancelled) setError('error');
+        if (!cancelled) setError("error");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -168,7 +167,7 @@ export default function ScenariosHistory({ onSelectRun }: ScenariosHistoryProps)
     setDeleting(true);
     try {
       await scenarioRunsService.destroyAll();
-      toast.success(t('history.deleteAllRuns'));
+      toast.success(t("history.deleteAllRuns"));
       setDeleteModalOpen(false);
       // Reset back to page 1 and refresh.
       if (page !== 1) {
@@ -177,7 +176,7 @@ export default function ScenariosHistory({ onSelectRun }: ScenariosHistoryProps)
         setRefreshTick((tick) => tick + 1);
       }
     } catch {
-      toast.error(t('history.deleteAllRuns'));
+      toast.error(t("history.deleteAllRuns"));
       setDeleteModalOpen(false);
     } finally {
       setDeleting(false);
@@ -186,31 +185,28 @@ export default function ScenariosHistory({ onSelectRun }: ScenariosHistoryProps)
 
   return (
     <div className="flex flex-col" data-testid="scenarios-history">
-      <div className="flex items-center justify-between border-b border-lightgray px-4 py-2">
+      <div className="border-lightgray flex items-center justify-between border-b px-4 py-2">
         <div className="flex items-center gap-3">
-          <span
-            className="text-xs text-darkgray"
-            data-testid="history-showing"
-          >
-            {t('history.toolbar.showing', { from, to, total })}
+          <span className="text-darkgray text-xs" data-testid="history-showing">
+            {t("history.toolbar.showing", { from, to, total })}
           </span>
           <button
             type="button"
-            className="rounded px-2 py-1 text-xs text-primary hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+            className="text-primary rounded px-2 py-1 text-xs hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={prevDisabled}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             data-testid="history-prev"
           >
-            {t('history.toolbar.prev')}
+            {t("history.toolbar.prev")}
           </button>
           <button
             type="button"
-            className="rounded px-2 py-1 text-xs text-primary hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+            className="text-primary rounded px-2 py-1 text-xs hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={nextDisabled}
             onClick={() => setPage((p) => p + 1)}
             data-testid="history-next"
           >
-            {t('history.toolbar.next')}
+            {t("history.toolbar.next")}
           </button>
         </div>
         {total > 0 && (
@@ -220,14 +216,14 @@ export default function ScenariosHistory({ onSelectRun }: ScenariosHistoryProps)
             onClick={() => setDeleteModalOpen(true)}
             data-testid="history-delete-all"
           >
-            ✕ {t('history.deleteAllRuns')}
+            ✕ {t("history.deleteAllRuns")}
           </Button>
         )}
       </div>
 
       {loading && (
         <div
-          className="px-4 py-6 text-center text-sm text-darkgray"
+          className="text-darkgray px-4 py-6 text-center text-sm"
           data-testid="scenarios-history-loading"
         >
           …
@@ -235,7 +231,7 @@ export default function ScenariosHistory({ onSelectRun }: ScenariosHistoryProps)
       )}
       {!loading && error && (
         <div
-          className="px-4 py-6 text-center text-sm text-error"
+          className="text-error px-4 py-6 text-center text-sm"
           data-testid="scenarios-history-error"
         >
           {error}
@@ -243,10 +239,10 @@ export default function ScenariosHistory({ onSelectRun }: ScenariosHistoryProps)
       )}
       {!loading && !error && total === 0 && (
         <div
-          className="px-4 py-8 text-center text-sm text-darkgray"
+          className="text-darkgray px-4 py-8 text-center text-sm"
           data-testid="scenarios-history-empty"
         >
-          {t('history.emptyState')}
+          {t("history.emptyState")}
         </div>
       )}
       {!loading && !error && total > 0 && (

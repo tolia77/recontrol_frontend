@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
-import { Button, Input, Modal } from '../../../../components/ui';
+import { Button, Input, Modal } from "../../../../components/ui";
 
 // D-22-12 / AUDIT-05 mass-delete arm: highest-friction destructive confirm.
 // Operator must type the literal "DELETE" (case-sensitive, no transliteration
@@ -19,7 +19,7 @@ export interface MassDeleteConfirmModalProps {
 
 // The literal phrase is identical across EN+UK by D-22 discretion. Defined as
 // a const so the equality check stays a single grep-able choke point.
-const REQUIRED_PHRASE = 'DELETE';
+const REQUIRED_PHRASE = "DELETE";
 
 export default function MassDeleteConfirmModal({
   open,
@@ -28,13 +28,13 @@ export default function MassDeleteConfirmModal({
   onCancel,
   loading = false,
 }: MassDeleteConfirmModalProps) {
-  const { t } = useTranslation('scenarios');
-  const [typedPhrase, setTypedPhrase] = useState<string>('');
+  const { t } = useTranslation("scenarios");
+  const [typedPhrase, setTypedPhrase] = useState<string>("");
 
   // Reset the typed phrase when the modal transitions closed -> open so a
   // re-open doesn't leak the previous attempt's input.
   useEffect(() => {
-    if (open) setTypedPhrase('');
+    if (open) setTypedPhrase("");
   }, [open]);
 
   // Escape dismiss via window-level listener. Modal shell receives suppressEsc
@@ -42,17 +42,23 @@ export default function MassDeleteConfirmModal({
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onCancel();
+      if (e.key === "Escape") onCancel();
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [open, onCancel]);
 
   const phraseMatches = typedPhrase === REQUIRED_PHRASE;
   const confirmDisabled = !phraseMatches || loading;
 
   return (
-    <Modal open={open} onClose={onCancel} size="md" suppressEsc suppressOverlayClick>
+    <Modal
+      open={open}
+      onClose={onCancel}
+      size="md"
+      suppressEsc
+      suppressOverlayClick
+    >
       {/* Inner wrapper carries testids and mouseDown-based backdrop dismiss so
           existing tests (MassDeleteConfirmModal.test.tsx) continue to pass
           without modification. The outer div acts as the "backdrop area" for
@@ -69,25 +75,25 @@ export default function MassDeleteConfirmModal({
           data-testid="mass-delete-card"
           onMouseDown={(e) => e.stopPropagation()}
         >
-          <h2 className="text-base font-semibold text-primary">
-            {t('history.deleteAllConfirm.title')}
+          <h2 className="text-primary text-base font-semibold">
+            {t("history.deleteAllConfirm.title")}
           </h2>
           <p
             className="mt-2 text-sm text-gray-700"
             data-testid="mass-delete-body"
           >
-            {t('history.deleteAllConfirm.body', { count })}
+            {t("history.deleteAllConfirm.body", { count })}
           </p>
           <div className="mt-3">
             <Input
               type="text"
               value={typedPhrase}
               onChange={(e) => setTypedPhrase(e.target.value)}
-              placeholder={t('history.deleteAllConfirm.typePlaceholder')}
+              placeholder={t("history.deleteAllConfirm.typePlaceholder")}
               data-testid="mass-delete-input"
               autoFocus
               disabled={loading}
-              aria-label={t('history.deleteAllConfirm.typePlaceholder')}
+              aria-label={t("history.deleteAllConfirm.typePlaceholder")}
             />
           </div>
           <div className="mt-4 flex justify-end gap-2">
@@ -98,7 +104,7 @@ export default function MassDeleteConfirmModal({
               disabled={loading}
               data-testid="mass-delete-cancel"
             >
-              {t('history.deleteAllConfirm.cancel')}
+              {t("history.deleteAllConfirm.cancel")}
             </Button>
             <Button
               variant="danger"
@@ -113,7 +119,7 @@ export default function MassDeleteConfirmModal({
               }}
               data-testid="mass-delete-confirm"
             >
-              {t('history.deleteAllConfirm.confirm')}
+              {t("history.deleteAllConfirm.confirm")}
             </Button>
           </div>
         </div>

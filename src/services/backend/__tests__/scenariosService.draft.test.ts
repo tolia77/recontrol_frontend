@@ -9,12 +9,12 @@
 //   - Type-level assertions: DraftStep.dry_intent_warning is optional;
 //     DraftStep.description is string | null.
 
-import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // Mock the backend axios instance BEFORE importing scenariosService so the
 // service picks up the spy. Same idiom existing tests use (vi.mock with a
 // factory returning a mocked backendInstance with `.post` / `.get`).
-vi.mock('src/services/backend/config.ts', () => {
+vi.mock("src/services/backend/config.ts", () => {
   return {
     backendInstance: {
       post: vi.fn(),
@@ -26,8 +26,8 @@ vi.mock('src/services/backend/config.ts', () => {
 });
 
 // Mock the access token helper so we don't depend on localStorage in tests.
-vi.mock('src/utils/auth.ts', () => ({
-  getAccessToken: () => 'test-jwt',
+vi.mock("src/utils/auth.ts", () => ({
+  getAccessToken: () => "test-jwt",
 }));
 
 import {
@@ -36,22 +36,22 @@ import {
   type DraftStep,
   type DryIntentWarning,
   type DraftQuota,
-} from '../scenariosService';
-import { backendInstance } from '../config';
+} from "../scenariosService";
+import { backendInstance } from "../config";
 
 type PostMock = Mock<typeof backendInstance.post>;
 
 function makeDraftResponse(overrides?: Partial<DraftResponse>): DraftResponse {
   return {
     draft: {
-      name: 'Diagnose nginx',
-      description: 'Check nginx service and recent logs.',
+      name: "Diagnose nginx",
+      description: "Check nginx service and recent logs.",
       command_steps: [
         {
-          binary: 'systemctl',
-          args: ['status', 'nginx'],
-          cwd: '/',
-          description: 'Check nginx service status',
+          binary: "systemctl",
+          args: ["status", "nginx"],
+          cwd: "/",
+          description: "Check nginx service status",
         },
       ],
     },
@@ -66,7 +66,7 @@ function makeDraftResponse(overrides?: Partial<DraftResponse>): DraftResponse {
   };
 }
 
-describe('scenariosService.createDraft', () => {
+describe("scenariosService.createDraft", () => {
   let postSpy: PostMock;
 
   beforeEach(() => {
@@ -75,41 +75,39 @@ describe('scenariosService.createDraft', () => {
     postSpy.mockResolvedValue({ data: makeDraftResponse() });
   });
 
-  it('POSTs to /scenarios/drafts with body { prompt } and Accept-Language: en header (EN locale)', async () => {
-    await scenariosService.createDraft('test prompt', 'en');
+  it("POSTs to /scenarios/drafts with body { prompt } and Accept-Language: en header (EN locale)", async () => {
+    await scenariosService.createDraft("test prompt", "en");
 
     expect(postSpy).toHaveBeenCalledTimes(1);
     const call = postSpy.mock.calls[0];
-    expect(call[0]).toBe('/scenarios/drafts');
-    expect(call[1]).toEqual({ prompt: 'test prompt' });
+    expect(call[0]).toBe("/scenarios/drafts");
+    expect(call[1]).toEqual({ prompt: "test prompt" });
     const config = call[2] as {
       headers?: Record<string, string>;
       signal?: AbortSignal;
     };
     expect(config.headers).toMatchObject({
-      'Accept-Language': 'en',
+      "Accept-Language": "en",
     });
     // Authorization is injected by the request interceptor in config.ts — not
     // present in the static request config object. The interceptor mock in
     // this test suite does not run interceptors (vi.mock strips them).
-    expect(config.headers).not.toHaveProperty('Authorization');
+    expect(config.headers).not.toHaveProperty("Authorization");
   });
 
-  it('forwards AbortSignal so aborting before resolution rejects the promise', async () => {
+  it("forwards AbortSignal so aborting before resolution rejects the promise", async () => {
     // Simulate axios behavior: when the request config.signal is aborted,
     // the call rejects with a CanceledError-like object.
     postSpy.mockImplementation((_url, _body, config) => {
       return new Promise((_resolve, reject) => {
-        const signal = (
-          config as { signal?: AbortSignal } | undefined
-        )?.signal;
+        const signal = (config as { signal?: AbortSignal } | undefined)?.signal;
         if (signal) {
           if (signal.aborted) {
-            reject(new DOMException('canceled', 'AbortError'));
+            reject(new DOMException("canceled", "AbortError"));
             return;
           }
-          signal.addEventListener('abort', () => {
-            reject(new DOMException('canceled', 'AbortError'));
+          signal.addEventListener("abort", () => {
+            reject(new DOMException("canceled", "AbortError"));
           });
         }
         // Never resolve without abort — caller must abort to settle.
@@ -117,7 +115,11 @@ describe('scenariosService.createDraft', () => {
     });
 
     const controller = new AbortController();
-    const promise = scenariosService.createDraft('тестовий', 'uk', controller.signal);
+    const promise = scenariosService.createDraft(
+      "тестовий",
+      "uk",
+      controller.signal,
+    );
 
     // Verify the Accept-Language header was set to 'uk' AND the signal flowed
     // into the axios config.
@@ -127,7 +129,7 @@ describe('scenariosService.createDraft', () => {
       headers?: Record<string, string>;
       signal?: AbortSignal;
     };
-    expect(config.headers).toMatchObject({ 'Accept-Language': 'uk' });
+    expect(config.headers).toMatchObject({ "Accept-Language": "uk" });
     expect(config.signal).toBe(controller.signal);
 
     // Abort and assert the promise rejects.
@@ -135,7 +137,7 @@ describe('scenariosService.createDraft', () => {
     await expect(promise).rejects.toThrow();
   });
 
-  it('resolves with a typed DraftResponse exposing the four-key quota object', async () => {
+  it("resolves with a typed DraftResponse exposing the four-key quota object", async () => {
     const fixture = makeDraftResponse({
       quota: {
         tokens_used: 12_345,
@@ -146,22 +148,22 @@ describe('scenariosService.createDraft', () => {
     });
     postSpy.mockResolvedValueOnce({ data: fixture });
 
-    const result = await scenariosService.createDraft('list services', 'en');
+    const result = await scenariosService.createDraft("list services", "en");
 
     // Top-level shape
     expect(result.draft).toBeDefined();
-    expect(result.draft.name).toBe('Diagnose nginx');
+    expect(result.draft.name).toBe("Diagnose nginx");
     expect(Array.isArray(result.draft.command_steps)).toBe(true);
 
     // Exact 4-key quota contract (AI-06 / AI-07).
     expect(Object.keys(result.quota).sort()).toEqual(
-      ['drafts_limit', 'drafts_used', 'tokens_limit', 'tokens_used'].sort()
+      ["drafts_limit", "drafts_used", "tokens_limit", "tokens_used"].sort(),
     );
     expect(result.quota.tokens_used).toBe(12_345);
     expect(result.quota.drafts_limit).toBe(30);
   });
 
-  it('exposes correctly-typed DraftStep / DryIntentWarning / DraftQuota interfaces', () => {
+  it("exposes correctly-typed DraftStep / DryIntentWarning / DraftQuota interfaces", () => {
     // Type-level assertions — TypeScript compiles iff the interfaces are
     // shaped as the plan requires. The expect() calls are runtime-trivial; the
     // value is in the compile-time structural checks above each.
@@ -169,34 +171,34 @@ describe('scenariosService.createDraft', () => {
     // DraftStep.description is `string | null` (the model may emit JSON null;
     // mustn't be widened to undefined).
     const stepWithNullDescription: DraftStep = {
-      binary: 'ls',
-      args: ['-la'],
-      cwd: '/tmp',
+      binary: "ls",
+      args: ["-la"],
+      cwd: "/tmp",
       description: null,
     };
     expect(stepWithNullDescription.description).toBeNull();
 
     // DraftStep.dry_intent_warning is OPTIONAL (may be absent entirely).
     const stepWithoutWarning: DraftStep = {
-      binary: 'pwd',
+      binary: "pwd",
       args: [],
-      cwd: '/',
-      description: 'Print working directory',
+      cwd: "/",
+      description: "Print working directory",
     };
     expect(stepWithoutWarning.dry_intent_warning).toBeUndefined();
 
     // DryIntentWarning has both pattern + message_key (AI-05 contract).
     const warning: DryIntentWarning = {
-      pattern: 'find_delete',
-      message_key: 'scenarios.ai.dry_intent.find_delete',
+      pattern: "find_delete",
+      message_key: "scenarios.ai.dry_intent.find_delete",
     };
     const stepWithWarning: DraftStep = {
       ...stepWithoutWarning,
       dry_intent_warning: warning,
     };
-    expect(stepWithWarning.dry_intent_warning?.pattern).toBe('find_delete');
+    expect(stepWithWarning.dry_intent_warning?.pattern).toBe("find_delete");
     expect(stepWithWarning.dry_intent_warning?.message_key).toMatch(
-      /^scenarios\.ai\.dry_intent\.[a-z_]+$/
+      /^scenarios\.ai\.dry_intent\.[a-z_]+$/,
     );
 
     // DraftQuota has exactly the four ledger-mirror keys.

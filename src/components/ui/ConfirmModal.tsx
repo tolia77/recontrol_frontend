@@ -1,7 +1,7 @@
-import { useRef, type ReactNode } from 'react';
+import { useRef, type ReactNode } from "react";
 
-import { Button } from './Button';
-import { Modal } from './Modal';
+import { Button } from "./Button";
+import { Modal } from "./Modal";
 
 interface CheckboxSlot {
   label: string;
@@ -43,13 +43,17 @@ export function ConfirmModal({
       size="md"
       suppressEsc={!!isBusy}
       suppressOverlayClick={!!isBusy}
-      initialFocusRef={dangerous ? (cancelRef as React.RefObject<HTMLElement | null>) : undefined}
+      initialFocusRef={
+        dangerous
+          ? (cancelRef as React.RefObject<HTMLElement | null>)
+          : undefined
+      }
     >
       <Modal.Header>{title}</Modal.Header>
       <Modal.Body>
         {body}
         {checkbox && (
-          <label className="flex items-center gap-2 text-sm mb-4 text-text cursor-pointer select-none">
+          <label className="text-text mb-4 flex cursor-pointer items-center gap-2 text-sm select-none">
             <input
               type="checkbox"
               checked={checkbox.checked}
@@ -70,7 +74,7 @@ export function ConfirmModal({
               disabled={!!isBusy}
               onClick={onCancel}
             >
-              {cancelLabel ?? 'Cancel'}
+              {cancelLabel ?? "Cancel"}
             </Button>
             <Button
               variant="danger"
@@ -78,7 +82,7 @@ export function ConfirmModal({
               disabled={!!isBusy}
               onClick={onConfirm}
             >
-              {confirmLabel ?? 'OK'}
+              {confirmLabel ?? "OK"}
             </Button>
           </>
         ) : (
@@ -89,7 +93,7 @@ export function ConfirmModal({
               disabled={!!isBusy}
               onClick={onCancel}
             >
-              {cancelLabel ?? 'Cancel'}
+              {cancelLabel ?? "Cancel"}
             </Button>
             <Button
               variant="primary"
@@ -97,7 +101,7 @@ export function ConfirmModal({
               disabled={!!isBusy}
               onClick={onConfirm}
             >
-              {confirmLabel ?? 'OK'}
+              {confirmLabel ?? "OK"}
             </Button>
           </>
         )}

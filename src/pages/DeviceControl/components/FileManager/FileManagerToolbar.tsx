@@ -1,6 +1,6 @@
-import { useRef } from 'react';
-import { useTranslation } from 'react-i18next';
-import { RefreshIcon } from '../../icons';
+import { useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { RefreshIcon } from "../../icons";
 import {
   FolderPlusIcon,
   PencilIcon,
@@ -8,7 +8,7 @@ import {
   MoveIcon,
   CopyIcon,
   UploadIcon,
-} from './icons';
+} from "./icons";
 
 interface FileManagerToolbarProps {
   showHidden: boolean;
@@ -57,7 +57,7 @@ export function FileManagerToolbar({
   onCopyTo,
   onUploadFiles,
 }: FileManagerToolbarProps) {
-  const { t } = useTranslation('fileManager');
+  const { t } = useTranslation("fileManager");
   const renameEnabled = !disabled && selectionCount === 1;
   const newFolderEnabled = !disabled;
   const deleteEnabled = selectionCount > 0;
@@ -80,43 +80,43 @@ export function FileManagerToolbar({
     const files = Array.from(e.target.files ?? []);
     if (files.length > 0) onUploadFiles(files);
     // Reset so picking the same file twice still triggers onChange.
-    e.target.value = '';
+    e.target.value = "";
   };
 
   return (
-    <div className="flex items-center gap-2 p-2 border-b border-lightgray bg-background flex-shrink-0">
+    <div className="border-lightgray bg-background flex flex-shrink-0 items-center gap-2 border-b p-2">
       <button
         type="button"
         onClick={onRefresh}
         disabled={disabled}
-        title={t('toolbar.refresh')}
-        aria-label={t('toolbar.refresh')}
-        className="p-1.5 rounded hover:bg-tertiary disabled:opacity-50 disabled:cursor-not-allowed text-text transition-colors"
+        title={t("toolbar.refresh")}
+        aria-label={t("toolbar.refresh")}
+        className="hover:bg-tertiary text-text rounded p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <RefreshIcon className="w-4 h-4" />
+        <RefreshIcon className="h-4 w-4" />
       </button>
 
-      <div className="w-px h-5 bg-lightgray" aria-hidden="true" />
+      <div className="bg-lightgray h-5 w-px" aria-hidden="true" />
 
       <button
         type="button"
         onClick={onNewFolder}
         disabled={!newFolderEnabled}
-        title={t('toolbar.newFolder')}
-        aria-label={t('toolbar.newFolder')}
-        className="p-1.5 rounded hover:bg-tertiary disabled:opacity-50 disabled:cursor-not-allowed text-text transition-colors"
+        title={t("toolbar.newFolder")}
+        aria-label={t("toolbar.newFolder")}
+        className="hover:bg-tertiary text-text rounded p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <FolderPlusIcon className="w-4 h-4" />
+        <FolderPlusIcon className="h-4 w-4" />
       </button>
       <button
         type="button"
         onClick={handleUploadClick}
         disabled={!uploadEnabled}
-        title={t('toolbar.uploadFiles')}
-        aria-label={t('toolbar.uploadFiles')}
-        className="p-1.5 rounded hover:bg-tertiary disabled:opacity-50 disabled:cursor-not-allowed text-text transition-colors"
+        title={t("toolbar.uploadFiles")}
+        aria-label={t("toolbar.uploadFiles")}
+        className="hover:bg-tertiary text-text rounded p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <UploadIcon className="w-4 h-4" />
+        <UploadIcon className="h-4 w-4" />
       </button>
       <input
         ref={fileInputRef}
@@ -129,51 +129,51 @@ export function FileManagerToolbar({
         type="button"
         onClick={onRename}
         disabled={!renameEnabled}
-        title={t('toolbar.rename')}
-        aria-label={t('toolbar.rename')}
-        className="p-1.5 rounded hover:bg-tertiary disabled:opacity-50 disabled:cursor-not-allowed text-text transition-colors"
+        title={t("toolbar.rename")}
+        aria-label={t("toolbar.rename")}
+        className="hover:bg-tertiary text-text rounded p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <PencilIcon className="w-4 h-4" />
+        <PencilIcon className="h-4 w-4" />
       </button>
       <button
         type="button"
         onClick={onDelete}
         disabled={!deleteEnabled}
-        title={t('toolbar.delete')}
-        aria-label={t('toolbar.delete')}
-        className="p-1.5 rounded hover:bg-tertiary disabled:opacity-50 disabled:cursor-not-allowed text-error transition-colors"
+        title={t("toolbar.delete")}
+        aria-label={t("toolbar.delete")}
+        className="hover:bg-tertiary text-error rounded p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <TrashIcon className="w-4 h-4" />
+        <TrashIcon className="h-4 w-4" />
       </button>
       <button
         type="button"
         onClick={onMoveTo}
         disabled={!moveEnabled}
-        title={t('toolbar.moveTo')}
-        aria-label={t('toolbar.moveTo')}
-        className="p-1.5 rounded hover:bg-tertiary disabled:opacity-50 disabled:cursor-not-allowed text-text transition-colors"
+        title={t("toolbar.moveTo")}
+        aria-label={t("toolbar.moveTo")}
+        className="hover:bg-tertiary text-text rounded p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <MoveIcon className="w-4 h-4" />
+        <MoveIcon className="h-4 w-4" />
       </button>
       <button
         type="button"
         onClick={onCopyTo}
         disabled={!copyEnabled}
-        title={t('toolbar.copyTo')}
-        aria-label={t('toolbar.copyTo')}
-        className="p-1.5 rounded hover:bg-tertiary disabled:opacity-50 disabled:cursor-not-allowed text-text transition-colors"
+        title={t("toolbar.copyTo")}
+        aria-label={t("toolbar.copyTo")}
+        className="hover:bg-tertiary text-text rounded p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <CopyIcon className="w-4 h-4" />
+        <CopyIcon className="h-4 w-4" />
       </button>
 
-      <label className="ml-auto flex items-center gap-2 text-sm text-text cursor-pointer select-none">
+      <label className="text-text ml-auto flex cursor-pointer items-center gap-2 text-sm select-none">
         <input
           type="checkbox"
           checked={showHidden}
           onChange={(e) => onToggleShowHidden(e.target.checked)}
           className="accent-primary"
         />
-        {t('toolbar.showHiddenFiles')}
+        {t("toolbar.showHiddenFiles")}
       </label>
     </div>
   );

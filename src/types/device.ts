@@ -8,7 +8,7 @@ export interface DeviceUser {
 export interface Device {
   id: string;
   name: string;
-  status: 'active' | 'inactive' | string;
+  status: "active" | "inactive" | string;
   last_active_at: string | null;
   created_at: string;
   updated_at: string;

@@ -6,10 +6,10 @@ import {
   useState,
   type FC,
   type KeyboardEvent,
-} from 'react';
-import { useTranslation } from 'react-i18next';
-import { Button } from 'src/components/ui/Button';
-import type { PanelStatus } from './transcriptReducer';
+} from "react";
+import { useTranslation } from "react-i18next";
+import { Button } from "src/components/ui/Button";
+import type { PanelStatus } from "./transcriptReducer";
 
 const TICK_MS = 30_000;
 // ~8 lines at ~24px line-height = 192px. Keep in sync with the CSS class
@@ -24,7 +24,10 @@ const MAX_TEXTAREA_PX = 192;
  * used to force a re-render every ~30 s; the *displayed* value is always
  * derived from the current wall-clock.
  */
-function timeToNextUtcMidnight(now: number): { hours: number; minutes: number } {
+function timeToNextUtcMidnight(now: number): {
+  hours: number;
+  minutes: number;
+} {
   const nowDate = new Date(now);
   const next = new Date(
     Date.UTC(
@@ -66,8 +69,8 @@ export interface InputBoxProps {
  *     disabled when input is empty or the panel is disabled.
  */
 export const InputBox: FC<InputBoxProps> = ({ status, onSubmit }) => {
-  const { t } = useTranslation('assistant');
-  const [value, setValue] = useState('');
+  const { t } = useTranslation("assistant");
+  const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Tick the component every 30s while halted_quota so the displayed
@@ -75,7 +78,7 @@ export const InputBox: FC<InputBoxProps> = ({ status, onSubmit }) => {
   // re-render matters; the actual reset-time math reads Date.now() below.
   const [, setTick] = useState(0);
   useEffect(() => {
-    if (status !== 'halted_quota') return;
+    if (status !== "halted_quota") return;
     const id = window.setInterval(() => setTick((n) => n + 1), TICK_MS);
     return () => window.clearInterval(id);
   }, [status]);
@@ -86,25 +89,26 @@ export const InputBox: FC<InputBoxProps> = ({ status, onSubmit }) => {
   useLayoutEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
-    el.style.height = 'auto';
+    el.style.height = "auto";
     const next = Math.min(el.scrollHeight, MAX_TEXTAREA_PX);
     el.style.height = `${next}px`;
   }, [value]);
 
-  const loopActive = status === 'streaming' || status === 'awaiting_confirmation';
-  const halted = status === 'halted_quota';
+  const loopActive =
+    status === "streaming" || status === "awaiting_confirmation";
+  const halted = status === "halted_quota";
   const disabled = loopActive || halted;
 
   const submit = useCallback(() => {
     const text = value.trim();
     if (!text || disabled) return;
     onSubmit(text);
-    setValue('');
+    setValue("");
   }, [value, disabled, onSubmit]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
+      if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         submit();
       }
@@ -113,17 +117,17 @@ export const InputBox: FC<InputBoxProps> = ({ status, onSubmit }) => {
   );
 
   const tooltip = loopActive
-    ? t('input.waitingTooltip', {
-        defaultValue: 'Waiting for agent — press Stop to interrupt',
+    ? t("input.waitingTooltip", {
+        defaultValue: "Waiting for agent — press Stop to interrupt",
       })
     : undefined;
 
   let resetMsg: string | null = null;
   if (halted) {
     const { hours, minutes } = timeToNextUtcMidnight(Date.now());
-    const hh = String(hours).padStart(2, '0');
-    const mm = String(minutes).padStart(2, '0');
-    resetMsg = t('input.halted_quota.inlineMessage', {
+    const hh = String(hours).padStart(2, "0");
+    const mm = String(minutes).padStart(2, "0");
+    resetMsg = t("input.halted_quota.inlineMessage", {
       hh,
       mm,
       defaultValue: `Daily quota reached — resets at 00:00 UTC (in ${hh}h ${mm}m)`,
@@ -134,7 +138,7 @@ export const InputBox: FC<InputBoxProps> = ({ status, onSubmit }) => {
     <div className="border-t border-gray-200 bg-white">
       {resetMsg && (
         <div
-          className="px-3 py-2 text-xs text-error bg-error/5 border-b border-error/20"
+          className="text-error bg-error/5 border-error/20 border-b px-3 py-2 text-xs"
           role="status"
           aria-live="polite"
           data-testid="assistant-halted-quota-message"
@@ -142,7 +146,7 @@ export const InputBox: FC<InputBoxProps> = ({ status, onSubmit }) => {
           {resetMsg}
         </div>
       )}
-      <div className="p-3 flex gap-2 items-end">
+      <div className="flex items-end gap-2 p-3">
         <textarea
           ref={textareaRef}
           value={value}
@@ -151,13 +155,13 @@ export const InputBox: FC<InputBoxProps> = ({ status, onSubmit }) => {
           rows={1}
           disabled={disabled}
           title={tooltip}
-          placeholder={t('input.placeholder', {
-            defaultValue: 'Ask the assistant to act on this device…',
+          placeholder={t("input.placeholder", {
+            defaultValue: "Ask the assistant to act on this device…",
           })}
-          aria-label={t('input.placeholder', {
-            defaultValue: 'Ask the assistant to act on this device…',
+          aria-label={t("input.placeholder", {
+            defaultValue: "Ask the assistant to act on this device…",
           })}
-          className="flex-1 resize-none rounded-lg border border-lightgray px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:bg-gray-100 disabled:text-darkgray disabled:cursor-not-allowed"
+          className="border-lightgray focus:ring-primary/20 disabled:text-darkgray flex-1 resize-none rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100"
           style={{ maxHeight: `${MAX_TEXTAREA_PX}px` }}
           data-testid="assistant-input-textarea"
         />
@@ -166,10 +170,10 @@ export const InputBox: FC<InputBoxProps> = ({ status, onSubmit }) => {
           size="sm"
           disabled={disabled || !value.trim()}
           onClick={submit}
-          aria-label={t('input.send', { defaultValue: 'Send' })}
+          aria-label={t("input.send", { defaultValue: "Send" })}
           data-testid="assistant-send-button"
         >
-          {t('input.send', { defaultValue: 'Send' })}
+          {t("input.send", { defaultValue: "Send" })}
         </Button>
       </div>
     </div>

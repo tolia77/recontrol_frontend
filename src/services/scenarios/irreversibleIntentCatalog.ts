@@ -22,15 +22,15 @@
  */
 
 export const IRREVERSIBLE_IDS = [
-  'rm',
-  'truncate',
-  'dd_of_dev',
-  'mkfs',
-  'systemctl_destruct',
-  'kill_9',
-  'find_delete',
-  'chmod_777_recursive',
-  'chown_recursive',
+  "rm",
+  "truncate",
+  "dd_of_dev",
+  "mkfs",
+  "systemctl_destruct",
+  "kill_9",
+  "find_delete",
+  "chmod_777_recursive",
+  "chown_recursive",
 ] as const;
 
 export type IrreversibleId = (typeof IRREVERSIBLE_IDS)[number];
@@ -48,24 +48,24 @@ export interface IrreversibleCheckInput {
 }
 
 export const IRREVERSIBLE_PATTERNS: readonly IrreversiblePattern[] = [
-  { id: 'rm', binaryRegex: /^rm$/ },
-  { id: 'truncate', binaryRegex: /^truncate$/ },
-  { id: 'dd_of_dev', binaryRegex: /^dd$/, argMatch: /^of=\/dev\// },
-  { id: 'mkfs', binaryRegex: /^mkfs(\..+)?$/ },
+  { id: "rm", binaryRegex: /^rm$/ },
+  { id: "truncate", binaryRegex: /^truncate$/ },
+  { id: "dd_of_dev", binaryRegex: /^dd$/, argMatch: /^of=\/dev\// },
+  { id: "mkfs", binaryRegex: /^mkfs(\..+)?$/ },
   {
-    id: 'systemctl_destruct',
+    id: "systemctl_destruct",
     binaryRegex: /^systemctl$/,
     argMatch: /^(stop|disable|mask)$/,
   },
-  { id: 'kill_9', binaryRegex: /^kill$/, argMatch: /^-9$/ },
-  { id: 'find_delete', binaryRegex: /^find$/, argMatch: /^-delete$/ },
+  { id: "kill_9", binaryRegex: /^kill$/, argMatch: /^-9$/ },
+  { id: "find_delete", binaryRegex: /^find$/, argMatch: /^-delete$/ },
   {
-    id: 'chmod_777_recursive',
+    id: "chmod_777_recursive",
     binaryRegex: /^chmod$/,
     argMatch: /^-R$/,
     arg2Match: /^777$/,
   },
-  { id: 'chown_recursive', binaryRegex: /^chown$/, argMatch: /^-R$/ },
+  { id: "chown_recursive", binaryRegex: /^chown$/, argMatch: /^-R$/ },
 ] as const;
 
 /**
@@ -74,7 +74,10 @@ export const IRREVERSIBLE_PATTERNS: readonly IrreversiblePattern[] = [
  * to pass the basename, matching how the backend `CommandPolicy.evaluate`
  * treats the binary kwarg).
  */
-export function isIrreversible({ binary, args }: IrreversibleCheckInput): boolean {
+export function isIrreversible({
+  binary,
+  args,
+}: IrreversibleCheckInput): boolean {
   if (!binary) return false;
   return IRREVERSIBLE_PATTERNS.some((pattern) => {
     if (!pattern.binaryRegex.test(binary)) return false;

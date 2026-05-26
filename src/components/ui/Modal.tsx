@@ -1,9 +1,15 @@
-import { useEffect, useId, useRef, type ReactNode, type RefObject } from 'react';
+import {
+  useEffect,
+  useId,
+  useRef,
+  type ReactNode,
+  type RefObject,
+} from "react";
 
 interface ModalProps {
   open: boolean;
   onClose: () => void;
-  size?: 'sm' | 'md' | 'lg' | 'full';
+  size?: "sm" | "md" | "lg" | "full";
   suppressEsc?: boolean;
   suppressOverlayClick?: boolean;
   initialFocusRef?: RefObject<HTMLElement | null>;
@@ -16,28 +22,28 @@ interface SubProps {
   className?: string;
 }
 
-const sizeCardClasses: Record<'sm' | 'md' | 'lg' | 'full', string> = {
-  sm: 'bg-background border border-lightgray rounded-lg shadow-xl max-w-sm w-[90%] p-6',
-  md: 'bg-background border border-lightgray rounded-lg shadow-xl max-w-md w-[90%] p-6',
-  lg: 'bg-background border border-lightgray rounded-lg shadow-xl max-w-lg w-[90%] p-6',
-  full: 'bg-background w-full max-w-5xl',
+const sizeCardClasses: Record<"sm" | "md" | "lg" | "full", string> = {
+  sm: "bg-background border border-lightgray rounded-lg shadow-xl max-w-sm w-[90%] p-6",
+  md: "bg-background border border-lightgray rounded-lg shadow-xl max-w-md w-[90%] p-6",
+  lg: "bg-background border border-lightgray rounded-lg shadow-xl max-w-lg w-[90%] p-6",
+  full: "bg-background w-full max-w-5xl",
 };
 
-const wrapperClasses: Record<'sm' | 'md' | 'lg' | 'full', string> = {
-  sm: 'flex items-center justify-center',
-  md: 'flex items-center justify-center',
-  lg: 'flex items-center justify-center',
-  full: '',
+const wrapperClasses: Record<"sm" | "md" | "lg" | "full", string> = {
+  sm: "flex items-center justify-center",
+  md: "flex items-center justify-center",
+  lg: "flex items-center justify-center",
+  full: "",
 };
 
 export function Modal({
   open,
   onClose,
-  size = 'md',
+  size = "md",
   suppressEsc = false,
   suppressOverlayClick = false,
   initialFocusRef,
-  className = '',
+  className = "",
   children,
 }: ModalProps) {
   const headingId = useId();
@@ -48,7 +54,7 @@ export function Modal({
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prev;
     };
@@ -58,13 +64,13 @@ export function Modal({
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !suppressEsc) {
+      if (e.key === "Escape" && !suppressEsc) {
         e.preventDefault();
         onClose();
       }
     };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
   }, [open, suppressEsc, onClose]);
 
   // Focus management
@@ -91,7 +97,7 @@ export function Modal({
 
   return (
     <div
-      className={`fixed inset-0 bg-black/40 z-50 ${wrapperClasses[size]}`}
+      className={`fixed inset-0 z-50 bg-black/40 ${wrapperClasses[size]}`}
       onClick={handleOverlayClick}
       role="presentation"
     >
@@ -111,29 +117,23 @@ export function Modal({
   );
 }
 
-function ModalHeader({ children, className = '' }: SubProps) {
+function ModalHeader({ children, className = "" }: SubProps) {
   return (
-    <h2
-      className={`text-lg font-semibold mb-3 text-text ${className}`}
-    >
+    <h2 className={`text-text mb-3 text-lg font-semibold ${className}`}>
       {children}
     </h2>
   );
 }
 
-function ModalBody({ children, className = '' }: SubProps) {
+function ModalBody({ children, className = "" }: SubProps) {
   return (
-    <div className={`text-sm text-text/80 mb-4 ${className}`}>
-      {children}
-    </div>
+    <div className={`text-text/80 mb-4 text-sm ${className}`}>{children}</div>
   );
 }
 
-function ModalFooter({ children, className = '' }: SubProps) {
+function ModalFooter({ children, className = "" }: SubProps) {
   return (
-    <div className={`flex justify-end gap-2 ${className}`}>
-      {children}
-    </div>
+    <div className={`flex justify-end gap-2 ${className}`}>{children}</div>
   );
 }
 

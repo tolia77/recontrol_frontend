@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import type { QueueState, TransferQueue } from '../services/transfer';
+import { useEffect, useState } from "react";
+import type { QueueState, TransferQueue } from "../services/transfer";
 
 /**
  * Subscribe a React component to a {@link TransferQueue} instance.

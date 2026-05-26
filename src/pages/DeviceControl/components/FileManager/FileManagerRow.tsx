@@ -1,8 +1,8 @@
-import { memo, useEffect, useRef } from 'react';
-import type { KeyboardEvent, MouseEvent } from 'react';
-import type { FileEntry } from '../../services/files';
-import { IconForEntry } from './icons';
-import { formatBytes, formatDate, formatType } from './utils/formatters';
+import { memo, useEffect, useRef } from "react";
+import type { KeyboardEvent, MouseEvent } from "react";
+import type { FileEntry } from "../../services/files";
+import { IconForEntry } from "./icons";
+import { formatBytes, formatDate, formatType } from "./utils/formatters";
 
 export const ROW_HEIGHT_PX = 36;
 
@@ -33,7 +33,7 @@ function stemEnd(name: string, isDirectory: boolean): number {
   if (isDirectory) return name.length;
   // Find the last dot, but ignore a leading dot at index 0 -- ".env" should
   // be selected entirely, not "" before the dot.
-  const lastDot = name.lastIndexOf('.');
+  const lastDot = name.lastIndexOf(".");
   if (lastDot <= 0) return name.length; // no extension OR pure dotfile
   return lastDot;
 }
@@ -57,12 +57,12 @@ function FileManagerRowImpl({
   //   None               -> hover:bg-tertiary
   const stateClass =
     isSelected && isFocused
-      ? 'bg-accent/30 ring-1 ring-accent'
+      ? "bg-accent/30 ring-1 ring-accent"
       : isSelected
-        ? 'bg-accent/20 text-text'
+        ? "bg-accent/20 text-text"
         : isFocused
-          ? 'bg-tertiary'
-          : 'hover:bg-tertiary/60';
+          ? "bg-tertiary"
+          : "hover:bg-tertiary/60";
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -83,13 +83,13 @@ function FileManagerRowImpl({
   }, [isRenaming, entry.name, entry.isDirectory]);
 
   const handleInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       e.stopPropagation();
       onRenameCommit(e.currentTarget.value);
       return;
     }
-    if (e.key === 'Escape') {
+    if (e.key === "Escape") {
       e.preventDefault();
       e.stopPropagation();
       onRenameCancel();
@@ -112,15 +112,17 @@ function FileManagerRowImpl({
       data-row-index={index}
       onClick={isRenaming ? undefined : onClick}
       onDoubleClick={isRenaming ? undefined : onDoubleClick}
-      onContextMenu={isRenaming ? (e) => e.stopPropagation() : handleRowContextMenu}
+      onContextMenu={
+        isRenaming ? (e) => e.stopPropagation() : handleRowContextMenu
+      }
       className={[
-        'grid grid-cols-[1fr_120px_180px_140px] items-center px-3 cursor-default text-sm border-b border-lightgray/50 select-none',
+        "border-lightgray/50 grid cursor-default grid-cols-[1fr_120px_180px_140px] items-center border-b px-3 text-sm select-none",
         stateClass,
-      ].join(' ')}
+      ].join(" ")}
       style={{ height: `${ROW_HEIGHT_PX}px` }}
     >
-      <div className="flex items-center min-w-0">
-        <IconForEntry entry={entry} className="w-4 h-4 mr-2 flex-shrink-0" />
+      <div className="flex min-w-0 items-center">
+        <IconForEntry entry={entry} className="mr-2 h-4 w-4 flex-shrink-0" />
         {isRenaming ? (
           <input
             ref={inputRef}
@@ -131,16 +133,16 @@ function FileManagerRowImpl({
             onClick={(e) => e.stopPropagation()}
             onDoubleClick={(e) => e.stopPropagation()}
             onContextMenu={(e) => e.stopPropagation()}
-            className="flex-1 min-w-0 bg-background text-text border border-accent rounded px-1 py-0.5 outline-none text-sm"
+            className="bg-background text-text border-accent min-w-0 flex-1 rounded border px-1 py-0.5 text-sm outline-none"
           />
         ) : (
-          <span className="truncate text-text" title={entry.name}>
+          <span className="text-text truncate" title={entry.name}>
             {entry.name}
           </span>
         )}
       </div>
-      <div className="text-right text-darkgray tabular-nums pr-4">
-        {entry.isDirectory ? '' : formatBytes(entry.sizeBytes)}
+      <div className="text-darkgray pr-4 text-right tabular-nums">
+        {entry.isDirectory ? "" : formatBytes(entry.sizeBytes)}
       </div>
       <div className="text-darkgray">{formatDate(entry.modifiedUtc)}</div>
       <div className="text-darkgray truncate">

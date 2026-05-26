@@ -1,7 +1,11 @@
-import { Fragment } from 'react';
-import { useTranslation } from 'react-i18next';
-import { ChevronRightIcon } from './icons';
-import { detectSeparator, joinPath, splitIntoSegments } from './utils/pathUtils';
+import { Fragment } from "react";
+import { useTranslation } from "react-i18next";
+import { ChevronRightIcon } from "./icons";
+import {
+  detectSeparator,
+  joinPath,
+  splitIntoSegments,
+} from "./utils/pathUtils";
 
 interface FileManagerBreadcrumbProps {
   currentPath: string | null;
@@ -23,26 +27,26 @@ export function FileManagerBreadcrumb({
   rootPath,
   onNavigate,
 }: FileManagerBreadcrumbProps) {
-  const { t } = useTranslation('fileManager');
+  const { t } = useTranslation("fileManager");
   if (!currentPath) {
     return (
       <nav
-        aria-label={t('breadcrumb.ariaLabel')}
-        className="px-3 py-2 border-b border-lightgray text-sm text-darkgray bg-background flex-shrink-0 min-h-[36px]"
+        aria-label={t("breadcrumb.ariaLabel")}
+        className="border-lightgray text-darkgray bg-background min-h-[36px] flex-shrink-0 border-b px-3 py-2 text-sm"
       >
-        {t('breadcrumb.selectFolderPrompt')}
+        {t("breadcrumb.selectFolderPrompt")}
       </nav>
     );
   }
 
   const sep = detectSeparator(rootPath ?? currentPath);
   const segments = splitIntoSegments(currentPath, sep);
-  const isPosixAbsolute = sep === '/' && currentPath.startsWith('/');
+  const isPosixAbsolute = sep === "/" && currentPath.startsWith("/");
 
   return (
     <nav
-      aria-label={t('breadcrumb.ariaLabel')}
-      className="flex items-center gap-1 px-3 py-2 border-b border-lightgray text-sm bg-background flex-shrink-0 min-h-[36px] overflow-x-auto"
+      aria-label={t("breadcrumb.ariaLabel")}
+      className="border-lightgray bg-background flex min-h-[36px] flex-shrink-0 items-center gap-1 overflow-x-auto border-b px-3 py-2 text-sm"
     >
       {segments.map((seg, i) => {
         const isLast = i === segments.length - 1;
@@ -50,23 +54,23 @@ export function FileManagerBreadcrumb({
         // an empty segment so joinPath preserves the leading `/`.
         const partsThroughHere = segments.slice(0, i + 1);
         const fullPrefix = isPosixAbsolute
-          ? joinPath(['', ...partsThroughHere], sep)
+          ? joinPath(["", ...partsThroughHere], sep)
           : joinPath(partsThroughHere, sep);
 
         return (
           <Fragment key={`${fullPrefix}-${i}`}>
             {i > 0 && (
-              <ChevronRightIcon className="w-3 h-3 text-darkgray flex-shrink-0" />
+              <ChevronRightIcon className="text-darkgray h-3 w-3 flex-shrink-0" />
             )}
             {isLast ? (
-              <span className="font-medium text-text whitespace-nowrap">
+              <span className="text-text font-medium whitespace-nowrap">
                 {seg}
               </span>
             ) : (
               <button
                 type="button"
                 onClick={() => onNavigate(fullPrefix)}
-                className="whitespace-nowrap hover:text-primary hover:underline cursor-pointer"
+                className="hover:text-primary cursor-pointer whitespace-nowrap hover:underline"
                 title={fullPrefix}
               >
                 {seg}
