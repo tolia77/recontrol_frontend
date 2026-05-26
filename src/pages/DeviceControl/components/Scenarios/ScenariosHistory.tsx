@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button, useToast } from "../../../../components/ui";
+import { Button, useToast, LoadingState, ErrorState, EmptyState } from "../../../../components/ui";
 import {
   scenarioRunsService,
   type ScenarioRun,
@@ -222,27 +222,22 @@ export default function ScenariosHistory({
       </div>
 
       {loading && (
-        <div
-          className="text-darkgray px-4 py-6 text-center text-sm"
-          data-testid="scenarios-history-loading"
-        >
-          …
+        <div data-testid="scenarios-history-loading">
+          <LoadingState />
         </div>
       )}
       {!loading && error && (
-        <div
-          className="text-error px-4 py-6 text-center text-sm"
-          data-testid="scenarios-history-error"
-        >
-          {error}
+        <div data-testid="scenarios-history-error">
+          <ErrorState
+            message={error}
+            onRetry={() => setRefreshTick((prev) => prev + 1)}
+            retryLabel={t("common:retry")}
+          />
         </div>
       )}
       {!loading && !error && total === 0 && (
-        <div
-          className="text-darkgray px-4 py-8 text-center text-sm"
-          data-testid="scenarios-history-empty"
-        >
-          {t("history.emptyState")}
+        <div data-testid="scenarios-history-empty">
+          <EmptyState title={t("history.emptyState")} />
         </div>
       )}
       {!loading && !error && total > 0 && (

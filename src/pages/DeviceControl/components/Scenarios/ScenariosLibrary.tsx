@@ -5,7 +5,7 @@ import {
   type Scenario,
 } from "src/services/backend/scenariosService";
 import { getUserId } from "src/utils/auth";
-import { ConfirmModal } from "src/components/ui";
+import { ConfirmModal, LoadingState, ErrorState, EmptyState } from "src/components/ui";
 import ScenariosRow from "./ScenariosRow";
 
 export interface ScenariosLibraryProps {
@@ -157,23 +157,20 @@ export default function ScenariosLibrary({
         </select>
       </div>
       {loading && (
-        <div className="text-sm text-gray-500" data-testid="scenarios-loading">
-          …
+        <div data-testid="scenarios-loading">
+          <LoadingState />
         </div>
       )}
       {error && !loading && (
-        <div className="text-error text-sm" data-testid="scenarios-error">
-          {error}
+        <div data-testid="scenarios-error">
+          <ErrorState message={error} onRetry={reload} retryLabel={t("common:retry")} />
         </div>
       )}
       {empty && !error && (
-        <div
-          className="py-4 text-center text-sm text-gray-500"
-          data-testid="scenarios-empty"
-        >
-          {debouncedQ || pinnedFilter
-            ? t("library.emptyFiltered")
-            : t("library.empty")}
+        <div data-testid="scenarios-empty">
+          <EmptyState
+            title={debouncedQ || pinnedFilter ? t("library.emptyFiltered") : t("library.empty")}
+          />
         </div>
       )}
       <ul className="flex flex-col gap-1" data-testid="scenarios-list">
