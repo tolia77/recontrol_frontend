@@ -1,5 +1,5 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import { getRefreshToken, saveTokens } from 'src/utils/auth';
+import { getRefreshToken, saveTokens, getAccessToken } from 'src/utils/auth';
 
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
@@ -11,6 +11,17 @@ interface ErrorResponseData {
 
 export const backendInstance = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL
+});
+
+// ── Request interceptor ────────────────────────────────────────────────────
+// Injects Authorization on every request unless config.skipAuth is true.
+backendInstance.interceptors.request.use((config) => {
+  if (config.skipAuth) return config;
+  const token = getAccessToken();
+  if (token) {
+    config.headers.Authorization = token;
+  }
+  return config;
 });
 
 // ── Refresh mutex ──────────────────────────────────────────────────────────
