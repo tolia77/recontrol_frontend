@@ -2,7 +2,12 @@ import React, { useState, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import type { ProcessInfo } from "../types.ts";
 import { RefreshIcon, CloseIcon } from "../icons.tsx";
-import { Modal, Button, LoadingState, EmptyState } from "../../../components/ui";
+import {
+  Modal,
+  Button,
+  LoadingState,
+  EmptyState,
+} from "../../../components/ui";
 
 interface ProcessesModalProps {
   open: boolean;
@@ -138,7 +143,12 @@ export const ProcessesModal: React.FC<ProcessesModalProps> = ({
   );
 
   return (
-    <Modal open={open} onClose={onClose} size="full" ariaLabel={t("manual.terminal.processesModal.title")}>
+    <Modal
+      open={open}
+      onClose={onClose}
+      size="full"
+      ariaLabel={t("manual.terminal.processesModal.title")}
+    >
       <div className="border-lightgray flex items-center justify-between gap-2 border-b px-4 py-3">
         <h5 className="text-base font-semibold">
           {t("manual.terminal.processesModal.title")}
@@ -168,7 +178,9 @@ export const ProcessesModal: React.FC<ProcessesModalProps> = ({
       <div className="p-0">
         <div className="h-[480px] overflow-hidden">
           {loading ? (
-            <LoadingState message={t("manual.terminal.processesModal.loading")} />
+            <LoadingState
+              message={t("manual.terminal.processesModal.loading")}
+            />
           ) : processes.length === 0 ? (
             <EmptyState title={t("manual.terminal.processesModal.empty")} />
           ) : (

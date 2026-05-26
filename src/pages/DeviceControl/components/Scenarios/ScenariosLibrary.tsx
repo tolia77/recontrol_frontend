@@ -5,7 +5,12 @@ import {
   type Scenario,
 } from "src/services/backend/scenariosService";
 import { getUserId } from "src/utils/auth";
-import { ConfirmModal, LoadingState, ErrorState, EmptyState } from "src/components/ui";
+import {
+  ConfirmModal,
+  LoadingState,
+  ErrorState,
+  EmptyState,
+} from "src/components/ui";
 import ScenariosRow from "./ScenariosRow";
 
 export interface ScenariosLibraryProps {
@@ -163,13 +168,21 @@ export default function ScenariosLibrary({
       )}
       {error && !loading && (
         <div data-testid="scenarios-error">
-          <ErrorState message={error} onRetry={reload} retryLabel={t("common:retry")} />
+          <ErrorState
+            message={error}
+            onRetry={reload}
+            retryLabel={t("common:retry")}
+          />
         </div>
       )}
       {empty && !error && (
         <div data-testid="scenarios-empty">
           <EmptyState
-            title={debouncedQ || pinnedFilter ? t("library.emptyFiltered") : t("library.empty")}
+            title={
+              debouncedQ || pinnedFilter
+                ? t("library.emptyFiltered")
+                : t("library.empty")
+            }
           />
         </div>
       )}

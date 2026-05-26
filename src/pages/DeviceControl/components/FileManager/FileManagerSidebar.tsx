@@ -46,9 +46,7 @@ export function FileManagerSidebar({
         </div>
       )}
 
-      {error && !isLoading && (
-        <ErrorState message={error} />
-      )}
+      {error && !isLoading && <ErrorState message={error} />}
 
       {!isLoading && !error && roots && roots.length > 0 && (
         <ul className="py-1">
