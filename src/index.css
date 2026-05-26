@@ -125,11 +125,6 @@ p {
     font-weight: 400;
 }
 
-/* small helpers used by components */
-.small {
-    font-size: 13px;
-    padding: 6px 10px;
-}
 /* Layout */
 .command-websocket {
     display: flex;
@@ -154,73 +149,9 @@ p {
     border-radius: 4px;
 }
 
-.small-input {
-    padding: 0.375rem;
-    border: 1px solid var(--color-lightgray);
-    border-radius: 2px;
-    font-size: 0.875rem;
-}
-
 .action-buttons {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
 }
 
-/* Buttons */
-.btn-primary {
-    padding: 0.5rem 1rem;
-    background: var(--color-primary);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.btn-primary:hover:not(:disabled) {
-    background: var(--color-secondary);
-}
-
-.btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.btn-secondary {
-    padding: 0.375rem 0.75rem;
-    background: var(--color-tertiary);
-    color: var(--color-text);
-    border: 1px solid var(--color-lightgray);
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-secondary:hover:not(:disabled) {
-    background: var(--color-lightgray);
-}
-
-.btn-secondary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.btn-danger {
-    padding: 0.375rem 0.75rem;
-    background: var(--color-error);
-    color: #fff;
-    border: 1px solid var(--color-error);
-    border-radius: 4px;
-    cursor: pointer;
-    transition: opacity 0.2s;
-}
-
-.btn-danger:hover:not(:disabled) {
-    opacity: 0.9;
-}
-
-.btn-danger:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
