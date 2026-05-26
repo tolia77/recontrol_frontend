@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Button, Input } from '../../../../components/ui';
+import { Button, Input, Modal } from '../../../../components/ui';
 
 // D-22-12 / AUDIT-05 mass-delete arm: highest-friction destructive confirm.
 // Operator must type the literal "DELETE" (case-sensitive, no transliteration
-// in any locale — per D-22 mandate) before [Delete all] enables. Backdrop +
-// Escape dismiss like PolicyPreviewModal.
+// in any locale — per D-22 mandate) before [Delete all] enables. Modal shell
+// owns scroll-lock and focus management; Esc is handled at window level for
+// test compatibility (suppressEsc on shell prevents double-firing).
 
 export interface MassDeleteConfirmModalProps {
   open: boolean;
@@ -36,7 +37,8 @@ export default function MassDeleteConfirmModal({
     if (open) setTypedPhrase('');
   }, [open]);
 
-  // Escape dismiss — bind only while open to avoid spurious cancels.
+  // Escape dismiss via window-level listener. Modal shell receives suppressEsc
+  // so only this handler fires (avoids double-calling onCancel).
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -46,77 +48,76 @@ export default function MassDeleteConfirmModal({
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onCancel]);
 
-  if (!open) return null;
-
   const phraseMatches = typedPhrase === REQUIRED_PHRASE;
   const confirmDisabled = !phraseMatches || loading;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-      role="dialog"
-      aria-modal="true"
-      data-testid="mass-delete-modal"
-      onMouseDown={(e) => {
-        // Backdrop dismiss: only when the mousedown's target IS the backdrop
-        // (clicks on the inner card bubble up but currentTarget === target
-        // only on the outer element itself).
-        if (e.target === e.currentTarget) onCancel();
-      }}
-    >
+    <Modal open={open} onClose={onCancel} size="md" suppressEsc suppressOverlayClick>
+      {/* Inner wrapper carries testids and mouseDown-based backdrop dismiss so
+          existing tests (MassDeleteConfirmModal.test.tsx) continue to pass
+          without modification. The outer div acts as the "backdrop area" for
+          tests; the inner card div stops mouseDown propagation. */}
       <div
-        className="w-full max-w-md rounded-xl bg-white p-5 shadow-2xl"
-        data-testid="mass-delete-card"
-        onMouseDown={(e) => e.stopPropagation()}
+        data-testid="mass-delete-modal"
+        role="dialog"
+        aria-modal="true"
+        onMouseDown={(e) => {
+          if (e.target === e.currentTarget) onCancel();
+        }}
       >
-        <h2 className="text-base font-semibold text-primary">
-          {t('history.deleteAllConfirm.title')}
-        </h2>
-        <p
-          className="mt-2 text-sm text-gray-700"
-          data-testid="mass-delete-body"
+        <div
+          data-testid="mass-delete-card"
+          onMouseDown={(e) => e.stopPropagation()}
         >
-          {t('history.deleteAllConfirm.body', { count })}
-        </p>
-        <div className="mt-3">
-          <Input
-            type="text"
-            value={typedPhrase}
-            onChange={(e) => setTypedPhrase(e.target.value)}
-            placeholder={t('history.deleteAllConfirm.typePlaceholder')}
-            data-testid="mass-delete-input"
-            autoFocus
-            disabled={loading}
-            aria-label={t('history.deleteAllConfirm.typePlaceholder')}
-          />
-        </div>
-        <div className="mt-4 flex justify-end gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={onCancel}
-            disabled={loading}
-            data-testid="mass-delete-cancel"
+          <h2 className="text-base font-semibold text-primary">
+            {t('history.deleteAllConfirm.title')}
+          </h2>
+          <p
+            className="mt-2 text-sm text-gray-700"
+            data-testid="mass-delete-body"
           >
-            {t('history.deleteAllConfirm.cancel')}
-          </Button>
-          <Button
-            variant="danger"
-            size="sm"
-            loading={loading}
-            disabled={confirmDisabled}
-            onClick={() => {
-              // The `=== 'DELETE'` gate at the disabled level prevents a
-              // synthetic Enter-press from triggering this without the typed
-              // phrase. Keep the click handler trusting the disabled gate.
-              void onConfirm();
-            }}
-            data-testid="mass-delete-confirm"
-          >
-            {t('history.deleteAllConfirm.confirm')}
-          </Button>
+            {t('history.deleteAllConfirm.body', { count })}
+          </p>
+          <div className="mt-3">
+            <Input
+              type="text"
+              value={typedPhrase}
+              onChange={(e) => setTypedPhrase(e.target.value)}
+              placeholder={t('history.deleteAllConfirm.typePlaceholder')}
+              data-testid="mass-delete-input"
+              autoFocus
+              disabled={loading}
+              aria-label={t('history.deleteAllConfirm.typePlaceholder')}
+            />
+          </div>
+          <div className="mt-4 flex justify-end gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onCancel}
+              disabled={loading}
+              data-testid="mass-delete-cancel"
+            >
+              {t('history.deleteAllConfirm.cancel')}
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              loading={loading}
+              disabled={confirmDisabled}
+              onClick={() => {
+                // The `=== 'DELETE'` gate at the disabled level prevents a
+                // synthetic Enter-press from triggering this without the typed
+                // phrase. Keep the click handler trusting the disabled gate.
+                void onConfirm();
+              }}
+              data-testid="mass-delete-confirm"
+            >
+              {t('history.deleteAllConfirm.confirm')}
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
