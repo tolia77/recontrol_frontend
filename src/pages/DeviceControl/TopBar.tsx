@@ -64,7 +64,7 @@ function PanelTab({
       className={`flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium transition-colors ${
         active
           ? "bg-accent/10 text-text ring-accent/30 ring-1"
-          : "text-darkgray hover:text-text hover:bg-gray-100"
+          : "text-darkgray hover:text-text hover:bg-tertiary"
       }`}
     >
       {icon}
@@ -122,19 +122,19 @@ export function TopBar({
       : "bg-error";
 
   return (
-    <header className="flex h-[52px] shrink-0 items-center gap-3 border-b border-gray-200 bg-white px-3">
+    <header className="flex h-[52px] shrink-0 items-center gap-3 border-b border-lightgray bg-background px-3">
       {/* LEFT — Identity */}
       <button
         type="button"
         onClick={() => navigate("/devices")}
         aria-label={t("sidebar.control")}
-        className="text-darkgray hover:text-text rounded-lg p-1.5 transition-colors hover:bg-gray-100"
+        className="text-darkgray hover:text-text rounded-lg p-1.5 transition-colors hover:bg-tertiary"
       >
         <ChevronLeftIcon className="h-5 w-5" />
       </button>
 
       <div
-        className="flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1"
+        className="flex items-center gap-2 rounded-full border border-lightgray bg-background px-3 py-1"
         title={deviceName || t("topbar.deviceLabel")}
       >
         <span
@@ -164,13 +164,13 @@ export function TopBar({
       )}
 
       {/* CENTER — Workspace */}
-      <div className="flex h-8 items-center rounded-lg bg-gray-100 p-0.5">
+      <div className="flex h-8 items-center rounded-lg bg-tertiary p-0.5">
         <button
           type="button"
           onClick={() => setActiveMode("interactive")}
           className={`h-7 rounded-md px-3 text-sm font-medium transition-colors ${
             activeMode === "interactive"
-              ? "text-accent bg-white shadow-sm"
+              ? "text-accent bg-background shadow-sm"
               : "text-darkgray hover:text-text"
           }`}
         >
@@ -181,7 +181,7 @@ export function TopBar({
           onClick={() => setActiveMode("manual")}
           className={`h-7 rounded-md px-3 text-sm font-medium transition-colors ${
             activeMode === "manual"
-              ? "text-text bg-white shadow-sm"
+              ? "text-text bg-background shadow-sm"
               : "text-darkgray hover:text-text"
           }`}
         >

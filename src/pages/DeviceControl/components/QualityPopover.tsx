@@ -60,7 +60,7 @@ export function QualityPopover({
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className="text-text flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-100 px-2.5 py-1 font-mono text-xs transition-colors hover:bg-gray-200"
+        className="text-text flex items-center gap-1 rounded-lg border border-lightgray bg-background px-2.5 py-1 font-mono text-xs transition-colors hover:bg-tertiary"
       >
         <span>{`${currentResolution}p · ${currentFps}fps`}</span>
         <ChevronDownIcon
@@ -72,7 +72,7 @@ export function QualityPopover({
         <div
           role="dialog"
           aria-label={t("topbar.quality.title")}
-          className="absolute top-full right-0 z-50 mt-2 w-64 rounded-xl border border-gray-200 bg-white p-3 shadow-lg"
+          className="absolute top-full right-0 z-50 mt-2 w-64 rounded-xl border border-lightgray bg-background p-3 shadow-lg"
         >
           <h3 className="text-darkgray mb-2 text-xs font-semibold tracking-wide uppercase">
             {t("topbar.quality.title")}

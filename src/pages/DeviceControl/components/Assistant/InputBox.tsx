@@ -135,7 +135,7 @@ export const InputBox: FC<InputBoxProps> = ({ status, onSubmit }) => {
   }
 
   return (
-    <div className="border-t border-gray-200 bg-white">
+    <div className="border-t border-lightgray bg-background">
       {resetMsg && (
         <div
           className="text-error bg-error/5 border-error/20 border-b px-3 py-2 text-xs"
@@ -161,7 +161,7 @@ export const InputBox: FC<InputBoxProps> = ({ status, onSubmit }) => {
           aria-label={t("input.placeholder", {
             defaultValue: "Ask the assistant to act on this device…",
           })}
-          className="border-lightgray focus:ring-primary/20 disabled:text-darkgray flex-1 resize-none rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100"
+          className="border-lightgray focus:ring-primary/20 disabled:text-darkgray flex-1 resize-none rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:bg-background"
           style={{ maxHeight: `${MAX_TEXTAREA_PX}px` }}
           data-testid="assistant-input-textarea"
         />
