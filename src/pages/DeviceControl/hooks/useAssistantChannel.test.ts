@@ -142,9 +142,12 @@ function useChannelWithReducer(ws: WebSocket | null): {
   // would lose history when the hook fires events between renders).
   const broadcastsRef = useRef<AssistantBroadcast[]>([]);
   // Mirror what AssistantPanel.tsx does in production (see 20-09 wiring).
-  useAssistantChannel(ws, (msg) => {
-    broadcastsRef.current.push(msg);
-    dispatchTranscript({ type: "broadcast", broadcast: msg });
+  useAssistantChannel({
+    socket: ws,
+    onBroadcast: (msg) => {
+      broadcastsRef.current.push(msg);
+      dispatchTranscript({ type: "broadcast", broadcast: msg });
+    },
   });
   return { state, broadcasts: broadcastsRef.current };
 }

@@ -77,7 +77,7 @@ export function AssistantPanel({
     dispatchTranscript({ type: "broadcast", broadcast: msg });
   }, []);
 
-  const { dispatch } = useAssistantChannel(ws, onBroadcast);
+  const { dispatch } = useAssistantChannel({ socket: ws, onBroadcast });
 
   // 80% quota Toast — fires once when the reducer flips the flag (which
   // happens at most once per run; the reducer resets the flag on

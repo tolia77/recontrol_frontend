@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
+import { useOrderedBroadcast } from "./useOrderedBroadcast";
 
 const ASSISTANT_IDENTIFIER = JSON.stringify({ channel: "AssistantChannel" });
-const GAP_CLOSE_TIMEOUT_MS = 500;
 
 /**
  * Inner broadcast envelope shape per Phase 18 STREAM-03 / STREAM-04 and Phase 20 D-11.
@@ -84,9 +84,18 @@ interface AssistantCableEnvelope {
   message?: unknown;
 }
 
+interface UseAssistantChannelOptions {
+  socket: WebSocket | null;
+  onBroadcast: (msg: AssistantBroadcast) => void;
+}
+
 /**
  * Subscribe to the Rails AssistantChannel over the existing raw WebSocket
  * (the same socket that DeviceControl already opens for CommandChannel).
+ *
+ * Options-object signature per D-11. Composes useOrderedBroadcast for the
+ * seq-reorder buffer per D-12 (resetMarker "accepted", no seqless error
+ * passthrough).
  *
  * Wire-format invariants (Phase 18 STREAM-02..04, D-11):
  *  - `seq` is monotonically increasing per session; gaps are reordered with a
@@ -105,75 +114,42 @@ interface AssistantCableEnvelope {
  *    `connection_lost` error is delivered within 5s of socket close.
  */
 export function useAssistantChannel(
-  ws: WebSocket | null,
-  onBroadcast: (msg: AssistantBroadcast) => void,
+  { socket, onBroadcast }: UseAssistantChannelOptions,
 ): UseAssistantChannelReturn {
-  // Refs avoid stale-closure in the message handler bound inside the effect.
-  const onBroadcastRef = useRef(onBroadcast);
-  useEffect(() => {
-    onBroadcastRef.current = onBroadcast;
-  }, [onBroadcast]);
-
-  // Seq-ordered reorder buffer per Phase 18 STREAM-02 / D-16.
-  const bufferRef = useRef<Map<number, AssistantBroadcast>>(new Map());
-  const expectedSeqRef = useRef<number>(0);
-  const gapTimerRef = useRef<number | null>(null);
-  const closedRef = useRef<boolean>(false);
-
-  // Flush in-order from the reorder buffer.
-  const flushInOrder = useCallback((): void => {
-    while (bufferRef.current.has(expectedSeqRef.current)) {
-      const msg = bufferRef.current.get(expectedSeqRef.current);
-      if (!msg) break;
-      bufferRef.current.delete(expectedSeqRef.current);
-      expectedSeqRef.current += 1;
-      try {
-        onBroadcastRef.current(msg);
-      } catch (err) {
-        // Reducer errors must not crash the hook; log and continue.
-        console.warn("useAssistantChannel: onBroadcast threw", err);
-      }
-    }
-
-    if (bufferRef.current.size > 0 && gapTimerRef.current === null) {
-      gapTimerRef.current = window.setTimeout(() => {
-        gapTimerRef.current = null;
-        // VERIFY-04 invariant: suppress synthetic gap-close error after socket
-        // close; the close handler already delivered `connection_lost`.
-        if (closedRef.current) return;
-        const errorEvent: AssistantBroadcast = {
-          type: "error",
-          seq: expectedSeqRef.current,
-          session_token: "",
-          source: "stream_out_of_order",
-        };
-        try {
-          onBroadcastRef.current(errorEvent);
-        } catch (err) {
-          console.warn(
-            "useAssistantChannel: onBroadcast threw on gap-close error",
-            err,
-          );
-        }
-      }, GAP_CLOSE_TIMEOUT_MS);
-    } else if (bufferRef.current.size === 0 && gapTimerRef.current !== null) {
-      window.clearTimeout(gapTimerRef.current);
-      gapTimerRef.current = null;
-    }
-  }, []);
+  // Shared seq-ordered reorder buffer (D-12). resetMarker "accepted" resets
+  // the buffer between assistant runs. AssistantChannel gap-close error has NO
+  // `message` field (ScenarioRunChannel includes one — a twin difference).
+  const { bufferRef, expectedSeqRef, gapTimerRef, closedRef, flushInOrder, reset } =
+    useOrderedBroadcast<AssistantBroadcast>({
+      onBroadcast,
+      resetMarker: "accepted",
+      allowSeqlessError: false,
+      makeGapCloseError: (seq) => ({
+        type: "error",
+        seq,
+        session_token: "",
+        source: "stream_out_of_order",
+      }),
+      makeConnectionLostError: (seq) => ({
+        type: "error",
+        seq,
+        session_token: "",
+        source: "connection_lost",
+      }),
+    });
 
   // Channel lifecycle effect: subscribe on mount (or on socket open if the
   // socket is still CONNECTING at mount), unsubscribe on unmount.
   //
   // The CONNECTING→OPEN transition does NOT change the WebSocket object
-  // reference, so a dependency on `ws` alone would let the subscribe slip
+  // reference, so a dependency on `socket` alone would let the subscribe slip
   // through whenever AssistantPanel mounts before the parent's socket is open.
   // We attach an `open` listener as a wake-up to catch that case.
   useEffect(() => {
-    if (!ws) return;
+    if (!socket) return;
     if (
-      ws.readyState === WebSocket.CLOSING ||
-      ws.readyState === WebSocket.CLOSED
+      socket.readyState === WebSocket.CLOSING ||
+      socket.readyState === WebSocket.CLOSED
     )
       return;
 
@@ -188,8 +164,8 @@ export function useAssistantChannel(
 
     const sendSubscribe = (): void => {
       if (subscribed) return;
-      if (ws.readyState !== WebSocket.OPEN) return;
-      ws.send(
+      if (socket.readyState !== WebSocket.OPEN) return;
+      socket.send(
         JSON.stringify({
           command: "subscribe",
           identifier: ASSISTANT_IDENTIFIER,
@@ -227,12 +203,7 @@ export function useAssistantChannel(
       // `accepted` (transmit, seqless) before any seq broadcasts of a new
       // run — use it as the reset marker.
       if ((broadcast as { type?: string }).type === "accepted") {
-        bufferRef.current = new Map();
-        expectedSeqRef.current = 1;
-        if (gapTimerRef.current !== null) {
-          window.clearTimeout(gapTimerRef.current);
-          gapTimerRef.current = null;
-        }
+        reset();
       }
 
       if (typeof (broadcast as { seq?: unknown }).seq === "number") {
@@ -242,7 +213,7 @@ export function useAssistantChannel(
         // No seq → bypass reorder buffer. Production envelopes always carry
         // seq; this branch only fires for malformed traffic.
         try {
-          onBroadcastRef.current(broadcast);
+          onBroadcast(broadcast);
         } catch (err) {
           console.warn(
             "useAssistantChannel: onBroadcast threw on seqless event",
@@ -268,15 +239,15 @@ export function useAssistantChannel(
         source: "connection_lost",
       };
       try {
-        onBroadcastRef.current(errorEvent);
+        onBroadcast(errorEvent);
       } catch (err) {
         console.warn("useAssistantChannel: onBroadcast threw on close", err);
       }
     };
 
-    ws.addEventListener("open", onOpen);
-    ws.addEventListener("message", onMessage);
-    ws.addEventListener("close", onClose);
+    socket.addEventListener("open", onOpen);
+    socket.addEventListener("message", onMessage);
+    socket.addEventListener("close", onClose);
 
     // Already open at mount → subscribe immediately. Otherwise the `open`
     // listener handles it when the CONNECTING socket transitions.
@@ -284,8 +255,8 @@ export function useAssistantChannel(
 
     return () => {
       try {
-        if (subscribed && ws.readyState === WebSocket.OPEN) {
-          ws.send(
+        if (subscribed && socket.readyState === WebSocket.OPEN) {
+          socket.send(
             JSON.stringify({
               command: "unsubscribe",
               identifier: ASSISTANT_IDENTIFIER,
@@ -295,20 +266,20 @@ export function useAssistantChannel(
       } catch {
         // swallow — socket may already be closing
       }
-      ws.removeEventListener("open", onOpen);
-      ws.removeEventListener("message", onMessage);
-      ws.removeEventListener("close", onClose);
+      socket.removeEventListener("open", onOpen);
+      socket.removeEventListener("message", onMessage);
+      socket.removeEventListener("close", onClose);
       if (gapTimerRef.current !== null) {
         window.clearTimeout(gapTimerRef.current);
         gapTimerRef.current = null;
       }
     };
-  }, [ws, flushInOrder]);
+  }, [socket, flushInOrder, reset, onBroadcast, bufferRef, closedRef, expectedSeqRef, gapTimerRef]);
 
   const dispatch = useCallback(
     (action: AssistantDispatchAction, data: object = {}) => {
-      if (!ws || ws.readyState !== WebSocket.OPEN) return;
-      ws.send(
+      if (!socket || socket.readyState !== WebSocket.OPEN) return;
+      socket.send(
         JSON.stringify({
           command: "message",
           identifier: ASSISTANT_IDENTIFIER,
@@ -316,7 +287,7 @@ export function useAssistantChannel(
         }),
       );
     },
-    [ws],
+    [socket],
   );
 
   return { dispatch };
