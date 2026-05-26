@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { getMyDevicesRequest } from 'src/services/backend/devicesRequests';
+import { getMyDevicesRequest } from 'src/services/backend/devicesService';
 import { Card, CardHeader } from 'src/components/ui/Card';
 import { Button } from 'src/components/ui/Button';
 import { Spinner } from 'src/components/ui/Spinner';

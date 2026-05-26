@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
 import DevicesTable from 'src/pages/Devices/DevicesTable';
 import type { Device } from 'src/types';
-import type { GetMyDevicesParams } from 'src/services/backend/devicesRequests';
-import { getMyDevicesRequest } from 'src/services/backend/devicesRequests';
+import type { GetMyDevicesParams } from 'src/services/backend/devicesService';
+import { getMyDevicesRequest } from 'src/services/backend/devicesService';
 import { useTranslation } from 'react-i18next';
 import { Button } from 'src/components/ui/Button';
 import { Spinner } from 'src/components/ui/Spinner';

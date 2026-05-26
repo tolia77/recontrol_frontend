@@ -1,7 +1,7 @@
 import { useRef, useCallback, useState, useEffect } from 'react';
 import { FilesChannelClient, FilesDataChannel } from '../services/files';
 import { ClipboardLoopGate, createClipboardChannelHandle, type ClipboardChannelHandle } from '../services/clipboard';
-import { getTurnCredentialsRequest } from 'src/services/backend/turnRequests';
+import { getTurnCredentialsRequest } from 'src/services/backend/turnService';
 import type React from 'react';
 
 export type WebRtcConnectionState = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'failed';

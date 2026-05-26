@@ -7,7 +7,7 @@ import {
   updateUserAdminRequest,
   deleteUserAdminRequest,
   type UserResponse
-} from 'src/services/backend/usersRequests';
+} from 'src/services/backend/usersService';
 import { getErrorMessage } from 'src/utils/getErrorMessage';
 import { useToast } from 'src/components/ui/Toast';
 import { Button } from 'src/components/ui/Button';

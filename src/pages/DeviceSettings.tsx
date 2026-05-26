@@ -1,16 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { getDeviceRequest, updateDeviceRequest, deleteDeviceRequest } from 'src/services/backend/devicesRequests';
+import { getDeviceRequest, updateDeviceRequest, deleteDeviceRequest } from 'src/services/backend/devicesService';
 import {
   listDeviceSharesRequest,
   createDeviceShareRequest,
   deleteDeviceShareRequest,
   updateDeviceShareRequest
-} from 'src/services/backend/deviceSharesRequests';
+} from 'src/services/backend/deviceSharesService';
 import {
   listPermissionsGroupsRequest,
   createPermissionsGroupRequest
-} from 'src/services/backend/permissionsGroupsRequests';
+} from 'src/services/backend/permissionsGroupsService';
 import { useTranslation } from 'react-i18next';
 import { useToast } from 'src/components/ui/Toast';
 import { LoadingOverlay } from 'src/components/ui/Spinner';

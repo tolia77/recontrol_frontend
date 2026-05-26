@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import logoFull from 'src/assets/img/logo-full.svg';
 import { Link, useNavigate } from 'react-router';
-import { loginRequest } from 'src/services/backend/authRequests';
+import { loginRequest } from 'src/services/backend/authService';
 import { saveTokens, saveUserId, saveUserRole } from 'src/utils/auth';
 import { useTranslation, Trans } from 'react-i18next';
 import { Button } from 'src/components/ui/Button';
