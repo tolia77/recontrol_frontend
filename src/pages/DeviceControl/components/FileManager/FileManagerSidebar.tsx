@@ -2,6 +2,7 @@ import type { FileEntry } from "../../services/files";
 import { LockIcon, FolderIcon } from "./icons";
 import { isAncestor } from "./utils/pathUtils";
 import { useTranslation } from "react-i18next";
+import { ErrorState } from "../../../../components/ui";
 
 interface FileManagerSidebarProps {
   roots: FileEntry[] | null;
@@ -46,7 +47,7 @@ export function FileManagerSidebar({
       )}
 
       {error && !isLoading && (
-        <div className="text-error p-3 text-sm">{error}</div>
+        <ErrorState message={error} />
       )}
 
       {!isLoading && !error && roots && roots.length > 0 && (

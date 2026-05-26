@@ -2,7 +2,7 @@ import React, { useState, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import type { ProcessInfo } from "../types.ts";
 import { RefreshIcon, CloseIcon } from "../icons.tsx";
-import { Modal, Button } from "../../../components/ui";
+import { Modal, Button, LoadingState, EmptyState } from "../../../components/ui";
 
 interface ProcessesModalProps {
   open: boolean;
@@ -168,16 +168,9 @@ export const ProcessesModal: React.FC<ProcessesModalProps> = ({
       <div className="p-0">
         <div className="h-[480px] overflow-hidden">
           {loading ? (
-            <div className="text-darkgray flex h-full items-center justify-center text-sm">
-              <div className="flex flex-col items-center gap-2">
-                <div className="border-lightgray border-t-primary h-8 w-8 animate-spin rounded-full border-4" />
-                {t("manual.terminal.processesModal.loading")}
-              </div>
-            </div>
+            <LoadingState message={t("manual.terminal.processesModal.loading")} />
           ) : processes.length === 0 ? (
-            <div className="text-darkgray flex h-full items-center justify-center text-sm">
-              {t("manual.terminal.processesModal.empty")}
-            </div>
+            <EmptyState title={t("manual.terminal.processesModal.empty")} />
           ) : (
             <div className="h-full overflow-y-auto">
               <table className="min-w-full text-sm">
