@@ -3,15 +3,9 @@ import logoFull from 'src/assets/img/logo-full.svg';
 import { Link, useNavigate } from 'react-router';
 import { registerRequest } from 'src/services/backend/authRequests';
 import { saveTokens, saveUserId } from 'src/utils/auth';
+import { getErrorMessage } from 'src/utils/getErrorMessage';
 import { useTranslation, Trans } from 'react-i18next';
 import { Button } from 'src/components/ui/Button';
-
-interface ApiError {
-  response?: {
-    status?: number;
-    data?: Record<string, unknown>;
-  };
-}
 
 function Signup() {
   const { t } = useTranslation('auth');
@@ -41,27 +35,11 @@ function Signup() {
       saveUserId(res.data.user_id);
       navigate('/dashboard');
     } catch (error: unknown) {
-      const err = error as ApiError;
-      if (err?.response?.status === 400) {
+      const status = (error as { response?: { status?: number } }).response?.status;
+      if (status === 400) {
         setErrors([t('signup.errors.invalidInput')]);
-      } else if (err?.response?.status === 422) {
-        const resp = err.response.data;
-        if (resp && typeof resp === 'object') {
-          const msgs: string[] = [];
-          Object.entries(resp).forEach(([key, value]) => {
-            const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
-            if (Array.isArray(value)) {
-              value.forEach(v => msgs.push(`${capitalizedKey} ${String(v)}`));
-            } else {
-              msgs.push(`${capitalizedKey} ${String(value)}`);
-            }
-          });
-          setErrors(msgs.length ? msgs : [t('signup.errors.failed')]);
-        } else {
-          setErrors([t('signup.errors.failed')]);
-        }
       } else {
-        setErrors([t('signup.errors.failed')]);
+        setErrors([getErrorMessage(error) || t('signup.errors.failed')]);
       }
     } finally {
       setLoading(false);

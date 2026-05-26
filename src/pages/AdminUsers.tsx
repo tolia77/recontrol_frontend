@@ -8,6 +8,7 @@ import {
   deleteUserAdminRequest,
   type UserResponse
 } from 'src/services/backend/usersRequests';
+import { getErrorMessage } from 'src/utils/getErrorMessage';
 import { useToast } from 'src/components/ui/Toast';
 import { Button } from 'src/components/ui/Button';
 import { Spinner } from 'src/components/ui/Spinner';
@@ -19,13 +20,6 @@ interface EditableRowState {
   role: string;
   password: string;
   saving: boolean;
-}
-
-interface ApiError {
-  response?: {
-    status?: number;
-    data?: Record<string, unknown>;
-  };
 }
 
 const AdminUsers = () => {
@@ -108,25 +102,11 @@ const AdminUsers = () => {
       toast.success(t('messages.saved'));
       cancelEdit(row.id);
     } catch (e) {
-      const err = e as ApiError;
-      if (err?.response?.status === 422) {
-        const resp = err.response.data;
-        const msgs: string[] = [];
-        if (resp && typeof resp === 'object') {
-          Object.entries(resp).forEach(([k, v]) => {
-            const keyCap = k.charAt(0).toUpperCase() + k.slice(1);
-            if (Array.isArray(v)) {
-              v.forEach(x => msgs.push(`${keyCap} ${String(x)}`));
-            } else {
-              msgs.push(`${keyCap} ${String(v)}`);
-            }
-          });
-        }
-        toast.error(msgs.join(', ') || t('errors.saveFailed'));
-      } else if (err?.response?.status === 403) {
+      const status = (e as { response?: { status?: number } }).response?.status;
+      if (status === 403) {
         toast.error(t('errors.forbidden'));
       } else {
-        toast.error(t('errors.saveFailed'));
+        toast.error(getErrorMessage(e) || t('errors.saveFailed'));
       }
     } finally {
       setEditing(prev => ({ ...prev, [String(row.id)]: { ...row, saving: false } }));
@@ -164,25 +144,11 @@ const AdminUsers = () => {
       toast.success(t('messages.created'));
       setNewUser({ username: '', email: '', password: '', role: 'user' });
     } catch (e) {
-      const err = e as ApiError;
-      if (err?.response?.status === 422) {
-        const resp = err.response.data;
-        const msgs: string[] = [];
-        if (resp && typeof resp === 'object') {
-          Object.entries(resp).forEach(([k, v]) => {
-            const keyCap = k.charAt(0).toUpperCase() + k.slice(1);
-            if (Array.isArray(v)) {
-              v.forEach(x => msgs.push(`${keyCap} ${String(x)}`));
-            } else {
-              msgs.push(`${keyCap} ${String(v)}`);
-            }
-          });
-        }
-        toast.error(msgs.join(', ') || t('errors.createFailed'));
-      } else if (err?.response?.status === 403) {
+      const status = (e as { response?: { status?: number } }).response?.status;
+      if (status === 403) {
         toast.error(t('errors.forbidden'));
       } else {
-        toast.error(t('errors.createFailed'));
+        toast.error(getErrorMessage(e) || t('errors.createFailed'));
       }
     } finally {
       setCreating(false);

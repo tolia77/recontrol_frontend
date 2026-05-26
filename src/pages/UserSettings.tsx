@@ -3,6 +3,7 @@ import { getUserId, clearAuth } from 'src/utils/auth';
 import { getUserRequest, updateUserSelfRequest } from 'src/services/backend/usersRequests';
 import { logoutRequest } from 'src/services/backend/authRequests';
 import type { UserResponse } from 'src/services/backend/usersRequests';
+import { getErrorMessage } from 'src/utils/getErrorMessage';
 import { useTranslation } from 'react-i18next';
 import { useToast } from 'src/components/ui/Toast';
 import { Button } from 'src/components/ui/Button';
@@ -57,25 +58,11 @@ function UserSettings() {
       setPassword('');
       toast.success(t('messages.saved'));
     } catch (error) {
-      const resp = (error as { response?: { status?: number; data?: unknown } }).response;
-      if (resp?.status === 422) {
-        const data = resp.data;
-        const msgs: string[] = [];
-        if (data && typeof data === 'object') {
-          Object.entries(data as Record<string, unknown>).forEach(([key, value]) => {
-            const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
-            if (Array.isArray(value)) {
-              value.forEach(v => msgs.push(`${capitalizedKey} ${String(v)}`));
-            } else {
-              msgs.push(`${capitalizedKey} ${String(value)}`);
-            }
-          });
-        }
-        toast.error(msgs.length ? msgs.join(', ') : t('errors.saveFailed'));
-      } else if (resp?.status === 403) {
+      const status = (error as { response?: { status?: number } }).response?.status;
+      if (status === 403) {
         toast.error(t('errors.forbidden'));
       } else {
-        toast.error(t('errors.saveFailed'));
+        toast.error(getErrorMessage(error) || t('errors.saveFailed'));
       }
     } finally {
       setSaving(false);
