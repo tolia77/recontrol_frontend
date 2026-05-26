@@ -1,10 +1,14 @@
 import {
+  createContext,
+  useContext,
   useEffect,
   useId,
   useRef,
   type ReactNode,
   type RefObject,
 } from "react";
+
+const ModalHeadingContext = createContext<string>("");
 
 interface ModalProps {
   open: boolean;
@@ -14,6 +18,7 @@ interface ModalProps {
   suppressOverlayClick?: boolean;
   initialFocusRef?: RefObject<HTMLElement | null>;
   className?: string;
+  ariaLabel?: string;
   children: ReactNode;
 }
 
@@ -33,7 +38,7 @@ const wrapperClasses: Record<"sm" | "md" | "lg" | "full", string> = {
   sm: "flex items-center justify-center",
   md: "flex items-center justify-center",
   lg: "flex items-center justify-center",
-  full: "",
+  full: "flex items-center justify-center p-4",
 };
 
 export function Modal({
@@ -44,6 +49,7 @@ export function Modal({
   suppressOverlayClick = false,
   initialFocusRef,
   className = "",
+  ariaLabel,
   children,
 }: ModalProps) {
   const headingId = useId();
@@ -96,30 +102,38 @@ export function Modal({
   };
 
   return (
-    <div
-      className={`fixed inset-0 z-50 bg-black/40 ${wrapperClasses[size]}`}
-      onClick={handleOverlayClick}
-      role="presentation"
-    >
+    <ModalHeadingContext.Provider value={headingId}>
       <div
-        ref={cardRef}
-        className={`${sizeCardClasses[size]} ${className}`}
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={headingId}
-        tabIndex={-1}
-        data-modal-heading-id={headingId}
+        className={`fixed inset-0 z-50 bg-black/40 ${wrapperClasses[size]}`}
+        onClick={handleOverlayClick}
+        role="presentation"
       >
-        {children}
+        <div
+          ref={cardRef}
+          className={`${sizeCardClasses[size]} ${className}`}
+          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+          {...(ariaLabel
+            ? { "aria-label": ariaLabel }
+            : { "aria-labelledby": headingId })}
+          tabIndex={-1}
+          data-modal-heading-id={headingId}
+        >
+          {children}
+        </div>
       </div>
-    </div>
+    </ModalHeadingContext.Provider>
   );
 }
 
 function ModalHeader({ children, className = "" }: SubProps) {
+  const headingId = useContext(ModalHeadingContext);
   return (
-    <h2 className={`text-text mb-3 text-lg font-semibold ${className}`}>
+    <h2
+      id={headingId}
+      className={`text-text mb-3 text-lg font-semibold ${className}`}
+    >
       {children}
     </h2>
   );
