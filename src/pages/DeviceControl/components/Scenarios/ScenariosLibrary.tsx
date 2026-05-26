@@ -41,6 +41,8 @@ export default function ScenariosLibrary({
   const [pinnedFilter, setPinnedFilter] = useState<string>("");
   // Pending-delete target: null means no dialog open; non-null means confirm modal open.
   const [deleteTarget, setDeleteTarget] = useState<Scenario | null>(null);
+  // In-flight delete lock — mirrors AdminUsers deleting pattern (WR-05).
+  const [deleting, setDeleting] = useState(false);
   const currentUserId = getUserId() ?? "";
 
   // LIB-03: 200ms debounce per CONTEXT "Claude's Discretion".
@@ -91,12 +93,15 @@ export default function ScenariosLibrary({
   const performDelete = async () => {
     if (!deleteTarget) return;
     const target = deleteTarget;
-    setDeleteTarget(null);
+    setDeleting(true);
     try {
       await scenariosService.destroy(target.id);
       await reload();
     } catch {
       setError(t("library.empty"));
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
     }
   };
 
@@ -190,6 +195,7 @@ export default function ScenariosLibrary({
       <ConfirmModal
         open={deleteTarget !== null}
         dangerous
+        isBusy={deleting}
         title={t("library.deleteConfirm.title")}
         body={t("library.deleteConfirm.body", { name: deleteTarget?.name })}
         confirmLabel={t("library.deleteConfirm.confirm")}
