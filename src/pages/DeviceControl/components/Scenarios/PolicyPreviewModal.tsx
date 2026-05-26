@@ -140,7 +140,7 @@ export default function PolicyPreviewModal({
     >
       <div
         data-testid="policy-preview-card"
-        className="mx-4 flex max-h-[90vh] w-full max-w-2xl flex-col rounded-xl bg-white shadow-2xl"
+        className="mx-4 flex max-h-[90vh] w-full max-w-2xl flex-col rounded-xl bg-background shadow-2xl"
         onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -148,7 +148,7 @@ export default function PolicyPreviewModal({
           <div className="flex min-w-0 items-center gap-3">
             <h2 className="text-lg font-semibold text-primary">{t('preApprove.title')}</h2>
             <span
-              className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700"
+              className="rounded bg-tertiary px-2 py-1 text-xs text-text"
               data-testid="policy-preview-target-device"
             >
               {t('preApprove.targetDevice', { deviceName })}

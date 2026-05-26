@@ -124,7 +124,7 @@ export default function DraftReviewModal({
     >
       <div
         data-testid="draft-review-card"
-        className="bg-white rounded-lg shadow-lg flex flex-col max-h-[70vh] w-full max-w-2xl mx-4"
+        className="bg-background rounded-lg shadow-lg flex flex-col max-h-[70vh] w-full max-w-2xl mx-4"
       >
         {/* Header */}
         <header className="border-b border-lightgray px-6 py-4">
@@ -189,7 +189,7 @@ export default function DraftReviewModal({
         </div>
 
         {/* Sticky footer */}
-        <div className="border-t border-lightgray px-6 py-4 flex items-center justify-between bg-white">
+        <div className="border-t border-lightgray px-6 py-4 flex items-center justify-between bg-background">
           <Button
             variant="secondary"
             size="sm"
