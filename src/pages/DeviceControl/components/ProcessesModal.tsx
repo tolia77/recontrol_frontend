@@ -2,6 +2,7 @@ import React, {useState, useMemo, useCallback} from 'react';
 import {useTranslation} from 'react-i18next';
 import type {ProcessInfo} from '../types.ts';
 import {RefreshIcon, CloseIcon} from '../icons.tsx';
+import { Modal } from '../../../components/ui';
 
 interface ProcessesModalProps {
   open: boolean;
@@ -116,76 +117,69 @@ export const ProcessesModal: React.FC<ProcessesModalProps> = ({
     onKill(pid);
   }, [onKill]);
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="w-full max-w-5xl bg-white rounded-lg shadow-lg border border-gray-200">
-          <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between gap-2">
-            <h5 className="text-base font-semibold">{t('manual.terminal.processesModal.title')}</h5>
-            <div className="flex gap-2 items-center">
-              <button title={t('manual.terminal.processesModal.refresh')} className="btn-secondary p-2 flex items-center justify-center" onClick={onRefresh} disabled={loading}>
-                <RefreshIcon className="w-4 h-4" />
-              </button>
-              <button title={t('manual.terminal.processesModal.close')} className="btn-secondary p-2 flex items-center justify-center" onClick={onClose}>
-                <CloseIcon className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-          <div className="p-0">
-            <div className="h-[480px] overflow-hidden">
-              {loading ? (
-                <div className="h-full flex items-center justify-center text-sm text-gray-600">
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="w-8 h-8 border-4 border-lightgray border-t-primary rounded-full animate-spin" />
-                    {t('manual.terminal.processesModal.loading')}
-                  </div>
-                </div>
-              ) : processes.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-sm text-gray-600">{t('manual.terminal.processesModal.empty')}</div>
-              ) : (
-                <div className="h-full overflow-y-auto">
-                  <table className="min-w-full text-sm">
-                    <thead className="sticky top-0 bg-white shadow-sm">
-                      <tr className="text-left text-gray-700 border-b">
-                        {headerCols.map(h => (
-                          <th key={h.key} className="px-2 py-2 select-none cursor-pointer" onClick={() => toggleSort(h.key)}>
-                            <span className="inline-flex items-center gap-1">
-                              {t(`manual.terminal.processesModal.${h.i18n}`)}
-                              {sort.column === h.key && (
-                                <span className="text-xs">{sort.direction === 'asc' ? '▲' : '▼'}</span>
-                              )}
-                            </span>
-                          </th>
-                        ))}
-                        <th className="px-2 py-2">{t('manual.terminal.processesModal.actions')}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {sorted.map(p => (
-                        <tr key={p.Pid} className="border-b last:border-b-0 hover:bg-gray-50">
-                          <td className="px-2 py-2 font-mono">{p.Pid}</td>
-                          <td className="px-2 py-2">{p.Name}</td>
-                          <td className="px-2 py-2">{typeof p.MemoryMB === 'number' ? `${p.MemoryMB} MB` : '-'}</td>
-                          <td className="px-2 py-2">{formatCpuDisplay(p.CpuTime)}</td>
-                          <td className="px-2 py-2">{formatStartDisplay(p.StartTime)}</td>
-                          <td className="px-2 py-2">
-                            <button className="btn-danger" onClick={() => handleKill(p.Pid)}>
-                              {t('manual.terminal.kill')}
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
+    <Modal open={open} onClose={onClose} size="full">
+      <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between gap-2">
+        <h5 className="text-base font-semibold">{t('manual.terminal.processesModal.title')}</h5>
+        <div className="flex gap-2 items-center">
+          <button title={t('manual.terminal.processesModal.refresh')} className="btn-secondary p-2 flex items-center justify-center" onClick={onRefresh} disabled={loading}>
+            <RefreshIcon className="w-4 h-4" />
+          </button>
+          <button title={t('manual.terminal.processesModal.close')} className="btn-secondary p-2 flex items-center justify-center" onClick={onClose}>
+            <CloseIcon className="w-4 h-4" />
+          </button>
         </div>
       </div>
-    </div>
+      <div className="p-0">
+        <div className="h-[480px] overflow-hidden">
+          {loading ? (
+            <div className="h-full flex items-center justify-center text-sm text-gray-600">
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-8 h-8 border-4 border-lightgray border-t-primary rounded-full animate-spin" />
+                {t('manual.terminal.processesModal.loading')}
+              </div>
+            </div>
+          ) : processes.length === 0 ? (
+            <div className="h-full flex items-center justify-center text-sm text-gray-600">{t('manual.terminal.processesModal.empty')}</div>
+          ) : (
+            <div className="h-full overflow-y-auto">
+              <table className="min-w-full text-sm">
+                <thead className="sticky top-0 bg-white shadow-sm">
+                  <tr className="text-left text-gray-700 border-b">
+                    {headerCols.map(h => (
+                      <th key={h.key} className="px-2 py-2 select-none cursor-pointer" onClick={() => toggleSort(h.key)}>
+                        <span className="inline-flex items-center gap-1">
+                          {t(`manual.terminal.processesModal.${h.i18n}`)}
+                          {sort.column === h.key && (
+                            <span className="text-xs">{sort.direction === 'asc' ? '▲' : '▼'}</span>
+                          )}
+                        </span>
+                      </th>
+                    ))}
+                    <th className="px-2 py-2">{t('manual.terminal.processesModal.actions')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sorted.map(p => (
+                    <tr key={p.Pid} className="border-b last:border-b-0 hover:bg-gray-50">
+                      <td className="px-2 py-2 font-mono">{p.Pid}</td>
+                      <td className="px-2 py-2">{p.Name}</td>
+                      <td className="px-2 py-2">{typeof p.MemoryMB === 'number' ? `${p.MemoryMB} MB` : '-'}</td>
+                      <td className="px-2 py-2">{formatCpuDisplay(p.CpuTime)}</td>
+                      <td className="px-2 py-2">{formatStartDisplay(p.StartTime)}</td>
+                      <td className="px-2 py-2">
+                        <button className="btn-danger" onClick={() => handleKill(p.Pid)}>
+                          {t('manual.terminal.kill')}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </Modal>
   );
 };

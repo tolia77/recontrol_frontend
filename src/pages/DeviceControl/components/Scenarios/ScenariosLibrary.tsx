@@ -5,6 +5,7 @@ import {
   type Scenario,
 } from 'src/services/backend/scenariosService';
 import { getUserId } from 'src/utils/auth';
+import { ConfirmModal } from 'src/components/ui';
 import ScenariosRow from './ScenariosRow';
 
 export interface ScenariosLibraryProps {
@@ -38,6 +39,8 @@ export default function ScenariosLibrary({
   // Full multi-device picker is a v1.6+ enhancement (CONTEXT "Claude's
   // Discretion": "list devices the operator has access to ...").
   const [pinnedFilter, setPinnedFilter] = useState<string>('');
+  // Pending-delete target: null means no dialog open; non-null means confirm modal open.
+  const [deleteTarget, setDeleteTarget] = useState<Scenario | null>(null);
   const currentUserId = getUserId() ?? '';
 
   // LIB-03: 200ms debounce per CONTEXT "Claude's Discretion".
@@ -85,17 +88,20 @@ export default function ScenariosLibrary({
     }
   };
 
-  const handleDelete = async (s: Scenario) => {
-    // LIB-06: confirm-then-hard-delete. window.confirm is acceptable v1.5
-    // surface; full modal lives behind the editor's dirty-state guard in 21-10.
-    const proceed = window.confirm(t('library.deleteConfirm.body', { name: s.name }));
-    if (!proceed) return;
+  const performDelete = async () => {
+    if (!deleteTarget) return;
+    const target = deleteTarget;
+    setDeleteTarget(null);
     try {
-      await scenariosService.destroy(s.id);
+      await scenariosService.destroy(target.id);
       await reload();
     } catch {
       setError(t('library.empty'));
     }
+  };
+
+  const handleDelete = (s: Scenario) => {
+    setDeleteTarget(s);
   };
 
   const handleDuplicate = async (s: Scenario) => {
@@ -181,6 +187,16 @@ export default function ScenariosLibrary({
           />
         ))}
       </ul>
+      <ConfirmModal
+        open={deleteTarget !== null}
+        dangerous
+        title={t('library.deleteConfirm.title')}
+        body={t('library.deleteConfirm.body', { name: deleteTarget?.name })}
+        confirmLabel={t('library.deleteConfirm.confirm')}
+        cancelLabel={t('library.deleteConfirm.cancel')}
+        onConfirm={performDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }
