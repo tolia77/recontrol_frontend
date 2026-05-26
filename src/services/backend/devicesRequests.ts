@@ -1,5 +1,4 @@
 import {backendInstance} from "src/services/backend/config.ts";
-import {getAccessToken} from "src/utils/auth.ts";
 
 export interface GetMyDevicesParams {
     owner?: 'me' | 'owned' | 'shared' | '';
@@ -13,9 +12,6 @@ export interface GetMyDevicesParams {
 
 export async function getMyDevicesRequest(params?: GetMyDevicesParams) {
     return await backendInstance.get("/devices/me", {
-        headers: {
-            Authorization: getAccessToken()
-        },
         params: {
             // only include defined values
             ...(params?.owner ? {owner: params.owner} : {}),
@@ -30,19 +26,13 @@ export async function getMyDevicesRequest(params?: GetMyDevicesParams) {
 }
 
 export async function getDeviceRequest(deviceId: string) {
-    return await backendInstance.get(`/devices/${deviceId}`, {
-        headers: {Authorization: getAccessToken()}
-    });
+    return await backendInstance.get(`/devices/${deviceId}`);
 }
 
 export async function updateDeviceRequest(deviceId: string, payload: { name: string }) {
-    return await backendInstance.patch(`/devices/${deviceId}`, {device: payload}, {
-        headers: {Authorization: getAccessToken()}
-    });
+    return await backendInstance.patch(`/devices/${deviceId}`, {device: payload});
 }
 
 export async function deleteDeviceRequest(deviceId: string) {
-    return await backendInstance.delete(`/devices/${deviceId}`, {
-        headers: {Authorization: getAccessToken()}
-    });
+    return await backendInstance.delete(`/devices/${deviceId}`);
 }

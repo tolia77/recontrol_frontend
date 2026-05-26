@@ -1,5 +1,4 @@
 import { backendInstance } from "src/services/backend/config.ts";
-import { getAccessToken } from "src/utils/auth.ts";
 
 // D-12: per-step snapshot written by Scenario#before_save.
 export interface ClassifiedIntentAtSave {
@@ -170,23 +169,19 @@ export const scenariosService = {
         ...(params?.page ? { page: params.page } : {}),
         ...(params?.per_page ? { per_page: params.per_page } : {}),
       },
-      headers: { Authorization: getAccessToken() },
     });
     return data.scenarios;
   },
 
   async show(id: string): Promise<Scenario> {
-    const { data } = await backendInstance.get<Scenario>(`/scenarios/${id}`, {
-      headers: { Authorization: getAccessToken() },
-    });
+    const { data } = await backendInstance.get<Scenario>(`/scenarios/${id}`);
     return data;
   },
 
   async create(payload: ScenarioCreatePayload): Promise<ScenarioWriteResponse> {
     const { data } = await backendInstance.post<ScenarioWriteResponse>(
       '/scenarios',
-      { scenario: payload },
-      { headers: { Authorization: getAccessToken() } }
+      { scenario: payload }
     );
     return data;
   },
@@ -208,7 +203,6 @@ export const scenariosService = {
       { prompt },
       {
         headers: {
-          Authorization: getAccessToken(),
           'Accept-Language': locale,
         },
         signal,
@@ -220,23 +214,19 @@ export const scenariosService = {
   async update(id: string, payload: ScenarioUpdatePayload): Promise<ScenarioWriteResponse> {
     const { data } = await backendInstance.patch<ScenarioWriteResponse>(
       `/scenarios/${id}`,
-      { scenario: payload },
-      { headers: { Authorization: getAccessToken() } }
+      { scenario: payload }
     );
     return data;
   },
 
   async destroy(id: string): Promise<void> {
-    await backendInstance.delete(`/scenarios/${id}`, {
-      headers: { Authorization: getAccessToken() },
-    });
+    await backendInstance.delete(`/scenarios/${id}`);
   },
 
   async duplicate(id: string): Promise<ScenarioWriteResponse> {
     const { data } = await backendInstance.post<ScenarioWriteResponse>(
       `/scenarios/${id}/duplicate`,
-      {},
-      { headers: { Authorization: getAccessToken() } }
+      {}
     );
     return data;
   },
@@ -247,7 +237,6 @@ export const scenariosService = {
       `/scenarios/${id}/policy-preview`,
       {
         params: { device_id: deviceId },
-        headers: { Authorization: getAccessToken() },
       }
     );
     return data;

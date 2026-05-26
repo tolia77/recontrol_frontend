@@ -1,5 +1,4 @@
 import { backendInstance } from "src/services/backend/config.ts";
-import { getAccessToken } from "src/utils/auth.ts";
 
 export type UserResponse = {
   id: number | string;
@@ -11,11 +10,7 @@ export type UserResponse = {
 };
 
 export async function getUserRequest(userId: string) {
-  return await backendInstance.get<UserResponse>(`/users/${userId}` , {
-    headers: {
-      Authorization: getAccessToken()
-    }
-  });
+  return await backendInstance.get<UserResponse>(`/users/${userId}`);
 }
 
 export type UserUpdateSelf = {
@@ -27,30 +22,24 @@ export type UserUpdateSelf = {
 export async function updateUserSelfRequest(userId: string, payload: UserUpdateSelf) {
   return await backendInstance.patch<UserResponse>(`/users/${userId}`, {
     user: payload
-  }, {
-    headers: {
-      Authorization: getAccessToken()
-    }
   });
 }
 
 // Admin endpoints
 export async function listUsersRequest() {
-  return await backendInstance.get<UserResponse[]>(`/users`, {
-    headers: { Authorization: getAccessToken() }
-  });
+  return await backendInstance.get<UserResponse[]>(`/users`);
 }
 
 export type UserCreateAdmin = { username: string; email: string; password: string; role: string };
 export async function createUserAdminRequest(payload: UserCreateAdmin) {
-  return await backendInstance.post<UserResponse>(`/users`, { user: payload }, { headers: { Authorization: getAccessToken() } });
+  return await backendInstance.post<UserResponse>(`/users`, { user: payload });
 }
 
 export type UserUpdateAdmin = { username?: string; email?: string; password?: string; role?: string };
 export async function updateUserAdminRequest(userId: number | string, payload: UserUpdateAdmin) {
-  return await backendInstance.patch<UserResponse>(`/users/${userId}`, { user: payload }, { headers: { Authorization: getAccessToken() } });
+  return await backendInstance.patch<UserResponse>(`/users/${userId}`, { user: payload });
 }
 
 export async function deleteUserAdminRequest(userId: number | string) {
-  return await backendInstance.delete<void>(`/users/${userId}`, { headers: { Authorization: getAccessToken() } });
+  return await backendInstance.delete<void>(`/users/${userId}`);
 }

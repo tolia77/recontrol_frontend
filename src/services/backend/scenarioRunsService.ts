@@ -1,5 +1,4 @@
 import { backendInstance } from "src/services/backend/config.ts";
-import { getAccessToken } from "src/utils/auth.ts";
 
 export type ScenarioRunStatus =
   | 'running'
@@ -77,28 +76,21 @@ export const scenarioRunsService = {
         ...(params?.page ? { page: params.page } : {}),
         ...(params?.per_page ? { per_page: params.per_page } : {}),
       },
-      headers: { Authorization: getAccessToken() },
     });
     return { runs: data.scenario_runs, total: data.meta.total };
   },
 
   async show(id: string): Promise<ScenarioRun> {
-    const { data } = await backendInstance.get<ScenarioRun>(`/scenario-runs/${id}`, {
-      headers: { Authorization: getAccessToken() },
-    });
+    const { data } = await backendInstance.get<ScenarioRun>(`/scenario-runs/${id}`);
     return data;
   },
 
   // AUDIT-05 / D-14
   async destroy(id: string): Promise<void> {
-    await backendInstance.delete(`/scenario-runs/${id}`, {
-      headers: { Authorization: getAccessToken() },
-    });
+    await backendInstance.delete(`/scenario-runs/${id}`);
   },
 
   async destroyAll(): Promise<void> {
-    await backendInstance.delete('/scenario-runs/destroy-all', {
-      headers: { Authorization: getAccessToken() },
-    });
+    await backendInstance.delete('/scenario-runs/destroy-all');
   },
 };
