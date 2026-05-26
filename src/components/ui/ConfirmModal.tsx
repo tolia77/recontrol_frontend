@@ -43,11 +43,7 @@ export function ConfirmModal({
       size="md"
       suppressEsc={!!isBusy}
       suppressOverlayClick={!!isBusy}
-      initialFocusRef={
-        dangerous
-          ? (cancelRef as React.RefObject<HTMLElement | null>)
-          : undefined
-      }
+      initialFocusRef={cancelRef as React.RefObject<HTMLElement | null>}
     >
       <Modal.Header>{title}</Modal.Header>
       <Modal.Body>

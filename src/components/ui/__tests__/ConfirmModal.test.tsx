@@ -41,6 +41,12 @@ describe("ConfirmModal", () => {
     expect(document.activeElement).toBe(cancel);
   });
 
+  it("dangerous=false (default): Cancel button receives focus on open", () => {
+    render(<ConfirmModal {...defaultProps()} />);
+    const cancel = screen.getByText("Cancel");
+    expect(document.activeElement).toBe(cancel);
+  });
+
   it("isBusy=true: both buttons are disabled", () => {
     render(<ConfirmModal {...defaultProps({ isBusy: true })} />);
     const buttons = screen.getAllByRole("button") as HTMLButtonElement[];
