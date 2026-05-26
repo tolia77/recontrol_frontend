@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { getMyDevicesRequest } from 'src/services/backend/devicesService';
 import { Card, CardHeader } from 'src/components/ui/Card';
 import { Button } from 'src/components/ui/Button';
-import { Spinner } from 'src/components/ui/Spinner';
+import { LoadingState, EmptyState } from 'src/components/ui';
 import type { Device } from 'src/types';
 
 interface ActivityItem {
@@ -66,10 +66,7 @@ function Dashboard() {
           <CardHeader title={t('dashboard.devicesSectionTitle')} />
 
           {loadingDevices ? (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Spinner size="sm" />
-              {t('dashboard.loading')}
-            </div>
+            <LoadingState message={t('dashboard.loading')} />
           ) : devices.length ? (
             <>
               <p className="text-4xl font-bold mb-2">
@@ -111,7 +108,7 @@ function Dashboard() {
               </div>
             </>
           ) : (
-            <p className="text-sm text-gray-600">{t('dashboard.noDevices')}</p>
+            <EmptyState title={t('dashboard.noDevices')} />
           )}
         </Card>
 

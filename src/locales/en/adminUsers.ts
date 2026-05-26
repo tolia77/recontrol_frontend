@@ -32,7 +32,12 @@ const adminUsers = {
     creating: 'Creating...',
     updating: 'Updating...',
     deleting: 'Deleting...',
-    deleteConfirm: 'Are you sure you want to delete this user?',
+    deleteConfirm: {
+      title: 'Delete User',
+      body: 'Are you sure you want to delete this user?',
+      confirm: 'Delete',
+      cancel: 'Cancel'
+    },
     saved: 'Saved successfully',
     created: 'User created',
     deleted: 'User deleted'

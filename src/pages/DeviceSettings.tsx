@@ -13,7 +13,7 @@ import {
 } from 'src/services/backend/permissionsGroupsService';
 import { useTranslation } from 'react-i18next';
 import { useToast } from 'src/components/ui/Toast';
-import { LoadingOverlay } from 'src/components/ui/Spinner';
+import { LoadingState, EmptyState } from 'src/components/ui';
 import { DeviceInfoForm } from './DeviceSettings/DeviceInfoForm';
 import { InviteShareForm } from './DeviceSettings/InviteShareForm';
 import { SharesList } from './DeviceSettings/SharesList';
@@ -302,8 +302,8 @@ const DeviceSettings = () => {
     }
   };
 
-  if (loading) return <LoadingOverlay message={t('loading')} />;
-  if (!device) return <div className="p-6">{t('notFound')}</div>;
+  if (loading) return <LoadingState message={t('loading')} />;
+  if (!device) return <div className="p-6"><EmptyState title={t('notFound')} /></div>;
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -321,7 +321,7 @@ const DeviceSettings = () => {
       />
 
       <div className="space-y-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-background rounded-lg shadow p-6 border border-lightgray">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold">{t('sharing.section')}</h2>
             <button

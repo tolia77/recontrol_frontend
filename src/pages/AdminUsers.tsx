@@ -10,8 +10,7 @@ import {
 } from 'src/services/backend/usersService';
 import { getErrorMessage } from 'src/utils/getErrorMessage';
 import { useToast } from 'src/components/ui/Toast';
-import { Button } from 'src/components/ui/Button';
-import { Spinner } from 'src/components/ui/Spinner';
+import { Button, Input, Card, LoadingState, EmptyState, ConfirmModal } from 'src/components/ui';
 
 interface EditableRowState {
   id: number | string;
@@ -34,6 +33,8 @@ const AdminUsers = () => {
   const [newUser, setNewUser] = useState({ username: '', email: '', password: '', role: 'user' });
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Record<string, EditableRowState>>({});
+  const [deleteUserTarget, setDeleteUserTarget] = useState<UserResponse | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -113,19 +114,22 @@ const AdminUsers = () => {
     }
   };
 
-  const handleDelete = async (u: UserResponse) => {
-    if (!window.confirm(t('messages.deleteConfirm'))) return;
-
+  const handleDeleteConfirm = async () => {
+    if (!deleteUserTarget) return;
+    const u = deleteUserTarget;
+    setDeleting(true);
     try {
       await deleteUserAdminRequest(u.id);
       setUsers(prev => prev.filter(x => x.id !== u.id));
       toast.success(t('messages.deleted'));
-
       if (String(u.id) === String(currentUserId)) {
         saveUserRole(null);
       }
     } catch {
       toast.error(t('errors.deleteFailed'));
+    } finally {
+      setDeleting(false);
+      setDeleteUserTarget(null);
     }
   };
 
@@ -176,68 +180,61 @@ const AdminUsers = () => {
       </div>
 
       {/* Create user form */}
-      <form onSubmit={handleCreate} className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 mb-6 space-y-3 max-w-xl">
-        <h2 className="text-lg font-semibold">{t('create.title')}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs">{t('create.username')}</label>
-            <input
+      <Card className="mb-6 max-w-xl">
+        <form onSubmit={handleCreate} className="space-y-3">
+          <h2 className="text-lg font-semibold">{t('create.title')}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Input
+              label={t('create.username')}
               type="text"
               value={newUser.username}
               onChange={e => setNewUser(s => ({ ...s, username: e.target.value }))}
               required
             />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs">{t('create.email')}</label>
-            <input
+            <Input
+              label={t('create.email')}
               type="email"
               value={newUser.email}
               onChange={e => setNewUser(s => ({ ...s, email: e.target.value }))}
               required
             />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs">{t('create.password')}</label>
-            <input
+            <Input
+              label={t('create.password')}
               type="password"
               value={newUser.password}
               onChange={e => setNewUser(s => ({ ...s, password: e.target.value }))}
               required
             />
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-text">{t('create.role')}</label>
+              <select
+                value={newUser.role}
+                onChange={e => setNewUser(s => ({ ...s, role: e.target.value }))}
+                className="px-3 py-2 border border-lightgray rounded-lg text-sm"
+              >
+                <option value="user">{t('roles.user')}</option>
+                <option value="admin">{t('roles.admin')}</option>
+              </select>
+            </div>
           </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs">{t('create.role')}</label>
-            <select
-              value={newUser.role}
-              onChange={e => setNewUser(s => ({ ...s, role: e.target.value }))}
-              className="px-3 py-2 border border-lightgray rounded-lg text-sm"
-            >
-              <option value="user">{t('roles.user')}</option>
-              <option value="admin">{t('roles.admin')}</option>
-            </select>
-          </div>
-        </div>
-        <Button type="submit" loading={creating}>
-          {creating ? t('messages.creating') : t('create.submit')}
-        </Button>
-      </form>
+          <Button type="submit" loading={creating}>
+            {creating ? t('messages.creating') : t('create.submit')}
+          </Button>
+        </form>
+      </Card>
 
       {/* Users table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+      <Card>
         <h2 className="text-lg font-semibold mb-4">{t('title')}</h2>
         {loading ? (
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Spinner size="sm" />
-            {t('messages.loading')}
-          </div>
+          <LoadingState message={t('messages.loading')} />
         ) : users.length === 0 ? (
-          <p className="text-sm text-gray-600">{t('messages.empty')}</p>
+          <EmptyState title={t('messages.empty')} />
         ) : (
           <div className="overflow-auto">
             <table className="min-w-full text-sm">
-              <thead className="sticky top-0 bg-white shadow-sm">
-                <tr className="text-left text-gray-700 border-b">
+              <thead className="sticky top-0 bg-background shadow-sm">
+                <tr className="text-left text-text border-b">
                   <th className="px-2 py-2">{t('table.username')}</th>
                   <th className="px-2 py-2">{t('table.email')}</th>
                   <th className="px-2 py-2">{t('table.role')}</th>
@@ -252,11 +249,11 @@ const AdminUsers = () => {
                   const isEditing = !!edit;
 
                   return (
-                    <tr key={u.id} className="border-b last:border-b-0 hover:bg-gray-50 align-top">
+                    <tr key={u.id} className="border-b last:border-b-0 hover:bg-tertiary align-top">
                       <td className="px-2 py-2">
                         {isEditing ? (
-                          <input
-                            className="small-input w-full"
+                          <Input
+                            className="w-full"
                             value={edit.username}
                             onChange={e => changeEditField(u.id, 'username', e.target.value)}
                           />
@@ -266,8 +263,9 @@ const AdminUsers = () => {
                       </td>
                       <td className="px-2 py-2">
                         {isEditing ? (
-                          <input
-                            className="small-input w-full"
+                          <Input
+                            type="email"
+                            className="w-full"
                             value={edit.email}
                             onChange={e => changeEditField(u.id, 'email', e.target.value)}
                           />
@@ -278,7 +276,7 @@ const AdminUsers = () => {
                       <td className="px-2 py-2">
                         {isEditing ? (
                           <select
-                            className="small-input w-full"
+                            className="w-full px-3 py-2 border border-lightgray rounded-lg text-sm"
                             value={edit.role}
                             onChange={e => changeEditField(u.id, 'role', e.target.value)}
                           >
@@ -291,10 +289,10 @@ const AdminUsers = () => {
                           </span>
                         )}
                       </td>
-                      <td className="px-2 py-2 text-xs text-gray-500">
+                      <td className="px-2 py-2 text-xs text-darkgray">
                         {u.created_at ? new Date(u.created_at).toLocaleDateString() : '-'}
                       </td>
-                      <td className="px-2 py-2 text-xs text-gray-500">
+                      <td className="px-2 py-2 text-xs text-darkgray">
                         {u.updated_at ? new Date(u.updated_at).toLocaleDateString() : '-'}
                       </td>
                       <td className="px-2 py-2 space-y-1">
@@ -303,16 +301,15 @@ const AdminUsers = () => {
                             <Button variant="secondary" size="sm" onClick={() => beginEdit(u)}>
                               {t('table.edit')}
                             </Button>
-                            <Button variant="danger" size="sm" onClick={() => handleDelete(u)}>
+                            <Button variant="danger" size="sm" onClick={() => setDeleteUserTarget(u)}>
                               {t('table.delete')}
                             </Button>
                           </div>
                         )}
                         {isEditing && (
                           <div className="flex gap-2 flex-wrap items-center">
-                            <input
+                            <Input
                               type="password"
-                              className="small-input"
                               placeholder={t('create.password')}
                               value={edit.password}
                               onChange={e => changeEditField(u.id, 'password', e.target.value)}
@@ -342,7 +339,19 @@ const AdminUsers = () => {
             </table>
           </div>
         )}
-      </div>
+      </Card>
+
+      <ConfirmModal
+        open={deleteUserTarget !== null}
+        dangerous
+        title={t('messages.deleteConfirm.title')}
+        body={t('messages.deleteConfirm.body')}
+        confirmLabel={t('messages.deleteConfirm.confirm')}
+        cancelLabel={t('messages.deleteConfirm.cancel')}
+        isBusy={deleting}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteUserTarget(null)}
+      />
     </div>
   );
 };

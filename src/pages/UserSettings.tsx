@@ -7,7 +7,7 @@ import { getErrorMessage } from 'src/utils/getErrorMessage';
 import { useTranslation } from 'react-i18next';
 import { useToast } from 'src/components/ui/Toast';
 import { Button } from 'src/components/ui/Button';
-import { LoadingOverlay } from 'src/components/ui/Spinner';
+import { LoadingState } from 'src/components/ui';
 
 function UserSettings() {
   const { t } = useTranslation('userSettings');
@@ -82,7 +82,7 @@ function UserSettings() {
   }
 
   if (loading) {
-    return <LoadingOverlay message={t('loading')} />;
+    return <LoadingState message={t('loading')} />;
   }
 
   if (!userId) {

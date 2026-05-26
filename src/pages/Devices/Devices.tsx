@@ -5,7 +5,7 @@ import type { GetMyDevicesParams } from 'src/services/backend/devicesService';
 import { getMyDevicesRequest } from 'src/services/backend/devicesService';
 import { useTranslation } from 'react-i18next';
 import { Button } from 'src/components/ui/Button';
-import { Spinner } from 'src/components/ui/Spinner';
+import { LoadingState } from 'src/components/ui';
 
 function Devices() {
   const { t } = useTranslation('devices');
@@ -162,9 +162,7 @@ function Devices() {
 
       {/* Content */}
       {loading ? (
-        <div className="flex w-full justify-center py-10" aria-live="polite">
-          <Spinner size="lg" />
-        </div>
+        <LoadingState />
       ) : (
         <DevicesTable devices={devices} />
       )}
