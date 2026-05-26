@@ -5,6 +5,7 @@ import { loginRequest } from 'src/services/backend/authService';
 import { saveTokens, saveUserId, saveUserRole } from 'src/utils/auth';
 import { useTranslation, Trans } from 'react-i18next';
 import { Button } from 'src/components/ui/Button';
+import { Input } from 'src/components/ui';
 
 function Login() {
   const { t } = useTranslation('auth');
@@ -54,37 +55,27 @@ function Login() {
             </div>
           )}
 
-          <div>
-            <label className="text-sm font-medium" htmlFor="email">
-              {t('login.email')}
-            </label>
-            <input
-              className="w-full mt-1"
-              type="email"
-              id="email"
-              name="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-            />
-          </div>
+          <Input
+            label={t('login.email')}
+            type="email"
+            id="email"
+            name="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+          />
 
-          <div>
-            <label className="text-sm font-medium" htmlFor="password">
-              {t('login.password')}
-            </label>
-            <input
-              className="w-full mt-1"
-              type="password"
-              id="password"
-              name="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-            />
-          </div>
+          <Input
+            label={t('login.password')}
+            type="password"
+            id="password"
+            name="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+          />
 
           <Button type="submit" loading={loading} className="w-full">
             {t('login.submit')}

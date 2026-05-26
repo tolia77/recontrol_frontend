@@ -3,6 +3,7 @@ import type { InviteShareFormProps } from './types';
 import { PermissionsEditor } from './components/PermissionsEditor';
 import { LoadGroupPanel } from './components/LoadGroupPanel';
 import { SaveGroupPanel } from './components/SaveGroupPanel';
+import { Input, Button } from 'src/components/ui';
 
 export const InviteShareForm: React.FC<InviteShareFormProps> = ({
   t,
@@ -18,37 +19,35 @@ export const InviteShareForm: React.FC<InviteShareFormProps> = ({
   const [showSavePanel, setShowSavePanel] = useState(false);
 
   return (
-    <form onSubmit={onSubmit} className="mb-6 p-4 border border-gray-200 rounded-lg">
+    <form onSubmit={onSubmit} className="mb-6 p-4 border border-lightgray rounded-lg">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t('form.userEmail')}
-          </label>
-          <input
+          <Input
+            label={t('form.userEmail')}
             type="email"
             value={shareForm.userEmail}
             onChange={(e) => onChange({ ...shareForm, userEmail: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
             required
           />
         </div>
 
         {/* Action buttons to reveal load/save panels */}
         <div className="flex gap-2 md:col-span-2">
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="sm"
             onClick={() => setShowLoadPanel(!showLoadPanel)}
-            className="px-2 py-1 border border-gray-300 rounded text-xs font-medium hover:bg-gray-50"
           >
             {t('form.loadGroup')}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            size="sm"
             onClick={() => setShowSavePanel(!showSavePanel)}
-            className="px-2 py-1 bg-gray-700 text-white rounded text-xs font-medium hover:bg-gray-600"
           >
             {t('form.saveGroup')}
-          </button>
+          </Button>
         </div>
 
         {showLoadPanel && (
@@ -85,24 +84,18 @@ export const InviteShareForm: React.FC<InviteShareFormProps> = ({
         />
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t('form.expiresAt')}
-          </label>
-          <input
+          <Input
+            label={t('form.expiresAt')}
             type="datetime-local"
             value={shareForm.expiresAt}
             onChange={(e) => onChange({ ...shareForm, expiresAt: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
       </div>
       <div className="flex justify-end">
-        <button
-          type="submit"
-          className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
-        >
+        <Button type="submit">
           {t('form.sendInvitation')}
-        </button>
+        </Button>
       </div>
     </form>
   );

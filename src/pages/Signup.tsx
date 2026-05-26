@@ -6,6 +6,7 @@ import { saveTokens, saveUserId } from 'src/utils/auth';
 import { getErrorMessage } from 'src/utils/getErrorMessage';
 import { useTranslation, Trans } from 'react-i18next';
 import { Button } from 'src/components/ui/Button';
+import { Input } from 'src/components/ui';
 
 function Signup() {
   const { t } = useTranslation('auth');
@@ -61,69 +62,49 @@ function Signup() {
             </div>
           )}
 
-          <div>
-            <label className="text-sm font-medium" htmlFor="username">
-              {t('signup.username')}
-            </label>
-            <input
-              className="w-full mt-1"
-              type="text"
-              id="username"
-              name="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              autoComplete="username"
-            />
-          </div>
+          <Input
+            label={t('signup.username')}
+            type="text"
+            id="username"
+            name="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            autoComplete="username"
+          />
 
-          <div>
-            <label className="text-sm font-medium" htmlFor="email">
-              {t('signup.email')}
-            </label>
-            <input
-              className="w-full mt-1"
-              type="email"
-              id="email"
-              name="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-            />
-          </div>
+          <Input
+            label={t('signup.email')}
+            type="email"
+            id="email"
+            name="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+          />
 
-          <div>
-            <label className="text-sm font-medium" htmlFor="password">
-              {t('signup.password')}
-            </label>
-            <input
-              className="w-full mt-1"
-              type="password"
-              id="password"
-              name="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="new-password"
-            />
-          </div>
+          <Input
+            label={t('signup.password')}
+            type="password"
+            id="password"
+            name="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="new-password"
+          />
 
-          <div>
-            <label className="text-sm font-medium" htmlFor="confirmPassword">
-              {t('signup.confirm')}
-            </label>
-            <input
-              className="w-full mt-1"
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              autoComplete="new-password"
-            />
-          </div>
+          <Input
+            label={t('signup.confirm')}
+            type="password"
+            id="confirmPassword"
+            name="confirmPassword"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            autoComplete="new-password"
+          />
 
           <Button type="submit" loading={loading} className="w-full">
             {t('signup.submit')}

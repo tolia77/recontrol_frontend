@@ -4,6 +4,7 @@ import type { EditShareFormProps } from './types';
 import { PermissionsEditor } from './components/PermissionsEditor';
 import { LoadGroupPanel } from './components/LoadGroupPanel';
 import { SaveGroupPanel } from './components/SaveGroupPanel';
+import { Input, Button } from 'src/components/ui';
 
 export const EditShareForm: React.FC<EditShareFormProps> = ({
   t,
@@ -22,25 +23,26 @@ export const EditShareForm: React.FC<EditShareFormProps> = ({
     <form onSubmit={onSubmit} className="mb-6 p-4 border border-blue-200 rounded-lg bg-blue-50">
       <div className="flex justify-between items-center mb-3">
         <h3 className="font-semibold">{t('sharing.editShare')}</h3>
-        <button type="button" onClick={onCancel} className="text-sm text-gray-600 hover:underline">{t('sharing.cancelEdit')}</button>
+        <button type="button" onClick={onCancel} className="text-sm text-darkgray hover:underline">{t('sharing.cancelEdit')}</button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div className="flex gap-2 md:col-span-2">
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="sm"
             onClick={() => setShowLoadPanel(!showLoadPanel)}
-            className="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 text-sm"
           >
             {t('form.loadGroup')}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            size="sm"
             onClick={() => setShowSavePanel(!showSavePanel)}
-            className="px-2 py-1 bg-gray-700 text-white rounded hover:bg-gray-600 text-sm"
           >
             {t('form.saveGroup')}
-          </button>
+          </Button>
         </div>
 
         {showLoadPanel && (
@@ -76,22 +78,18 @@ export const EditShareForm: React.FC<EditShareFormProps> = ({
         />
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t('form.expiresAt')}
-          </label>
-          <input
+          <Input
+            label={t('form.expiresAt')}
             type="datetime-local"
             value={editForm.expiresAt}
             onChange={(e) => onChange({ ...editForm, expiresAt: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
       </div>
       <div className="flex justify-end gap-2">
-        <button type="button" onClick={onCancel} className="px-3 py-2 border rounded-md">{t('sharing.cancelEdit')}</button>
-        <button type="submit" className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark">{t('sharing.saveChanges')}</button>
+        <Button type="button" variant="secondary" onClick={onCancel}>{t('sharing.cancelEdit')}</Button>
+        <Button type="submit">{t('sharing.saveChanges')}</Button>
       </div>
     </form>
   );
 };
-

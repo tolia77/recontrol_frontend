@@ -1,6 +1,7 @@
 // filepath: src/pages/DeviceSettings/components/LoadGroupPanel.tsx
 import React from 'react';
 import type { PermissionsGroup } from 'src/types';
+import { Button } from 'src/components/ui';
 
 export interface LoadGroupPanelProps {
   t: any;
@@ -13,14 +14,14 @@ export interface LoadGroupPanelProps {
 export const LoadGroupPanel: React.FC<LoadGroupPanelProps> = ({ t, groups, value, onChange, onLoad }) => {
   return (
     <div className="md:col-span-2">
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label className="block text-sm font-medium text-text mb-1">
         {t('form.permissionsGroup')}
       </label>
       <div className="flex gap-2">
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full px-3 py-2 border border-lightgray rounded-lg text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
         >
           <option value="">{t('form.selectPermissions')}</option>
           {groups.map((group) => (
@@ -29,15 +30,10 @@ export const LoadGroupPanel: React.FC<LoadGroupPanelProps> = ({ t, groups, value
             </option>
           ))}
         </select>
-        <button
-          type="button"
-          onClick={onLoad}
-          className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 whitespace-nowrap"
-        >
+        <Button type="button" variant="secondary" onClick={onLoad}>
           {t('form.apply')}
-        </button>
+        </Button>
       </div>
     </div>
   );
 };
-
