@@ -124,4 +124,44 @@ describe("Modal", () => {
     const dialog = screen.getByRole("dialog");
     expect(dialog.className).toContain("max-w-md");
   });
+
+  it("aria-labelledby on dialog resolves to the Modal.Header h2 id", () => {
+    render(
+      <Modal open={true} onClose={() => {}}>
+        <Modal.Header>Title</Modal.Header>
+        <Modal.Body>body</Modal.Body>
+      </Modal>,
+    );
+    const dialog = screen.getByRole("dialog");
+    const heading = screen.getByRole("heading", { name: "Title" });
+    const labelledById = dialog.getAttribute("aria-labelledby");
+    const headingId = heading.getAttribute("id");
+    expect(labelledById).toBeTruthy();
+    expect(headingId).toBeTruthy();
+    expect(labelledById).toBe(headingId);
+  });
+
+  it("ariaLabel prop sets aria-label and omits aria-labelledby (no dangling id)", () => {
+    render(
+      <Modal open={true} onClose={() => {}} ariaLabel="Processes">
+        <Modal.Body>content without header</Modal.Body>
+      </Modal>,
+    );
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.getAttribute("aria-label")).toBe("Processes");
+    expect(dialog.hasAttribute("aria-labelledby")).toBe(false);
+  });
+
+  it('size="full" backdrop contains flex centering classes', () => {
+    render(
+      <Modal open={true} onClose={() => {}} size="full">
+        <Modal.Body>full content</Modal.Body>
+      </Modal>,
+    );
+    const backdrop = document.querySelector(
+      '[role="presentation"]',
+    ) as HTMLElement;
+    expect(backdrop.className).toContain("items-center");
+    expect(backdrop.className).toContain("justify-center");
+  });
 });
