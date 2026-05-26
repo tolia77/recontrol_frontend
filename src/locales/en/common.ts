@@ -28,7 +28,8 @@ const common = {
     recentActivity: 'Recent Activity',
     loading: 'Loading...',
     lastUpdated: 'Last updated {{time}}'
-  }
+  },
+  retry: 'Retry'
 };
 
 export default common;

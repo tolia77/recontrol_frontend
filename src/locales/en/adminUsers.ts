@@ -48,7 +48,8 @@ const adminUsers = {
     saveFailed: 'Failed to save user',
     createFailed: 'Failed to create user',
     deleteFailed: 'Failed to delete user'
-  }
+  },
+  refreshLabel: 'Refresh user list'
 };
 export default adminUsers;
 

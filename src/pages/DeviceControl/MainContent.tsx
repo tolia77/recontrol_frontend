@@ -1,4 +1,5 @@
 import { useRef, useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { MainContentProps, ScalingMode } from './types';
 import { computeRealImageCoords } from './utils/coords';
 import { buttonName, pressedButtonsFromMask, normalizeWheelToClicks, mapButtonToBackend } from './utils/mouse';
@@ -35,6 +36,8 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                                                                                                        splitRatio,
                                                                                                        setSplitRatio,
                                                                                                    }) => {
+    const { t } = useTranslation('deviceControl');
+
     // overlay & container refs
     const overlayRef = useRef<HTMLDivElement | null>(null);
     const videoContainerRef = useRef<HTMLDivElement | null>(null);
@@ -258,7 +261,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                         <svg className="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25A2.25 2.25 0 0 1 5.25 3h13.5A2.25 2.25 0 0 1 21 5.25Z" />
                         </svg>
-                        <span className="text-lg font-medium">Click Start Stream to begin</span>
+                        <span className="text-lg font-medium">{t('stream.idle')}</span>
                     </div>
                 )
             );
@@ -269,7 +272,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                 renderStage(
                     <div className="relative z-[3] text-center text-[#D1D5DB]">
                         <div className="w-8 h-8 mx-auto mb-3 border-2 border-darkgray border-t-secondary rounded-full animate-spin" />
-                        <span className="text-lg font-medium">Connecting...</span>
+                        <span className="text-lg font-medium">{t('stream.connecting')}</span>
                     </div>
                 )
             );
@@ -287,7 +290,7 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                         <div className="absolute inset-0 z-20 flex items-center justify-center rounded-[inherit] bg-black/60">
                             <div className="text-center text-[#D1D5DB]">
                                 <div className="w-8 h-8 mx-auto mb-3 border-2 border-darkgray border-t-secondary rounded-full animate-spin" />
-                                <span className="text-lg font-medium">Reconnecting...</span>
+                                <span className="text-lg font-medium">{t('stream.reconnecting')}</span>
                             </div>
                         </div>
                     </div>
@@ -309,12 +312,12 @@ export const MainContent: React.FC<MainContentProps & { activeMode: 'interactive
                         <svg className="w-12 h-12 mx-auto mb-3 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
                         </svg>
-                        <span className="text-lg font-medium block mb-4">Connection failed</span>
+                        <span className="text-lg font-medium block mb-4">{t('stream.failed')}</span>
                         <button
                             onClick={retryWebRtc}
                             className="px-4 py-2 bg-secondary hover:opacity-90 text-white rounded-lg text-sm font-medium transition-colors"
                         >
-                            Retry Connection
+                            {t('stream.retryConnection')}
                         </button>
                     </div>
                 )

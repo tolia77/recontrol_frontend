@@ -47,7 +47,8 @@ const adminUsers = {
     saveFailed: 'Не вдалося зберегти',
     createFailed: 'Не вдалося створити користувача',
     deleteFailed: 'Не вдалося видалити користувача'
-  }
+  },
+  refreshLabel: 'Оновити список користувачів'
 };
 export default adminUsers;
 

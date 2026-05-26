@@ -174,7 +174,7 @@ const AdminUsers = () => {
           <h1 className="text-3xl font-bold mb-1">{t('title')}</h1>
           <p className="text-sm text-gray-600">{t('subtitle')}</p>
         </div>
-        <Button variant="secondary" size="sm" onClick={() => loadUsers()}>
+        <Button variant="secondary" size="sm" aria-label={t('refreshLabel')} onClick={() => loadUsers()}>
           ↻
         </Button>
       </div>

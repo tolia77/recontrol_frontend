@@ -119,6 +119,13 @@ const deviceControl = {
     power: {
       title: 'Живлення'
     }
+  },
+  stream: {
+    idle: 'Натисніть «Запустити трансляцію», щоб почати',
+    connecting: 'Підключення...',
+    reconnecting: 'Перепідключення...',
+    failed: 'Не вдалося підключитися',
+    retryConnection: 'Повторити підключення'
   }
 };
 export default deviceControl;

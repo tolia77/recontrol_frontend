@@ -119,6 +119,13 @@ const deviceControl = {
     power: {
       title: 'Power'
     }
+  },
+  stream: {
+    idle: 'Click Start Stream to begin',
+    connecting: 'Connecting...',
+    reconnecting: 'Reconnecting...',
+    failed: 'Connection failed',
+    retryConnection: 'Retry Connection'
   }
 };
 export default deviceControl;

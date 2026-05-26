@@ -28,7 +28,8 @@ const common = {
     recentActivity: 'Остання активність',
     loading: 'Завантаження...',
     lastUpdated: 'Останнє оновлення {{time}}'
-  }
+  },
+  retry: 'Повторити'
 };
 
 export default common;
