@@ -1,5 +1,6 @@
 import type { WebRtcConnectionState } from './hooks/useWebRtc';
 import type { StreamStats } from './hooks/useStreamStats';
+import type { PermissionsSubset } from 'src/types';
 
 export type Mode = 'interactive' | 'manual';
 export type ScalingMode = 'fit' | '1:1';
@@ -56,15 +57,7 @@ export interface ProcessInfo {
     StartTime?: string;
 }
 
-// Permissions subset (duplicated shape to avoid circular import). Optional flags if provided.
-export interface PermissionsSubset {
-    see_screen?: boolean;
-    see_system_info?: boolean;
-    access_mouse?: boolean;
-    access_keyboard?: boolean;
-    access_terminal?: boolean;
-    manage_power?: boolean;
-}
+export type { PermissionsSubset };
 
 export interface MainContentProps {
     disabled: boolean;

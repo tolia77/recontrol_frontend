@@ -1,6 +1,6 @@
 import { backendInstance } from "src/services/backend/config.ts";
 import { getAccessToken } from "src/utils/auth.ts";
-import type { DeviceShare, DeviceShareCreatePayload, PermissionsGroupAttributes } from "src/types/global";
+import type { DeviceShare, DeviceShareCreatePayload, PermissionsGroupAttributes } from "src/types";
 
 export async function listDeviceSharesRequest(deviceId: string) {
   return await backendInstance.get<{ items: DeviceShare[] }>("/device-shares", {

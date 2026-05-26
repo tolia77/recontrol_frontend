@@ -1,5 +1,5 @@
 import DeviceRow from 'src/pages/Devices/DeviceRow';
-import type { Device } from 'src/types/global';
+import type { Device } from 'src/types';
 import { useTranslation } from 'react-i18next';
 
 interface DeviceTableProps {

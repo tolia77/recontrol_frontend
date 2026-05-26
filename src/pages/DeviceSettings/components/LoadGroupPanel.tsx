@@ -1,6 +1,6 @@
 // filepath: src/pages/DeviceSettings/components/LoadGroupPanel.tsx
 import React from 'react';
-import type { PermissionsGroup } from 'src/types/global';
+import type { PermissionsGroup } from 'src/types';
 
 export interface LoadGroupPanelProps {
   t: any;

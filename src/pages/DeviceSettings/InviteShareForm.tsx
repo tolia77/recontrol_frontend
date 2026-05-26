@@ -64,7 +64,7 @@ export const InviteShareForm: React.FC<InviteShareFormProps> = ({
         {showSavePanel && (
           <SaveGroupPanel
             t={t}
-            name={shareForm.newGroup.name}
+            name={shareForm.newGroup.name ?? ''}
             onChange={(name) => onChange({ ...shareForm, newGroup: { ...shareForm.newGroup, name } })}
             onSave={onSaveGroup}
           />
@@ -73,7 +73,14 @@ export const InviteShareForm: React.FC<InviteShareFormProps> = ({
         {/* Always visible permissions editor */}
         <PermissionsEditor
           t={t}
-          value={shareForm.newGroup}
+          value={{
+            see_screen: !!shareForm.newGroup.see_screen,
+            see_system_info: !!shareForm.newGroup.see_system_info,
+            access_mouse: !!shareForm.newGroup.access_mouse,
+            access_keyboard: !!shareForm.newGroup.access_keyboard,
+            access_terminal: !!shareForm.newGroup.access_terminal,
+            manage_power: !!shareForm.newGroup.manage_power,
+          }}
           onChange={(next) => onChange({ ...shareForm, newGroup: { ...shareForm.newGroup, ...next } })}
         />
 

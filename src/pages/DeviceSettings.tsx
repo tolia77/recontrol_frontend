@@ -19,7 +19,7 @@ import { InviteShareForm } from './DeviceSettings/InviteShareForm';
 import { SharesList } from './DeviceSettings/SharesList';
 import { EditShareForm } from './DeviceSettings/EditShareForm';
 import type { ShareFormState, DeviceInfoFormState, EditShareFormState } from './DeviceSettings/types';
-import type { Device, DeviceShare, PermissionsGroup, DeviceShareCreatePayload } from 'src/types/global';
+import type { Device, DeviceShare, PermissionsGroup, DeviceShareCreatePayload } from 'src/types';
 
 const DeviceSettings = () => {
   const { t } = useTranslation('deviceSettings');
@@ -140,19 +140,19 @@ const DeviceSettings = () => {
       access_terminal,
       manage_power
     } = shareForm.newGroup;
-    if (!name.trim()) {
+    if (!name?.trim()) {
       toast.warning(t('sharing.nameRequired'));
       return;
     }
     try {
       await createPermissionsGroupRequest({
         name: name.trim(),
-        see_screen,
-        see_system_info,
-        access_mouse,
-        access_keyboard,
-        access_terminal,
-        manage_power,
+        see_screen: see_screen ?? null,
+        see_system_info: see_system_info ?? null,
+        access_mouse: access_mouse ?? null,
+        access_keyboard: access_keyboard ?? null,
+        access_terminal: access_terminal ?? null,
+        manage_power: manage_power ?? null,
       });
       await loadPermissionsGroups();
       toast.success(t('form.groupSaved'));
@@ -247,12 +247,12 @@ const DeviceSettings = () => {
     type PatchPayload = Partial<DeviceShareCreatePayload> & {
       permissions_group_attributes?: {
         name?: string;
-        see_screen?: boolean;
-        see_system_info?: boolean;
-        access_mouse?: boolean;
-        access_keyboard?: boolean;
-        access_terminal?: boolean;
-        manage_power?: boolean;
+        see_screen?: boolean | null;
+        see_system_info?: boolean | null;
+        access_mouse?: boolean | null;
+        access_keyboard?: boolean | null;
+        access_terminal?: boolean | null;
+        manage_power?: boolean | null;
       };
     };
     const payload: PatchPayload = {

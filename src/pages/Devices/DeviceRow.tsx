@@ -1,5 +1,5 @@
 import { LinkIcon, SettingsIcon } from 'src/components/icons/Icons';
-import type { Device } from 'src/types/global';
+import type { Device } from 'src/types';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 

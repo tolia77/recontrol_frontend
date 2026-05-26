@@ -8,7 +8,7 @@ import { useToast } from 'src/components/ui';
 import type { Mode } from 'src/pages/DeviceControl/types';
 import { getMyDeviceSharesForDeviceRequest } from 'src/services/backend/deviceSharesRequests';
 import { getDeviceRequest } from 'src/services/backend/devicesRequests';
-import type { DeviceShare } from 'src/types/global';
+import type { DeviceShare } from 'src/types';
 import { useWebRtc } from './hooks/useWebRtc';
 import { useStreamStats } from './hooks/useStreamStats';
 import { useFilesChannel } from './hooks/useFilesChannel';

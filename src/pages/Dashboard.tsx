@@ -5,7 +5,7 @@ import { getMyDevicesRequest } from 'src/services/backend/devicesRequests';
 import { Card, CardHeader } from 'src/components/ui/Card';
 import { Button } from 'src/components/ui/Button';
 import { Spinner } from 'src/components/ui/Spinner';
-import type { Device } from 'src/types/global';
+import type { Device } from 'src/types';
 
 interface ActivityItem {
   id: string;

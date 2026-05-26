@@ -56,7 +56,7 @@ export const EditShareForm: React.FC<EditShareFormProps> = ({
         {showSavePanel && (
           <SaveGroupPanel
             t={t}
-            name={editForm.newGroup.name}
+            name={editForm.newGroup.name ?? ''}
             onChange={(name) => onChange({ ...editForm, newGroup: { ...editForm.newGroup, name } })}
             onSave={onSaveGroup}
           />
@@ -64,7 +64,14 @@ export const EditShareForm: React.FC<EditShareFormProps> = ({
 
         <PermissionsEditor
           t={t}
-          value={editForm.newGroup}
+          value={{
+            see_screen: !!editForm.newGroup.see_screen,
+            see_system_info: !!editForm.newGroup.see_system_info,
+            access_mouse: !!editForm.newGroup.access_mouse,
+            access_keyboard: !!editForm.newGroup.access_keyboard,
+            access_terminal: !!editForm.newGroup.access_terminal,
+            manage_power: !!editForm.newGroup.manage_power,
+          }}
           onChange={(next) => onChange({ ...editForm, newGroup: { ...editForm.newGroup, ...next } })}
         />
 
