@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { MouseEvent, RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useToast } from 'src/components/ui';
+import { useToast, ConfirmModal } from 'src/components/ui';
 import type { UseFilesChannel } from '../../hooks/useFilesChannel';
 import { useFilesRoots } from '../../hooks/useFilesRoots';
 import { useFileManagerSelection } from '../../hooks/useFileManagerSelection';
@@ -22,7 +22,6 @@ import { FileManagerListing } from './FileManagerListing';
 import { FileManagerStatusBar } from './FileManagerStatusBar';
 import { FileManagerEmptyAllowlist } from './FileManagerEmptyAllowlist';
 import { ContextMenu } from './ContextMenu';
-import { ConfirmDialog } from './ConfirmDialog';
 import { FolderPickerModal } from './FolderPickerModal';
 import { TransferQueuePanel } from './TransferQueuePanel';
 import { DropZoneOverlay } from './DropZoneOverlay';
@@ -1223,7 +1222,7 @@ export function FileManagerPanel({
         {dragActive && <DropZoneOverlay />}
       </div>
       <ContextMenu state={contextMenu} onClose={handleContextMenuClose} />
-      <ConfirmDialog
+      <ConfirmModal
         open={confirm?.kind === 'delete'}
         title={t('dialogs.delete.title')}
         body={

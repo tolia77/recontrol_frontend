@@ -1,4 +1,4 @@
-import { ConfirmDialog } from './ConfirmDialog';
+import { ConfirmModal } from 'src/components/ui';
 import { useTranslation } from 'react-i18next';
 
 /**
@@ -42,7 +42,7 @@ export function LargeFileWarningDialog({
       ? t('dialogs.largeFileWarning.upload')
       : t('dialogs.largeFileWarning.download');
   return (
-    <ConfirmDialog
+    <ConfirmModal
       open={open}
       title={t('dialogs.largeFileWarning.title', { direction })}
       body={
