@@ -264,6 +264,20 @@ export function useAssistantChannel(
   const dispatch = useCallback(
     (action: AssistantDispatchAction, data: object = {}) => {
       if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      // Re-assert the subscription immediately before every action. Frequent
+      // web-socket reconnects (short-lived access tokens) plus StrictMode effect
+      // churn can leave the AssistantChannel subscription torn down on the live
+      // connection — the lifecycle effect's last action ends up being an
+      // `unsubscribe` with no following re-subscribe. Without this guard the
+      // message below lands on a missing subscription and Rails raises
+      // "Unable to find subscription with identifier: {"channel":"AssistantChannel"}".
+      //
+      // ActionCable's `Subscriptions#add` is a no-op when the identifier is
+      // already registered and otherwise registers + confirms synchronously,
+      // in-order, before the next command on the same connection is processed.
+      // So prefixing the action with a subscribe is harmless when already
+      // subscribed and self-healing when not.
+      ws.send(JSON.stringify({ command: 'subscribe', identifier: ASSISTANT_IDENTIFIER }));
       ws.send(
         JSON.stringify({
           command: 'message',

@@ -290,6 +290,48 @@ describe('useAssistantChannel — VERIFY-04 stream-drop', () => {
     expect(result.current.broadcasts.length).toBe(broadcastsBefore);
   });
 
+  it('re-subscribes immediately before dispatching an action (run_prompt race fix)', () => {
+    // Root cause of the "Unable to find subscription with identifier:
+    // {\"channel\":\"AssistantChannel\"}" RuntimeError: frequent web-socket
+    // reconnects + StrictMode churn can leave the AssistantChannel subscription
+    // torn down on the live connection. The old `dispatch` only checked
+    // `ws.readyState === OPEN`, never whether the channel was still subscribed,
+    // so `run_prompt` landed on a dead subscription. The fix prefixes every
+    // dispatched action with a `subscribe` frame: ActionCable no-ops it when the
+    // channel is already registered and registers it in-order when it isn't, so
+    // the message can never hit a missing subscription.
+    const ws = new MockWebSocket();
+
+    const { result } = renderHook(() =>
+      useAssistantChannel(ws as unknown as WebSocket, () => {}),
+    );
+
+    // Drop the mount-time subscribe frame so we isolate dispatch's output.
+    ws.sent.length = 0;
+
+    act(() => {
+      result.current.dispatch('run_prompt', { prompt: 'hi', session_token: 'tok' });
+    });
+
+    // Exactly two frames, in order: subscribe(identifier) then message(identifier).
+    expect(ws.sent).toHaveLength(2);
+
+    const subFrame = JSON.parse(ws.sent[0]) as { command: string; identifier: string };
+    expect(subFrame.command).toBe('subscribe');
+    expect(subFrame.identifier).toBe(ASSISTANT_IDENTIFIER);
+
+    const msgFrame = JSON.parse(ws.sent[1]) as {
+      command: string;
+      identifier: string;
+      data: string;
+    };
+    expect(msgFrame.command).toBe('message');
+    expect(msgFrame.identifier).toBe(ASSISTANT_IDENTIFIER);
+    const inner = JSON.parse(msgFrame.data) as { action: string; prompt: string };
+    expect(inner.action).toBe('run_prompt');
+    expect(inner.prompt).toBe('hi');
+  });
+
   it('subscribes when the socket transitions from CONNECTING to OPEN', () => {
     // Regression for the production bug where AssistantPanel mounts before
     // wsRef.current finishes its TCP handshake: the original hook returned

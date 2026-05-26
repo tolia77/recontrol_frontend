@@ -275,18 +275,26 @@ describe('useScenarioRunChannel', () => {
     expect((broadcasts[0] as { message?: string }).message).toBe('run_in_progress');
   });
 
-  it('dispatches start_run as ActionCable message with scenario_id', () => {
+  it('re-asserts the subscription then dispatches start_run with scenario_id', () => {
     const { ws, result } = makeHarness();
 
-    // First sent frame was the subscribe — clear and re-test the next send.
+    // Drop the mount-time subscribe frame so we isolate dispatch's output.
     ws.sent.length = 0;
 
     act(() => {
       result.result.current.dispatch('start_run', { scenario_id: 's-1' });
     });
 
-    expect(ws.sent).toHaveLength(1);
-    const frame = JSON.parse(ws.sent[0]) as {
+    // start_run race fix: dispatch re-subscribes immediately before the message
+    // so it can never land on a subscription torn down by reconnect/StrictMode
+    // churn (the "Unable to find subscription ... ScenarioRunChannel" error).
+    expect(ws.sent).toHaveLength(2);
+
+    const subFrame = JSON.parse(ws.sent[0]) as { command: string; identifier: string };
+    expect(subFrame.command).toBe('subscribe');
+    expect(subFrame.identifier).toBe(SCENARIO_RUN_IDENTIFIER);
+
+    const frame = JSON.parse(ws.sent[1]) as {
       command: string;
       identifier: string;
       data: string;
@@ -298,7 +306,7 @@ describe('useScenarioRunChannel', () => {
     expect(inner.scenario_id).toBe('s-1');
   });
 
-  it('dispatches stop_run with no payload', () => {
+  it('dispatches stop_run with no payload (after re-asserting the subscription)', () => {
     const { ws, result } = makeHarness();
     ws.sent.length = 0;
 
@@ -306,8 +314,11 @@ describe('useScenarioRunChannel', () => {
       result.result.current.dispatch('stop_run');
     });
 
-    expect(ws.sent).toHaveLength(1);
-    const frame = JSON.parse(ws.sent[0]) as {
+    expect(ws.sent).toHaveLength(2);
+    const subFrame = JSON.parse(ws.sent[0]) as { command: string };
+    expect(subFrame.command).toBe('subscribe');
+
+    const frame = JSON.parse(ws.sent[1]) as {
       command: string;
       identifier: string;
       data: string;
