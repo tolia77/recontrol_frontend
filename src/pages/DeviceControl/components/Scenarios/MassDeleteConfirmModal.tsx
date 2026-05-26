@@ -38,15 +38,16 @@ export default function MassDeleteConfirmModal({
   }, [open]);
 
   // Escape dismiss via window-level listener. Modal shell receives suppressEsc
-  // so only this handler fires (avoids double-calling onCancel).
+  // so only this handler fires (avoids double-calling onCancel). Gate on
+  // !loading (WR-06) so a mid-delete Esc cannot abandon the dialog.
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onCancel();
+      if (e.key === "Escape" && !loading) onCancel();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, onCancel]);
+  }, [open, loading, onCancel]);
 
   const phraseMatches = typedPhrase === REQUIRED_PHRASE;
   const confirmDisabled = !phraseMatches || loading;
@@ -58,15 +59,15 @@ export default function MassDeleteConfirmModal({
       size="md"
       suppressEsc
       suppressOverlayClick
+      ariaLabel={t("history.deleteAllConfirm.title")}
     >
       {/* Inner wrapper carries testids and mouseDown-based backdrop dismiss so
           existing tests (MassDeleteConfirmModal.test.tsx) continue to pass
           without modification. The outer div acts as the "backdrop area" for
-          tests; the inner card div stops mouseDown propagation. */}
+          tests; the inner card div stops mouseDown propagation.
+          nested dialog role removed (WR-04) — the Modal shell owns the only boundary. */}
       <div
         data-testid="mass-delete-modal"
-        role="dialog"
-        aria-modal="true"
         onMouseDown={(e) => {
           if (e.target === e.currentTarget) onCancel();
         }}

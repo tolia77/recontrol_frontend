@@ -174,10 +174,14 @@ describe("MassDeleteConfirmModal", () => {
     await i18next.changeLanguage("en");
   });
 
-  it('renders the dialog with role="dialog" and aria-modal', () => {
+  it("renders exactly one dialog boundary (the Modal shell, not the inner wrapper)", () => {
     render(<MassDeleteConfirmModal {...defaultProps()} />);
-    const root = screen.getByTestId("mass-delete-modal");
-    expect(root.getAttribute("role")).toBe("dialog");
-    expect(root.getAttribute("aria-modal")).toBe("true");
+    // WR-04: the inner wrapper must NOT carry role="dialog" — only the Modal shell should.
+    const inner = screen.getByTestId("mass-delete-modal");
+    expect(inner.getAttribute("role")).toBeNull();
+    expect(inner.getAttribute("aria-modal")).toBeNull();
+    // The single dialog boundary belongs to the Modal shell.
+    const dialogs = document.querySelectorAll('[role="dialog"]');
+    expect(dialogs.length).toBe(1);
   });
 });
