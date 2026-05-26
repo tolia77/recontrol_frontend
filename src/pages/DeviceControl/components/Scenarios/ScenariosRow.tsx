@@ -46,7 +46,7 @@ export default function ScenariosRow({
 
   return (
     <li
-      className="border-lightgray flex items-start gap-2 rounded border bg-white px-3 py-2"
+      className="border-lightgray bg-background flex items-start gap-2 rounded border px-3 py-2"
       data-testid={`scenarios-row-${scenario.id}`}
     >
       {/* D-22-08: primary [▶ Run] action on left edge in accent token. The
@@ -76,7 +76,7 @@ export default function ScenariosRow({
             </span>
           )}
           {scenario.pinned_device_id && (
-            <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-700">
+            <span className="bg-tertiary text-text rounded px-1.5 py-0.5 text-xs">
               {t("library.pinnedDeviceChip", {
                 device: scenario.pinned_device_id.slice(0, 8),
               })}
@@ -84,11 +84,11 @@ export default function ScenariosRow({
           )}
         </div>
         {descriptionPreview && (
-          <div className="truncate text-sm text-gray-600">
+          <div className="text-darkgray truncate text-sm">
             {descriptionPreview}
           </div>
         )}
-        <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+        <div className="text-darkgray flex flex-wrap items-center gap-2 text-xs">
           <span>{t("library.runCount", { count: runCount })}</span>
           <span aria-hidden="true">·</span>
           <span>{t("library.stepCount", { count: stepCount })}</span>
@@ -109,7 +109,7 @@ export default function ScenariosRow({
         <div className="flex shrink-0 items-center gap-1">
           <button
             type="button"
-            className="text-primary rounded px-2 py-1 text-xs hover:bg-gray-100"
+            className="text-primary hover:bg-tertiary rounded px-2 py-1 text-xs"
             onClick={onEdit}
             data-testid="scenarios-row-edit"
           >
@@ -117,7 +117,7 @@ export default function ScenariosRow({
           </button>
           <button
             type="button"
-            className="text-primary rounded px-2 py-1 text-xs hover:bg-gray-100"
+            className="text-primary hover:bg-tertiary rounded px-2 py-1 text-xs"
             onClick={onDuplicate}
             data-testid="scenarios-row-duplicate"
           >

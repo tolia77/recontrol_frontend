@@ -86,12 +86,12 @@ export const ManualPowerControls: React.FC<{
 
   return (
     <div className="space-y-6">
-      <h3 className="mb-4 text-lg font-semibold text-text">
+      <h3 className="text-text mb-4 text-lg font-semibold">
         {t("manual.power.title")}
       </h3>
 
-      <div className="rounded-lg border border-lightgray bg-background p-4">
-        <p className="mb-4 text-sm text-darkgray">
+      <div className="border-lightgray bg-background rounded-lg border p-4">
+        <p className="text-darkgray mb-4 text-sm">
           ⚠️ {t("manual.power.warning")}
         </p>
 
@@ -105,7 +105,7 @@ export const ManualPowerControls: React.FC<{
               >
                 {label}
               </button>
-              <span className="mt-1 text-center text-xs text-darkgray">
+              <span className="text-darkgray mt-1 text-center text-xs">
                 {description}
               </span>
             </div>

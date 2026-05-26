@@ -122,19 +122,19 @@ export function TopBar({
       : "bg-error";
 
   return (
-    <header className="flex h-[52px] shrink-0 items-center gap-3 border-b border-lightgray bg-background px-3">
+    <header className="border-lightgray bg-background flex h-[52px] shrink-0 items-center gap-3 border-b px-3">
       {/* LEFT — Identity */}
       <button
         type="button"
         onClick={() => navigate("/devices")}
         aria-label={t("sidebar.control")}
-        className="text-darkgray hover:text-text rounded-lg p-1.5 transition-colors hover:bg-tertiary"
+        className="text-darkgray hover:text-text hover:bg-tertiary rounded-lg p-1.5 transition-colors"
       >
         <ChevronLeftIcon className="h-5 w-5" />
       </button>
 
       <div
-        className="flex items-center gap-2 rounded-full border border-lightgray bg-background px-3 py-1"
+        className="border-lightgray bg-background flex items-center gap-2 rounded-full border px-3 py-1"
         title={deviceName || t("topbar.deviceLabel")}
       >
         <span
@@ -164,7 +164,7 @@ export function TopBar({
       )}
 
       {/* CENTER — Workspace */}
-      <div className="flex h-8 items-center rounded-lg bg-tertiary p-0.5">
+      <div className="bg-tertiary flex h-8 items-center rounded-lg p-0.5">
         <button
           type="button"
           onClick={() => setActiveMode("interactive")}

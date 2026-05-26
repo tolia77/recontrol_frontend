@@ -372,7 +372,7 @@ export default function ScenarioEditor({
       <div className="border-lightgray flex items-center gap-2 border-b px-4 py-2">
         <button
           type="button"
-          className="rounded px-2 py-1 text-sm hover:bg-gray-100"
+          className="hover:bg-tertiary rounded px-2 py-1 text-sm"
           onClick={requestClose}
           data-testid="editor-back"
         >
@@ -487,7 +487,7 @@ export default function ScenarioEditor({
           </DndContext>
           <button
             type="button"
-            className="border-lightgray mt-2 rounded border border-dashed px-2 py-1 text-sm hover:bg-gray-50 disabled:opacity-50"
+            className="border-lightgray hover:bg-tertiary mt-2 rounded border border-dashed px-2 py-1 text-sm disabled:opacity-50"
             onClick={addStep}
             disabled={saving || loading}
             data-testid="editor-add-step"
@@ -498,10 +498,10 @@ export default function ScenarioEditor({
       </div>
 
       {/* D-02: sticky bottom bar */}
-      <div className="border-lightgray sticky bottom-0 flex items-center justify-end gap-2 border-t bg-white px-4 py-2">
+      <div className="border-lightgray bg-background sticky bottom-0 flex items-center justify-end gap-2 border-t px-4 py-2">
         <button
           type="button"
-          className="rounded px-3 py-1 text-sm hover:bg-gray-100 disabled:opacity-50"
+          className="hover:bg-tertiary rounded px-3 py-1 text-sm disabled:opacity-50"
           onClick={requestClose}
           data-testid="editor-cancel"
           disabled={saving}

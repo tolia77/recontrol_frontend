@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button, useToast, LoadingState, ErrorState, EmptyState } from "../../../../components/ui";
+import {
+  Button,
+  useToast,
+  LoadingState,
+  ErrorState,
+  EmptyState,
+} from "../../../../components/ui";
 import {
   scenarioRunsService,
   type ScenarioRun,
@@ -57,7 +63,7 @@ function HistoryRow({ run, onSelect }: HistoryRowProps) {
 
   return (
     <li
-      className="border-lightgray flex cursor-pointer items-start gap-3 border-b px-3 py-2 hover:bg-gray-50"
+      className="border-lightgray hover:bg-tertiary flex cursor-pointer items-start gap-3 border-b px-3 py-2"
       onClick={() => onSelect(run.id)}
       role="button"
       aria-label={t(`history.runStatus.${statusKey}`)}
@@ -82,7 +88,7 @@ function HistoryRow({ run, onSelect }: HistoryRowProps) {
         </span>
         <div className="text-darkgray flex items-center gap-2 text-xs">
           {run.device_id && (
-            <span className="rounded bg-gray-100 px-2 py-0.5 font-mono">
+            <span className="bg-background rounded px-2 py-0.5 font-mono">
               {run.device_id.slice(0, 8)}
             </span>
           )}
@@ -97,7 +103,7 @@ function HistoryRow({ run, onSelect }: HistoryRowProps) {
               entry.key === "overflow" ? (
                 <span
                   key={entry.key}
-                  className="text-darkgray ml-1 rounded bg-gray-100 px-2 py-1 text-xs"
+                  className="text-darkgray bg-background ml-1 rounded px-2 py-1 text-xs"
                 >
                   {entry.glyph}
                 </span>
@@ -192,7 +198,7 @@ export default function ScenariosHistory({
           </span>
           <button
             type="button"
-            className="text-primary rounded px-2 py-1 text-xs hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+            className="text-primary hover:bg-tertiary rounded px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-50"
             disabled={prevDisabled}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             data-testid="history-prev"
@@ -201,7 +207,7 @@ export default function ScenariosHistory({
           </button>
           <button
             type="button"
-            className="text-primary rounded px-2 py-1 text-xs hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+            className="text-primary hover:bg-tertiary rounded px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-50"
             disabled={nextDisabled}
             onClick={() => setPage((p) => p + 1)}
             data-testid="history-next"
