@@ -103,7 +103,7 @@ function makeHarness() {
     broadcasts.push(msg);
   };
   const result = renderHook(
-    ({ socket }) => useScenarioRunChannel(socket, onBroadcast),
+    ({ socket }) => useScenarioRunChannel({ socket, onBroadcast }),
     {
       initialProps: { socket: ws as unknown as WebSocket },
     },

@@ -210,7 +210,7 @@ export default function ScenariosPanel({
   );
 
   // Mount the ScenarioRunChannel subscription.
-  const { dispatch: dispatchChannel } = useScenarioRunChannel(ws, onBroadcast);
+  const { dispatch: dispatchChannel } = useScenarioRunChannel({ socket: ws, onBroadcast });
 
   // Library → modal opener flow per D-22-07 + RUN-01.
   // The library row already holds the full Scenario from the index payload, so

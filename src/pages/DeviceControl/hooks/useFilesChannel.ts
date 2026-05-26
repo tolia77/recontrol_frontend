@@ -44,6 +44,14 @@ export interface UseFilesChannel {
  * React hook that lifts the imperative `filesClientRef` (from useWebRtc) into
  * a typed value suitable for component consumption.
  *
+ * Derived-status hook: computes files channel status from WebRTC signals.
+ * Does NOT subscribe to a raw WebSocket.
+ *
+ * Channel pattern exception per D-13: positional args from UseWebRtcReturn
+ * (NOT options-object). Documented exception because the UseWebRtcReturn
+ * surface is the stable contract (D-08) and adding a wrapper object would
+ * create churn with zero benefit.
+ *
  * Rules:
  * - When `connectionState !== 'connected'` -> status 'closed', request null.
  * - When connected, we schedule a microtask to recheck the ref (the files-ctl

@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
+import { useOrderedBroadcast } from "./useOrderedBroadcast";
 
 const SCENARIO_RUN_IDENTIFIER = JSON.stringify({
   channel: "ScenarioRunChannel",
 });
-const GAP_CLOSE_TIMEOUT_MS = 500;
 
 /**
  * Inner broadcast envelope shape for the ScenarioRunChannel (Phase 22 RUN-08).
@@ -96,8 +96,17 @@ interface ScenarioRunCableEnvelope {
   message?: unknown;
 }
 
+interface UseScenarioRunChannelOptions {
+  socket: WebSocket | null;
+  onBroadcast: (msg: ScenarioRunBroadcast) => void;
+}
+
 /**
  * Subscribe to the Rails ScenarioRunChannel over the existing raw WebSocket.
+ *
+ * Options-object signature per D-11. Composes useOrderedBroadcast for the
+ * seq-reorder buffer per D-12 (resetMarker "run_started", allowSeqlessError
+ * true — seqless error envelopes are forwarded directly before seq-routing).
  *
  * Wire-format invariants (Phase 22; mirror of useAssistantChannel — Pitfall 2
  * and Pitfall 6 from 22-RESEARCH.md):
@@ -120,74 +129,44 @@ interface ScenarioRunCableEnvelope {
  *    the consuming component's responsibility — Pitfall 6.)
  */
 export function useScenarioRunChannel(
-  ws: WebSocket | null,
-  onBroadcast: (msg: ScenarioRunBroadcast) => void,
+  { socket, onBroadcast }: UseScenarioRunChannelOptions,
 ): UseScenarioRunChannelReturn {
-  // Refs avoid stale-closure in the message handler bound inside the effect.
-  const onBroadcastRef = useRef(onBroadcast);
-  useEffect(() => {
-    onBroadcastRef.current = onBroadcast;
-  }, [onBroadcast]);
-
-  // Seq-ordered reorder buffer per Phase 18 STREAM-02 / Phase 22 Pitfall 2.
-  const bufferRef = useRef<Map<number, ScenarioRunBroadcast>>(new Map());
-  const expectedSeqRef = useRef<number>(0);
-  const gapTimerRef = useRef<number | null>(null);
-  const closedRef = useRef<boolean>(false);
-
-  // Flush in-order from the reorder buffer.
-  const flushInOrder = useCallback((): void => {
-    while (bufferRef.current.has(expectedSeqRef.current)) {
-      const msg = bufferRef.current.get(expectedSeqRef.current);
-      if (!msg) break;
-      bufferRef.current.delete(expectedSeqRef.current);
-      expectedSeqRef.current += 1;
-      try {
-        onBroadcastRef.current(msg);
-      } catch (err) {
-        // Consumer errors must not crash the hook; log and continue.
-        console.warn("useScenarioRunChannel: onBroadcast threw", err);
-      }
-    }
-
-    if (bufferRef.current.size > 0 && gapTimerRef.current === null) {
-      gapTimerRef.current = window.setTimeout(() => {
-        gapTimerRef.current = null;
-        // Suppress synthetic gap-close error after socket close; the close
-        // handler already delivered `connection_lost`.
-        if (closedRef.current) return;
-        const errorEvent: ScenarioRunBroadcast = {
-          type: "error",
-          seq: expectedSeqRef.current,
-          session_token: "",
-          source: "stream_out_of_order",
-          message: "stream_out_of_order",
-        };
-        try {
-          onBroadcastRef.current(errorEvent);
-        } catch (err) {
-          console.warn(
-            "useScenarioRunChannel: onBroadcast threw on gap-close error",
-            err,
-          );
-        }
-      }, GAP_CLOSE_TIMEOUT_MS);
-    } else if (bufferRef.current.size === 0 && gapTimerRef.current !== null) {
-      window.clearTimeout(gapTimerRef.current);
-      gapTimerRef.current = null;
-    }
-  }, []);
+  // Shared seq-ordered reorder buffer (D-12). resetMarker "run_started" resets
+  // the buffer between scenario runs. allowSeqlessError true — seqless `error`
+  // envelopes (single-in-flight run_in_progress rejection) forwarded directly.
+  // ScenarioRun gap-close / connection_lost errors include a `message` field
+  // (a twin difference from AssistantChannel which omits it).
+  const { bufferRef, expectedSeqRef, gapTimerRef, closedRef, flushInOrder, reset } =
+    useOrderedBroadcast<ScenarioRunBroadcast>({
+      onBroadcast,
+      resetMarker: "run_started",
+      allowSeqlessError: true,
+      makeGapCloseError: (seq) => ({
+        type: "error",
+        seq,
+        session_token: "",
+        source: "stream_out_of_order",
+        message: "stream_out_of_order",
+      }),
+      makeConnectionLostError: (seq) => ({
+        type: "error",
+        seq,
+        session_token: "",
+        source: "connection_lost",
+        message: "connection_lost",
+      }),
+    });
 
   // Channel lifecycle effect: subscribe on mount (or on socket open if the
   // socket is still CONNECTING at mount), unsubscribe on unmount. Mirrors the
   // CONNECTING→OPEN wake-up dance from useAssistantChannel — the socket
-  // reference is stable across that transition so a `ws`-only dep would miss
-  // it.
+  // reference is stable across that transition so a `socket`-only dep would
+  // miss it.
   useEffect(() => {
-    if (!ws) return;
+    if (!socket) return;
     if (
-      ws.readyState === WebSocket.CLOSING ||
-      ws.readyState === WebSocket.CLOSED
+      socket.readyState === WebSocket.CLOSING ||
+      socket.readyState === WebSocket.CLOSED
     )
       return;
 
@@ -200,8 +179,8 @@ export function useScenarioRunChannel(
 
     const sendSubscribe = (): void => {
       if (subscribed) return;
-      if (ws.readyState !== WebSocket.OPEN) return;
-      ws.send(
+      if (socket.readyState !== WebSocket.OPEN) return;
+      socket.send(
         JSON.stringify({
           command: "subscribe",
           identifier: SCENARIO_RUN_IDENTIFIER,
@@ -238,12 +217,7 @@ export function useScenarioRunChannel(
       // subscription starts fresh. (Mirror of the `accepted` reset in
       // useAssistantChannel.)
       if ((broadcast as { type?: string }).type === "run_started") {
-        bufferRef.current = new Map();
-        expectedSeqRef.current = 1;
-        if (gapTimerRef.current !== null) {
-          window.clearTimeout(gapTimerRef.current);
-          gapTimerRef.current = null;
-        }
+        reset();
       }
 
       // Tolerate seqless `error` envelopes — single-in-flight rejection
@@ -254,7 +228,7 @@ export function useScenarioRunChannel(
         typeof (broadcast as { seq?: unknown }).seq !== "number"
       ) {
         try {
-          onBroadcastRef.current(broadcast);
+          onBroadcast(broadcast);
         } catch (err) {
           console.warn(
             "useScenarioRunChannel: onBroadcast threw on seqless error",
@@ -271,7 +245,7 @@ export function useScenarioRunChannel(
         // No seq → bypass reorder buffer. Production broadcast envelopes
         // always carry seq; this branch is forward-compat insurance.
         try {
-          onBroadcastRef.current(broadcast);
+          onBroadcast(broadcast);
         } catch (err) {
           console.warn(
             "useScenarioRunChannel: onBroadcast threw on seqless event",
@@ -298,15 +272,15 @@ export function useScenarioRunChannel(
         message: "connection_lost",
       };
       try {
-        onBroadcastRef.current(errorEvent);
+        onBroadcast(errorEvent);
       } catch (err) {
         console.warn("useScenarioRunChannel: onBroadcast threw on close", err);
       }
     };
 
-    ws.addEventListener("open", onOpen);
-    ws.addEventListener("message", onMessage);
-    ws.addEventListener("close", onClose);
+    socket.addEventListener("open", onOpen);
+    socket.addEventListener("message", onMessage);
+    socket.addEventListener("close", onClose);
 
     // Already open at mount → subscribe immediately. Otherwise the `open`
     // listener handles it when the CONNECTING socket transitions.
@@ -314,8 +288,8 @@ export function useScenarioRunChannel(
 
     return () => {
       try {
-        if (subscribed && ws.readyState === WebSocket.OPEN) {
-          ws.send(
+        if (subscribed && socket.readyState === WebSocket.OPEN) {
+          socket.send(
             JSON.stringify({
               command: "unsubscribe",
               identifier: SCENARIO_RUN_IDENTIFIER,
@@ -325,20 +299,20 @@ export function useScenarioRunChannel(
       } catch {
         // swallow — socket may already be closing
       }
-      ws.removeEventListener("open", onOpen);
-      ws.removeEventListener("message", onMessage);
-      ws.removeEventListener("close", onClose);
+      socket.removeEventListener("open", onOpen);
+      socket.removeEventListener("message", onMessage);
+      socket.removeEventListener("close", onClose);
       if (gapTimerRef.current !== null) {
         window.clearTimeout(gapTimerRef.current);
         gapTimerRef.current = null;
       }
     };
-  }, [ws, flushInOrder]);
+  }, [socket, flushInOrder, reset, onBroadcast, bufferRef, closedRef, expectedSeqRef, gapTimerRef]);
 
   const dispatch = useCallback(
     (action: ScenarioRunDispatchAction, data: object = {}) => {
-      if (!ws || ws.readyState !== WebSocket.OPEN) return;
-      ws.send(
+      if (!socket || socket.readyState !== WebSocket.OPEN) return;
+      socket.send(
         JSON.stringify({
           command: "message",
           identifier: SCENARIO_RUN_IDENTIFIER,
@@ -346,7 +320,7 @@ export function useScenarioRunChannel(
         }),
       );
     },
-    [ws],
+    [socket],
   );
 
   return { dispatch };

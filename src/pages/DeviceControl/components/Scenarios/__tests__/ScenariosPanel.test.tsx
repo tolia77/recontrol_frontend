@@ -68,10 +68,12 @@ let capturedOnBroadcast: ((msg: ScenarioRunBroadcast) => void) | null = null;
 const mockDispatch = vi.fn();
 
 vi.mock("../../../hooks/useScenarioRunChannel", () => ({
-  useScenarioRunChannel: (
-    _ws: WebSocket | null,
-    onBroadcast: (msg: ScenarioRunBroadcast) => void,
-  ) => {
+  useScenarioRunChannel: ({
+    onBroadcast,
+  }: {
+    socket: WebSocket | null;
+    onBroadcast: (msg: ScenarioRunBroadcast) => void;
+  }) => {
     capturedOnBroadcast = onBroadcast;
     return { dispatch: mockDispatch };
   },

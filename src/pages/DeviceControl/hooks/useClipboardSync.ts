@@ -62,6 +62,16 @@ const DEFAULT_CAPS: ClipboardCapability = {
   isSecureContext: false,
 };
 
+/**
+ * Clipboard sync over the WebRTC data channel.
+ *
+ * Channel pattern: options-object shape (UseClipboardSyncArgs).
+ * Exception per D-13: does NOT subscribe to a raw WebSocket — it uses the
+ * clipboard RTCDataChannel via ClipboardChannelClient. The options-object
+ * shape satisfies D-11 structurally without adding a `socket` arg that would
+ * go unused. pcRef and clipboardCtlRef are the integration surface from
+ * useWebRtc (D-08 contract).
+ */
 export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
   const {
     connectionState,
