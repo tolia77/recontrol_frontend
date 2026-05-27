@@ -1,5 +1,5 @@
-import { FilesChannelClient, FilesDataChannel } from "../services/files";
-import { ClipboardLoopGate } from "../services/clipboard";
+import { FilesChannelClient, FilesDataChannel } from "../../services/files";
+import { ClipboardLoopGate } from "../../services/clipboard";
 import type React from "react";
 import { useDataChannels } from "./useDataChannels";
 import { usePeerConnection } from "./usePeerConnection";

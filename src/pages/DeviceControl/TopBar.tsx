@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import type { SidebarProps, CommandAction } from "./types";
-import type { WebRtcConnectionState } from "./hooks/useWebRtc";
+import type { WebRtcConnectionState } from "./hooks/realtime/useWebRtc";
 import { ChevronLeftIcon, ScenariosIcon, StopIcon } from "./icons";
 import { FilesToggleIcon } from "./components/FileManager/icons";
 import { AssistantToggleIcon } from "./components/Assistant/icons";

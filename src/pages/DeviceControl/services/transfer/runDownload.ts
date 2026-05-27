@@ -2,7 +2,7 @@ import { DownloadTransfer } from "./DownloadTransfer";
 import { FilesChannelError } from "../files";
 import type { FilesChannelClient } from "../files/FilesChannelClient";
 import type { FilesDataChannel } from "../files/FilesDataChannel";
-import type { FilesChannelRequest } from "../../hooks/useFilesChannel";
+import type { FilesChannelRequest } from "../../hooks/realtime/useFilesChannel";
 import type { FilesErrorCode } from "../files/filesProtocol.generated";
 import type { RunDownloadFn } from "./types";
 import {

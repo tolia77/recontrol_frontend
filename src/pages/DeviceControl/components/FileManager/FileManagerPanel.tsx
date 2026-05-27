@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MouseEvent, RefObject } from "react";
 import { useTranslation } from "react-i18next";
 import { useToast, ConfirmModal } from "src/components/ui";
-import type { UseFilesChannel } from "../../hooks/useFilesChannel";
+import type { UseFilesChannel } from "../../hooks/realtime/useFilesChannel";
 import { useFilesRoots } from "../../hooks/useFilesRoots";
 import { useFileManagerSelection } from "../../hooks/useFileManagerSelection";
 import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";

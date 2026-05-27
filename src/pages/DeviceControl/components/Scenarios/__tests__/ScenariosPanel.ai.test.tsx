@@ -43,7 +43,7 @@ import { initReactI18next } from "react-i18next";
 
 import scenariosEn from "src/locales/en/scenarios.ts";
 import { ToastProvider } from "src/components/ui";
-import type { ScenarioRunBroadcast } from "../../../hooks/useScenarioRunChannel";
+import type { ScenarioRunBroadcast } from "../../../hooks/realtime/useScenarioRunChannel";
 import type {
   DraftResponse,
   Scenario,
@@ -88,7 +88,7 @@ vi.mock("src/services/backend/scenarioRunsService.ts", async () => {
   };
 });
 
-vi.mock("../../../hooks/useScenarioRunChannel", () => ({
+vi.mock("../../../hooks/realtime/useScenarioRunChannel", () => ({
   useScenarioRunChannel: (
     ws: WebSocket | null,
     onBroadcast: (msg: ScenarioRunBroadcast) => void,

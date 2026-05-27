@@ -1,6 +1,6 @@
 import { useCallback } from "react";
-import type { FilesChannelClient, FilesDataChannel } from "../services/files";
-import { FilesChannelError } from "../services/files";
+import type { FilesChannelClient, FilesDataChannel } from "../../services/files";
+import { FilesChannelError } from "../../services/files";
 import type { UseWebRtcReturn } from "./useWebRtc";
 
 export type FilesChannelStatus = "closed" | "opening" | "open" | "failed";

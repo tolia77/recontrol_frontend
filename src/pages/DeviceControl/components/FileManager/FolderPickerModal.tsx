@@ -6,7 +6,7 @@ import type {
   FilesListResponse,
   FilesListRootsResponse,
 } from "../../services/files";
-import type { UseFilesChannel } from "../../hooks/useFilesChannel";
+import type { UseFilesChannel } from "../../hooks/realtime/useFilesChannel";
 import { ChevronRightIcon, ChevronDownIcon, FolderIcon } from "./icons";
 import { mapFilesErrorToMessage } from "./utils/errors";
 

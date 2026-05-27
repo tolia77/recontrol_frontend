@@ -29,8 +29,8 @@ import {
   initialTranscriptState,
   type TranscriptState,
 } from "../Assistant/transcriptReducer";
-import type { AssistantBroadcast } from "../../hooks/useAssistantChannel";
-import type { ScenarioRunBroadcast } from "../../hooks/useScenarioRunChannel";
+import type { AssistantBroadcast } from "../../hooks/realtime/useAssistantChannel";
+import type { ScenarioRunBroadcast } from "../../hooks/realtime/useScenarioRunChannel";
 
 // ----------------------------------------------------------------------------
 // Types

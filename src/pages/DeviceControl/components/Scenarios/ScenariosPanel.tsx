@@ -16,8 +16,8 @@ import {
   type PolicyPreviewResponse,
   type Scenario,
 } from "../../../../services/backend/scenariosService";
-import { useScenarioRunChannel } from "../../hooks/useScenarioRunChannel";
-import type { ScenarioRunBroadcast } from "../../hooks/useScenarioRunChannel";
+import { useScenarioRunChannel } from "../../hooks/realtime/useScenarioRunChannel";
+import type { ScenarioRunBroadcast } from "../../hooks/realtime/useScenarioRunChannel";
 import {
   initialScenariosState,
   scenariosReducer,

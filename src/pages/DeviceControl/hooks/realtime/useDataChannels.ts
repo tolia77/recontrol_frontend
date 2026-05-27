@@ -1,10 +1,10 @@
 import { useCallback, useRef, useState } from "react";
-import { FilesChannelClient, FilesDataChannel } from "../services/files";
+import { FilesChannelClient, FilesDataChannel } from "../../services/files";
 import {
   ClipboardLoopGate,
   createClipboardChannelHandle,
   type ClipboardChannelHandle,
-} from "../services/clipboard";
+} from "../../services/clipboard";
 import type React from "react";
 
 /**

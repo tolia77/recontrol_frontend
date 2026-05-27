@@ -26,7 +26,7 @@ import {
   type ScenariosAction,
   type ActiveRun,
 } from "./scenariosReducer";
-import type { ScenarioRunBroadcast } from "../../hooks/useScenarioRunChannel";
+import type { ScenarioRunBroadcast } from "../../hooks/realtime/useScenarioRunChannel";
 
 // ----------------------------------------------------------------------------
 // Helpers

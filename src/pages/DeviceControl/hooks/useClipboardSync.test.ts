@@ -14,13 +14,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   useClipboardSync,
   type UseClipboardSyncArgs,
-} from "./useClipboardSync";
+} from "./realtime/useClipboardSync";
 import type { ClipboardCapability } from "./useClipboardCapability";
 import { ClipboardLoopGate } from "../services/clipboard";
 
 describe("useClipboardSync (module load)", () => {
   it("imports cleanly without side effects", async () => {
-    const mod = await import("./useClipboardSync");
+    const mod = await import("./realtime/useClipboardSync");
     expect(typeof mod.useClipboardSync).toBe("function");
   });
 });

@@ -1,5 +1,5 @@
-import type { WebRtcConnectionState } from "./hooks/useWebRtc";
-import type { StreamStats } from "./hooks/useStreamStats";
+import type { WebRtcConnectionState } from "./hooks/realtime/useWebRtc";
+import type { StreamStats } from "./hooks/realtime/useStreamStats";
 import type { PermissionsSubset } from "src/types";
 
 export type Mode = "interactive" | "manual";

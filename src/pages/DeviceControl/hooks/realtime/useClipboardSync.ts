@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ClipboardLoopGate } from "../services/clipboard";
+import type { ClipboardLoopGate } from "../../services/clipboard";
 import {
   bindFocusVisibilityListeners,
   decideInbound,
   prepareOutbound,
-} from "../services/clipboard";
-import { ClipboardChannelClient } from "../services/clipboard";
+} from "../../services/clipboard";
+import { ClipboardChannelClient } from "../../services/clipboard";
 import type {
   ClipboardCapabilitiesEnvelope,
   ClipboardRefusalReason,
-} from "../services/clipboard/clipboardProtocol.generated";
-import type { ClipboardCapability } from "./useClipboardCapability";
+} from "../../services/clipboard/clipboardProtocol.generated";
+import type { ClipboardCapability } from "../useClipboardCapability";
 import type { WebRtcConnectionState } from "./useWebRtc";
 
 export type ClipboardSyncStatus =

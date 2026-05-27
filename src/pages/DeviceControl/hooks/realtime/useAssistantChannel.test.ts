@@ -35,7 +35,7 @@ import {
   initialTranscriptState,
   transcriptReducer,
   type TranscriptState,
-} from "../components/Assistant/transcriptReducer";
+} from "../../components/Assistant/transcriptReducer";
 
 const ASSISTANT_IDENTIFIER = JSON.stringify({ channel: "AssistantChannel" });
 

@@ -1,4 +1,4 @@
-import type { AssistantBroadcast } from "../../hooks/useAssistantChannel";
+import type { AssistantBroadcast } from "../../hooks/realtime/useAssistantChannel";
 
 /**
  * Transcript reducer (Plan 20-07).

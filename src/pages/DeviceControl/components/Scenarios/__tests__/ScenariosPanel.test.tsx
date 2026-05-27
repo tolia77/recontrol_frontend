@@ -19,7 +19,7 @@ import { initReactI18next } from "react-i18next";
 
 import scenariosEn from "../../../../../locales/en/scenarios";
 import { ToastProvider } from "../../../../../components/ui";
-import type { ScenarioRunBroadcast } from "../../../hooks/useScenarioRunChannel";
+import type { ScenarioRunBroadcast } from "../../../hooks/realtime/useScenarioRunChannel";
 import type { Scenario } from "../../../../../services/backend/scenariosService";
 import type {
   ScenarioRun,
@@ -67,7 +67,7 @@ vi.mock("../../../../../services/backend/scenarioRunsService", async () => {
 let capturedOnBroadcast: ((msg: ScenarioRunBroadcast) => void) | null = null;
 const mockDispatch = vi.fn();
 
-vi.mock("../../../hooks/useScenarioRunChannel", () => ({
+vi.mock("../../../hooks/realtime/useScenarioRunChannel", () => ({
   useScenarioRunChannel: ({
     onBroadcast,
   }: {
