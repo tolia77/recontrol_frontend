@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import type { RefObject, KeyboardEvent } from "react";
 import type { FileEntry } from "../services/files";
-import type { useFileManagerSelection } from "./useFileManagerSelection";
+import type { useFileManagerSelection } from "./state/useFileManagerSelection";
 
 /**
  * Scoped keyboard handler for the file manager panel. Returns an `onKeyDown`

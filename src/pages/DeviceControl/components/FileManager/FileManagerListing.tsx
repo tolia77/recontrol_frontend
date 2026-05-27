@@ -7,7 +7,7 @@ import type { FileEntry, FilesListResponse } from "../../services/files";
 import { FilesChannelError } from "../../services/files";
 import { useToast } from "src/components/ui";
 import type { UseFilesChannel } from "../../hooks/realtime/useFilesChannel";
-import type { useFileManagerSelection } from "../../hooks/useFileManagerSelection";
+import type { useFileManagerSelection } from "../../hooks/state/useFileManagerSelection";
 import type { SortColumn, SortState } from "./types";
 import { ROW_HEIGHT_PX, FileManagerRow } from "./FileManagerRow";
 import { FolderIcon } from "./icons";

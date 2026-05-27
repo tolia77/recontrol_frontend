@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import type { FileEntry, FilesListRootsResponse } from "../services/files";
-import { FilesChannelError } from "../services/files";
-import type { UseFilesChannel } from "./realtime/useFilesChannel";
+import type { FileEntry, FilesListRootsResponse } from "../../services/files";
+import { FilesChannelError } from "../../services/files";
+import type { UseFilesChannel } from "../realtime/useFilesChannel";
 
 export interface UseFilesRootsReturn {
   roots: FileEntry[] | null;

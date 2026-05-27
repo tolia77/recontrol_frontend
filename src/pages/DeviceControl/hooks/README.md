@@ -8,39 +8,38 @@ top-level `src/hooks/` directory at that point.
 
 ## Folder Layout (D-14)
 
-This is the **target layout** for Phase 26. Files are relocated incrementally across
-Phase 26 plans; not all files have physically moved yet.
+Realized layout as of Phase 26 Plan 05.
 
 ```
 hooks/
 ├── README.md             ← this file
 │
 ├── realtime/             ← transport + channel + WebRTC hooks
-│   ├── useDeviceSocket.ts          (new — Plan 02) full WS lifecycle + onmessage dispatcher
-│   ├── useWebRtc.ts                (moved — Plan 03/04) peer connection + signaling + data channels
-│   ├── usePeerConnection.ts        (new internal — Plan 03/04) peer lifecycle sub-unit
-│   ├── useWebRtcSignaling.ts       (new internal — Plan 03/04) signaling sub-unit
-│   ├── useDataChannels.ts          (new internal — Plan 03/04) files + clipboard data-channel sub-unit
-│   ├── useClipboardSync.ts         (moved — Plan 05) clipboard RTCDataChannel sync
-│   ├── useFilesChannel.ts          (moved — Plan 05) derived files-channel status
-│   ├── useAssistantChannel.ts      (moved — Plan 02/05) raw-ws subscriber, options-object signature
-│   ├── useScenarioRunChannel.ts    (moved — Plan 02/05) raw-ws subscriber, options-object signature
-│   └── useOrderedBroadcast.ts      (new — Plan 02) shared seq-ordered reorder buffer base hook
+│   ├── useDeviceSocket.ts          full WS lifecycle + onmessage dispatcher (D-04/D-06/D-07)
+│   ├── useWebRtc.ts                peer connection composer — returns flat UseWebRtcReturn (D-08)
+│   ├── usePeerConnection.ts        peer lifecycle sub-unit (D-09)
+│   ├── useWebRtcSignaling.ts       signaling sub-unit (D-09)
+│   ├── useDataChannels.ts          files + clipboard data-channel sub-unit (D-09)
+│   ├── useClipboardSync.ts         clipboard RTCDataChannel sync; options-object signature
+│   ├── useFilesChannel.ts          derived files-channel status; documented exception (D-13)
+│   ├── useAssistantChannel.ts      raw-ws subscriber; options-object signature (D-11)
+│   ├── useScenarioRunChannel.ts    raw-ws subscriber; options-object signature (D-11)
+│   ├── useOrderedBroadcast.ts      shared seq-ordered reorder buffer base hook (D-12)
+│   └── useStreamStats.ts           RTCPeerConnection frame-rate / encoder stats
 │
 ├── state/                ← feature state sub-hooks (each owns a coherent state slice)
-│   ├── usePermissions.ts           (new — Plan 01) permissions + buildPermissions + canSend
-│   ├── useTerminalSession.ts       (new — Plan 01) terminalResults + processes + processesLoading
-│   ├── useStreamControls.ts        (new — Plan 01) showStats + currentFps + currentResolution
-│   ├── useFileManagerState.ts      (moved — Plan 05) file manager panel persistent state
-│   └── useTransferQueue.ts         (moved — Plan 05) transfer queue snapshot
+│   ├── usePermissions.ts           permissions + buildPermissions + canSend (D-01/D-03)
+│   ├── useTerminalSession.ts       terminalResults + processes + processesLoading (D-01)
+│   ├── useStreamControls.ts        showStats + currentFps + currentResolution (D-01)
+│   ├── useFileManagerState.ts      file manager panel persistent state (localStorage)
+│   ├── useTransferQueue.ts         transfer queue snapshot subscriber
+│   ├── useFileManagerSelection.ts  Windows-Explorer-style multi-selection state machine
+│   └── useFilesRoots.ts            file system roots listing (depends on realtime/useFilesChannel)
 │
 └── (top-level, cross-cutting)      ← hooks used by multiple DeviceControl concerns
-    ├── useStreamStats.ts           RTCPeerConnection frame-rate / encoder stats
     ├── useClipboardCapability.ts   one-shot browser Clipboard API capability detection
-    ├── useKeyboardShortcuts.ts     keyboard shortcut bindings for panel toggles
+    ├── useKeyboardShortcuts.ts     keyboard shortcut bindings for file manager panel
     ├── useRefusalToastThrottle.ts  throttled clipboard-refusal toast firing
-    ├── useFileManagerSelection.ts  file manager selection state
-    ├── useFilesRoots.ts            file system roots listing
     └── selectPillState.ts          pure selector (not a React hook) for clipboard pill state
 ```
 
