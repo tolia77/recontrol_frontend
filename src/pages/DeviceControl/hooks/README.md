@@ -36,6 +36,12 @@ hooks/
 │   ├── useFileManagerSelection.ts  Windows-Explorer-style multi-selection state machine
 │   └── useFilesRoots.ts            file system roots listing (depends on realtime/useFilesChannel)
 │
+├── files/                ← FileManager I/O operation hooks (upload, download, drag-drop, CRUD)
+│   ├── useFileUpload.ts            sequential batch upload loop + large-file/conflict gates
+│   ├── useFileDownload.ts          download capability gate + large-file routing
+│   ├── useFileDragDrop.ts          drag-depth counter + native addEventListener drag effect
+│   └── useFileOperations.ts        mkdir/rename/delete/move/copy over the files-ctl channel
+│
 └── (top-level, cross-cutting)      ← hooks used by multiple DeviceControl concerns
     ├── useClipboardCapability.ts   one-shot browser Clipboard API capability detection
     ├── useKeyboardShortcuts.ts     keyboard shortcut bindings for file manager panel
@@ -59,6 +65,14 @@ Hooks that own a coherent slice of DeviceControl feature state, expose typed set
 and have no direct dependency on a live transport. The dispatcher in `useDeviceSocket`
 writes into these via **injected callbacks** (D-06) — the state hooks themselves stay
 transport-agnostic.
+
+### `files/`
+Hooks that encapsulate FileManager I/O operations (upload, download, drag-drop, CRUD
+operations over the files-ctl channel). These hooks orchestrate protocol calls and
+transfer-queue interactions; they dispatch against the `fileManagerUiReducer` for
+dialog/flow state. The four existing `state/` FileManager hooks
+(`useFileManagerState`, `useFileManagerSelection`, `useFilesRoots`, `useTransferQueue`)
+stay in `state/` because they own coherent state slices, not I/O operations.
 
 ### Top-level `hooks/`
 Hooks that are genuinely cross-cutting within DeviceControl: either they straddle both
