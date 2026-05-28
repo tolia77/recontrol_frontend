@@ -56,7 +56,7 @@ interface FileManagerViewProps {
   channel: UseFilesChannel;
   roots: ReturnType<typeof useFilesRoots>;
   selection: ReturnType<typeof useFileManagerSelection>;
-  rightColumnRef: RefObject<HTMLDivElement>;
+  rightColumnRef: RefObject<HTMLDivElement | null>;
   dragActive: boolean;
   activeRootPath: string | null;
   visibleEntries: FileEntry[];

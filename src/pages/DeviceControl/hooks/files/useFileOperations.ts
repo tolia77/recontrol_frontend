@@ -36,7 +36,7 @@ export interface UseFileOperationsOptions {
     destinationPath: string,
   ) => Promise<{ mode: NameConflictMode; applyToAll: boolean }>;
   onRefresh: () => void;
-  rootRef: RefObject<HTMLDivElement>;
+  rootRef: RefObject<HTMLDivElement | null>;
   toast: {
     info: (message: string) => void;
     error: (message: string) => void;

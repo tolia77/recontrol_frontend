@@ -3,7 +3,7 @@ import type { RefObject } from "react";
 import type { TFunction } from "i18next";
 
 export interface UseFileDragDropOptions {
-  rightColumnRef: RefObject<HTMLDivElement>;
+  rightColumnRef: RefObject<HTMLDivElement | null>;
   currentPath: string | null;
   /** Called with the dropped File array; typically useFileUpload's handleUploadFiles. */
   onFiles: (files: File[]) => void;
