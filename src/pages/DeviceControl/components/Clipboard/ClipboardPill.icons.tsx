@@ -1,4 +1,4 @@
-import type { IconProps } from "../types";
+import type { IconProps } from "../../types";
 
 /**
  * Clipboard pill icon set. Hand-rolled to match the project convention

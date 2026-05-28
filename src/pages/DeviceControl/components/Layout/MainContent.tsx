@@ -10,7 +10,7 @@ import {
 } from "../../utils/mouse";
 import { mapToVirtualKey } from "../../utils/keyboard";
 import { ManualControls } from "../Manual/ManualControls";
-import { StreamStatsOverlay } from "../StreamStatsOverlay";
+import { StreamStatsOverlay } from "../Stream/StreamStatsOverlay";
 import { Splitter } from "../FileManager/Splitter";
 
 import { generateUUID } from "src/utils/uuid";

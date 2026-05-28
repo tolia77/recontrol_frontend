@@ -5,11 +5,11 @@ import type { WebRtcConnectionState } from "../../hooks/realtime/useWebRtc";
 import { ChevronLeftIcon, ScenariosIcon, StopIcon } from "../icons/icons";
 import { FilesToggleIcon } from "../FileManager/icons";
 import { AssistantToggleIcon } from "../Assistant/icons";
-import { QualityPopover } from "../QualityPopover";
-import { PowerPopover } from "../PowerPopover";
-import { HeaderTransferPill } from "../HeaderTransferPill";
-import { ClipboardPill } from "../ClipboardPill";
-import type { ClipboardPillProps } from "../ClipboardPill";
+import { QualityPopover } from "../Stream/QualityPopover";
+import { PowerPopover } from "../Power/PowerPopover";
+import { HeaderTransferPill } from "../Transfer/HeaderTransferPill";
+import { ClipboardPill } from "../Clipboard/ClipboardPill";
+import type { ClipboardPillProps } from "../Clipboard/ClipboardPill";
 import type { QueueState } from "../../services/transfer";
 
 /**

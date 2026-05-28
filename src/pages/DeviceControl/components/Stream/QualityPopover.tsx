@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronDownIcon } from "./icons/icons";
+import { ChevronDownIcon } from "../icons/icons";
 import { ResolutionControl } from "./ResolutionControl";
 import { FpsControls } from "./FpsControls";
 
