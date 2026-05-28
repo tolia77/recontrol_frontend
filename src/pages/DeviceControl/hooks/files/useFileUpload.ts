@@ -1,8 +1,9 @@
 import { useCallback, useRef } from "react";
 import type { RefObject } from "react";
 import type { TFunction } from "i18next";
-import type { NameConflictMode } from "src/pages/DeviceControl/services/files";
-import type { TransferItem, TransferQueue } from "src/pages/DeviceControl/services/transfer";
+import type { NameConflictMode } from "src/pages/DeviceControl/services/files/filesProtocol.generated";
+import type { TransferItem } from "src/pages/DeviceControl/services/transfer/types";
+import type { TransferQueue } from "src/pages/DeviceControl/services/transfer/TransferQueue";
 import { detectSeparator, joinPath } from "src/pages/DeviceControl/components/FileManager/utils/pathUtils";
 
 /**

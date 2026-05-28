@@ -1,4 +1,4 @@
-import type { FileEntry } from "src/pages/DeviceControl/services/files";
+import type { FileEntry } from "src/pages/DeviceControl/services/files/filesProtocol.generated";
 import type { ContextMenuState } from "./types";
 
 /**

@@ -1,4 +1,4 @@
-import type { FileEntry } from "src/pages/DeviceControl/services/files";
+import type { FileEntry } from "src/pages/DeviceControl/services/files/filesProtocol.generated";
 import { LockIcon, FolderIcon } from "./icons";
 import { isAncestor } from "./utils/pathUtils";
 import { useTranslation } from "react-i18next";

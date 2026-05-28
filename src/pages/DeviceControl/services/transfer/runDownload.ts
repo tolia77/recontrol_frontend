@@ -1,5 +1,5 @@
 import { DownloadTransfer } from "./DownloadTransfer";
-import { FilesChannelError } from "src/pages/DeviceControl/services/files";
+import { FilesChannelError } from "src/pages/DeviceControl/services/files/FilesChannelClient";
 import type { FilesChannelClient } from "src/pages/DeviceControl/services/files/FilesChannelClient";
 import type { FilesDataChannel } from "src/pages/DeviceControl/services/files/FilesDataChannel";
 import type { FilesChannelRequest } from "src/pages/DeviceControl/hooks/realtime/useFilesChannel";

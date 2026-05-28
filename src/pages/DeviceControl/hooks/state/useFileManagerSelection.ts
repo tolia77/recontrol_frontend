@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { FileEntry } from "src/pages/DeviceControl/services/files";
+import type { FileEntry } from "src/pages/DeviceControl/services/files/filesProtocol.generated";
 import type { SelectionState } from "src/pages/DeviceControl/components/FileManager/types";
 
 /**

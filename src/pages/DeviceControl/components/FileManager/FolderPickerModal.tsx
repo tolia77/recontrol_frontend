@@ -5,7 +5,7 @@ import type {
   FileEntry,
   FilesListResponse,
   FilesListRootsResponse,
-} from "src/pages/DeviceControl/services/files";
+} from "src/pages/DeviceControl/services/files/filesProtocol.generated";
 import type { UseFilesChannel } from "src/pages/DeviceControl/hooks/realtime/useFilesChannel";
 import { ChevronRightIcon, ChevronDownIcon, FolderIcon } from "./icons";
 import { mapFilesErrorToMessage } from "./utils/errors";

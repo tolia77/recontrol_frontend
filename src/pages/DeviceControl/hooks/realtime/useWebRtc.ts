@@ -1,5 +1,6 @@
-import { FilesChannelClient, FilesDataChannel } from "src/pages/DeviceControl/services/files";
-import { ClipboardLoopGate } from "src/pages/DeviceControl/services/clipboard";
+import { FilesChannelClient } from "src/pages/DeviceControl/services/files/FilesChannelClient";
+import { FilesDataChannel } from "src/pages/DeviceControl/services/files/FilesDataChannel";
+import { ClipboardLoopGate } from "src/pages/DeviceControl/services/clipboard/clipboardLoopGate";
 import type React from "react";
 import { useDataChannels } from "./useDataChannels";
 import { usePeerConnection } from "./usePeerConnection";

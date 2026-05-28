@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Modal } from "src/components/ui";
-import type { NameConflictMode } from "src/pages/DeviceControl/services/files";
+import type { NameConflictMode } from "src/pages/DeviceControl/services/files/filesProtocol.generated";
 
 interface NameConflictDialogProps {
   open: boolean;

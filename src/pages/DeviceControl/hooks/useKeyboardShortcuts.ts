@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import type { RefObject, KeyboardEvent } from "react";
-import type { FileEntry } from "src/pages/DeviceControl/services/files";
+import type { FileEntry } from "src/pages/DeviceControl/services/files/filesProtocol.generated";
 import type { useFileManagerSelection } from "./state/useFileManagerSelection";
 
 /**

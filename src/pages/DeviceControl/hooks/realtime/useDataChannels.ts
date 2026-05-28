@@ -1,10 +1,11 @@
 import { useCallback, useRef, useState } from "react";
-import { FilesChannelClient, FilesDataChannel } from "src/pages/DeviceControl/services/files";
+import { FilesChannelClient } from "src/pages/DeviceControl/services/files/FilesChannelClient";
+import { FilesDataChannel } from "src/pages/DeviceControl/services/files/FilesDataChannel";
+import { ClipboardLoopGate } from "src/pages/DeviceControl/services/clipboard/clipboardLoopGate";
 import {
-  ClipboardLoopGate,
   createClipboardChannelHandle,
   type ClipboardChannelHandle,
-} from "src/pages/DeviceControl/services/clipboard";
+} from "src/pages/DeviceControl/services/clipboard/clipboardChannelHandle";
 import type React from "react";
 
 /**

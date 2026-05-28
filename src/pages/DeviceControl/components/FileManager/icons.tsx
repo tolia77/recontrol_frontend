@@ -1,5 +1,5 @@
 import type { IconProps } from "src/pages/DeviceControl/types";
-import type { FileEntry } from "src/pages/DeviceControl/services/files";
+import type { FileEntry } from "src/pages/DeviceControl/services/files/filesProtocol.generated";
 import { classify } from "./utils/fileTypes";
 
 /**

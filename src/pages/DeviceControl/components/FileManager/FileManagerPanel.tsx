@@ -17,7 +17,7 @@ import { useFileUpload } from "src/pages/DeviceControl/hooks/files/useFileUpload
 import { useFileDownload } from "src/pages/DeviceControl/hooks/files/useFileDownload";
 import { useFileDragDrop } from "src/pages/DeviceControl/hooks/files/useFileDragDrop";
 import { useFileOperations } from "src/pages/DeviceControl/hooks/files/useFileOperations";
-import type { FileEntry, NameConflictMode } from "src/pages/DeviceControl/services/files";
+import type { FileEntry, NameConflictMode } from "src/pages/DeviceControl/services/files/filesProtocol.generated";
 import type {
   ContextMenuItem,
   FileManagerState,
@@ -33,10 +33,8 @@ import FolderPickerModal from "./FolderPickerModal";
 import LargeFileWarningDialog from "./LargeFileWarningDialog";
 import DownloadBlockedDialog from "./DownloadBlockedDialog";
 import NameConflictDialog from "./NameConflictDialog";
-import type {
-  DownloadTransfer,
-  TransferQueue,
-} from "src/pages/DeviceControl/services/transfer";
+import type { DownloadTransfer } from "src/pages/DeviceControl/services/transfer/DownloadTransfer";
+import type { TransferQueue } from "src/pages/DeviceControl/services/transfer/TransferQueue";
 import { detectSeparator, isAncestor, parentPath } from "./utils/pathUtils";
 import FileManagerView from "./FileManagerView";
 

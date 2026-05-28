@@ -1,7 +1,9 @@
 import { useCallback } from "react";
 import type { RefObject } from "react";
-import type { FileEntry } from "src/pages/DeviceControl/services/files";
-import type { DownloadTransfer, TransferItem, TransferQueue } from "src/pages/DeviceControl/services/transfer";
+import type { FileEntry } from "src/pages/DeviceControl/services/files/filesProtocol.generated";
+import type { DownloadTransfer } from "src/pages/DeviceControl/services/transfer/DownloadTransfer";
+import type { TransferItem } from "src/pages/DeviceControl/services/transfer/types";
+import type { TransferQueue } from "src/pages/DeviceControl/services/transfer/TransferQueue";
 
 /**
  * 100 MiB download-warning threshold (mirrors the upload threshold in

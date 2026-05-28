@@ -6,7 +6,7 @@
 //   - Per PATTERNS.md "No Analog Found": pure-helper coverage is preferred over
 //     installing a render harness for a one-shot capability check.
 import { describe, expect, it } from "vitest";
-import { detectCapability } from "src/pages/DeviceControl/services/clipboard";
+import { detectCapability } from "src/pages/DeviceControl/services/clipboard/clipboardCore";
 
 describe("useClipboardCapability (underlying detectCapability)", () => {
   it("returns canRead=true when navigator.clipboard.readText is a function", () => {

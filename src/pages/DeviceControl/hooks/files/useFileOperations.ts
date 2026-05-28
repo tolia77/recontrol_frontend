@@ -1,8 +1,8 @@
 import React, { useCallback } from "react";
 import type { RefObject } from "react";
 import type { TFunction } from "i18next";
-import { FilesChannelError } from "src/pages/DeviceControl/services/files";
-import type { FileEntry, NameConflictMode } from "src/pages/DeviceControl/services/files";
+import { FilesChannelError } from "src/pages/DeviceControl/services/files/FilesChannelClient";
+import type { FileEntry, NameConflictMode } from "src/pages/DeviceControl/services/files/filesProtocol.generated";
 import type { UseFilesChannel } from "src/pages/DeviceControl/hooks/realtime/useFilesChannel";
 import type { FileManagerUiAction } from "src/pages/DeviceControl/components/FileManager/fileManagerUiReducer";
 import { mapFilesErrorToMessage } from "src/pages/DeviceControl/components/FileManager/utils/errors";

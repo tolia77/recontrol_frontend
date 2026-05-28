@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import type { FileEntry, FilesListRootsResponse } from "src/pages/DeviceControl/services/files";
-import { FilesChannelError } from "src/pages/DeviceControl/services/files";
+import type { FileEntry, FilesListRootsResponse } from "src/pages/DeviceControl/services/files/filesProtocol.generated";
+import { FilesChannelError } from "src/pages/DeviceControl/services/files/FilesChannelClient";
 import type { UseFilesChannel } from "src/pages/DeviceControl/hooks/realtime/useFilesChannel";
 
 export interface UseFilesRootsReturn {

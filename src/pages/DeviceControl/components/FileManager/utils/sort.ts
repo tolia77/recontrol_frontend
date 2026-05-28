@@ -1,4 +1,4 @@
-import type { FileEntry } from "src/pages/DeviceControl/services/files";
+import type { FileEntry } from "src/pages/DeviceControl/services/files/filesProtocol.generated";
 import type { SortState } from "src/pages/DeviceControl/components/FileManager/types";
 import { classify } from "./fileTypes";
 

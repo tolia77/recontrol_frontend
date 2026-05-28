@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import type { QueueState, TransferQueue } from "src/pages/DeviceControl/services/transfer";
+import type { QueueState } from "src/pages/DeviceControl/services/transfer/types";
+import type { TransferQueue } from "src/pages/DeviceControl/services/transfer/TransferQueue";
 
 /**
  * Subscribe a React component to a {@link TransferQueue} instance.

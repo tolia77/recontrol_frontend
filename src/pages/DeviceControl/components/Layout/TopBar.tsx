@@ -10,7 +10,7 @@ import PowerPopover from "src/pages/DeviceControl/components/Power/PowerPopover"
 import HeaderTransferPill from "src/pages/DeviceControl/components/Transfer/HeaderTransferPill";
 import ClipboardPill from "src/pages/DeviceControl/components/Clipboard/ClipboardPill";
 import type { ClipboardPillProps } from "src/pages/DeviceControl/components/Clipboard/ClipboardPill";
-import type { QueueState } from "src/pages/DeviceControl/services/transfer";
+import type { QueueState } from "src/pages/DeviceControl/services/transfer/types";
 
 /**
  * TopBarProps mirrors the old `ExtendedSidebarProps` 1:1 (renamed) — no new

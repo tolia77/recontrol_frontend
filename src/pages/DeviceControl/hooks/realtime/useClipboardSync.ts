@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ClipboardLoopGate } from "src/pages/DeviceControl/services/clipboard";
+import type { ClipboardLoopGate } from "src/pages/DeviceControl/services/clipboard/clipboardLoopGate";
 import {
   bindFocusVisibilityListeners,
   decideInbound,
   prepareOutbound,
-} from "src/pages/DeviceControl/services/clipboard";
-import { ClipboardChannelClient } from "src/pages/DeviceControl/services/clipboard";
+} from "src/pages/DeviceControl/services/clipboard/clipboardCore";
+import { ClipboardChannelClient } from "src/pages/DeviceControl/services/clipboard/ClipboardChannelClient";
 import type {
   ClipboardCapabilitiesEnvelope,
   ClipboardRefusalReason,

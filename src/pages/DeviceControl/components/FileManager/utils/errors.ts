@@ -1,4 +1,4 @@
-import { FilesChannelError } from "src/pages/DeviceControl/services/files";
+import { FilesChannelError } from "src/pages/DeviceControl/services/files/FilesChannelClient";
 import type { TFunction } from "i18next";
 
 /**

@@ -22,12 +22,10 @@ import { useTransferQueue } from "./hooks/state/useTransferQueue";
 import FileManagerPanel from "./components/FileManager/FileManagerPanel";
 import AssistantPanel from "./components/Assistant/AssistantPanel";
 import ScenariosPanel from "./components/Scenarios/ScenariosPanel";
-import {
-  TransferQueue,
-  createRunUpload,
-  createRunDownload,
-} from "./services/transfer";
-import type { DownloadTransfer } from "./services/transfer";
+import { TransferQueue } from "./services/transfer/TransferQueue";
+import { createRunUpload } from "./services/transfer/runUpload";
+import { createRunDownload } from "./services/transfer/runDownload";
+import type { DownloadTransfer } from "./services/transfer/DownloadTransfer";
 
 interface CommandWebSocketProps {
   wsUrl: string;

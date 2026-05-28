@@ -16,7 +16,7 @@ import {
   type UseClipboardSyncArgs,
 } from "./realtime/useClipboardSync";
 import type { ClipboardCapability } from "./useClipboardCapability";
-import { ClipboardLoopGate } from "src/pages/DeviceControl/services/clipboard";
+import { ClipboardLoopGate } from "src/pages/DeviceControl/services/clipboard/clipboardLoopGate";
 
 describe("useClipboardSync (module load)", () => {
   it("imports cleanly without side effects", async () => {

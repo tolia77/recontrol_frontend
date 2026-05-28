@@ -1,6 +1,7 @@
 import { useCallback } from "react";
-import type { FilesChannelClient, FilesDataChannel } from "src/pages/DeviceControl/services/files";
-import { FilesChannelError } from "src/pages/DeviceControl/services/files";
+import type { FilesChannelClient } from "src/pages/DeviceControl/services/files/FilesChannelClient";
+import type { FilesDataChannel } from "src/pages/DeviceControl/services/files/FilesDataChannel";
+import { FilesChannelError } from "src/pages/DeviceControl/services/files/FilesChannelClient";
 import type { UseWebRtcReturn } from "./useWebRtc";
 
 export type FilesChannelStatus = "closed" | "opening" | "open" | "failed";
