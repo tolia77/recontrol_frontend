@@ -110,3 +110,7 @@ export function useAssistantChannel({ socket, onBroadcast }: UseAssistantChannel
 Documented exceptions (D-13):
 - `useWebRtc` — peer-connection driven, takes `{ sendMessage }` (not a raw subscriber)
 - `useFilesChannel` — derived-status hook, takes positional args from `UseWebRtcReturn`
+
+---
+
+See the consolidated frontend conventions reference: [`CONVENTIONS.md`](../../../CONVENTIONS.md) (naming, component placement, export style, state-management rule).

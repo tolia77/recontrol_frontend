@@ -27,3 +27,7 @@ Apply the rules in order:
 - Calls the Rails REST API → `src/services/backend/*Service.ts`
 - DeviceControl real-time protocol or feature → `src/pages/DeviceControl/services/<feature>/`
 - Other frontend feature service → `src/services/<feature>/`
+
+---
+
+See the consolidated frontend conventions reference: [`CONVENTIONS.md`](../../CONVENTIONS.md) (naming, component placement, export style, state-management rule).
