@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { type UserResponse } from "src/services/backend/usersService";
 import { Button, Input, Card, LoadingState, EmptyState } from "src/components/ui";
-import { type EditableRowState } from "src/pages/AdminUsers.hook";
+import { type EditableRowState } from "src/pages/AdminUsers/useAdminUsers";
 
 export interface AdminUsersTableProps {
   users: UserResponse[];

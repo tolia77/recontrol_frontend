@@ -6,7 +6,7 @@ import {
   Card,
   ConfirmModal,
 } from "src/components/ui";
-import { useAdminUsers } from "./AdminUsers.hook";
+import { useAdminUsers } from "./AdminUsers/useAdminUsers";
 import AdminUsersTable from "./AdminUsers/AdminUsersTable";
 
 const AdminUsers = () => {
