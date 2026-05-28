@@ -34,7 +34,8 @@ hooks/
 │   ├── useFileManagerState.ts      file manager panel persistent state (localStorage)
 │   ├── useTransferQueue.ts         transfer queue snapshot subscriber
 │   ├── useFileManagerSelection.ts  Windows-Explorer-style multi-selection state machine
-│   └── useFilesRoots.ts            file system roots listing (depends on realtime/useFilesChannel)
+│   ├── useFilesRoots.ts            file system roots listing (depends on realtime/useFilesChannel)
+│   └── useScenarioEditor.ts        ScenarioEditor form state + load/save/dirty (P28.1)
 │
 ├── files/                ← FileManager I/O operation hooks (upload, download, drag-drop, CRUD)
 │   ├── useFileUpload.ts            sequential batch upload loop + large-file/conflict gates
