@@ -1,4 +1,3 @@
-// filepath: src/pages/DeviceSettings/components/SaveGroupPanel.tsx
 import React from "react";
 import { Input, Button } from "src/components/ui";
 

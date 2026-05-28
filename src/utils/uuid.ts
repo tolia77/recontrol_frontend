@@ -36,5 +36,3 @@ export function generateUUID(): string {
   });
 }
 
-// Legacy export for backward compatibility
-export const uuidv4 = generateUUID;

@@ -1,4 +1,3 @@
-// filepath: src/pages/DeviceSettings/components/PermissionsEditor.tsx
 import React from "react";
 
 export interface PermissionsEditorProps {

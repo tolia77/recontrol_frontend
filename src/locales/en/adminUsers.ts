@@ -1,4 +1,3 @@
-// filepath: d:\PROGRAMMING\COURSEWORK\REACT\recontrol_frontend\src\locales\en\adminUsers.ts
 export const adminUsers = {
   title: "User Management",
   subtitle: "Create, update and delete users",

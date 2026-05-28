@@ -1,4 +1,3 @@
-// filepath: src/pages/DeviceSettings/components/LoadGroupPanel.tsx
 import React from "react";
 import type { PermissionsGroup } from "src/types";
 import { Button } from "src/components/ui";

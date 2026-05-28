@@ -1,4 +1,3 @@
-// filepath: src/pages/DeviceSettings/EditShareForm.tsx
 import React, { useState } from "react";
 import type { EditShareFormProps } from "./types";
 import PermissionsEditor from "./components/PermissionsEditor";
