@@ -13,8 +13,6 @@ import ManualControls from "../Manual/ManualControls";
 import StreamStatsOverlay from "../Stream/StreamStatsOverlay";
 import Splitter from "../FileManager/Splitter";
 
-import { generateUUID } from "src/utils/uuid";
-
 /**
  * Main Content Area with WebRTC video stream
  */
@@ -52,8 +50,8 @@ const MainContent: React.FC<
   const lastCoordsRef = useRef<{ x: number; y: number } | null>(null);
   const lastMoveSentAtRef = useRef<number>(0);
 
-  // Scaling mode state
-  const [scalingMode, setScalingMode] = useState<ScalingMode>("fit");
+  // Scaling mode state (setter reserved for future UI toggle)
+  const [scalingMode, _setScalingMode] = useState<ScalingMode>("fit");
 
   const getRealCoordsFromClient = useCallback(
     (clientX: number, clientY: number) => {
