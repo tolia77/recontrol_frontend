@@ -1,5 +1,5 @@
 // filepath: d:\PROGRAMMING\COURSEWORK\REACT\recontrol_frontend\src\locales\en\adminUsers.ts
-const adminUsers = {
+export const adminUsers = {
   title: "User Management",
   subtitle: "Create, update and delete users",
   table: {
@@ -51,4 +51,3 @@ const adminUsers = {
   },
   refreshLabel: "Refresh user list",
 };
-export default adminUsers;

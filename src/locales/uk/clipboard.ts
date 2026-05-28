@@ -1,4 +1,4 @@
-const clipboard = {
+export const clipboard = {
   pill: {
     state: {
       idle: "Буфер обміну готовий",
@@ -49,4 +49,3 @@ const clipboard = {
   sizeCap_many: "Буфер перевищує ліміт у {{count}} байтів",
   sizeCap_other: "Буфер перевищує ліміт у {{count}} байтів",
 };
-export default clipboard;

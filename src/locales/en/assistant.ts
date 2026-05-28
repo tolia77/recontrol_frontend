@@ -1,4 +1,4 @@
-const assistant = {
+export const assistant = {
   sidebar: {
     toggle: "Assistant",
   },
@@ -99,4 +99,3 @@ const assistant = {
   },
 };
 
-export default assistant;

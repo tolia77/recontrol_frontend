@@ -1,4 +1,4 @@
-const deviceSettings = {
+export const deviceSettings = {
   title: "Device Settings",
   subtitle: "Manage device details and sharing",
   info: {
@@ -64,4 +64,3 @@ const deviceSettings = {
   loading: "Loading...",
   notFound: "Device not found",
 };
-export default deviceSettings;

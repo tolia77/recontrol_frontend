@@ -3,8 +3,8 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 
-import scenariosEn from "../../../../../locales/en/scenarios";
-import scenariosUk from "../../../../../locales/uk/scenarios";
+import { scenarios as scenariosEn } from "../../../../../locales/en/scenarios";
+import { scenarios as scenariosUk } from "../../../../../locales/uk/scenarios";
 import MassDeleteConfirmModal from "../MassDeleteConfirmModal";
 
 afterEach(() => cleanup());

@@ -134,5 +134,3 @@ export function useDraftGeneration(): UseDraftGenerationResult {
 
   return { state, generate, cancel, reset };
 }
-
-export default useDraftGeneration;

@@ -1,4 +1,4 @@
-const indexPage = {
+export const indexPage = {
   hero: {
     headline: "Віддалене керування пристроями — просто",
     sub: "Керуйте пристроями з будь‑якого місця. Транслюйте екран, надсилайте введення та виконуйте команди впевнено.",
@@ -38,4 +38,3 @@ const indexPage = {
     help: "Потрібна допомога? <helpLink>Перейдіть до сторінки Допомоги та FAQ</helpLink>",
   },
 };
-export default indexPage;

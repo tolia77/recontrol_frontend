@@ -1,4 +1,4 @@
-const userSettings = {
+export const userSettings = {
   title: "User settings",
   loading: "Loading user…",
   fields: {
@@ -23,4 +23,3 @@ const userSettings = {
     notLoggedIn: "You must be logged in to view settings.",
   },
 };
-export default userSettings;

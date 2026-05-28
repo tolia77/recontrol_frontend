@@ -1,4 +1,4 @@
-const auth = {
+export const auth = {
   login: {
     title: "Увійдіть до свого акаунта",
     email: "Ел. пошта",
@@ -23,4 +23,3 @@ const auth = {
     },
   },
 };
-export default auth;

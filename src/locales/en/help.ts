@@ -1,5 +1,5 @@
 // English translations for Help page
-const help = {
+export const help = {
   header: {
     title: "Help & FAQ",
     subtitle:
@@ -80,4 +80,3 @@ const help = {
   },
 };
 
-export default help;

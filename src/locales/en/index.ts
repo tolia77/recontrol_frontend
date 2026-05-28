@@ -1,4 +1,4 @@
-const indexPage = {
+export const indexPage = {
   hero: {
     headline: "Remote device control, simplified",
     sub: "Securely manage and control your devices from anywhere. Stream screens, send inputs, and run commands with confidence.",
@@ -38,4 +38,3 @@ const indexPage = {
     help: "Need help? <helpLink>Visit the Help & FAQ page</helpLink>",
   },
 };
-export default indexPage;

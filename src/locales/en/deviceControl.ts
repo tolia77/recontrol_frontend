@@ -1,4 +1,4 @@
-const deviceControl = {
+export const deviceControl = {
   sidebar: {
     control: "Control",
     mode: "Mode",
@@ -129,4 +129,3 @@ const deviceControl = {
     retryConnection: "Retry Connection",
   },
 };
-export default deviceControl;

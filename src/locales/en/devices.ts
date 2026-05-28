@@ -1,4 +1,4 @@
-const devices = {
+export const devices = {
   title: "Devices",
   table: {
     name: "Name",
@@ -32,4 +32,3 @@ const devices = {
     loading: "Loading devices...",
   },
 };
-export default devices;

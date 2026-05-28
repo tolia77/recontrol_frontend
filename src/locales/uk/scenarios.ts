@@ -1,4 +1,4 @@
-const scenarios = {
+export const scenarios = {
   sidebar: {
     toggle: "Сценарії",
     tooltip: "Збережені сценарії (Ctrl+Shift+S)",
@@ -254,4 +254,3 @@ const scenarios = {
   },
 };
 
-export default scenarios;

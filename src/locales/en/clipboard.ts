@@ -1,4 +1,4 @@
-const clipboard = {
+export const clipboard = {
   pill: {
     state: {
       idle: "Clipboard ready",
@@ -43,4 +43,3 @@ const clipboard = {
   sizeCap_one: "Clipboard exceeds {{count}} byte limit",
   sizeCap_other: "Clipboard exceeds {{count}} bytes limit",
 };
-export default clipboard;

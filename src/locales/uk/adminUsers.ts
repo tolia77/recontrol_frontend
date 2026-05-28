@@ -1,4 +1,4 @@
-const adminUsers = {
+export const adminUsers = {
   title: "Керування користувачами",
   subtitle: "Створення, оновлення та видалення користувачів",
   table: {
@@ -50,4 +50,3 @@ const adminUsers = {
   },
   refreshLabel: "Оновити список користувачів",
 };
-export default adminUsers;

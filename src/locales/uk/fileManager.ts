@@ -1,4 +1,4 @@
-const fileManager = {
+export const fileManager = {
   sidebar: {
     sharedFolders: "Спільні папки",
     sharedByDesktopUser: "Надано спільний доступ користувачем десктопу",
@@ -195,4 +195,3 @@ const fileManager = {
   },
 };
 
-export default fileManager;

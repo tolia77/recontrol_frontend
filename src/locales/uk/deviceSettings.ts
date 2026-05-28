@@ -1,4 +1,4 @@
-const deviceSettings = {
+export const deviceSettings = {
   title: "Налаштування пристрою",
   subtitle: "Керуйте деталями та доступом",
   info: {
@@ -64,4 +64,3 @@ const deviceSettings = {
   loading: "Завантаження...",
   notFound: "Пристрій не знайдено",
 };
-export default deviceSettings;

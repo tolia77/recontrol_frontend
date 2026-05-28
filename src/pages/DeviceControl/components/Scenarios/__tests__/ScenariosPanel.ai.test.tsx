@@ -41,7 +41,7 @@ import {
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 
-import scenariosEn from "src/locales/en/scenarios.ts";
+import { scenarios as scenariosEn } from "src/locales/en/scenarios.ts";
 import { ToastProvider } from "src/components/ui";
 import type { ScenarioRunBroadcast } from "../../../hooks/realtime/useScenarioRunChannel";
 import type {

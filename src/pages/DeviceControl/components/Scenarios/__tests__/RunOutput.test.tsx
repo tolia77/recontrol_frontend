@@ -3,7 +3,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 
-import scenariosEn from "../../../../../locales/en/scenarios";
+import { scenarios as scenariosEn } from "../../../../../locales/en/scenarios";
 import { RunOutput } from "../RunOutput";
 import type { ToolRow } from "../../Assistant/transcriptReducer";
 

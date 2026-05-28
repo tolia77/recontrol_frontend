@@ -1,4 +1,4 @@
-const common = {
+export const common = {
   lang: {
     switch_label: "Language",
     english: "English",
@@ -31,5 +31,3 @@ const common = {
   },
   retry: "Retry",
 };
-
-export default common;

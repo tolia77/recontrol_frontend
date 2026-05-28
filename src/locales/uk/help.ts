@@ -1,5 +1,5 @@
 // Ukrainian translations for Help page
-const help = {
+export const help = {
   header: {
     title: "Допомога та Питання",
     subtitle:
@@ -80,4 +80,3 @@ const help = {
   },
 };
 
-export default help;

@@ -1,4 +1,4 @@
-const fileManager = {
+export const fileManager = {
   sidebar: {
     sharedFolders: "Shared folders",
     sharedByDesktopUser: "Shared by the desktop user",
@@ -188,4 +188,3 @@ const fileManager = {
   },
 };
 
-export default fileManager;

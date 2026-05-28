@@ -27,7 +27,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 
-import scenariosEn from "src/locales/en/scenarios.ts";
+import { scenarios as scenariosEn } from "src/locales/en/scenarios.ts";
 import type {
   DraftQuota,
   DraftResponse,

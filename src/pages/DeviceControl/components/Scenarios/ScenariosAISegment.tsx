@@ -36,7 +36,7 @@ import type {
 } from "src/services/backend/scenariosService.ts";
 
 import { useDraftGeneration } from "./useDraftGeneration";
-import i18n from "src/i18n.ts";
+import { i18n } from "src/i18n.ts";
 
 export interface ScenariosAISegmentProps {
   /**
