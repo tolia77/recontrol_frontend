@@ -5,7 +5,7 @@ interface StreamStatsOverlayProps {
   visible: boolean;
 }
 
-export function StreamStatsOverlay({
+function StreamStatsOverlay({
   stats,
   visible,
 }: StreamStatsOverlayProps) {
@@ -23,3 +23,5 @@ export function StreamStatsOverlay({
     </div>
   );
 }
+
+export default StreamStatsOverlay;

@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { getMyDevicesRequest } from "src/services/backend/devicesService";
-import { Card, CardHeader } from "src/components/ui/Card";
-import { Button } from "src/components/ui/Button";
+import Card from "src/components/ui/Card";
+import CardHeader from "src/components/ui/CardHeader";
+import Button from "src/components/ui/Button";
 import { LoadingState, EmptyState } from "src/components/ui";
 import type { Device } from "src/types";
 

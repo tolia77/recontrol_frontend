@@ -39,7 +39,7 @@ interface ToastProviderProps {
   children: ReactNode;
 }
 
-export function ToastProvider({ children }: ToastProviderProps) {
+function ToastProvider({ children }: ToastProviderProps) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const removeToast = useCallback((id: string) => {

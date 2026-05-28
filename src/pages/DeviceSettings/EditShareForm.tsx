@@ -1,12 +1,12 @@
 // filepath: src/pages/DeviceSettings/EditShareForm.tsx
 import React, { useState } from "react";
 import type { EditShareFormProps } from "./types";
-import { PermissionsEditor } from "./components/PermissionsEditor";
-import { LoadGroupPanel } from "./components/LoadGroupPanel";
-import { SaveGroupPanel } from "./components/SaveGroupPanel";
+import PermissionsEditor from "./components/PermissionsEditor";
+import LoadGroupPanel from "./components/LoadGroupPanel";
+import SaveGroupPanel from "./components/SaveGroupPanel";
 import { Input, Button } from "src/components/ui";
 
-export const EditShareForm: React.FC<EditShareFormProps> = ({
+const EditShareForm: React.FC<EditShareFormProps> = ({
   t,
   editForm,
   permissionsGroups,
@@ -116,3 +116,5 @@ export const EditShareForm: React.FC<EditShareFormProps> = ({
     </form>
   );
 };
+
+export default EditShareForm;

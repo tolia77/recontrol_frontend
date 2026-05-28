@@ -2,7 +2,7 @@ import React from "react";
 import type { DeviceInfoFormProps } from "./types";
 import { Input, Button } from "src/components/ui";
 
-export const DeviceInfoForm: React.FC<DeviceInfoFormProps> = ({
+const DeviceInfoForm: React.FC<DeviceInfoFormProps> = ({
   t,
   deviceForm,
   onChange,
@@ -32,3 +32,5 @@ export const DeviceInfoForm: React.FC<DeviceInfoFormProps> = ({
     </div>
   );
 };
+
+export default DeviceInfoForm;

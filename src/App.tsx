@@ -3,7 +3,7 @@ import Layout from "src/components/Layout";
 import Index from "src/pages/Index";
 import Login from "src/pages/Login";
 import Signup from "src/pages/Signup";
-import { DeviceControl } from "src/pages/DeviceControl/DeviceControl";
+import DeviceControl from "src/pages/DeviceControl/DeviceControl";
 import Dashboard from "src/pages/Dashboard";
 import Devices from "src/pages/Devices/Devices";
 import DeviceSettings from "src/pages/DeviceSettings";

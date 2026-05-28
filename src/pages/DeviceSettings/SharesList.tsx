@@ -1,7 +1,7 @@
 import React from "react";
 import type { SharesListProps } from "./types";
 
-export const SharesList: React.FC<SharesListProps> = ({
+const SharesList: React.FC<SharesListProps> = ({
   t,
   shares,
   onDelete,
@@ -50,3 +50,5 @@ export const SharesList: React.FC<SharesListProps> = ({
     </div>
   );
 };
+
+export default SharesList;

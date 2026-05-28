@@ -7,7 +7,7 @@ interface EmptyStateProps {
   className?: string;
 }
 
-export function EmptyState({
+function EmptyState({
   title,
   icon,
   action,
@@ -23,3 +23,5 @@ export function EmptyState({
     </div>
   );
 }
+
+export default EmptyState;

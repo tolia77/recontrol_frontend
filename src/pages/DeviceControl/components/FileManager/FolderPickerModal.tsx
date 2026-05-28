@@ -91,7 +91,7 @@ const EMPTY_NODE: NodeState = {
  * suppressEsc/suppressOverlayClick -- the panel will dismiss the modal in
  * its `finally` block.
  */
-export function FolderPickerModal({
+function FolderPickerModal({
   open,
   title,
   confirmLabel,
@@ -438,3 +438,5 @@ function TreeNode({
     </li>
   );
 }
+
+export default FolderPickerModal;

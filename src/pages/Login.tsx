@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router";
 import { loginRequest } from "src/services/backend/authService";
 import { saveTokens, saveUserId, saveUserRole } from "src/utils/auth";
 import { useTranslation, Trans } from "react-i18next";
-import { Button } from "src/components/ui/Button";
+import Button from "src/components/ui/Button";
 import { Input } from "src/components/ui";
 
 function Login() {

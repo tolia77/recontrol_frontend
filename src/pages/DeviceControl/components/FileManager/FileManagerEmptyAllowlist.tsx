@@ -7,7 +7,7 @@ import { FolderIcon } from "./icons";
  * browser and cannot open the desktop's Settings window. The copy tells them
  * to ask the desktop user (CONTEXT locked).
  */
-export function FileManagerEmptyAllowlist() {
+function FileManagerEmptyAllowlist() {
   const { t } = useTranslation("fileManager");
   return (
     <div className="bg-background flex h-full w-full flex-col items-center justify-center p-8 text-center">
@@ -34,3 +34,5 @@ export function FileManagerEmptyAllowlist() {
     </div>
   );
 }
+
+export default FileManagerEmptyAllowlist;

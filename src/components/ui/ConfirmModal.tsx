@@ -1,7 +1,7 @@
 import { useRef, type ReactNode } from "react";
 
-import { Button } from "./Button";
-import { Modal } from "./Modal";
+import Button from "./Button";
+import Modal from "./Modal";
 
 interface CheckboxSlot {
   label: string;
@@ -22,7 +22,7 @@ interface ConfirmModalProps {
   checkbox?: CheckboxSlot;
 }
 
-export function ConfirmModal({
+function ConfirmModal({
   open,
   title,
   body,
@@ -105,3 +105,5 @@ export function ConfirmModal({
     </Modal>
   );
 }
+
+export default ConfirmModal;

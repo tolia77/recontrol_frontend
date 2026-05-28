@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
  * unobscured so the user can still read the destination context (active root +
  * shared-folders list) while dragging.
  */
-export function DropZoneOverlay() {
+function DropZoneOverlay() {
   const { t } = useTranslation("fileManager");
   return (
     <div
@@ -29,3 +29,5 @@ export function DropZoneOverlay() {
     </div>
   );
 }
+
+export default DropZoneOverlay;

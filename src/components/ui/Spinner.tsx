@@ -9,26 +9,13 @@ const sizeClasses = {
   lg: "w-12 h-12 border-4",
 };
 
-export function Spinner({ size = "md", className = "" }: SpinnerProps) {
+function Spinner({ size = "md", className = "" }: SpinnerProps) {
   return (
     <div
       className={`${sizeClasses[size]} border-primary animate-spin rounded-full border-t-transparent ${className}`}
       role="status"
       aria-label="Loading"
     />
-  );
-}
-
-interface LoadingOverlayProps {
-  message?: string;
-}
-
-export function LoadingOverlay({ message }: LoadingOverlayProps) {
-  return (
-    <div className="flex flex-col items-center justify-center gap-3 py-12">
-      <Spinner size="lg" />
-      {message && <p className="text-darkgray text-sm">{message}</p>}
-    </div>
   );
 }
 

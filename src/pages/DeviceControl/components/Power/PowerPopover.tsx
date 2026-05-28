@@ -23,7 +23,7 @@ interface PowerPopoverProps {
  * are still gated by `permissions.manage_power` via canSend() upstream — the
  * TopBar additionally hides this control entirely when the permission is absent.
  */
-export function PowerPopover({ addAction, disabled }: PowerPopoverProps) {
+function PowerPopover({ addAction, disabled }: PowerPopoverProps) {
   const { t } = useTranslation("deviceControl");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -106,3 +106,5 @@ export function PowerPopover({ addAction, disabled }: PowerPopoverProps) {
     </div>
   );
 }
+
+export default PowerPopover;

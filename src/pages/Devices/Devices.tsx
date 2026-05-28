@@ -4,7 +4,7 @@ import type { Device } from "src/types";
 import type { GetMyDevicesParams } from "src/services/backend/devicesService";
 import { getMyDevicesRequest } from "src/services/backend/devicesService";
 import { useTranslation } from "react-i18next";
-import { Button } from "src/components/ui/Button";
+import Button from "src/components/ui/Button";
 import { LoadingState } from "src/components/ui";
 
 function Devices() {

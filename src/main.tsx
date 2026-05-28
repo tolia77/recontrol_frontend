@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { ToastProvider } from "./components/ui/Toast";
+import ToastProvider from "./components/ui/Toast";
 import "./index.css";
 // Phase 20: streamdown ships its own stylesheet (code-block / table polish).
 // streamdown carries a hard mermaid dependency (~75MB on disk, larger bundle

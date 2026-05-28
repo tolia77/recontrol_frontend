@@ -9,7 +9,7 @@ import type { UserResponse } from "src/services/backend/usersService";
 import { getErrorMessage } from "src/utils/getErrorMessage";
 import { useTranslation } from "react-i18next";
 import { useToast } from "src/components/ui/Toast";
-import { Button } from "src/components/ui/Button";
+import Button from "src/components/ui/Button";
 import { LoadingState } from "src/components/ui";
 
 function UserSettings() {

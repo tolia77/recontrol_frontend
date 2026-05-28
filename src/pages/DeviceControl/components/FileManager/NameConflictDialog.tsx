@@ -11,7 +11,7 @@ interface NameConflictDialogProps {
   onDecide: (mode: NameConflictMode, applyToAll: boolean) => void;
 }
 
-export function NameConflictDialog({
+function NameConflictDialog({
   open,
   operation,
   fileName,
@@ -82,3 +82,5 @@ export function NameConflictDialog({
     </Modal>
   );
 }
+
+export default NameConflictDialog;

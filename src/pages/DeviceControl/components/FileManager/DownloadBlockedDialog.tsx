@@ -24,7 +24,7 @@ interface DownloadBlockedDialogProps {
   onClose: () => void;
 }
 
-export function DownloadBlockedDialog({
+function DownloadBlockedDialog({
   open,
   fileName,
   sizeBytes,
@@ -65,3 +65,5 @@ export function DownloadBlockedDialog({
     </Modal>
   );
 }
+
+export default DownloadBlockedDialog;

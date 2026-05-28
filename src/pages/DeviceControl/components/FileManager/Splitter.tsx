@@ -27,7 +27,7 @@ interface SplitterProps {
  * divider + right pane are omitted. The left pane stays the container's first
  * child in both layouts, so toggling the right pane does not remount `left`.
  */
-export function Splitter({
+function Splitter({
   initialRatio,
   onRatioChange,
   left,
@@ -111,3 +111,5 @@ function clamp(r: number): number {
   if (!Number.isFinite(r)) return 0.5;
   return Math.min(0.9, Math.max(0.1, r));
 }
+
+export default Splitter;

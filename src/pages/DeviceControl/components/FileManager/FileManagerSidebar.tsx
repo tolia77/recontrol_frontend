@@ -18,7 +18,7 @@ interface FileManagerSidebarProps {
  * noted as a follow-up (Research Pitfall 6) and can ship later without
  * changing this signature.
  */
-export function FileManagerSidebar({
+function FileManagerSidebar({
   roots,
   isLoading,
   error,
@@ -85,3 +85,5 @@ export function FileManagerSidebar({
     </aside>
   );
 }
+
+export default FileManagerSidebar;

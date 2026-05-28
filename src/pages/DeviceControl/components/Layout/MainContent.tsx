@@ -9,16 +9,16 @@ import {
   mapButtonToBackend,
 } from "../../utils/mouse";
 import { mapToVirtualKey } from "../../utils/keyboard";
-import { ManualControls } from "../Manual/ManualControls";
-import { StreamStatsOverlay } from "../Stream/StreamStatsOverlay";
-import { Splitter } from "../FileManager/Splitter";
+import ManualControls from "../Manual/ManualControls";
+import StreamStatsOverlay from "../Stream/StreamStatsOverlay";
+import Splitter from "../FileManager/Splitter";
 
 import { generateUUID } from "src/utils/uuid";
 
 /**
  * Main Content Area with WebRTC video stream
  */
-export const MainContent: React.FC<
+const MainContent: React.FC<
   MainContentProps & { activeMode: "interactive" | "manual" }
 > = ({
   disabled,
@@ -452,3 +452,5 @@ export const MainContent: React.FC<
     </div>
   );
 };
+
+export default MainContent;

@@ -11,7 +11,7 @@ export interface LoadGroupPanelProps {
   onLoad: () => void;
 }
 
-export const LoadGroupPanel: React.FC<LoadGroupPanelProps> = ({
+const LoadGroupPanel: React.FC<LoadGroupPanelProps> = ({
   t,
   groups,
   value,
@@ -43,3 +43,5 @@ export const LoadGroupPanel: React.FC<LoadGroupPanelProps> = ({
     </div>
   );
 };
+
+export default LoadGroupPanel;

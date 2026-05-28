@@ -27,18 +27,18 @@ import {
   fileManagerUiReducer,
   initialFileManagerUiState,
 } from "./fileManagerUiReducer";
-import { FileManagerEmptyAllowlist } from "./FileManagerEmptyAllowlist";
-import { ContextMenu } from "./ContextMenu";
-import { FolderPickerModal } from "./FolderPickerModal";
-import { LargeFileWarningDialog } from "./LargeFileWarningDialog";
-import { DownloadBlockedDialog } from "./DownloadBlockedDialog";
-import { NameConflictDialog } from "./NameConflictDialog";
+import FileManagerEmptyAllowlist from "./FileManagerEmptyAllowlist";
+import ContextMenu from "./ContextMenu";
+import FolderPickerModal from "./FolderPickerModal";
+import LargeFileWarningDialog from "./LargeFileWarningDialog";
+import DownloadBlockedDialog from "./DownloadBlockedDialog";
+import NameConflictDialog from "./NameConflictDialog";
 import type {
   DownloadTransfer,
   TransferQueue,
 } from "../../services/transfer";
 import { detectSeparator, isAncestor, parentPath } from "./utils/pathUtils";
-import { FileManagerView } from "./FileManagerView";
+import FileManagerView from "./FileManagerView";
 
 interface FileManagerPanelProps {
   /** Used for storage keying in parent hooks; included for completeness. */
@@ -71,7 +71,7 @@ interface FileManagerPanelProps {
  * The `FileManagerPanelProps` interface and the `DeviceControl.tsx` mount are
  * UNTOUCHED (D-01).
  */
-export function FileManagerPanel({
+function FileManagerPanel({
   deviceId: _deviceId,
   channel,
   state,
@@ -790,3 +790,5 @@ export function FileManagerPanel({
     </div>
   );
 }
+
+export default FileManagerPanel;

@@ -8,7 +8,7 @@ interface FileManagerStatusBarProps {
   selectionSize: number;
 }
 
-export function FileManagerStatusBar({
+function FileManagerStatusBar({
   totalCount,
   selectionCount,
   selectionSize,
@@ -33,3 +33,5 @@ export function FileManagerStatusBar({
     </footer>
   );
 }
+
+export default FileManagerStatusBar;

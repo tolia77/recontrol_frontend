@@ -26,7 +26,7 @@ interface ContextMenuProps {
  * menu is open. The listener does NOT use the focus-ownership guard pattern
  * because the menu is a transient global popup, not part of any panel root.
  */
-export function ContextMenu({ state, onClose }: ContextMenuProps) {
+function ContextMenu({ state, onClose }: ContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const [adjusted, setAdjusted] = useState<{
     left: number;
@@ -137,3 +137,5 @@ export function ContextMenu({ state, onClose }: ContextMenuProps) {
     </>
   );
 }
+
+export default ContextMenu;

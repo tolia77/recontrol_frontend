@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { generateUUID } from "src/utils/uuid";
-import { Button } from "src/components/ui/Button";
+import Button from "src/components/ui/Button";
 
 interface QuickActionsProps {
   disabled: boolean;
@@ -11,7 +11,7 @@ interface QuickActionsProps {
   }) => void;
 }
 
-export function QuickActions({ disabled, addAction }: QuickActionsProps) {
+function QuickActions({ disabled, addAction }: QuickActionsProps) {
   const { t } = useTranslation("deviceControl");
 
   return (
@@ -45,3 +45,5 @@ export function QuickActions({ disabled, addAction }: QuickActionsProps) {
     </div>
   );
 }
+
+export default QuickActions;

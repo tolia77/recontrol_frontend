@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
-import { Card } from "src/components/ui/Card";
-import { Button } from "src/components/ui/Button";
+import Card from "src/components/ui/Card";
+import Button from "src/components/ui/Button";
 import type { ToolRow } from "./transcriptReducer";
 import { WarningTriangleIcon } from "./icons";
 
@@ -55,7 +55,7 @@ interface ConfirmationCardProps {
   onConfirm: (decision: "allow" | "deny") => void;
 }
 
-export const ConfirmationCard: FC<ConfirmationCardProps> = ({
+const ConfirmationCard: FC<ConfirmationCardProps> = ({
   row,
   onConfirm,
 }) => {

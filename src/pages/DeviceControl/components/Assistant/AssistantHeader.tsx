@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "src/components/ui/Button";
+import Button from "src/components/ui/Button";
 import type { PanelStatus } from "./transcriptReducer";
 
 const MAX_STEPS = 25;
@@ -36,7 +36,7 @@ export interface AssistantHeaderProps {
  *
  * No quota meter (D-08 — deferred to v1.5+ admin tooling).
  */
-export const AssistantHeader: FC<AssistantHeaderProps> = ({
+const AssistantHeader: FC<AssistantHeaderProps> = ({
   status,
   stepCount,
   onStop,
@@ -88,3 +88,5 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({
     </div>
   );
 };
+
+export default AssistantHeader;

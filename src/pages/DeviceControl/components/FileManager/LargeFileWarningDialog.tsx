@@ -27,7 +27,7 @@ interface LargeFileWarningDialogProps {
   onCancel: () => void;
 }
 
-export function LargeFileWarningDialog({
+function LargeFileWarningDialog({
   open,
   fileName,
   sizeBytes,
@@ -58,3 +58,5 @@ export function LargeFileWarningDialog({
     />
   );
 }
+
+export default LargeFileWarningDialog;

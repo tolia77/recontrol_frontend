@@ -20,7 +20,7 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button } from "src/components/ui/Button.tsx";
+import Button from "src/components/ui/Button.tsx";
 import type {
   DraftResponse,
   DraftStep,

@@ -102,7 +102,7 @@ vi.mock("../../../hooks/realtime/useScenarioRunChannel", () => ({
 
 // Mock i18n.language so the AISegment fires generate() with 'en'.
 vi.mock("src/i18n.ts", () => ({
-  default: { language: "en" },
+  i18n: { language: "en" },
 }));
 
 // Mock useDraftGeneration so we can drive the panel's AI flow deterministically.

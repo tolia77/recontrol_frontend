@@ -22,7 +22,7 @@ interface FileManagerBreadcrumbProps {
  * is detected from the root path so Windows paths render with backslashes
  * and POSIX paths render with slashes.
  */
-export function FileManagerBreadcrumb({
+function FileManagerBreadcrumb({
   currentPath,
   rootPath,
   onNavigate,
@@ -82,3 +82,5 @@ export function FileManagerBreadcrumb({
     </nav>
   );
 }
+
+export default FileManagerBreadcrumb;

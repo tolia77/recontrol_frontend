@@ -6,7 +6,7 @@ interface FpsControlsProps {
   disabled?: boolean;
 }
 
-export function FpsControls({
+function FpsControls({
   currentFps,
   onFpsChange,
   disabled,
@@ -31,3 +31,5 @@ export function FpsControls({
     </div>
   );
 }
+
+export default FpsControls;

@@ -9,7 +9,7 @@ import {
   type ScenarioRunStep,
 } from "../../../../services/backend/scenarioRunsService";
 import { GLYPH_CATALOG, STATUS_BADGE_CLASS } from "./exitCodeGlyphs";
-import { RunOutput } from "./RunOutput";
+import RunOutput from "./RunOutput";
 import { copyAsMarkdown } from "../Assistant/copyAsMarkdown";
 import type { ActiveRun } from "./scenariosReducer";
 import type { ToolRow } from "../Assistant/transcriptReducer";

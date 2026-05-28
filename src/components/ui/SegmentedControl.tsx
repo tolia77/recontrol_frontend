@@ -31,7 +31,7 @@ const PILL_BASE_CLASS =
 const PILL_ACTIVE_CLASS = "bg-accent text-white";
 const PILL_INACTIVE_CLASS = "bg-transparent text-primary hover:bg-gray-100";
 
-export function SegmentedControl<T extends string>({
+function SegmentedControl<T extends string>({
   value,
   options,
   onChange,

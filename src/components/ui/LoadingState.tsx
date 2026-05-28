@@ -1,11 +1,11 @@
-import { Spinner } from "./Spinner";
+import Spinner from "./Spinner";
 
 interface LoadingStateProps {
   message?: string;
   className?: string;
 }
 
-export function LoadingState({ message, className = "" }: LoadingStateProps) {
+function LoadingState({ message, className = "" }: LoadingStateProps) {
   return (
     <div
       className={`flex flex-col items-center justify-center gap-3 py-12 ${className}`}
@@ -15,3 +15,5 @@ export function LoadingState({ message, className = "" }: LoadingStateProps) {
     </div>
   );
 }
+
+export default LoadingState;

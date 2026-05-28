@@ -1,9 +1,9 @@
 import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ProcessesModal } from "../Terminal/ProcessesModal.tsx";
+import ProcessesModal from "../Terminal/ProcessesModal.tsx";
 import { Button, Input } from "src/components/ui";
 
-export const ManualTerminalControls: React.FC<{
+const ManualTerminalControls: React.FC<{
   disabled: boolean;
   addAction?: (action: {
     id: string;
@@ -436,3 +436,5 @@ export const ManualTerminalControls: React.FC<{
     </div>
   );
 };
+
+export default ManualTerminalControls;

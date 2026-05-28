@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
-import { ToolCallCard } from "../Assistant/ToolCallCard";
+import ToolCallCard from "../Assistant/ToolCallCard";
 import type { ToolRow } from "../Assistant/transcriptReducer";
 
 /**
@@ -23,7 +23,7 @@ export interface RunOutputProps {
   skippedReason?: string;
 }
 
-export const RunOutput: FC<RunOutputProps> = ({ row, skippedReason }) => {
+const RunOutput: FC<RunOutputProps> = ({ row, skippedReason }) => {
   const { t } = useTranslation("scenarios");
 
   if (!skippedReason) {

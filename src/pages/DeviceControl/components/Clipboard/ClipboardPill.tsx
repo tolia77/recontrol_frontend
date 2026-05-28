@@ -130,7 +130,7 @@ function computeFreshnessTooltip(
   return t("pill.tooltip.idleStale");
 }
 
-export function ClipboardPill(props: ClipboardPillProps) {
+function ClipboardPill(props: ClipboardPillProps) {
   const { t } = useTranslation("clipboard");
 
   // Session sync counter per D-07 / Claude's Discretion: ClipboardPill-internal
@@ -245,3 +245,5 @@ export function ClipboardPill(props: ClipboardPillProps) {
     </button>
   );
 }
+
+export default ClipboardPill;

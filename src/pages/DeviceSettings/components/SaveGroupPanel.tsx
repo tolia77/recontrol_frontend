@@ -9,7 +9,7 @@ export interface SaveGroupPanelProps {
   onSave: () => void;
 }
 
-export const SaveGroupPanel: React.FC<SaveGroupPanelProps> = ({
+const SaveGroupPanel: React.FC<SaveGroupPanelProps> = ({
   t,
   name,
   onChange,
@@ -33,3 +33,5 @@ export const SaveGroupPanel: React.FC<SaveGroupPanelProps> = ({
     </div>
   );
 };
+
+export default SaveGroupPanel;

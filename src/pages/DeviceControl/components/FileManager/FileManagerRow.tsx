@@ -156,4 +156,6 @@ function FileManagerRowImpl({
  * Memoized row; re-renders only when one of its scalar props changes
  * (entry identity, selection bit, focus bit, click handlers).
  */
-export const FileManagerRow = memo(FileManagerRowImpl);
+const FileManagerRow = memo(FileManagerRowImpl);
+
+export default FileManagerRow;

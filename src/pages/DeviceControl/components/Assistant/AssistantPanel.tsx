@@ -5,9 +5,9 @@ import { useToast } from "src/components/ui";
 import { useAssistantChannel } from "../../hooks/realtime/useAssistantChannel";
 import type { AssistantBroadcast } from "../../hooks/realtime/useAssistantChannel";
 import { initialTranscriptState, transcriptReducer } from "./transcriptReducer";
-import { Transcript } from "./Transcript";
-import { AssistantHeader } from "./AssistantHeader";
-import { InputBox } from "./InputBox";
+import Transcript from "./Transcript";
+import AssistantHeader from "./AssistantHeader";
+import InputBox from "./InputBox";
 import { copyAsMarkdown } from "./copyAsMarkdown";
 
 export interface AssistantPanelProps {
@@ -60,7 +60,7 @@ function generateSessionToken(): string {
  * Conversation state lives in `useReducer` state — nothing in localStorage,
  * nothing in the backend (CHAT-11). Closing the tab clears the panel.
  */
-export function AssistantPanel({
+function AssistantPanel({
   deviceId,
   ws,
   deviceName,
@@ -176,3 +176,5 @@ export function AssistantPanel({
     </div>
   );
 }
+
+export default AssistantPanel;

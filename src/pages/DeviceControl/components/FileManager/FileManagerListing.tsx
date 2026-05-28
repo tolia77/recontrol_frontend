@@ -9,7 +9,7 @@ import { useToast } from "src/components/ui";
 import type { UseFilesChannel } from "../../hooks/realtime/useFilesChannel";
 import type { useFileManagerSelection } from "../../hooks/state/useFileManagerSelection";
 import type { SortColumn, SortState } from "./types";
-import { ROW_HEIGHT_PX, FileManagerRow } from "./FileManagerRow";
+import FileManagerRow, { ROW_HEIGHT_PX } from "./FileManagerRow";
 import { FolderIcon } from "./icons";
 import { compareEntries } from "./utils/sort";
 
@@ -109,7 +109,7 @@ function errorMessageFor(
  *     500ms after the previous click on it, arms inline rename. A click within
  *     500ms is left to React's onDoubleClick to handle as activation.
  */
-export function FileManagerListing({
+function FileManagerListing({
   channel,
   path,
   sort,
@@ -427,3 +427,5 @@ export function FileManagerListing({
     </div>
   );
 }
+
+export default FileManagerListing;

@@ -10,10 +10,12 @@ export interface OperatorBubbleProps {
   text: string;
 }
 
-export const OperatorBubble: FC<OperatorBubbleProps> = ({ text }) => (
+const OperatorBubble: FC<OperatorBubbleProps> = ({ text }) => (
   <div className="flex justify-start">
     <div className="bg-tertiary text-text max-w-[80%] rounded-lg px-3 py-2 text-sm break-words whitespace-pre-wrap">
       {text}
     </div>
   </div>
 );
+
+export default OperatorBubble;

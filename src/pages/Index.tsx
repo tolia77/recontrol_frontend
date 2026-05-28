@@ -5,7 +5,7 @@ import dashboardIcon from "src/assets/img/icons/dashboard.svg";
 import deviceIcon from "src/assets/img/icons/device.svg";
 import settingsIcon from "src/assets/img/icons/settings.svg";
 import { useTranslation, Trans } from "react-i18next";
-import { Button } from "src/components/ui/Button";
+import Button from "src/components/ui/Button";
 
 function Index() {
   const { t } = useTranslation("index");

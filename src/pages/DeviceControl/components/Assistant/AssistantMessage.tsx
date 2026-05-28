@@ -20,7 +20,7 @@ export interface AssistantMessageProps {
   isStreaming: boolean;
 }
 
-export const AssistantMessage: FC<AssistantMessageProps> = ({
+const AssistantMessage: FC<AssistantMessageProps> = ({
   markdown,
   isStreaming,
 }) => (
@@ -34,3 +34,5 @@ export const AssistantMessage: FC<AssistantMessageProps> = ({
     )}
   </div>
 );
+
+export default AssistantMessage;

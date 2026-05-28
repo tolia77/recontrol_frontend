@@ -1,6 +1,6 @@
 import { useState, type FC } from "react";
 import { useTranslation } from "react-i18next";
-import { Card } from "src/components/ui/Card";
+import Card from "src/components/ui/Card";
 import type { ToolRow, ToolRowState } from "./transcriptReducer";
 
 /**
@@ -82,7 +82,7 @@ interface ToolCallCardProps {
   row: ToolRow;
 }
 
-export const ToolCallCard: FC<ToolCallCardProps> = ({ row }) => {
+const ToolCallCard: FC<ToolCallCardProps> = ({ row }) => {
   const { t } = useTranslation("assistant");
   const [showAll, setShowAll] = useState(false);
 

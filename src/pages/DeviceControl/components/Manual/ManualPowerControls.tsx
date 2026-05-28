@@ -9,7 +9,7 @@ type PowerCommand =
   | "power.logOff"
   | "power.lock";
 
-export const ManualPowerControls: React.FC<{
+const ManualPowerControls: React.FC<{
   disabled: boolean;
   addAction?: (action: any) => void;
 }> = ({ disabled, addAction }) => {
@@ -115,3 +115,5 @@ export const ManualPowerControls: React.FC<{
     </div>
   );
 };
+
+export default ManualPowerControls;

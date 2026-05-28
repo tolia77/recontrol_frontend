@@ -25,7 +25,7 @@ const sizeClasses: Record<ButtonSize, string> = {
   lg: "px-6 py-3 text-base min-h-[48px]",
 };
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
       variant = "primary",

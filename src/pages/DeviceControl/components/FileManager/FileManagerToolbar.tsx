@@ -44,7 +44,7 @@ interface FileManagerToolbarProps {
  * Toolbar strip shown above the breadcrumb. Plan 10-04 wires New Folder and
  * Rename; plan 10-05 wires Delete + Move to… + Copy to….
  */
-export function FileManagerToolbar({
+function FileManagerToolbar({
   showHidden,
   onToggleShowHidden,
   onRefresh,
@@ -178,3 +178,5 @@ export function FileManagerToolbar({
     </div>
   );
 }
+
+export default FileManagerToolbar;

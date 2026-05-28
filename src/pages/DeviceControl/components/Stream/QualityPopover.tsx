@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDownIcon } from "../icons/icons";
-import { ResolutionControl } from "./ResolutionControl";
-import { FpsControls } from "./FpsControls";
+import ResolutionControl from "./ResolutionControl";
+import FpsControls from "./FpsControls";
 
 interface QualityPopoverProps {
   currentResolution: number;
@@ -23,7 +23,7 @@ interface QualityPopoverProps {
  * (gray-400 labels, bg-white/10 inputs), so they sit in a dark "control well"
  * inside the otherwise-light popover — keeping them unchanged per the handoff.
  */
-export function QualityPopover({
+function QualityPopover({
   currentResolution,
   onResolutionChange,
   currentFps,
@@ -112,3 +112,5 @@ export function QualityPopover({
     </div>
   );
 }
+
+export default QualityPopover;

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, type FC } from "react";
 import type { Row } from "./transcriptReducer";
-import { OperatorBubble } from "./OperatorBubble";
-import { AssistantMessage } from "./AssistantMessage";
-import { ToolCallCard } from "./ToolCallCard";
-import { ConfirmationCard } from "./ConfirmationCard";
+import OperatorBubble from "./OperatorBubble";
+import AssistantMessage from "./AssistantMessage";
+import ToolCallCard from "./ToolCallCard";
+import ConfirmationCard from "./ConfirmationCard";
 
 /**
  * Scroll container + RowRenderer dispatcher (Plan 20-07; ToolRowPlaceholder
@@ -75,7 +75,7 @@ const RowRenderer: FC<{
   }
 };
 
-export const Transcript: FC<TranscriptProps> = ({ rows, onConfirm }) => {
+const Transcript: FC<TranscriptProps> = ({ rows, onConfirm }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const stickyToBottomRef = useRef(true);
 
@@ -114,3 +114,5 @@ export const Transcript: FC<TranscriptProps> = ({ rows, onConfirm }) => {
     </div>
   );
 };
+
+export default Transcript;

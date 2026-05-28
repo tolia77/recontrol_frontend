@@ -51,7 +51,7 @@ interface TransferQueuePanelProps {
  * not own queue lifecycle. {@link FileManagerPanel} constructs the queue once
  * via useRef and threads it down.
  */
-export function TransferQueuePanel({
+function TransferQueuePanel({
   queue,
   disconnectMessage,
   onDismissDisconnect,
@@ -382,3 +382,5 @@ function formatEta(totalSeconds: number): string {
   const secs = seconds % 60;
   return `${minutes}:${String(secs).padStart(2, "0")}`;
 }
+
+export default TransferQueuePanel;

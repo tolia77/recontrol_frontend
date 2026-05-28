@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo } from "react";
 import type { JSX } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, useToast } from "src/components/ui";
-import { RunOutput } from "./RunOutput";
+import RunOutput from "./RunOutput";
 import { copyAsMarkdown } from "../Assistant/copyAsMarkdown";
 import type { ActiveRun, ActiveRunStatus } from "./scenariosReducer";
 import type { ToolRow } from "../Assistant/transcriptReducer";
@@ -69,7 +69,7 @@ export interface ScenariosRunModeProps {
   commandSteps: ReadonlyArray<ScenariosRunModeCommandStep>;
 }
 
-export function ScenariosRunMode({
+function ScenariosRunMode({
   activeRun,
   deviceName,
   backTo,

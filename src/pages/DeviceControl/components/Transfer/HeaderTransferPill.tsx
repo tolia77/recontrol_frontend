@@ -7,7 +7,7 @@ interface HeaderTransferPillProps {
 
 const IN_FLIGHT_STATES = new Set(["queued", "active", "cancelling", "stalled"]);
 
-export function HeaderTransferPill({
+function HeaderTransferPill({
   snapshot,
   onClick,
 }: HeaderTransferPillProps) {
@@ -34,3 +34,5 @@ export function HeaderTransferPill({
     </button>
   );
 }
+
+export default HeaderTransferPill;

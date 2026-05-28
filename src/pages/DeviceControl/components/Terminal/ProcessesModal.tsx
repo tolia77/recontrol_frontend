@@ -80,7 +80,7 @@ function formatStartDisplay(st?: string): string {
   });
 }
 
-export const ProcessesModal: React.FC<ProcessesModalProps> = ({
+const ProcessesModal: React.FC<ProcessesModalProps> = ({
   open,
   onClose,
   processes,
@@ -248,3 +248,5 @@ export const ProcessesModal: React.FC<ProcessesModalProps> = ({
     </Modal>
   );
 };
+
+export default ProcessesModal;

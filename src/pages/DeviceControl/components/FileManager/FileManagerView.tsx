@@ -6,13 +6,13 @@ import type { useFilesRoots } from "../../hooks/state/useFilesRoots";
 import type { SortColumn, SortState } from "./types";
 import type { FileEntry } from "../../services/files";
 import type { TransferQueue } from "../../services/transfer";
-import { FileManagerSidebar } from "./FileManagerSidebar";
-import { FileManagerToolbar } from "./FileManagerToolbar";
-import { FileManagerBreadcrumb } from "./FileManagerBreadcrumb";
-import { FileManagerListing } from "./FileManagerListing";
-import { FileManagerStatusBar } from "./FileManagerStatusBar";
-import { TransferQueuePanel } from "./TransferQueuePanel";
-import { DropZoneOverlay } from "./DropZoneOverlay";
+import FileManagerSidebar from "./FileManagerSidebar";
+import FileManagerToolbar from "./FileManagerToolbar";
+import FileManagerBreadcrumb from "./FileManagerBreadcrumb";
+import FileManagerListing from "./FileManagerListing";
+import FileManagerStatusBar from "./FileManagerStatusBar";
+import TransferQueuePanel from "./TransferQueuePanel";
+import DropZoneOverlay from "./DropZoneOverlay";
 
 // ---------------------------------------------------------------------------
 // Grouped-prop sub-interfaces (D-08)
@@ -88,7 +88,7 @@ interface FileManagerViewProps {
 // NO dialogs and NO context menu — those stay in the container (D-02).
 // ---------------------------------------------------------------------------
 
-export function FileManagerView({
+function FileManagerView({
   channel,
   roots,
   selection,
@@ -180,3 +180,5 @@ export function FileManagerView({
     </>
   );
 }
+
+export default FileManagerView;

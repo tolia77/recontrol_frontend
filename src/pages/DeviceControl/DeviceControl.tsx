@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { generateUUID } from "src/utils/uuid";
-import { TopBar } from "./components/Layout/TopBar";
-import { MainContent } from "./components/Layout/MainContent";
+import TopBar from "./components/Layout/TopBar";
+import MainContent from "./components/Layout/MainContent";
 import { getUserId } from "src/utils/auth";
 import { useToast } from "src/components/ui";
 import type { Mode } from "src/pages/DeviceControl/types";
@@ -19,8 +19,8 @@ import { useRefusalToastThrottle } from "./hooks/useRefusalToastThrottle";
 import { useTranslation } from "react-i18next";
 import { useFileManagerState } from "./hooks/state/useFileManagerState";
 import { useTransferQueue } from "./hooks/state/useTransferQueue";
-import { FileManagerPanel } from "./components/FileManager/FileManagerPanel";
-import { AssistantPanel } from "./components/Assistant/AssistantPanel";
+import FileManagerPanel from "./components/FileManager/FileManagerPanel";
+import AssistantPanel from "./components/Assistant/AssistantPanel";
 import ScenariosPanel from "./components/Scenarios/ScenariosPanel";
 import {
   TransferQueue,
@@ -33,7 +33,7 @@ interface CommandWebSocketProps {
   wsUrl: string;
 }
 
-export function DeviceControl({ wsUrl }: CommandWebSocketProps) {
+function DeviceControl({ wsUrl }: CommandWebSocketProps) {
   // Orchestrator-level identity state (3 remaining useState after Wave C)
   const [deviceId, setDeviceId] = useState("");
   const [deviceName, setDeviceName] = useState<string>("");
@@ -576,3 +576,5 @@ export function DeviceControl({ wsUrl }: CommandWebSocketProps) {
     </div>
   );
 }
+
+export default DeviceControl;

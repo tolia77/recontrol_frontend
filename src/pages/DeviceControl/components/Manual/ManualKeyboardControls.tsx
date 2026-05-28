@@ -2,7 +2,7 @@ import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Input } from "src/components/ui";
 
-export const ManualKeyboardControls: React.FC<{
+const ManualKeyboardControls: React.FC<{
   disabled: boolean;
   addAction?: (action: any) => void;
 }> = ({ disabled, addAction }) => {
@@ -156,3 +156,5 @@ export const ManualKeyboardControls: React.FC<{
     </div>
   );
 };
+
+export default ManualKeyboardControls;

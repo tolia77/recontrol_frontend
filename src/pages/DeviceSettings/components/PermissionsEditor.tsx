@@ -14,7 +14,7 @@ export interface PermissionsEditorProps {
   onChange: (next: PermissionsEditorProps["value"]) => void;
 }
 
-export const PermissionsEditor: React.FC<PermissionsEditorProps> = ({
+const PermissionsEditor: React.FC<PermissionsEditorProps> = ({
   t,
   value,
   onChange,
@@ -50,3 +50,5 @@ export const PermissionsEditor: React.FC<PermissionsEditorProps> = ({
     </div>
   );
 };
+
+export default PermissionsEditor;

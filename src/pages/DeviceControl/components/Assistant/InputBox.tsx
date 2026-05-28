@@ -8,7 +8,7 @@ import {
   type KeyboardEvent,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "src/components/ui/Button";
+import Button from "src/components/ui/Button";
 import type { PanelStatus } from "./transcriptReducer";
 
 const TICK_MS = 30_000;
@@ -68,7 +68,7 @@ export interface InputBoxProps {
  *   - Send button is always visible (CONTEXT discretion: discoverability) and
  *     disabled when input is empty or the panel is disabled.
  */
-export const InputBox: FC<InputBoxProps> = ({ status, onSubmit }) => {
+const InputBox: FC<InputBoxProps> = ({ status, onSubmit }) => {
   const { t } = useTranslation("assistant");
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -179,3 +179,5 @@ export const InputBox: FC<InputBoxProps> = ({ status, onSubmit }) => {
     </div>
   );
 };
+
+export default InputBox;

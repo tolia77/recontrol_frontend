@@ -28,8 +28,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Card } from "src/components/ui/Card.tsx";
-import { Button } from "src/components/ui/Button.tsx";
+import Card from "src/components/ui/Card.tsx";
+import Button from "src/components/ui/Button.tsx";
 import type {
   DraftQuota,
   DraftResponse,
@@ -132,7 +132,7 @@ function isAmberQuota(q: DraftQuota): boolean {
   );
 }
 
-export function ScenariosAISegment({
+function ScenariosAISegment({
   onDraftReady,
   initialQuota,
   onPromptSubmitted,

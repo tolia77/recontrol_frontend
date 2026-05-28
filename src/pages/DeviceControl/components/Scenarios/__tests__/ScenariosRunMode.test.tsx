@@ -10,7 +10,7 @@ import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 
 import { scenarios as scenariosEn } from "../../../../../locales/en/scenarios";
-import { ScenariosRunMode } from "../ScenariosRunMode";
+import ScenariosRunMode from "../ScenariosRunMode";
 import type { ActiveRun, ActiveRunStatus } from "../scenariosReducer";
 import {
   initialTranscriptState,

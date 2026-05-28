@@ -3,7 +3,7 @@ import { mapButtonToBackend } from "../../utils/mouse.ts";
 import { useTranslation } from "react-i18next";
 import { Button, Input } from "src/components/ui";
 
-export const ManualMouseControls: React.FC<{
+const ManualMouseControls: React.FC<{
   disabled: boolean;
   addAction?: (action: any) => void;
 }> = ({ disabled, addAction }) => {
@@ -268,3 +268,5 @@ export const ManualMouseControls: React.FC<{
     </div>
   );
 };
+
+export default ManualMouseControls;

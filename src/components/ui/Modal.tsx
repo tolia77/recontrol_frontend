@@ -41,7 +41,7 @@ const wrapperClasses: Record<"sm" | "md" | "lg" | "full", string> = {
   full: "flex items-center justify-center p-4",
 };
 
-export function Modal({
+function Modal({
   open,
   onClose,
   size = "md",
@@ -154,3 +154,5 @@ function ModalFooter({ children, className = "" }: SubProps) {
 Modal.Header = ModalHeader;
 Modal.Body = ModalBody;
 Modal.Footer = ModalFooter;
+
+export default Modal;

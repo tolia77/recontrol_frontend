@@ -10,7 +10,7 @@ interface ResolutionControlProps {
   disabled?: boolean;
 }
 
-export function ResolutionControl({
+function ResolutionControl({
   currentResolution,
   onResolutionChange,
   disabled,
@@ -33,3 +33,5 @@ export function ResolutionControl({
     </div>
   );
 }
+
+export default ResolutionControl;

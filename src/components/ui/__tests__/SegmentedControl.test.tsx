@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 
-import { SegmentedControl } from "../SegmentedControl";
+import SegmentedControl from "../SegmentedControl";
 
 type Seg = "a" | "b";
 

@@ -5,7 +5,7 @@ import { registerRequest } from "src/services/backend/authService";
 import { saveTokens, saveUserId } from "src/utils/auth";
 import { getErrorMessage } from "src/utils/getErrorMessage";
 import { useTranslation, Trans } from "react-i18next";
-import { Button } from "src/components/ui/Button";
+import Button from "src/components/ui/Button";
 import { Input } from "src/components/ui";
 
 function Signup() {

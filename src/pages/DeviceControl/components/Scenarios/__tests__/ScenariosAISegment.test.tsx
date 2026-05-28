@@ -41,7 +41,7 @@ import type {
 // Mock i18n.language → always 'en' for deterministic locale assertion.
 // ---------------------------------------------------------------------------
 vi.mock("src/i18n.ts", () => ({
-  default: { language: "en" },
+  i18n: { language: "en" },
 }));
 
 // ---------------------------------------------------------------------------

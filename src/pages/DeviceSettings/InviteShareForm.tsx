@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import type { InviteShareFormProps } from "./types";
-import { PermissionsEditor } from "./components/PermissionsEditor";
-import { LoadGroupPanel } from "./components/LoadGroupPanel";
-import { SaveGroupPanel } from "./components/SaveGroupPanel";
+import PermissionsEditor from "./components/PermissionsEditor";
+import LoadGroupPanel from "./components/LoadGroupPanel";
+import SaveGroupPanel from "./components/SaveGroupPanel";
 import { Input, Button } from "src/components/ui";
 
-export const InviteShareForm: React.FC<InviteShareFormProps> = ({
+const InviteShareForm: React.FC<InviteShareFormProps> = ({
   t,
   shareForm,
   permissionsGroups,
@@ -117,3 +117,5 @@ export const InviteShareForm: React.FC<InviteShareFormProps> = ({
     </form>
   );
 };
+
+export default InviteShareForm;

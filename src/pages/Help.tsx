@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import { useTranslation, Trans } from "react-i18next";
-import { Button } from "src/components/ui/Button";
+import Button from "src/components/ui/Button";
 
 interface FAQItem {
   q: string;

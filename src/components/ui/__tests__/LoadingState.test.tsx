@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 
-import { LoadingState } from "../LoadingState";
+import LoadingState from "../LoadingState";
 
 afterEach(() => cleanup());
 

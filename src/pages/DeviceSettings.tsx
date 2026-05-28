@@ -18,10 +18,10 @@ import {
 import { useTranslation } from "react-i18next";
 import { useToast } from "src/components/ui/Toast";
 import { LoadingState, EmptyState } from "src/components/ui";
-import { DeviceInfoForm } from "./DeviceSettings/DeviceInfoForm";
-import { InviteShareForm } from "./DeviceSettings/InviteShareForm";
-import { SharesList } from "./DeviceSettings/SharesList";
-import { EditShareForm } from "./DeviceSettings/EditShareForm";
+import DeviceInfoForm from "./DeviceSettings/DeviceInfoForm";
+import InviteShareForm from "./DeviceSettings/InviteShareForm";
+import SharesList from "./DeviceSettings/SharesList";
+import EditShareForm from "./DeviceSettings/EditShareForm";
 import type {
   ShareFormState,
   DeviceInfoFormState,

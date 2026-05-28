@@ -1,15 +1,15 @@
 import React, { useState } from "react";
-import { ManualMouseControls } from "./ManualMouseControls.tsx";
-import { ManualKeyboardControls } from "./ManualKeyboardControls.tsx";
-import { ManualPowerControls } from "./ManualPowerControls.tsx";
-import { ManualTerminalControls } from "./ManualTerminalControls.tsx";
+import ManualMouseControls from "./ManualMouseControls.tsx";
+import ManualKeyboardControls from "./ManualKeyboardControls.tsx";
+import ManualPowerControls from "./ManualPowerControls.tsx";
+import ManualTerminalControls from "./ManualTerminalControls.tsx";
 import { useTranslation } from "react-i18next";
 import type { CommandAction } from "../../types.ts";
 import type { PermissionsSubset } from "src/types";
 
 type ManualSection = "mouse" | "keyboard" | "power" | "terminal";
 
-export const ManualControls: React.FC<{
+const ManualControls: React.FC<{
   disabled: boolean;
   addAction?: (action: CommandAction) => void;
   results?: { id: string; status: string; result: string }[];
@@ -146,3 +146,5 @@ export const ManualControls: React.FC<{
     </div>
   );
 };
+
+export default ManualControls;

@@ -5,10 +5,10 @@ import type { WebRtcConnectionState } from "../../hooks/realtime/useWebRtc";
 import { ChevronLeftIcon, ScenariosIcon, StopIcon } from "../icons/icons";
 import { FilesToggleIcon } from "../FileManager/icons";
 import { AssistantToggleIcon } from "../Assistant/icons";
-import { QualityPopover } from "../Stream/QualityPopover";
-import { PowerPopover } from "../Power/PowerPopover";
-import { HeaderTransferPill } from "../Transfer/HeaderTransferPill";
-import { ClipboardPill } from "../Clipboard/ClipboardPill";
+import QualityPopover from "../Stream/QualityPopover";
+import PowerPopover from "../Power/PowerPopover";
+import HeaderTransferPill from "../Transfer/HeaderTransferPill";
+import ClipboardPill from "../Clipboard/ClipboardPill";
 import type { ClipboardPillProps } from "../Clipboard/ClipboardPill";
 import type { QueueState } from "../../services/transfer";
 
@@ -76,7 +76,7 @@ function PanelTab({
   );
 }
 
-export function TopBar({
+function TopBar({
   activeMode,
   setActiveMode,
   addAction,
@@ -273,3 +273,5 @@ export function TopBar({
     </header>
   );
 }
+
+export default TopBar;

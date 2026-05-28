@@ -1,4 +1,4 @@
-import { Button } from "./Button";
+import Button from "./Button";
 
 interface ErrorStateProps {
   message: string;
@@ -7,7 +7,7 @@ interface ErrorStateProps {
   className?: string;
 }
 
-export function ErrorState({
+function ErrorState({
   message,
   onRetry,
   retryLabel = "Retry",
@@ -26,3 +26,5 @@ export function ErrorState({
     </div>
   );
 }
+
+export default ErrorState;
