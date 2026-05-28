@@ -1,4 +1,4 @@
-import { useRef, useCallback, useState } from "react";
+import { useRef, useCallback, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import type { MainContentProps, ScalingMode } from "src/pages/DeviceControl/types";
 import { computeRealImageCoords } from "src/pages/DeviceControl/utils/coords";
@@ -48,7 +48,10 @@ const MainContent: React.FC<
   const videoContainerRef = useRef<HTMLDivElement | null>(null);
 
   const lastCoordsRef = useRef<{ x: number; y: number } | null>(null);
-  const lastMoveSentAtRef = useRef<number>(0);
+  // Latest pointer position awaiting send, coalesced to one send per animation
+  // frame (~60Hz) so fast mouse motion stays smooth without flooding the wire.
+  const pendingMoveRef = useRef<{ x: number; y: number } | null>(null);
+  const moveRafRef = useRef<number | null>(null);
 
   // Scaling mode state (setter reserved for future UI toggle)
   const [scalingMode, _setScalingMode] = useState<ScalingMode>("fit");
@@ -87,15 +90,19 @@ const MainContent: React.FC<
       const btnName = buttonName(btn);
       const pressed = pressedButtonsFromMask(e.buttons);
 
-      console.log(`[screen-canvas] ${name}`, {
-        button: btn,
-        buttonName: btnName,
-        pressedButtonsMask: e.buttons,
-        pressedButtons: pressed,
-        x: Math.round(coords.x),
-        y: Math.round(coords.y),
-        debug: coords.debug,
-      });
+      // Skip logging for pointermove: it fires at the raw event rate (60-120Hz)
+      // and console.log at that frequency adds measurable jank.
+      if (name !== "pointermove") {
+        console.log(`[screen-canvas] ${name}`, {
+          button: btn,
+          buttonName: btnName,
+          pressedButtonsMask: e.buttons,
+          pressedButtons: pressed,
+          x: Math.round(coords.x),
+          y: Math.round(coords.y),
+          debug: coords.debug,
+        });
+      }
 
       if (typeof addAction === "function" && !disabled) {
         try {
@@ -118,16 +125,20 @@ const MainContent: React.FC<
             const curX = Math.round(coords.x);
             const curY = Math.round(coords.y);
             lastCoordsRef.current = { x: curX, y: curY };
-            const now =
-              typeof performance !== "undefined" && performance.now
-                ? performance.now()
-                : Date.now();
-            if (now - lastMoveSentAtRef.current < 100) return; // throttle
-            lastMoveSentAtRef.current = now;
-            addAction({
-              type: "mouse.move",
-              payload: { X: curX, Y: curY },
-            });
+            pendingMoveRef.current = { x: curX, y: curY };
+            if (moveRafRef.current == null) {
+              moveRafRef.current = requestAnimationFrame(() => {
+                moveRafRef.current = null;
+                const p = pendingMoveRef.current;
+                pendingMoveRef.current = null;
+                if (p && typeof addAction === "function" && !disabled) {
+                  addAction({
+                    type: "mouse.move",
+                    payload: { X: p.x, Y: p.y },
+                  });
+                }
+              });
+            }
           }
         } catch (err) {
           console.warn("Failed to send mouse action", err);
@@ -135,6 +146,13 @@ const MainContent: React.FC<
       }
     },
     [activeMode, getRealCoordsFromClient, addAction, disabled, hasMouse],
+  );
+
+  useEffect(
+    () => () => {
+      if (moveRafRef.current != null) cancelAnimationFrame(moveRafRef.current);
+    },
+    [],
   );
 
   const handleKeyDown = useCallback(
