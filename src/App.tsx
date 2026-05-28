@@ -1,5 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router";
-import Layout from "src/components/Layout";
+import Layout from "src/components/Shell/Layout";
 import Index from "src/pages/Index";
 import Login from "src/pages/Login";
 import Signup from "src/pages/Signup";
