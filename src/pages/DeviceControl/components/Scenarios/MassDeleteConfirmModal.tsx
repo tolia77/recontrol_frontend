@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button, Input, Modal } from "../../../../components/ui";
+import { Button, Input, Modal } from "src/components/ui";
 
 // D-22-12 / AUDIT-05 mass-delete arm: highest-friction destructive confirm.
 // Operator must type the literal "DELETE" (case-sensitive, no transliteration

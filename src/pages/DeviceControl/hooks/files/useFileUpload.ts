@@ -1,9 +1,9 @@
 import { useCallback, useRef } from "react";
 import type { RefObject } from "react";
 import type { TFunction } from "i18next";
-import type { NameConflictMode } from "../../services/files";
-import type { TransferItem, TransferQueue } from "../../services/transfer";
-import { detectSeparator, joinPath } from "../../components/FileManager/utils/pathUtils";
+import type { NameConflictMode } from "src/pages/DeviceControl/services/files";
+import type { TransferItem, TransferQueue } from "src/pages/DeviceControl/services/transfer";
+import { detectSeparator, joinPath } from "src/pages/DeviceControl/components/FileManager/utils/pathUtils";
 
 /**
  * 100 MiB upload-warning threshold (TRANSFER-06). The CONTEXT-locked check is

@@ -9,24 +9,24 @@ import {
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 
-import { scenarios as scenariosEn } from "../../../../../locales/en/scenarios";
-import { ToastProvider } from "../../../../../components/ui";
+import { scenarios as scenariosEn } from "src/locales/en/scenarios";
+import { ToastProvider } from "src/components/ui";
 import type {
   ScenarioRun,
   ScenarioRunStep,
   ScenarioRunStepStatus,
-} from "../../../../../services/backend/scenarioRunsService";
+} from "src/services/backend/scenarioRunsService";
 import type { ActiveRun } from "../scenariosReducer";
 import {
   initialTranscriptState,
   type ToolRow,
-} from "../../Assistant/transcriptReducer";
+} from "src/pages/DeviceControl/components/Assistant/transcriptReducer";
 
 // Mock the service BEFORE importing the component.
-vi.mock("../../../../../services/backend/scenarioRunsService", async () => {
+vi.mock("src/services/backend/scenarioRunsService", async () => {
   const actual = await vi.importActual<
-    typeof import("../../../../../services/backend/scenarioRunsService")
-  >("../../../../../services/backend/scenarioRunsService");
+    typeof import("src/services/backend/scenarioRunsService")
+  >("src/services/backend/scenarioRunsService");
   return {
     ...actual,
     scenarioRunsService: {
@@ -38,7 +38,7 @@ vi.mock("../../../../../services/backend/scenarioRunsService", async () => {
   };
 });
 
-import { scenarioRunsService } from "../../../../../services/backend/scenarioRunsService";
+import { scenarioRunsService } from "src/services/backend/scenarioRunsService";
 import ScenariosHistoryDetail from "../ScenariosHistoryDetail";
 
 const mockedShow = vi.mocked(scenarioRunsService.show);

@@ -9,7 +9,7 @@ import type {
   ScenarioRun,
   ScenarioRunStep,
   ScenarioRunStepStatus,
-} from "../../../../../services/backend/scenarioRunsService";
+} from "src/services/backend/scenarioRunsService";
 
 // ---------------------------------------------------------------------------
 // Fixtures

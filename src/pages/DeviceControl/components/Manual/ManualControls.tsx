@@ -4,7 +4,7 @@ import ManualKeyboardControls from "./ManualKeyboardControls.tsx";
 import ManualPowerControls from "./ManualPowerControls.tsx";
 import ManualTerminalControls from "./ManualTerminalControls.tsx";
 import { useTranslation } from "react-i18next";
-import type { CommandAction } from "../../types.ts";
+import type { CommandAction } from "src/pages/DeviceControl/types";
 import type { PermissionsSubset } from "src/types";
 
 type ManualSection = "mouse" | "keyboard" | "power" | "terminal";

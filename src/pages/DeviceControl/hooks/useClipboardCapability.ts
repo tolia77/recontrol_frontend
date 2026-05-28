@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { detectCapability } from "../services/clipboard";
+import { detectCapability } from "src/pages/DeviceControl/services/clipboard";
 
 export interface ClipboardCapability {
   canRead: boolean;

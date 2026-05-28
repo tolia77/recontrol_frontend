@@ -1,4 +1,4 @@
-import type { StreamStats } from "../../hooks/realtime/useStreamStats";
+import type { StreamStats } from "src/pages/DeviceControl/hooks/realtime/useStreamStats";
 
 interface StreamStatsOverlayProps {
   stats: StreamStats | null;

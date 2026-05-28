@@ -9,15 +9,15 @@ import {
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 
-import { scenarios as scenariosEn } from "../../../../../locales/en/scenarios";
+import { scenarios as scenariosEn } from "src/locales/en/scenarios";
 import ScenariosRunMode from "../ScenariosRunMode";
 import type { ActiveRun, ActiveRunStatus } from "../scenariosReducer";
 import {
   initialTranscriptState,
   type ToolRow,
   type TranscriptState,
-} from "../../Assistant/transcriptReducer";
-import { ToastProvider } from "../../../../../components/ui";
+} from "src/pages/DeviceControl/components/Assistant/transcriptReducer";
+import { ToastProvider } from "src/components/ui";
 import type { ReactElement } from "react";
 
 afterEach(() => {

@@ -8,24 +8,24 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useToast } from "../../../../components/ui";
+import { useToast } from "src/components/ui";
 import {
   scenariosService,
   type DraftResponse,
   type PolicyPreviewResponse,
   type Scenario,
-} from "../../../../services/backend/scenariosService";
-import { useScenarioRunChannel } from "../realtime/useScenarioRunChannel";
+} from "src/services/backend/scenariosService";
+import { useScenarioRunChannel } from "src/pages/DeviceControl/hooks/realtime/useScenarioRunChannel";
 import type {
   ScenarioRunBroadcast,
   ScenarioRunDispatchAction,
-} from "../realtime/useScenarioRunChannel";
+} from "src/pages/DeviceControl/hooks/realtime/useScenarioRunChannel";
 import {
   initialScenariosState,
   scenariosReducer,
   type ScenariosSegment,
   type ScenariosState,
-} from "../../components/Scenarios/scenariosReducer";
+} from "src/pages/DeviceControl/components/Scenarios/scenariosReducer";
 
 // ---------------------------------------------------------------------------
 // PanelMode — duplicated here so the hook does not need to import from the

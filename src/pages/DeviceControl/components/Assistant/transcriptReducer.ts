@@ -1,4 +1,4 @@
-import type { AssistantBroadcast } from "../../hooks/realtime/useAssistantChannel";
+import type { AssistantBroadcast } from "src/pages/DeviceControl/hooks/realtime/useAssistantChannel";
 
 /**
  * Transcript reducer (Plan 20-07).

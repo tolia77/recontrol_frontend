@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type {
   FileManagerState,
   SortState,
-} from "../../components/FileManager/types";
+} from "src/pages/DeviceControl/components/FileManager/types";
 
 const STORAGE_VERSION = "v1";
 

@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
-import ToolCallCard from "../Assistant/ToolCallCard";
-import type { ToolRow } from "../Assistant/transcriptReducer";
+import ToolCallCard from "src/pages/DeviceControl/components/Assistant/ToolCallCard";
+import type { ToolRow } from "src/pages/DeviceControl/components/Assistant/transcriptReducer";
 
 /**
  * RunOutput — thin presentational wrapper around the existing v1.4 ToolCallCard

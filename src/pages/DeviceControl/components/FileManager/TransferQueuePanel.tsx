@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useTransferQueue } from "../../hooks/state/useTransferQueue";
+import { useTransferQueue } from "src/pages/DeviceControl/hooks/state/useTransferQueue";
 import type {
   TransferItem,
   TransferQueue,
   TransferState,
-} from "../../services/transfer";
-import { SpeedTracker } from "../../services/transfer/speedTracker";
+} from "src/pages/DeviceControl/services/transfer";
+import { SpeedTracker } from "src/pages/DeviceControl/services/transfer/speedTracker";
 import {
   ChevronDownIcon,
   ChevronUpIcon,

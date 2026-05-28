@@ -1,4 +1,4 @@
-import type { QueueState } from "../../services/transfer";
+import type { QueueState } from "src/pages/DeviceControl/services/transfer";
 
 interface HeaderTransferPillProps {
   snapshot: QueueState;

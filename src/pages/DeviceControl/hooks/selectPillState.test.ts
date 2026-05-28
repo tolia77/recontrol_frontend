@@ -7,7 +7,7 @@
 import { describe, expect, it } from "vitest";
 import { selectPillState } from "./selectPillState";
 import type { SelectPillStateInput } from "./selectPillState";
-import type { ClipboardCapabilitiesEnvelope } from "../services/clipboard/clipboardProtocol.generated";
+import type { ClipboardCapabilitiesEnvelope } from "src/pages/DeviceControl/services/clipboard/clipboardProtocol.generated";
 
 function caps(
   overrides: Partial<ClipboardCapabilitiesEnvelope> = {},

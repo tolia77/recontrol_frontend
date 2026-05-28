@@ -17,23 +17,23 @@ import {
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 
-import { scenarios as scenariosEn } from "../../../../../locales/en/scenarios";
-import { ToastProvider } from "../../../../../components/ui";
-import type { ScenarioRunBroadcast } from "../../../hooks/realtime/useScenarioRunChannel";
-import type { Scenario } from "../../../../../services/backend/scenariosService";
+import { scenarios as scenariosEn } from "src/locales/en/scenarios";
+import { ToastProvider } from "src/components/ui";
+import type { ScenarioRunBroadcast } from "src/pages/DeviceControl/hooks/realtime/useScenarioRunChannel";
+import type { Scenario } from "src/services/backend/scenariosService";
 import type {
   ScenarioRun,
   ScenarioRunStatus,
-} from "../../../../../services/backend/scenarioRunsService";
+} from "src/services/backend/scenarioRunsService";
 
 // -----------------------------------------------------------------------------
 // Mocks — must be defined BEFORE importing the component.
 // -----------------------------------------------------------------------------
 
-vi.mock("../../../../../services/backend/scenariosService", async () => {
+vi.mock("src/services/backend/scenariosService", async () => {
   const actual = await vi.importActual<
-    typeof import("../../../../../services/backend/scenariosService")
-  >("../../../../../services/backend/scenariosService");
+    typeof import("src/services/backend/scenariosService")
+  >("src/services/backend/scenariosService");
   return {
     ...actual,
     scenariosService: {
@@ -48,10 +48,10 @@ vi.mock("../../../../../services/backend/scenariosService", async () => {
   };
 });
 
-vi.mock("../../../../../services/backend/scenarioRunsService", async () => {
+vi.mock("src/services/backend/scenarioRunsService", async () => {
   const actual = await vi.importActual<
-    typeof import("../../../../../services/backend/scenarioRunsService")
-  >("../../../../../services/backend/scenarioRunsService");
+    typeof import("src/services/backend/scenarioRunsService")
+  >("src/services/backend/scenarioRunsService");
   return {
     ...actual,
     scenarioRunsService: {
@@ -67,7 +67,7 @@ vi.mock("../../../../../services/backend/scenarioRunsService", async () => {
 let capturedOnBroadcast: ((msg: ScenarioRunBroadcast) => void) | null = null;
 const mockDispatch = vi.fn();
 
-vi.mock("../../../hooks/realtime/useScenarioRunChannel", () => ({
+vi.mock("src/pages/DeviceControl/hooks/realtime/useScenarioRunChannel", () => ({
   useScenarioRunChannel: ({
     onBroadcast,
   }: {
@@ -79,8 +79,8 @@ vi.mock("../../../hooks/realtime/useScenarioRunChannel", () => ({
   },
 }));
 
-import { scenariosService } from "../../../../../services/backend/scenariosService";
-import { scenarioRunsService } from "../../../../../services/backend/scenarioRunsService";
+import { scenariosService } from "src/services/backend/scenariosService";
+import { scenarioRunsService } from "src/services/backend/scenarioRunsService";
 import ScenariosPanel from "../ScenariosPanel";
 
 const mockedScenariosIndex = vi.mocked(scenariosService.index);

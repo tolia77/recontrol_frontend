@@ -1,14 +1,14 @@
 import { DownloadTransfer } from "./DownloadTransfer";
-import { FilesChannelError } from "../files";
-import type { FilesChannelClient } from "../files/FilesChannelClient";
-import type { FilesDataChannel } from "../files/FilesDataChannel";
-import type { FilesChannelRequest } from "../../hooks/realtime/useFilesChannel";
-import type { FilesErrorCode } from "../files/filesProtocol.generated";
+import { FilesChannelError } from "src/pages/DeviceControl/services/files";
+import type { FilesChannelClient } from "src/pages/DeviceControl/services/files/FilesChannelClient";
+import type { FilesDataChannel } from "src/pages/DeviceControl/services/files/FilesDataChannel";
+import type { FilesChannelRequest } from "src/pages/DeviceControl/hooks/realtime/useFilesChannel";
+import type { FilesErrorCode } from "src/pages/DeviceControl/services/files/filesProtocol.generated";
 import type { RunDownloadFn } from "./types";
 import {
   detectSeparator,
   joinPath,
-} from "../../components/FileManager/utils/pathUtils";
+} from "src/pages/DeviceControl/components/FileManager/utils/pathUtils";
 
 /**
  * Browser-side download runner.

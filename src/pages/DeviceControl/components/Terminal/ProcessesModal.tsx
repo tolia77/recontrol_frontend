@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import type { ProcessInfo } from "../../types.ts";
-import { RefreshIcon, CloseIcon } from "../icons/icons.tsx";
+import type { ProcessInfo } from "src/pages/DeviceControl/types";
+import { RefreshIcon, CloseIcon } from "src/pages/DeviceControl/components/icons/icons";
 import {
   Modal,
   Button,

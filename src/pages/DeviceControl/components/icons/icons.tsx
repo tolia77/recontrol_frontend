@@ -1,5 +1,5 @@
 import React from "react";
-import type { IconProps } from "../../types.ts";
+import type { IconProps } from "src/pages/DeviceControl/types";
 
 /**
  * Back Arrow Icon (ChevronLeft)

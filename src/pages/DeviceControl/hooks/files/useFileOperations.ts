@@ -1,13 +1,13 @@
 import React, { useCallback } from "react";
 import type { RefObject } from "react";
 import type { TFunction } from "i18next";
-import { FilesChannelError } from "../../services/files";
-import type { FileEntry, NameConflictMode } from "../../services/files";
-import type { UseFilesChannel } from "../realtime/useFilesChannel";
-import type { FileManagerUiAction } from "../../components/FileManager/fileManagerUiReducer";
-import { mapFilesErrorToMessage } from "../../components/FileManager/utils/errors";
-import { detectSeparator, isAncestor, joinPath } from "../../components/FileManager/utils/pathUtils";
-import type { useFileManagerSelection } from "../state/useFileManagerSelection";
+import { FilesChannelError } from "src/pages/DeviceControl/services/files";
+import type { FileEntry, NameConflictMode } from "src/pages/DeviceControl/services/files";
+import type { UseFilesChannel } from "src/pages/DeviceControl/hooks/realtime/useFilesChannel";
+import type { FileManagerUiAction } from "src/pages/DeviceControl/components/FileManager/fileManagerUiReducer";
+import { mapFilesErrorToMessage } from "src/pages/DeviceControl/components/FileManager/utils/errors";
+import { detectSeparator, isAncestor, joinPath } from "src/pages/DeviceControl/components/FileManager/utils/pathUtils";
+import type { useFileManagerSelection } from "src/pages/DeviceControl/hooks/state/useFileManagerSelection";
 
 interface MkdirResponse {
   path: string;

@@ -3,7 +3,7 @@ import type {
   ScenarioRunStatus,
   ScenarioRunStep,
   ScenarioRunStepStatus,
-} from "../../../../services/backend/scenarioRunsService";
+} from "src/services/backend/scenarioRunsService";
 
 // ---------------------------------------------------------------------------
 // GLYPH_CATALOG — single source of truth for the exit-code timeline.

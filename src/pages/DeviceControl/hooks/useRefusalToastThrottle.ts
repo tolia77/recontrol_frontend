@@ -1,7 +1,7 @@
 import { useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "src/components/ui";
-import type { ClipboardRefusalReason } from "../services/clipboard/clipboardProtocol.generated";
+import type { ClipboardRefusalReason } from "src/pages/DeviceControl/services/clipboard/clipboardProtocol.generated";
 
 const THROTTLE_MS = 2_000;
 

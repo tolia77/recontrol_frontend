@@ -1,5 +1,5 @@
-import type { FileEntry } from "../../../services/files";
-import type { SortState } from "../types";
+import type { FileEntry } from "src/pages/DeviceControl/services/files";
+import type { SortState } from "src/pages/DeviceControl/components/FileManager/types";
 import { classify } from "./fileTypes";
 
 /**

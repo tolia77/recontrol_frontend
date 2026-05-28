@@ -1,11 +1,11 @@
 import type { MouseEvent, RefObject } from "react";
 import { useTranslation } from "react-i18next";
-import type { UseFilesChannel } from "../../hooks/realtime/useFilesChannel";
-import type { useFileManagerSelection } from "../../hooks/state/useFileManagerSelection";
-import type { useFilesRoots } from "../../hooks/state/useFilesRoots";
+import type { UseFilesChannel } from "src/pages/DeviceControl/hooks/realtime/useFilesChannel";
+import type { useFileManagerSelection } from "src/pages/DeviceControl/hooks/state/useFileManagerSelection";
+import type { useFilesRoots } from "src/pages/DeviceControl/hooks/state/useFilesRoots";
 import type { SortColumn, SortState } from "./types";
-import type { FileEntry } from "../../services/files";
-import type { TransferQueue } from "../../services/transfer";
+import type { FileEntry } from "src/pages/DeviceControl/services/files";
+import type { TransferQueue } from "src/pages/DeviceControl/services/transfer";
 import FileManagerSidebar from "./FileManagerSidebar";
 import FileManagerToolbar from "./FileManagerToolbar";
 import FileManagerBreadcrumb from "./FileManagerBreadcrumb";

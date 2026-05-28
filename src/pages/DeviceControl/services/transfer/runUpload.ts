@@ -1,7 +1,7 @@
 import type { RefObject } from "react";
-import { ChunkHeader } from "../files/ChunkHeader";
-import { FilesChannelError } from "../files";
-import type { FilesChannelRequest } from "../../hooks/realtime/useFilesChannel";
+import { ChunkHeader } from "src/pages/DeviceControl/services/files/ChunkHeader";
+import { FilesChannelError } from "src/pages/DeviceControl/services/files";
+import type { FilesChannelRequest } from "src/pages/DeviceControl/hooks/realtime/useFilesChannel";
 import type { RunUploadFn } from "./types";
 
 /**

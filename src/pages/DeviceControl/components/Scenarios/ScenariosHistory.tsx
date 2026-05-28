@@ -7,12 +7,12 @@ import {
   LoadingState,
   ErrorState,
   EmptyState,
-} from "../../../../components/ui";
+} from "src/components/ui";
 import {
   scenarioRunsService,
   type ScenarioRun,
   type ScenarioRunStatus,
-} from "../../../../services/backend/scenarioRunsService";
+} from "src/services/backend/scenarioRunsService";
 import { STATUS_BADGE_CLASS, buildExitCodeTimeline } from "./exitCodeGlyphs";
 import MassDeleteConfirmModal from "./MassDeleteConfirmModal";
 

@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button, Spinner } from "../../../../components/ui";
-import { isIrreversible } from "../../../../services/scenarios/irreversibleIntentCatalog";
+import { Button, Spinner } from "src/components/ui";
+import { isIrreversible } from "src/services/scenarios/irreversibleIntentCatalog";
 import type {
   PolicyPreviewResponse,
   PolicyPreviewStep,
-} from "../../../../services/backend/scenariosService";
+} from "src/services/backend/scenariosService";
 
 // D-22-04 / D-22-05 / D-22-06: center-screen modal that renders the
 // /policy_preview response as a per-step list with shell-like primary line

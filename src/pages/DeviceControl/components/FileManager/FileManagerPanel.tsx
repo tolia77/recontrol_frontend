@@ -9,15 +9,15 @@ import {
 import type { MouseEvent, RefObject } from "react";
 import { useTranslation } from "react-i18next";
 import { useToast, ConfirmModal } from "src/components/ui";
-import type { UseFilesChannel } from "../../hooks/realtime/useFilesChannel";
-import { useFilesRoots } from "../../hooks/state/useFilesRoots";
-import { useFileManagerSelection } from "../../hooks/state/useFileManagerSelection";
-import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
-import { useFileUpload } from "../../hooks/files/useFileUpload";
-import { useFileDownload } from "../../hooks/files/useFileDownload";
-import { useFileDragDrop } from "../../hooks/files/useFileDragDrop";
-import { useFileOperations } from "../../hooks/files/useFileOperations";
-import type { FileEntry, NameConflictMode } from "../../services/files";
+import type { UseFilesChannel } from "src/pages/DeviceControl/hooks/realtime/useFilesChannel";
+import { useFilesRoots } from "src/pages/DeviceControl/hooks/state/useFilesRoots";
+import { useFileManagerSelection } from "src/pages/DeviceControl/hooks/state/useFileManagerSelection";
+import { useKeyboardShortcuts } from "src/pages/DeviceControl/hooks/useKeyboardShortcuts";
+import { useFileUpload } from "src/pages/DeviceControl/hooks/files/useFileUpload";
+import { useFileDownload } from "src/pages/DeviceControl/hooks/files/useFileDownload";
+import { useFileDragDrop } from "src/pages/DeviceControl/hooks/files/useFileDragDrop";
+import { useFileOperations } from "src/pages/DeviceControl/hooks/files/useFileOperations";
+import type { FileEntry, NameConflictMode } from "src/pages/DeviceControl/services/files";
 import type {
   ContextMenuItem,
   FileManagerState,
@@ -36,7 +36,7 @@ import NameConflictDialog from "./NameConflictDialog";
 import type {
   DownloadTransfer,
   TransferQueue,
-} from "../../services/transfer";
+} from "src/pages/DeviceControl/services/transfer";
 import { detectSeparator, isAncestor, parentPath } from "./utils/pathUtils";
 import FileManagerView from "./FileManagerView";
 

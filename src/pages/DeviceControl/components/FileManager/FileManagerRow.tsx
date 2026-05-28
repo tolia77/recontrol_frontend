@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef } from "react";
 import type { KeyboardEvent, MouseEvent } from "react";
-import type { FileEntry } from "../../services/files";
+import type { FileEntry } from "src/pages/DeviceControl/services/files";
 import { IconForEntry } from "./icons";
 import { formatBytes, formatDate, formatType } from "./utils/formatters";
 

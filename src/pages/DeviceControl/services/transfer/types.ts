@@ -1,7 +1,7 @@
 import type {
   FilesErrorCode,
   NameConflictMode,
-} from "../files/filesProtocol.generated";
+} from "src/pages/DeviceControl/services/files/filesProtocol.generated";
 
 /**
  * Direction of a transfer item from the browser's point of view.

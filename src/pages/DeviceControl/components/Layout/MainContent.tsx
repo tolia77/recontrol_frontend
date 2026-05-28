@@ -1,17 +1,17 @@
 import { useRef, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { MainContentProps, ScalingMode } from "../../types";
-import { computeRealImageCoords } from "../../utils/coords";
+import type { MainContentProps, ScalingMode } from "src/pages/DeviceControl/types";
+import { computeRealImageCoords } from "src/pages/DeviceControl/utils/coords";
 import {
   buttonName,
   pressedButtonsFromMask,
   normalizeWheelToClicks,
   mapButtonToBackend,
-} from "../../utils/mouse";
-import { mapToVirtualKey } from "../../utils/keyboard";
-import ManualControls from "../Manual/ManualControls";
-import StreamStatsOverlay from "../Stream/StreamStatsOverlay";
-import Splitter from "../FileManager/Splitter";
+} from "src/pages/DeviceControl/utils/mouse";
+import { mapToVirtualKey } from "src/pages/DeviceControl/utils/keyboard";
+import ManualControls from "src/pages/DeviceControl/components/Manual/ManualControls";
+import StreamStatsOverlay from "src/pages/DeviceControl/components/Stream/StreamStatsOverlay";
+import Splitter from "src/pages/DeviceControl/components/FileManager/Splitter";
 
 /**
  * Main Content Area with WebRTC video stream

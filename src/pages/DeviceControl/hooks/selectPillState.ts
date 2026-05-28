@@ -1,7 +1,7 @@
 import type {
   ClipboardCapabilitiesEnvelope,
   ClipboardRefusalReason,
-} from "../services/clipboard/clipboardProtocol.generated";
+} from "src/pages/DeviceControl/services/clipboard/clipboardProtocol.generated";
 import type { ClipboardCapability } from "./useClipboardCapability";
 
 /**

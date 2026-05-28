@@ -1,5 +1,5 @@
 import { ChunkHeader } from "./ChunkHeader";
-import type { DownloadTransfer } from "../transfer/DownloadTransfer";
+import type { DownloadTransfer } from "src/pages/DeviceControl/services/transfer/DownloadTransfer";
 
 /**
  * Frontend-side binary-channel handler for `files-data`.

@@ -1,18 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Button, useToast } from "../../../../components/ui";
+import { Button, useToast } from "src/components/ui";
 import {
   scenarioRunsService,
   type ScenarioRun,
   type ScenarioRunStatus,
   type ScenarioRunStep,
-} from "../../../../services/backend/scenarioRunsService";
+} from "src/services/backend/scenarioRunsService";
 import { GLYPH_CATALOG, STATUS_BADGE_CLASS } from "./exitCodeGlyphs";
 import RunOutput from "./RunOutput";
-import { copyAsMarkdown } from "../Assistant/copyAsMarkdown";
+import { copyAsMarkdown } from "src/pages/DeviceControl/components/Assistant/copyAsMarkdown";
 import type { ActiveRun } from "./scenariosReducer";
-import type { ToolRow } from "../Assistant/transcriptReducer";
+import type { ToolRow } from "src/pages/DeviceControl/components/Assistant/transcriptReducer";
 
 /**
  * ScenariosHistoryDetail — full-takeover history detail per D-22-09 / AUDIT-04.

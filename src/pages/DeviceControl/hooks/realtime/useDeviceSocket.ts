@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getAccessToken } from "src/utils/auth";
 import { refreshAccessTokenOnce } from "src/services/backend/config";
-import type { ProcessInfo } from "../state/useTerminalSession";
+import type { ProcessInfo } from "src/pages/DeviceControl/hooks/state/useTerminalSession";
 
 /**
  * Decode a JWT access token's `exp` claim and report whether it is already

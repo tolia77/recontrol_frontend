@@ -1,16 +1,16 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
-import type { SidebarProps, CommandAction } from "../../types";
-import type { WebRtcConnectionState } from "../../hooks/realtime/useWebRtc";
-import { ChevronLeftIcon, ScenariosIcon, StopIcon } from "../icons/icons";
-import { FilesToggleIcon } from "../FileManager/icons";
-import { AssistantToggleIcon } from "../Assistant/icons";
-import QualityPopover from "../Stream/QualityPopover";
-import PowerPopover from "../Power/PowerPopover";
-import HeaderTransferPill from "../Transfer/HeaderTransferPill";
-import ClipboardPill from "../Clipboard/ClipboardPill";
-import type { ClipboardPillProps } from "../Clipboard/ClipboardPill";
-import type { QueueState } from "../../services/transfer";
+import type { SidebarProps, CommandAction } from "src/pages/DeviceControl/types";
+import type { WebRtcConnectionState } from "src/pages/DeviceControl/hooks/realtime/useWebRtc";
+import { ChevronLeftIcon, ScenariosIcon, StopIcon } from "src/pages/DeviceControl/components/icons/icons";
+import { FilesToggleIcon } from "src/pages/DeviceControl/components/FileManager/icons";
+import { AssistantToggleIcon } from "src/pages/DeviceControl/components/Assistant/icons";
+import QualityPopover from "src/pages/DeviceControl/components/Stream/QualityPopover";
+import PowerPopover from "src/pages/DeviceControl/components/Power/PowerPopover";
+import HeaderTransferPill from "src/pages/DeviceControl/components/Transfer/HeaderTransferPill";
+import ClipboardPill from "src/pages/DeviceControl/components/Clipboard/ClipboardPill";
+import type { ClipboardPillProps } from "src/pages/DeviceControl/components/Clipboard/ClipboardPill";
+import type { QueueState } from "src/pages/DeviceControl/services/transfer";
 
 /**
  * TopBarProps mirrors the old `ExtendedSidebarProps` 1:1 (renamed) — no new

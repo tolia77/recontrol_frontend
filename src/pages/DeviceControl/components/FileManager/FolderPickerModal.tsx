@@ -5,8 +5,8 @@ import type {
   FileEntry,
   FilesListResponse,
   FilesListRootsResponse,
-} from "../../services/files";
-import type { UseFilesChannel } from "../../hooks/realtime/useFilesChannel";
+} from "src/pages/DeviceControl/services/files";
+import type { UseFilesChannel } from "src/pages/DeviceControl/hooks/realtime/useFilesChannel";
 import { ChevronRightIcon, ChevronDownIcon, FolderIcon } from "./icons";
 import { mapFilesErrorToMessage } from "./utils/errors";
 

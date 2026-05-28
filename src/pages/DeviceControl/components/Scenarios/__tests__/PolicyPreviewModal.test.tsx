@@ -9,7 +9,7 @@ import {
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 
-import { scenarios as scenariosEn } from "../../../../../locales/en/scenarios";
+import { scenarios as scenariosEn } from "src/locales/en/scenarios";
 import PolicyPreviewModal, {
   formatShellPreview,
   type PolicyPreviewModalCommandStep,
@@ -17,7 +17,7 @@ import PolicyPreviewModal, {
 import type {
   PolicyPreviewResponse,
   PolicyPreviewStep,
-} from "../../../../../services/backend/scenariosService";
+} from "src/services/backend/scenariosService";
 
 afterEach(() => cleanup());
 

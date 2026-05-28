@@ -4,11 +4,11 @@ import {
   selectPillState,
   type PillState,
   type PillStateResult,
-} from "../../hooks/selectPillState";
+} from "src/pages/DeviceControl/hooks/selectPillState";
 import type {
   ClipboardCapabilitiesEnvelope,
   ClipboardRefusalReason,
-} from "../../services/clipboard/clipboardProtocol.generated";
+} from "src/pages/DeviceControl/services/clipboard/clipboardProtocol.generated";
 import {
   PauseIcon,
   ArrowRightIcon,

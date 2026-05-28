@@ -1,8 +1,8 @@
-import type { FileEntry } from "../../services/files";
+import type { FileEntry } from "src/pages/DeviceControl/services/files";
 import { LockIcon, FolderIcon } from "./icons";
 import { isAncestor } from "./utils/pathUtils";
 import { useTranslation } from "react-i18next";
-import { ErrorState } from "../../../../components/ui";
+import { ErrorState } from "src/components/ui";
 
 interface FileManagerSidebarProps {
   roots: FileEntry[] | null;

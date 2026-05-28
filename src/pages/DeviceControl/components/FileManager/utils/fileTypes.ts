@@ -1,4 +1,4 @@
-import type { FileTypeKind } from "../types";
+import type { FileTypeKind } from "src/pages/DeviceControl/components/FileManager/types";
 
 const IMAGE_EXTS = new Set([
   "png",

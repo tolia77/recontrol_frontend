@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { SegmentedControl } from "../../../../components/ui";
+import { SegmentedControl } from "src/components/ui";
 import ScenariosLibrary from "./ScenariosLibrary";
 import ScenarioEditor from "./ScenarioEditor";
 import ScenariosHistory from "./ScenariosHistory";
@@ -10,9 +10,9 @@ import ScenariosRunMode from "./ScenariosRunMode";
 import PolicyPreviewModal from "./PolicyPreviewModal";
 import ScenariosAISegment from "./ScenariosAISegment";
 import DraftReviewModal from "./DraftReviewModal";
-import type { DraftResponse } from "../../../../services/backend/scenariosService";
+import type { DraftResponse } from "src/services/backend/scenariosService";
 import type { ScenariosSegment } from "./scenariosReducer";
-import { useScenariosPanelActions } from "../../hooks/state/useScenariosPanelActions";
+import { useScenariosPanelActions } from "src/pages/DeviceControl/hooks/state/useScenariosPanelActions";
 
 // -----------------------------------------------------------------------------
 // PanelMode discriminated union — Plan 23-09 extends the P22 shape with a

@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 
-import { Button, Modal } from "../../../../components/ui";
+import { Button, Modal } from "src/components/ui";
 
 export interface DirtyGuardModalProps {
   open: boolean;

@@ -1,4 +1,4 @@
-import type { ChunkHeader } from "../files/ChunkHeader";
+import type { ChunkHeader } from "src/pages/DeviceControl/services/files/ChunkHeader";
 
 /**
  * Closed state machine for a single browser-side download.

@@ -3,9 +3,9 @@ import type { JSX } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, useToast } from "src/components/ui";
 import RunOutput from "./RunOutput";
-import { copyAsMarkdown } from "../Assistant/copyAsMarkdown";
+import { copyAsMarkdown } from "src/pages/DeviceControl/components/Assistant/copyAsMarkdown";
 import type { ActiveRun, ActiveRunStatus } from "./scenariosReducer";
-import type { ToolRow } from "../Assistant/transcriptReducer";
+import type { ToolRow } from "src/pages/DeviceControl/components/Assistant/transcriptReducer";
 
 /**
  * ScenariosRunMode — full-takeover panel that owns the device-control right

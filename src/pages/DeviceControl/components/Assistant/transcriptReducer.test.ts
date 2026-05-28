@@ -18,7 +18,7 @@ import {
   type TranscriptAction,
   type TranscriptState,
 } from "./transcriptReducer";
-import type { AssistantBroadcast } from "../../hooks/realtime/useAssistantChannel";
+import type { AssistantBroadcast } from "src/pages/DeviceControl/hooks/realtime/useAssistantChannel";
 
 function broadcast(b: AssistantBroadcast): TranscriptAction {
   return { type: "broadcast", broadcast: b };
