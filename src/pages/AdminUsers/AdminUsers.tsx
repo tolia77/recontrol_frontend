@@ -6,8 +6,8 @@ import {
   Card,
   ConfirmModal,
 } from "src/components/ui";
-import { useAdminUsers } from "./AdminUsers/useAdminUsers";
-import AdminUsersTable from "./AdminUsers/AdminUsersTable";
+import { useAdminUsers } from "./useAdminUsers";
+import AdminUsersTable from "./AdminUsersTable";
 
 const AdminUsers = () => {
   const { t } = useTranslation("adminUsers");

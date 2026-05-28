@@ -6,10 +6,10 @@ import Signup from "src/pages/Signup";
 import DeviceControl from "src/pages/DeviceControl/DeviceControl";
 import Dashboard from "src/pages/Dashboard";
 import Devices from "src/pages/Devices/Devices";
-import DeviceSettings from "src/pages/DeviceSettings";
+import DeviceSettings from "src/pages/DeviceSettings/DeviceSettings";
 import Help from "src/pages/Help";
 import UserSettings from "src/pages/UserSettings";
-import AdminUsers from "src/pages/AdminUsers";
+import AdminUsers from "src/pages/AdminUsers/AdminUsers";
 
 function App() {
   return (

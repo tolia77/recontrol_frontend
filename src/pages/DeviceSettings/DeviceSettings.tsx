@@ -1,11 +1,11 @@
 import { useParams, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LoadingState, EmptyState } from "src/components/ui";
-import DeviceInfoForm from "./DeviceSettings/DeviceInfoForm";
-import InviteShareForm from "./DeviceSettings/InviteShareForm";
-import SharesList from "./DeviceSettings/SharesList";
-import EditShareForm from "./DeviceSettings/EditShareForm";
-import { useDeviceSettings } from "./DeviceSettings/useDeviceSettings";
+import DeviceInfoForm from "./DeviceInfoForm";
+import InviteShareForm from "./InviteShareForm";
+import SharesList from "./SharesList";
+import EditShareForm from "./EditShareForm";
+import { useDeviceSettings } from "./useDeviceSettings";
 
 const DeviceSettings = () => {
   const { t } = useTranslation("deviceSettings");
