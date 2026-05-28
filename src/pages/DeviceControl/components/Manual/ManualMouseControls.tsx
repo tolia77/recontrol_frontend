@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { mapButtonToBackend } from "./utils/mouse.ts";
+import { mapButtonToBackend } from "../../utils/mouse.ts";
 import { useTranslation } from "react-i18next";
 import { Button, Input } from "src/components/ui";
 

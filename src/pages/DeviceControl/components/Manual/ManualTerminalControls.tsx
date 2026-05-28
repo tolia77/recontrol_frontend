@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ProcessesModal } from "./components/ProcessesModal.tsx";
+import { ProcessesModal } from "../ProcessesModal.tsx";
 import { Button, Input } from "src/components/ui";
 
 export const ManualTerminalControls: React.FC<{

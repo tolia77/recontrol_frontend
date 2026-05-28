@@ -1,17 +1,17 @@
 import { useRef, useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { MainContentProps, ScalingMode } from "./types";
-import { computeRealImageCoords } from "./utils/coords";
+import type { MainContentProps, ScalingMode } from "../../types";
+import { computeRealImageCoords } from "../../utils/coords";
 import {
   buttonName,
   pressedButtonsFromMask,
   normalizeWheelToClicks,
   mapButtonToBackend,
-} from "./utils/mouse";
-import { mapToVirtualKey } from "./utils/keyboard";
-import { ManualControls } from "./ManualControls";
-import { StreamStatsOverlay } from "./components/StreamStatsOverlay";
-import { Splitter } from "./components/FileManager/Splitter";
+} from "../../utils/mouse";
+import { mapToVirtualKey } from "../../utils/keyboard";
+import { ManualControls } from "../Manual/ManualControls";
+import { StreamStatsOverlay } from "../StreamStatsOverlay";
+import { Splitter } from "../FileManager/Splitter";
 
 import { generateUUID } from "src/utils/uuid";
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { generateUUID } from "src/utils/uuid";
-import { TopBar } from "src/pages/DeviceControl/TopBar";
-import { MainContent } from "src/pages/DeviceControl/MainContent";
+import { TopBar } from "./components/Layout/TopBar";
+import { MainContent } from "./components/Layout/MainContent";
 import { getUserId } from "src/utils/auth";
 import { useToast } from "src/components/ui";
 import type { Mode } from "src/pages/DeviceControl/types";

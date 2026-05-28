@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { generateUUID } from "src/utils/uuid";
-import { PowerIcon } from "../icons";
+import { PowerIcon } from "./icons/icons";
 import type { CommandAction } from "../types";
 
 type PowerCommand =

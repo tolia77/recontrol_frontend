@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { RefreshIcon } from "../../icons";
+import { RefreshIcon } from "../icons/icons";
 import {
   FolderPlusIcon,
   PencilIcon,

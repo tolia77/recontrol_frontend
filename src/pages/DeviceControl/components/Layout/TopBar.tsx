@@ -1,16 +1,16 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
-import type { SidebarProps, CommandAction } from "./types";
-import type { WebRtcConnectionState } from "./hooks/realtime/useWebRtc";
-import { ChevronLeftIcon, ScenariosIcon, StopIcon } from "./icons";
-import { FilesToggleIcon } from "./components/FileManager/icons";
-import { AssistantToggleIcon } from "./components/Assistant/icons";
-import { QualityPopover } from "./components/QualityPopover";
-import { PowerPopover } from "./components/PowerPopover";
-import { HeaderTransferPill } from "./components/HeaderTransferPill";
-import { ClipboardPill } from "./components/ClipboardPill";
-import type { ClipboardPillProps } from "./components/ClipboardPill";
-import type { QueueState } from "./services/transfer";
+import type { SidebarProps, CommandAction } from "../../types";
+import type { WebRtcConnectionState } from "../../hooks/realtime/useWebRtc";
+import { ChevronLeftIcon, ScenariosIcon, StopIcon } from "../icons/icons";
+import { FilesToggleIcon } from "../FileManager/icons";
+import { AssistantToggleIcon } from "../Assistant/icons";
+import { QualityPopover } from "../QualityPopover";
+import { PowerPopover } from "../PowerPopover";
+import { HeaderTransferPill } from "../HeaderTransferPill";
+import { ClipboardPill } from "../ClipboardPill";
+import type { ClipboardPillProps } from "../ClipboardPill";
+import type { QueueState } from "../../services/transfer";
 
 /**
  * TopBarProps mirrors the old `ExtendedSidebarProps` 1:1 (renamed) — no new
