@@ -19,15 +19,22 @@ const FREE_AI_DRAFT_LIMIT = 0;
 
 // ── LiqPay auto-POST helper (D-05, RESEARCH.md Pattern 3) ────────────────────
 function submitToLiqPay(blob: LiqPayBlob): void {
+  // Don't leak our referrer to LiqPay. In local dev the referrer is http://localhost,
+  // which LiqPay stores in its own Matomo `_pk_ref` cookie and then its WAF 403s the
+  // checkout endpoints (`/apiweb/checkout/info`, `/apiwait`) for containing "localhost"
+  // — blanking the page. <form> has no referrerPolicy attribute, so set a document-level
+  // meta referrer before submitting; it governs the outgoing cross-origin navigation.
+  // No effect in production (real-domain referrer is not blocked) and the page unloads
+  // immediately, so the document-wide policy change has no lasting impact.
+  const referrerMeta = document.createElement("meta");
+  referrerMeta.name = "referrer";
+  referrerMeta.content = "no-referrer";
+  document.head.appendChild(referrerMeta);
+
   const form = document.createElement("form");
   form.method = "POST";
   form.action = blob.action_url;
   form.style.display = "none";
-  // Don't leak our referrer to LiqPay. In local dev the referrer is http://localhost,
-  // which LiqPay stores in its own Matomo `_pk_ref` cookie and then its WAF 403s the
-  // checkout long-poll (`/apiwait`) for containing "localhost" — blanking the page.
-  // Suppressing the referrer keeps that cookie clean; LiqPay does not need it.
-  form.referrerPolicy = "no-referrer";
 
   const dataInput = document.createElement("input");
   dataInput.type = "hidden";
