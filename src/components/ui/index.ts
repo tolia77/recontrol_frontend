@@ -1,3 +1,4 @@
+export { default as Banner } from "./Banner";
 export { default as Button } from "./Button";
 export { default as Spinner } from "./Spinner";
 export { default as LoadingOverlay } from "./LoadingOverlay";
