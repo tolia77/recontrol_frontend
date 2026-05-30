@@ -112,6 +112,10 @@ export const subscription = {
     cta: "Manage subscription",
   },
 
+  nudge: {
+    toast: "You've reached your {{limitName}} limit. Upgrade your plan to continue.",
+  },
+
   return: {
     loading: "Checking your subscription…",
     successHeading: "Subscription activated!",
@@ -240,6 +244,10 @@ export const subscription_uk = {
     message:
       "Оплату прострочено. Будь ласка, оновіть спосіб оплати, щоб зберегти підписку.",
     cta: "Керувати підпискою",
+  },
+
+  nudge: {
+    toast: "Ви досягли ліміту «{{limitName}}». Оновіть план, щоб продовжити.",
   },
 
   return: {

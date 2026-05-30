@@ -11,6 +11,7 @@ type BarColor = "secondary" | "amber" | "error" | "none";
 
 function getBarColor(used: number, limit: number | null): BarColor {
   if (limit === null) return "none";       // unlimited — never color
+  if (limit === 0) return "none";          // feature not included in plan — no color, no nudge
   if (used >= limit) return "error";       // 100% — red
   if (used >= limit * 0.9) return "amber"; // ≥90% — amber
   return "secondary";                      // normal — blue
@@ -42,7 +43,8 @@ function UsageBar({
 }: UsageBarProps) {
   const { t } = useTranslation("subscription");
   const color = getBarColor(used, limit);
-  const fillPercent = limit !== null ? Math.min(100, (used / limit) * 100) : 0;
+  const fillPercent =
+    limit === null || limit === 0 ? 0 : Math.min(100, (used / limit) * 100);
 
   return (
     <div className={`flex flex-col gap-1 ${className}`}>
