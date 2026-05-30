@@ -4,6 +4,7 @@ import dashboardIcon from "src/assets/img/icons/dashboard.svg";
 import devicesIcon from "src/assets/img/icons/device.svg";
 import settingsIcon from "src/assets/img/icons/settings.svg";
 import helpIcon from "src/assets/img/icons/help.svg";
+import subscriptionIcon from "src/assets/img/icons/subscription.svg";
 import { useTranslation } from "react-i18next";
 import { getUserRole } from "src/utils/auth";
 
@@ -50,6 +51,13 @@ function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         >
           <img src={settingsIcon} alt={t("nav.settings")} />
           <p>{t("nav.settings")}</p>
+        </Link>
+        <Link
+          to="/subscription"
+          className="flex h-[45px] items-center gap-1 transition-opacity hover:opacity-80"
+        >
+          <img src={subscriptionIcon} alt={t("nav.subscription")} />
+          <p>{t("nav.subscription")}</p>
         </Link>
         {role === "admin" && (
           <Link

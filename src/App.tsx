@@ -10,6 +10,8 @@ import DeviceSettings from "src/pages/DeviceSettings/DeviceSettings";
 import Help from "src/pages/Help";
 import UserSettings from "src/pages/UserSettings";
 import AdminUsers from "src/pages/AdminUsers/AdminUsers";
+import ManageSubscription from "src/pages/Subscription/ManageSubscription";
+import SubscriptionReturn from "src/pages/Subscription/SubscriptionReturn";
 
 function App() {
   return (
@@ -28,6 +30,8 @@ function App() {
           />
           <Route path="/settings" element={<UserSettings />} />
           <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/subscription" element={<ManageSubscription />} />
+          <Route path="/subscription/return" element={<SubscriptionReturn />} />
         </Route>
 
         {/* Help page */}

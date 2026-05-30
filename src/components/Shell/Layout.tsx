@@ -1,9 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Outlet } from "react-router";
+import { useTranslation } from "react-i18next";
 import Sidebar from "./Sidebar";
+import SubscriptionProvider from "src/contexts/SubscriptionContext";
+import PastDueBanner from "src/pages/Subscription/components/PastDueBanner";
+import { setPlanLimitHandler } from "src/utils/planLimitBus";
+import { useToast } from "src/components/ui/Toast";
 
-function Layout() {
+function LayoutInner() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { t } = useTranslation("subscription");
+  const { warning } = useToast();
+
+  useEffect(() => {
+    setPlanLimitHandler((envelope) => {
+      warning(t("nudge.toast", { limitName: envelope.limit_name }));
+    });
+    return () => setPlanLimitHandler(null);
+  }, [warning, t]);
 
   return (
     <div className="flex min-h-screen">
@@ -24,9 +38,18 @@ function Layout() {
           </button>
         </div>
 
+        <PastDueBanner />
         <Outlet />
       </main>
     </div>
+  );
+}
+
+function Layout() {
+  return (
+    <SubscriptionProvider>
+      <LayoutInner />
+    </SubscriptionProvider>
   );
 }
 
