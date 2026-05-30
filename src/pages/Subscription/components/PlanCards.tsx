@@ -23,6 +23,11 @@ function submitToLiqPay(blob: LiqPayBlob): void {
   form.method = "POST";
   form.action = blob.action_url;
   form.style.display = "none";
+  // Don't leak our referrer to LiqPay. In local dev the referrer is http://localhost,
+  // which LiqPay stores in its own Matomo `_pk_ref` cookie and then its WAF 403s the
+  // checkout long-poll (`/apiwait`) for containing "localhost" — blanking the page.
+  // Suppressing the referrer keeps that cookie clean; LiqPay does not need it.
+  form.referrerPolicy = "no-referrer";
 
   const dataInput = document.createElement("input");
   dataInput.type = "hidden";
