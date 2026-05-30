@@ -1,5 +1,7 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { getRefreshToken, saveTokens, getAccessToken } from "src/utils/auth";
+import { triggerPlanLimitNudge } from "src/utils/planLimitBus.ts";
+import type { PlanLimitEnvelope } from "src/services/backend/subscriptionService.ts";
 
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
@@ -84,6 +86,11 @@ backendInstance.interceptors.response.use(
         return backendInstance(originalRequest);
       }
 
+      return Promise.reject(error);
+    } else if (status === 402 && messageText === "plan_limit_reached") {
+      // D-15: global upgrade nudge — fire once and re-reject; no retry loop.
+      const envelope = error.response?.data as PlanLimitEnvelope;
+      triggerPlanLimitNudge(envelope);
       return Promise.reject(error);
     }
 
