@@ -24,6 +24,7 @@ import { indexPage as en_index } from "../en/index";
 import { indexPage as uk_index } from "../uk/index";
 import { scenarios as en_scenarios } from "../en/scenarios";
 import { scenarios as uk_scenarios } from "../uk/scenarios";
+import { subscription as en_subscription, subscription_uk as uk_subscription } from "../subscription";
 import { userSettings as en_userSettings } from "../en/userSettings";
 import { userSettings as uk_userSettings } from "../uk/userSettings";
 
@@ -60,6 +61,7 @@ const NAMESPACE_PAIRS = [
   ["index", en_index, uk_index],
   ["userSettings", en_userSettings, uk_userSettings],
   ["scenarios", en_scenarios, uk_scenarios],
+  ["subscription", en_subscription, uk_subscription],
 ] as const;
 
 describe.each(NAMESPACE_PAIRS)("i18n parity: %s", (name, en, uk) => {
@@ -120,6 +122,9 @@ describe("uk scenarios plural coverage", () => {
     expect("stepCount_other" in uk_scenarios.history).toBe(true);
   });
 });
+
+// The subscription namespace has no count-bearing keys (no {{count}} interpolation is
+// used by any component), so no CLDR plural coverage block is needed for it.
 
 // Verifier-greppable assertion that the PILL-06 banner literal is byte-exact.
 // This protects against the em-dash → hyphen-minus drift (Pitfall 1, RESEARCH lines 611-615).

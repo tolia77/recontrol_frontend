@@ -29,6 +29,7 @@ import { assistant } from "src/locales/en/assistant.ts";
 import { assistant as assistant_uk } from "src/locales/uk/assistant.ts";
 import { scenarios } from "src/locales/en/scenarios.ts";
 import { scenarios as scenarios_uk } from "src/locales/uk/scenarios.ts";
+import { subscription, subscription_uk } from "src/locales/subscription.ts";
 
 void i18n
   .use(LanguageDetector)
@@ -50,6 +51,7 @@ void i18n
       "clipboard",
       "assistant",
       "scenarios",
+      "subscription",
     ],
     defaultNS: "common",
     resources: {
@@ -67,6 +69,7 @@ void i18n
         clipboard,
         assistant,
         scenarios,
+        subscription,
       },
       uk: {
         common: common_uk,
@@ -82,6 +85,7 @@ void i18n
         clipboard: clipboard_uk,
         assistant: assistant_uk,
         scenarios: scenarios_uk,
+        subscription: subscription_uk,
       },
     },
     detection: {
