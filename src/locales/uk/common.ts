@@ -9,6 +9,7 @@ export const common = {
     devices: "Пристрої",
     help: "Допомога",
     settings: "Налаштування",
+    subscription: "Підписка",
     users: "Користувачі",
   },
   dashboard: {

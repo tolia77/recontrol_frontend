@@ -9,6 +9,7 @@ export const common = {
     devices: "Devices",
     help: "Help",
     settings: "Settings",
+    subscription: "Subscription",
     users: "Users",
   },
   dashboard: {
