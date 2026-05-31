@@ -142,6 +142,19 @@ export const subscription = {
     viewPlans: "View plans",
     dismiss:   "Dismiss",
   },
+
+  comparison: {
+    feature: {
+      device_sharing:       "Device sharing",
+      device_limit:         "Devices",
+      scenario_limit:       "Scenarios",
+      ai_draft_daily_limit: "AI drafts / day",
+      ai_access:            "AI assistant",
+    },
+    included:    "Included",
+    notIncluded: "—",
+    unlimited:   "Unlimited",
+  },
 };
 
 // UK subscription namespace
@@ -287,5 +300,18 @@ export const subscription_uk = {
     ai_access:            { header: "AI-асистент потребує оновлення плану" },
     viewPlans: "Переглянути плани",
     dismiss:   "Закрити",
+  },
+
+  comparison: {
+    feature: {
+      device_sharing:       "Спільний доступ до пристроїв",
+      device_limit:         "Пристрої",
+      scenario_limit:       "Сценарії",
+      ai_draft_daily_limit: "AI-чернетки / день",
+      ai_access:            "AI-асистент",
+    },
+    included:    "Включено",
+    notIncluded: "—",
+    unlimited:   "Без обмежень",
   },
 };

@@ -18,41 +18,39 @@ interface PlanComparisonProps {
   className?: string;
 }
 
-// ── Static feature row data (display labels + per-plan values) ────────────────
+// ── Static feature row data (per-plan values) ─────────────────────────────────
 // Source: 34-UI-SPEC.md §Feature Row Specification
 // These are display values for the comparison grid ONLY — NOT consumed by gate logic.
 // Gate logic reads server-provided usage values from SubscriptionContext.
+// Labels and the word-values (included / not included / unlimited) are localized
+// via the `comparison.*` keys in src/locales/subscription.ts. Numeric counts are
+// language-independent and stay inline. The sentinel "Unlimited" string maps to
+// the `comparison.unlimited` locale key at render time.
 
 interface FeatureRow {
   key: GateKey;
-  label: string;
   values: Record<"free" | "pro" | "advanced" | "business", string | boolean>;
 }
 
 const FEATURE_ROWS: FeatureRow[] = [
   {
     key: "device_sharing",
-    label: "Device sharing",
     values: { free: false, pro: true, advanced: true, business: true },
   },
   {
     key: "device_limit",
-    label: "Devices",
     values: { free: "2", pro: "10", advanced: "50", business: "Unlimited" },
   },
   {
     key: "scenario_limit",
-    label: "Scenarios",
     values: { free: "3", pro: "25", advanced: "Unlimited", business: "Unlimited" },
   },
   {
     key: "ai_draft_daily_limit",
-    label: "AI drafts / day",
     values: { free: "0", pro: "30", advanced: "30", business: "100" },
   },
   {
     key: "ai_access",
-    label: "AI assistant",
     values: { free: true, pro: true, advanced: true, business: true },
   },
 ];
@@ -65,15 +63,6 @@ function planHasFeature(
   if (typeof val === "boolean") return val;
   // Non-zero string counts → included; "0" or "—" → not included
   return val !== "0" && val !== "—";
-}
-
-function planFeatureValue(
-  plan: Plan,
-  row: FeatureRow,
-): string {
-  const val = row.values[plan.name];
-  if (typeof val === "boolean") return val ? "Included" : "—";
-  return val;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -124,7 +113,18 @@ function PlanComparison({
               {FEATURE_ROWS.map((row) => {
                 const isGatedRow = row.key === highlightFeature;
                 const included = planHasFeature(plan, row);
-                const displayValue = planFeatureValue(plan, row);
+                const raw = row.values[plan.name];
+
+                let displayValue: string;
+                if (typeof raw === "boolean") {
+                  displayValue = raw
+                    ? t("comparison.included")
+                    : t("comparison.notIncluded");
+                } else if (raw === "Unlimited") {
+                  displayValue = t("comparison.unlimited");
+                } else {
+                  displayValue = raw;
+                }
 
                 return (
                   <div
@@ -132,7 +132,7 @@ function PlanComparison({
                     className={`flex justify-between text-sm px-1 rounded ${isGatedRow ? "bg-primary/5" : ""}`}
                   >
                     <span className={isGatedRow ? "font-semibold" : ""}>
-                      {row.label}
+                      {t(`comparison.feature.${row.key}`)}
                     </span>
                     <span className={included ? "text-accent" : "text-darkgray"}>
                       {displayValue}
