@@ -26,10 +26,10 @@ vi.mock("react-i18next", () => ({
 import type { Plan, SubscriptionUsage } from "src/services/backend/subscriptionService";
 
 const stubPlans: Plan[] = [
-  { id: "1", name: "free",     monthly_price: 0,   features: [] },
-  { id: "2", name: "pro",      monthly_price: 299,  features: [] },
-  { id: "3", name: "advanced", monthly_price: 599,  features: [] },
-  { id: "4", name: "business", monthly_price: 999,  features: [] },
+  { id: "1", name: "free",     monthly_price: 0,   currency: "UAH" },
+  { id: "2", name: "pro",      monthly_price: 299,  currency: "UAH" },
+  { id: "3", name: "advanced", monthly_price: 599,  currency: "UAH" },
+  { id: "4", name: "business", monthly_price: 999,  currency: "UAH" },
 ];
 
 const stubUsage: SubscriptionUsage = {
@@ -91,7 +91,8 @@ describe("UpgradeModal", () => {
   describe("gate-specific header rendering", () => {
     it("renders header for device_sharing", () => {
       renderModal({ feature: "device_sharing", requiredPlan: "pro" });
-      expect(screen.getByRole("heading")).toBeDefined();
+      // Modal.Header renders <h2>; PlanComparison renders <h3> — use level:2 to be specific
+      expect(screen.getByRole("heading", { level: 2 })).toBeDefined();
       // The i18n key is passed through: gate.device_sharing.header
       expect(screen.getByText(/gate\.device_sharing\.header/)).toBeDefined();
     });
