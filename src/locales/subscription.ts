@@ -45,6 +45,7 @@ export const subscription = {
 
   planCard: {
     current: "Current plan",
+    switchTo: "Switch to {{plan}}",
     subscribe: "Subscribe",
     upgrade: "Upgrade",
     downgrade: "Downgrade",
@@ -179,6 +180,7 @@ export const subscription_uk = {
 
   planCard: {
     current: "Поточний план",
+    switchTo: "Перейти на {{plan}}",
     subscribe: "Підписатися",
     upgrade: "Оновити",
     downgrade: "Знизити",

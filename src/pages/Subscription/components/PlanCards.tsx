@@ -414,7 +414,10 @@ function PlanCards({ status }: PlanCardsProps) {
                 </p>
               )}
 
-              {/* CTA */}
+              {/* CTA — current plan shows a label; every other card shows a single
+                  "Switch to {plan}" button. The underlying action (cta) still drives the
+                  correct confirm modal + backend call: upgrade→checkout, downgrade→schedule,
+                  switch-to-Free→cancel. "danger" styling only for the switch-to-Free case. */}
               {isCurrent ? (
                 <span
                   role="status"
@@ -422,47 +425,15 @@ function PlanCards({ status }: PlanCardsProps) {
                 >
                   {t("planCard.current")}
                 </span>
-              ) : cta === "cancel" ? (
+              ) : (
                 <Button
-                  variant="danger"
+                  variant={cta === "cancel" ? "danger" : "primary"}
                   className="w-full"
-                  onClick={() => openConfirm("cancel", plan)}
+                  onClick={() => openConfirm(cta as ConfirmAction, plan)}
                 >
-                  {t("planCard.cancel")}
+                  {t("planCard.switchTo", { plan: t(`plan.${plan.name}`) })}
                 </Button>
-              ) : cta === "subscribe" ? (
-                <Button
-                  variant="primary"
-                  className="w-full"
-                  onClick={() => openConfirm("subscribe", plan)}
-                >
-                  {t("planCard.subscribe")}
-                </Button>
-              ) : cta === "upgrade" ? (
-                <Button
-                  variant="primary"
-                  className="w-full"
-                  onClick={() => openConfirm("upgrade", plan)}
-                >
-                  {t("planCard.upgrade")}
-                </Button>
-              ) : cta === "downgrade" ? (
-                <Button
-                  variant="secondary"
-                  className="w-full"
-                  onClick={() => openConfirm("downgrade", plan)}
-                >
-                  {t("planCard.downgrade")}
-                </Button>
-              ) : cta === "resubscribe" ? (
-                <Button
-                  variant="primary"
-                  className="w-full"
-                  onClick={() => openConfirm("resubscribe", plan)}
-                >
-                  {t("planCard.resubscribe")}
-                </Button>
-              ) : null}
+              )}
             </Card>
           );
         })}
