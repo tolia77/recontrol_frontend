@@ -28,6 +28,7 @@ export interface SubscriptionUsage {
   ai_drafts_used: number;
   ai_draft_limit: number | null;     // null = unlimited
   device_sharing: boolean;
+  ai_access: boolean;                // server-provided runtime flag (RD-2)
 }
 
 export interface LiqPayBlob {
@@ -59,6 +60,8 @@ export interface PlanLimitEnvelope {
 
 export interface SubscriptionContextValue {
   status: SubscriptionStatus | null;  // null = never subscribed (404 from API)
+  usage: SubscriptionUsage | null;   // null until first successful fetch
+  plans: Plan[];
   loading: boolean;
   error: string | null;
   refresh: () => void;

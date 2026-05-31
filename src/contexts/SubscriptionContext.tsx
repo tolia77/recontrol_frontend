@@ -10,6 +10,8 @@ import {
   subscriptionService,
   type SubscriptionContextValue,
   type SubscriptionStatus,
+  type SubscriptionUsage,
+  type Plan,
 } from "src/services/backend/subscriptionService.ts";
 import { getErrorMessage } from "src/utils/getErrorMessage";
 
@@ -37,36 +39,42 @@ export default function SubscriptionProvider({
   children,
 }: SubscriptionProviderProps) {
   const [status, setStatus] = useState<SubscriptionStatus | null>(null);
+  const [usage, setUsage] = useState<SubscriptionUsage | null>(null);
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchStatus = useCallback(async () => {
+  const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await subscriptionService.getStatus();
-      setStatus(data);
-      setError(null);
-    } catch (err) {
-      const axiosErr = err as { response?: { status?: number } };
-      if (axiosErr.response?.status === 404) {
-        // 404 = user has never subscribed — valid Free state, not an error
-        setStatus(null);
+      const [statusResult, usageResult, plansResult] = await Promise.allSettled([
+        subscriptionService.getStatus().catch((e) => {
+          if ((e as { response?: { status?: number } }).response?.status === 404) return null;
+          throw e;
+        }),
+        subscriptionService.getUsage(),
+        subscriptionService.getPlans(),
+      ]);
+      if (statusResult.status === "fulfilled") {
+        setStatus(statusResult.value);
         setError(null);
       } else {
-        setError(getErrorMessage(err));
+        setError(getErrorMessage(statusResult.reason));
       }
+      if (usageResult.status === "fulfilled") setUsage(usageResult.value);
+      if (plansResult.status === "fulfilled") setPlans(plansResult.value);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    void fetchStatus();
-  }, [fetchStatus]);
+    void fetchAll();
+  }, [fetchAll]);
 
   return (
     <SubscriptionContext.Provider
-      value={{ status, loading, error, refresh: fetchStatus }}
+      value={{ status, usage, plans, loading, error, refresh: fetchAll }}
     >
       {children}
     </SubscriptionContext.Provider>
