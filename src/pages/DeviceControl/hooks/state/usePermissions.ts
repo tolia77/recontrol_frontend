@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { getMyDeviceSharesForDeviceRequest } from "src/services/backend/deviceSharesService";
+import { deviceSharesService } from "src/services/backend/deviceSharesService";
 import type { DeviceShare } from "src/types";
 
 /**
@@ -78,7 +78,7 @@ export function usePermissions(): UsePermissionsReturn {
           setPermissions(buildPermissions(null)); // full access
           return;
         }
-        const res = await getMyDeviceSharesForDeviceRequest(devId);
+        const res = await deviceSharesService.mineForDevice(devId);
         const share =
           res.data.items && res.data.items.length ? res.data.items[0] : null;
         setPermissions(buildPermissions(share));

@@ -1,12 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { devicesService } from "src/services/backend/devicesService";
-import {
-  listDeviceSharesRequest,
-  createDeviceShareRequest,
-  deleteDeviceShareRequest,
-  updateDeviceShareRequest,
-} from "src/services/backend/deviceSharesService";
+import { deviceSharesService } from "src/services/backend/deviceSharesService";
 import {
   listPermissionsGroupsRequest,
   createPermissionsGroupRequest,
@@ -127,7 +122,7 @@ export function useDeviceSettings(
 
   const loadShares = useCallback(async () => {
     try {
-      const response = await listDeviceSharesRequest(deviceId!);
+      const response = await deviceSharesService.list(deviceId!);
       setShares(response.data.items || []);
     } catch {
       console.error("Failed to load shares");
@@ -279,7 +274,7 @@ export function useDeviceSettings(
         };
       }
       try {
-        await createDeviceShareRequest(payload);
+        await deviceSharesService.create(payload);
         setShareForm({
           userEmail: "",
           permissionsGroupId: "",
@@ -308,7 +303,7 @@ export function useDeviceSettings(
     async (shareId: string) => {
       if (!confirm(t("sharing.removeConfirm"))) return;
       try {
-        await deleteDeviceShareRequest(shareId);
+        await deviceSharesService.remove(shareId);
         loadShares();
         toast.success(t("sharing.removed"));
       } catch {
@@ -384,7 +379,7 @@ export function useDeviceSettings(
         };
       }
       try {
-        await updateDeviceShareRequest(editForm.shareId, payload);
+        await deviceSharesService.update(editForm.shareId, payload);
         setEditForm(null);
         setEditOriginalGroup(null);
         await loadShares();
