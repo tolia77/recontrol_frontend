@@ -54,29 +54,6 @@ export const subscription = {
     resubscribe: "Resubscribe",
   },
 
-  planFeature: {
-    free: {
-      feature1: "2 devices",
-      feature2: "3 scenarios",
-      feature3: "No AI drafts",
-    },
-    pro: {
-      feature1: "10 devices",
-      feature2: "20 scenarios",
-      feature3: "50 AI drafts / day",
-    },
-    advanced: {
-      feature1: "50 devices",
-      feature2: "100 scenarios",
-      feature3: "200 AI drafts / day",
-    },
-    business: {
-      feature1: "Unlimited devices",
-      feature2: "Unlimited scenarios",
-      feature3: "Unlimited AI drafts",
-    },
-  },
-
   pendingDowngrade: {
     note: "Switching to {{plan}} on {{date}}",
   },
@@ -211,29 +188,6 @@ export const subscription_uk = {
     downgrade: "Знизити",
     cancel: "Скасувати план",
     resubscribe: "Поновити підписку",
-  },
-
-  planFeature: {
-    free: {
-      feature1: "2 пристрої",
-      feature2: "3 сценарії",
-      feature3: "Без AI-чернеток",
-    },
-    pro: {
-      feature1: "10 пристроїв",
-      feature2: "20 сценаріїв",
-      feature3: "50 AI-чернеток / день",
-    },
-    advanced: {
-      feature1: "50 пристроїв",
-      feature2: "100 сценаріїв",
-      feature3: "200 AI-чернеток / день",
-    },
-    business: {
-      feature1: "Необмежена кількість пристроїв",
-      feature2: "Необмежена кількість сценаріїв",
-      feature3: "Необмежена кількість AI-чернеток",
-    },
   },
 
   pendingDowngrade: {
