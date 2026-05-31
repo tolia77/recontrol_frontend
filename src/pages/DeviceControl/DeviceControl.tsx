@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { generateUUID } from "src/utils/uuid";
 import TopBar from "./components/Layout/TopBar";
 import MainContent from "./components/Layout/MainContent";
+import { useGate } from "src/hooks/useGate";
+import UpgradeModal from "src/components/ui/UpgradeModal";
 import { getUserId } from "src/utils/auth";
 import { useToast } from "src/components/ui";
 import type { Mode } from "src/pages/DeviceControl/types";
@@ -57,6 +59,13 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
     currentResolution,
     setCurrentResolution,
   } = useStreamControls();
+
+  const aiGate = useGate("ai_access");
+  const aiGateRef = useRef(aiGate);
+  useEffect(() => {
+    aiGateRef.current = aiGate;
+  }); // sync every render so the stable keydown closure always reads current gate state
+  const [showAiUpgradeModal, setShowAiUpgradeModal] = useState(false);
 
   const {
     permissions,
@@ -436,6 +445,10 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
         const next = fmRightPaneActiveRef.current === "files" ? null : "files";
         fmSetRightPaneActiveRef.current(next);
       } else if (isAssistantShortcut) {
+        if (!aiGateRef.current.allowed) {
+          setShowAiUpgradeModal(true);
+          return;
+        }
         const next =
           fmRightPaneActiveRef.current === "assistant" ? null : "assistant";
         fmSetRightPaneActiveRef.current(next);
@@ -518,11 +531,15 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
           )
         }
         panelOpen={fmState.rightPaneActive === "files"}
-        onToggleAiPanel={() =>
+        onToggleAiPanel={() => {
+          if (!aiGate.allowed) {
+            setShowAiUpgradeModal(true);
+            return;
+          }
           fmSetRightPaneActive(
             fmState.rightPaneActive === "assistant" ? null : "assistant",
-          )
-        }
+          );
+        }}
         aiPanelOpen={fmState.rightPaneActive === "assistant"}
         onToggleScenarios={() =>
           fmSetRightPaneActive(
@@ -543,6 +560,13 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
           browserCaps: clipboardCaps,
         }}
       />
+      {showAiUpgradeModal && (
+        <UpgradeModal
+          feature="ai_access"
+          requiredPlan={aiGate.requiredPlan}
+          onClose={() => setShowAiUpgradeModal(false)}
+        />
+      )}
       <main
         className={`flex min-h-0 flex-1 flex-col ${activeMode === "interactive" ? "overflow-hidden" : ""}`}
       >

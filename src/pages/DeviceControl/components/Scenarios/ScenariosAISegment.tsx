@@ -34,6 +34,8 @@ import type {
   DraftQuota,
   DraftResponse,
 } from "src/services/backend/scenariosService.ts";
+import { useGate } from "src/hooks/useGate";
+import UpgradeModal from "src/components/ui/UpgradeModal";
 
 import { useDraftGeneration } from "./useDraftGeneration";
 import { i18n } from "src/i18n.ts";
@@ -141,6 +143,8 @@ function ScenariosAISegment({
 }: ScenariosAISegmentProps) {
   const { t } = useTranslation("scenarios");
   const { state, generate, cancel } = useDraftGeneration();
+  const gate = useGate("ai_draft_daily_limit");
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const [prompt, setPrompt] = useState("");
   const [errorDismissed, setErrorDismissed] = useState(false);
@@ -196,6 +200,14 @@ function ScenariosAISegment({
     // descriptive prose responds to the locale directive.
     void generate(prompt, i18n.language);
   }, [prompt, generate, onPromptSubmitted]);
+
+  const handleGenerateGated = useCallback(() => {
+    if (!gate.allowed) {
+      setShowUpgradeModal(true);
+      return;
+    }
+    handleGenerate();
+  }, [gate.allowed, handleGenerate]);
 
   // Phase 23 / Plan 23-09: parent-driven regenerate. Watches `regenerateToken`
   // and re-fires generate(regeneratePrompt) on each bump (skipping the
@@ -311,7 +323,7 @@ function ScenariosAISegment({
               <Button
                 variant="primary"
                 size="md"
-                onClick={handleGenerate}
+                onClick={handleGenerateGated}
                 disabled={submitDisabled}
                 type="button"
               >
@@ -378,6 +390,16 @@ function ScenariosAISegment({
             </Button>
           </div>
         </Card>
+      )}
+
+      {showUpgradeModal && (
+        <UpgradeModal
+          feature="ai_draft_daily_limit"
+          current={gate.current}
+          limit={gate.limit}
+          requiredPlan={gate.requiredPlan}
+          onClose={() => setShowUpgradeModal(false)}
+        />
       )}
     </div>
   );
