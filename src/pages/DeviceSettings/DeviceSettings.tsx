@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { LoadingState, EmptyState } from "src/components/ui";
@@ -6,11 +7,15 @@ import InviteShareForm from "./InviteShareForm";
 import SharesList from "./SharesList";
 import EditShareForm from "./EditShareForm";
 import { useDeviceSettings } from "./useDeviceSettings";
+import { useGate } from "src/hooks/useGate";
+import UpgradeModal from "src/components/ui/UpgradeModal";
 
 const DeviceSettings = () => {
   const { t } = useTranslation("deviceSettings");
   const { deviceId } = useParams<{ deviceId: string }>();
   const navigate = useNavigate();
+  const gate = useGate("device_sharing");
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const {
     device,
@@ -65,11 +70,24 @@ const DeviceSettings = () => {
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold">{t("sharing.section")}</h2>
             <button
-              onClick={() => setShowShareForm(!showShareForm)}
+              onClick={() => {
+                if (!gate.allowed) {
+                  setShowUpgradeModal(true);
+                  return;
+                }
+                setShowShareForm(!showShareForm);
+              }}
               className="bg-primary rounded-md px-4 py-2 text-white transition-opacity hover:opacity-90"
             >
               {showShareForm ? t("sharing.cancelInvite") : t("sharing.invite")}
             </button>
+            {showUpgradeModal && (
+              <UpgradeModal
+                feature="device_sharing"
+                requiredPlan={gate.requiredPlan}
+                onClose={() => setShowUpgradeModal(false)}
+              />
+            )}
           </div>
 
           {showShareForm && (

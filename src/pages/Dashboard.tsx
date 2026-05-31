@@ -7,6 +7,8 @@ import CardHeader from "src/components/ui/CardHeader";
 import Button from "src/components/ui/Button";
 import { LoadingState, EmptyState } from "src/components/ui";
 import type { Device } from "src/types";
+import { useGate } from "src/hooks/useGate";
+import UpgradeModal from "src/components/ui/UpgradeModal";
 
 interface ActivityItem {
   id: string;
@@ -18,6 +20,8 @@ interface ActivityItem {
 function Dashboard() {
   const { t } = useTranslation("common");
   const navigate = useNavigate();
+  const deviceGate = useGate("device_limit");
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const [devices, setDevices] = useState<Device[]>([]);
   const [loadingDevices, setLoadingDevices] = useState(false);
@@ -111,9 +115,27 @@ function Dashboard() {
                     {t("dashboard.controlFirstDevice")}
                   </Button>
                 ) : (
-                  <Button size="sm" onClick={() => navigate("/devices")}>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      if (!deviceGate.allowed) {
+                        setShowUpgradeModal(true);
+                        return;
+                      }
+                      navigate("/devices");
+                    }}
+                  >
                     {t("dashboard.addDevice")}
                   </Button>
+                )}
+                {showUpgradeModal && (
+                  <UpgradeModal
+                    feature="device_limit"
+                    current={deviceGate.current}
+                    limit={deviceGate.limit}
+                    requiredPlan={deviceGate.requiredPlan}
+                    onClose={() => setShowUpgradeModal(false)}
+                  />
                 )}
               </div>
             </>

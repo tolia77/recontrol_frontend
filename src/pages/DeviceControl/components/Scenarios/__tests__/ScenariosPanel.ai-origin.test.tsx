@@ -98,6 +98,11 @@ vi.mock("src/i18n.ts", () => ({
   default: { language: "en" },
 }));
 
+// Gate always open in panel-level tests — gate behaviour is unit-tested in useGate.test.ts.
+vi.mock("src/hooks/useGate", () => ({
+  useGate: () => ({ allowed: true, reason: null }),
+}));
+
 type HookState =
   | { kind: "idle" }
   | { kind: "generating"; startedAt: number }

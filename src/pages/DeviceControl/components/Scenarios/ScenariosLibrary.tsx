@@ -12,6 +12,8 @@ import {
   EmptyState,
 } from "src/components/ui";
 import ScenariosRow from "./ScenariosRow";
+import { useGate } from "src/hooks/useGate";
+import UpgradeModal from "src/components/ui/UpgradeModal";
 
 export interface ScenariosLibraryProps {
   deviceId: string;
@@ -33,6 +35,17 @@ export default function ScenariosLibrary({
   activeRunDeviceId = null,
 }: ScenariosLibraryProps) {
   const { t } = useTranslation("scenarios");
+  const gate = useGate("scenario_limit");
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  const handleNew = () => {
+    if (!gate.allowed) {
+      setShowUpgradeModal(true);
+      return;
+    }
+    onNew();
+  };
+
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -134,7 +147,7 @@ export default function ScenariosLibrary({
         <button
           type="button"
           className="bg-primary rounded px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
-          onClick={onNew}
+          onClick={handleNew}
           data-testid="scenarios-new-button"
         >
           {t("library.newButton")}
@@ -213,6 +226,15 @@ export default function ScenariosLibrary({
         onConfirm={performDelete}
         onCancel={() => setDeleteTarget(null)}
       />
+      {showUpgradeModal && (
+        <UpgradeModal
+          feature="scenario_limit"
+          current={gate.current}
+          limit={gate.limit}
+          requiredPlan={gate.requiredPlan}
+          onClose={() => setShowUpgradeModal(false)}
+        />
+      )}
     </div>
   );
 }

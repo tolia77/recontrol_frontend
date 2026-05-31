@@ -105,6 +105,11 @@ vi.mock("src/i18n.ts", () => ({
   i18n: { language: "en" },
 }));
 
+// Gate always open in panel-level tests — gate behaviour is unit-tested in useGate.test.ts.
+vi.mock("src/hooks/useGate", () => ({
+  useGate: () => ({ allowed: true, reason: null }),
+}));
+
 // Mock useDraftGeneration so we can drive the panel's AI flow deterministically.
 type HookState =
   | { kind: "idle" }

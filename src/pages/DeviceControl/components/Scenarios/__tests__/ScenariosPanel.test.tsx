@@ -79,6 +79,11 @@ vi.mock("src/pages/DeviceControl/hooks/realtime/useScenarioRunChannel", () => ({
   },
 }));
 
+// Gate always open in panel-level tests — gate behaviour is unit-tested in useGate.test.ts.
+vi.mock("src/hooks/useGate", () => ({
+  useGate: () => ({ allowed: true, reason: null }),
+}));
+
 import { scenariosService } from "src/services/backend/scenariosService";
 import { scenarioRunsService } from "src/services/backend/scenarioRunsService";
 import ScenariosPanel from "../ScenariosPanel";
