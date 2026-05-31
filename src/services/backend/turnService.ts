@@ -1,11 +1,13 @@
-import { backendInstance } from "src/services/backend/config.ts";
+import { BaseService } from "src/services/backend/BaseService.ts";
 
 export interface TurnCredentialsResponse {
   ice_servers: RTCIceServer[];
 }
 
-export async function getTurnCredentialsRequest() {
-  return await backendInstance.get<TurnCredentialsResponse>(
-    "/turn-credentials",
-  );
+class TurnService extends BaseService {
+  async getCredentials() {
+    return await this.api.get<TurnCredentialsResponse>("/turn-credentials");
+  }
 }
+
+export const turnService = new TurnService();

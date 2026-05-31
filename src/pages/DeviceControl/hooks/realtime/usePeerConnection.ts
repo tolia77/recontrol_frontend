@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getTurnCredentialsRequest } from "src/services/backend/turnService";
+import { turnService } from "src/services/backend/turnService";
 import type React from "react";
 import type { WebRtcConnectionState } from "./useWebRtc";
 
@@ -46,7 +46,7 @@ const TOTAL_TIMEOUT_MS = 20000;
 
 async function fetchIceServers(): Promise<RTCIceServer[]> {
   try {
-    const { data } = await getTurnCredentialsRequest();
+    const { data } = await turnService.getCredentials();
     if (data?.ice_servers?.length) return data.ice_servers;
     console.warn(
       "[webrtc] /turn_credentials returned empty list, falling back to STUN-only",
