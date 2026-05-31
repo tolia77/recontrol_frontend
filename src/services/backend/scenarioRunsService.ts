@@ -1,4 +1,4 @@
-import { backendInstance } from "src/services/backend/config.ts";
+import { BaseService } from "src/services/backend/BaseService.ts";
 
 export type ScenarioRunStatus =
   | "running"
@@ -69,11 +69,11 @@ export interface ScenarioRunIndexResult {
   total: number;
 }
 
-export const scenarioRunsService = {
+class ScenarioRunsService extends BaseService {
   async index(
     params?: ScenarioRunIndexParams,
   ): Promise<ScenarioRunIndexResult> {
-    const { data } = await backendInstance.get<ScenarioRunIndexResponse>(
+    const { data } = await this.api.get<ScenarioRunIndexResponse>(
       "/scenario-runs",
       {
         params: {
@@ -83,21 +83,21 @@ export const scenarioRunsService = {
       },
     );
     return { runs: data.scenario_runs, total: data.meta.total };
-  },
+  }
 
   async show(id: string): Promise<ScenarioRun> {
-    const { data } = await backendInstance.get<ScenarioRun>(
-      `/scenario-runs/${id}`,
-    );
+    const { data } = await this.api.get<ScenarioRun>(`/scenario-runs/${id}`);
     return data;
-  },
+  }
 
   // AUDIT-05 / D-14
   async destroy(id: string): Promise<void> {
-    await backendInstance.delete(`/scenario-runs/${id}`);
-  },
+    await this.api.delete(`/scenario-runs/${id}`);
+  }
 
   async destroyAll(): Promise<void> {
-    await backendInstance.delete("/scenario-runs/destroy-all");
-  },
-};
+    await this.api.delete("/scenario-runs/destroy-all");
+  }
+}
+
+export const scenarioRunsService = new ScenarioRunsService();
