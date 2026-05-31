@@ -100,6 +100,7 @@ function PlanCards({ status }: PlanCardsProps) {
   // ── Determine CTA per plan card (D-02) ────────────────────────────────────
   type CtaVariant =
     | "current"
+    | "none"
     | "subscribe"
     | "upgrade"
     | "downgrade"
@@ -109,39 +110,35 @@ function PlanCards({ status }: PlanCardsProps) {
   function getCta(plan: Plan): CtaVariant {
     const state = status?.state ?? null;
 
-    // Free plan card
+    // SINGLE source of truth for "current": the user's authoritative plan (currentPlanName,
+    // derived from status.plan_name, which the backend sets to user.plan). Exactly one card
+    // is ever "current". This prevents the double-"Current plan" badge that occurred when a
+    // separate Free branch ALSO claimed current in terminal states (e.g. cancelled-but-Pro
+    // until period end).
+    if (plan.name === currentPlanName) {
+      return "current";
+    }
+
+    // The Free card, when it is NOT the current plan, is the downgrade/cancel target for an
+    // active paid subscription. Free has no checkout, so when there's nothing live to cancel
+    // (e.g. already cancelled, awaiting period-end revert) it shows no button.
     if (plan.name === "free") {
-      if (state === "active" || state === "upgrading") {
-        return "cancel";
-      }
-      // null (never subscribed), cancelled, expired, past_due — treat free as current
-      return "current";
+      if (state === "active" || state === "upgrading") return "cancel";
+      return "none";
     }
 
-    // Paid plan card — same plan as current
-    if (plan.name === currentPlanName && state !== null) {
-      return "current";
-    }
-
-    // No active subscription (null/cancelled/expired) — paid plans → subscribe
+    // No live subscription (null/cancelled/expired) — paid plans → subscribe fresh.
     if (state === null || state === "cancelled" || state === "expired") {
       return "subscribe";
     }
 
-    // Active or past_due
-    if (state === "active" || state === "upgrading") {
-      if (plan.monthly_price > currentPrice) return "upgrade";
-      return "downgrade";
+    // Live subscription on a different paid tier.
+    if (state === "active" || state === "upgrading" || state === "pending") {
+      return plan.monthly_price > currentPrice ? "upgrade" : "downgrade";
     }
 
     if (state === "past_due") {
-      if (plan.monthly_price > currentPrice) return "resubscribe";
       return "resubscribe";
-    }
-
-    if (state === "pending") {
-      if (plan.monthly_price > currentPrice) return "upgrade";
-      return "downgrade";
     }
 
     return "subscribe";
@@ -425,7 +422,7 @@ function PlanCards({ status }: PlanCardsProps) {
                 >
                   {t("planCard.current")}
                 </span>
-              ) : (
+              ) : cta === "none" ? null : (
                 <Button
                   variant={cta === "cancel" ? "danger" : "primary"}
                   className="w-full"
