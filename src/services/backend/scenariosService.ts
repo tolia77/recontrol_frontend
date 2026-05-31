@@ -1,4 +1,4 @@
-import { backendInstance } from "src/services/backend/config.ts";
+import { BaseService } from "src/services/backend/BaseService.ts";
 
 // D-12: per-step snapshot written by Scenario#before_save.
 export interface ClassifiedIntentAtSave {
@@ -163,50 +163,42 @@ interface ScenarioIndexResponse {
   meta: { page: number; per_page: number; total: number };
 }
 
-export const scenariosService = {
+class ScenariosService extends BaseService {
   async index(params?: ScenarioIndexParams): Promise<Scenario[]> {
-    const { data } = await backendInstance.get<ScenarioIndexResponse>(
-      "/scenarios",
-      {
-        params: {
-          ...(params?.q ? { q: params.q } : {}),
-          ...(params?.pinned_device_id
-            ? { pinned_device_id: params.pinned_device_id }
-            : {}),
-          ...(params?.page ? { page: params.page } : {}),
-          ...(params?.per_page ? { per_page: params.per_page } : {}),
-        },
+    const { data } = await this.api.get<ScenarioIndexResponse>("/scenarios", {
+      params: {
+        ...(params?.q ? { q: params.q } : {}),
+        ...(params?.pinned_device_id
+          ? { pinned_device_id: params.pinned_device_id }
+          : {}),
+        ...(params?.page ? { page: params.page } : {}),
+        ...(params?.per_page ? { per_page: params.per_page } : {}),
       },
-    );
+    });
     return data.scenarios;
-  },
+  }
 
   async show(id: string): Promise<Scenario> {
-    const { data } = await backendInstance.get<Scenario>(`/scenarios/${id}`);
+    const { data } = await this.api.get<Scenario>(`/scenarios/${id}`);
     return data;
-  },
+  }
 
   async create(payload: ScenarioCreatePayload): Promise<ScenarioWriteResponse> {
-    const { data } = await backendInstance.post<ScenarioWriteResponse>(
-      "/scenarios",
-      { scenario: payload },
-    );
+    const { data } = await this.api.post<ScenarioWriteResponse>("/scenarios", {
+      scenario: payload,
+    });
+    this.refreshUsage(); // scenario_limit changed
     return data;
-  },
+  }
 
-  // AI-01 frontend half: POST /scenarios/drafts (Plan 23-06 backend mount;
-  // no `/api` prefix per backend routing). `locale` flows through the
-  // `Accept-Language` header so the backend system prompt (D-09) renders the
-  // correct locale directive. The `signal` argument is forwarded into the
-  // axios request config so `controller.abort()` terminates the in-flight
-  // HTTP request client-side (D-05 — server may still complete + charge;
-  // documented trade-off captured in UI copy "Cancel generation").
+  // AI-01 frontend half: POST /scenarios/drafts. Generating a draft consumes the
+  // daily AI-draft quota (ai_draft_daily_limit), so refresh usage on success.
   async createDraft(
     prompt: string,
     locale: string,
     signal?: AbortSignal,
   ): Promise<DraftResponse> {
-    const { data } = await backendInstance.post<DraftResponse>(
+    const { data } = await this.api.post<DraftResponse>(
       "/scenarios/drafts",
       { prompt },
       {
@@ -216,43 +208,48 @@ export const scenariosService = {
         signal,
       },
     );
+    this.refreshUsage(); // ai_draft_daily_limit changed
     return data;
-  },
+  }
 
   async update(
     id: string,
     payload: ScenarioUpdatePayload,
   ): Promise<ScenarioWriteResponse> {
-    const { data } = await backendInstance.patch<ScenarioWriteResponse>(
+    const { data } = await this.api.patch<ScenarioWriteResponse>(
       `/scenarios/${id}`,
       { scenario: payload },
     );
     return data;
-  },
+  }
 
   async destroy(id: string): Promise<void> {
-    await backendInstance.delete(`/scenarios/${id}`);
-  },
+    await this.api.delete(`/scenarios/${id}`);
+    this.refreshUsage(); // scenario_limit changed
+  }
 
   async duplicate(id: string): Promise<ScenarioWriteResponse> {
-    const { data } = await backendInstance.post<ScenarioWriteResponse>(
+    const { data } = await this.api.post<ScenarioWriteResponse>(
       `/scenarios/${id}/duplicate`,
       {},
     );
+    this.refreshUsage(); // scenario_limit changed
     return data;
-  },
+  }
 
   // POLICY-01
   async policyPreview(
     id: string,
     deviceId: string,
   ): Promise<PolicyPreviewResponse> {
-    const { data } = await backendInstance.get<PolicyPreviewResponse>(
+    const { data } = await this.api.get<PolicyPreviewResponse>(
       `/scenarios/${id}/policy-preview`,
       {
         params: { device_id: deviceId },
       },
     );
     return data;
-  },
-};
+  }
+}
+
+export const scenariosService = new ScenariosService();
