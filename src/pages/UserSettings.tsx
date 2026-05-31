@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 import { getUserId, clearAuth } from "src/utils/auth";
-import {
-  getUserRequest,
-  updateUserSelfRequest,
-} from "src/services/backend/usersService";
+import { usersService } from "src/services/backend/usersService";
 import { authService } from "src/services/backend/authService";
 import type { UserResponse } from "src/services/backend/usersService";
 import { getErrorMessage } from "src/utils/getErrorMessage";
@@ -32,7 +29,7 @@ function UserSettings() {
         return;
       }
       try {
-        const res = await getUserRequest(userId);
+        const res = await usersService.get(userId);
         setUser(res.data);
         setUsername(res.data.username);
         setEmail(res.data.email);
@@ -57,7 +54,7 @@ function UserSettings() {
       if (email !== user?.email) payload.email = email;
       if (password.length > 0) payload.password = password;
 
-      const res = await updateUserSelfRequest(userId, payload);
+      const res = await usersService.updateSelf(userId, payload);
       setUser(res.data);
       setPassword("");
       toast.success(t("messages.saved"));

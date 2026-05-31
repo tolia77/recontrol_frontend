@@ -1,4 +1,4 @@
-import { backendInstance } from "src/services/backend/config.ts";
+import { BaseService } from "src/services/backend/BaseService.ts";
 
 export type UserResponse = {
   id: number | string;
@@ -9,29 +9,11 @@ export type UserResponse = {
   updated_at?: string;
 };
 
-export async function getUserRequest(userId: string) {
-  return await backendInstance.get<UserResponse>(`/users/${userId}`);
-}
-
 export type UserUpdateSelf = {
   username?: string;
   email?: string;
   password?: string;
 };
-
-export async function updateUserSelfRequest(
-  userId: string,
-  payload: UserUpdateSelf,
-) {
-  return await backendInstance.patch<UserResponse>(`/users/${userId}`, {
-    user: payload,
-  });
-}
-
-// Admin endpoints
-export async function listUsersRequest() {
-  return await backendInstance.get<UserResponse[]>(`/users`);
-}
 
 export type UserCreateAdmin = {
   username: string;
@@ -39,9 +21,6 @@ export type UserCreateAdmin = {
   password: string;
   role: string;
 };
-export async function createUserAdminRequest(payload: UserCreateAdmin) {
-  return await backendInstance.post<UserResponse>(`/users`, { user: payload });
-}
 
 export type UserUpdateAdmin = {
   username?: string;
@@ -49,15 +28,36 @@ export type UserUpdateAdmin = {
   password?: string;
   role?: string;
 };
-export async function updateUserAdminRequest(
-  userId: number | string,
-  payload: UserUpdateAdmin,
-) {
-  return await backendInstance.patch<UserResponse>(`/users/${userId}`, {
-    user: payload,
-  });
+
+class UsersService extends BaseService {
+  async get(userId: string) {
+    return await this.api.get<UserResponse>(`/users/${userId}`);
+  }
+
+  async updateSelf(userId: string, payload: UserUpdateSelf) {
+    return await this.api.patch<UserResponse>(`/users/${userId}`, {
+      user: payload,
+    });
+  }
+
+  // Admin endpoints
+  async list() {
+    return await this.api.get<UserResponse[]>(`/users`);
+  }
+
+  async createAdmin(payload: UserCreateAdmin) {
+    return await this.api.post<UserResponse>(`/users`, { user: payload });
+  }
+
+  async updateAdmin(userId: number | string, payload: UserUpdateAdmin) {
+    return await this.api.patch<UserResponse>(`/users/${userId}`, {
+      user: payload,
+    });
+  }
+
+  async removeAdmin(userId: number | string) {
+    return await this.api.delete<void>(`/users/${userId}`);
+  }
 }
 
-export async function deleteUserAdminRequest(userId: number | string) {
-  return await backendInstance.delete<void>(`/users/${userId}`);
-}
+export const usersService = new UsersService();

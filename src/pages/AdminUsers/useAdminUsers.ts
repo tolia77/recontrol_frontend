@@ -2,10 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getUserId, saveUserRole } from "src/utils/auth";
 import {
-  listUsersRequest,
-  createUserAdminRequest,
-  updateUserAdminRequest,
-  deleteUserAdminRequest,
+  usersService,
   type UserResponse,
 } from "src/services/backend/usersService";
 import { getErrorMessage } from "src/utils/getErrorMessage";
@@ -79,7 +76,7 @@ export function useAdminUsers(): UseAdminUsersReturn {
   const loadUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await listUsersRequest();
+      const res = await usersService.list();
       setUsers(res.data);
     } catch {
       toast.error(t("errors.loadFailed"));
@@ -143,7 +140,7 @@ export function useAdminUsers(): UseAdminUsersReturn {
           payload.password = row.password.trim();
         if (row.role !== originalUser?.role) payload.role = row.role;
 
-        const res = await updateUserAdminRequest(row.id, payload);
+        const res = await usersService.updateAdmin(row.id, payload);
         setUsers((prev) => prev.map((u) => (u.id === row.id ? res.data : u)));
 
         if (String(row.id) === String(currentUserId) && res.data.role) {
@@ -175,7 +172,7 @@ export function useAdminUsers(): UseAdminUsersReturn {
     const u = deleteUserTarget;
     setDeleting(true);
     try {
-      await deleteUserAdminRequest(u.id);
+      await usersService.removeAdmin(u.id);
       setUsers((prev) => prev.filter((x) => x.id !== u.id));
       toast.success(t("messages.deleted"));
       if (String(u.id) === String(currentUserId)) {
@@ -195,7 +192,7 @@ export function useAdminUsers(): UseAdminUsersReturn {
       setCreating(true);
 
       try {
-        const res = await createUserAdminRequest({
+        const res = await usersService.createAdmin({
           username: newUser.username.trim(),
           email: newUser.email.trim(),
           password: newUser.password,
