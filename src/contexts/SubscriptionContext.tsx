@@ -17,7 +17,7 @@ import { getErrorMessage } from "src/utils/getErrorMessage";
 
 // ── Context ───────────────────────────────────────────────────────────────────
 
-const SubscriptionContext = createContext<SubscriptionContextValue | null>(null);
+export const SubscriptionContext = createContext<SubscriptionContextValue | null>(null);
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
