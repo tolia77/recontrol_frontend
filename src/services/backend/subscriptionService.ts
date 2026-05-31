@@ -1,4 +1,4 @@
-import { backendInstance } from "src/services/backend/config.ts";
+import { BaseService } from "src/services/backend/BaseService.ts";
 
 // ── Shared types ─────────────────────────────────────────────────────────────
 
@@ -75,46 +75,48 @@ interface PlansResponse {
 
 // ── subscriptionService ───────────────────────────────────────────────────────
 
-export const subscriptionService = {
+class SubscriptionService extends BaseService {
   async getStatus(): Promise<SubscriptionStatus> {
-    const { data } = await backendInstance.get<SubscriptionStatus>(
+    const { data } = await this.api.get<SubscriptionStatus>(
       "/subscriptions/status",
     );
     return data;
-  },
+  }
 
   async getPlans(): Promise<Plan[]> {
-    const { data } = await backendInstance.get<PlansResponse>("/plans");
+    const { data } = await this.api.get<PlansResponse>("/plans");
     return data.plans;
-  },
+  }
 
   async getUsage(): Promise<SubscriptionUsage> {
-    const { data } = await backendInstance.get<SubscriptionUsage>(
+    const { data } = await this.api.get<SubscriptionUsage>(
       "/subscriptions/usage",
     );
     return data;
-  },
+  }
 
   async checkout(planId: string, resultUrl: string): Promise<LiqPayBlob> {
-    const { data } = await backendInstance.post<LiqPayBlob>(
+    const { data } = await this.api.post<LiqPayBlob>(
       "/subscriptions/checkout",
       { plan_id: planId, result_url: resultUrl },
     );
     return data;
-  },
+  }
 
   async upgradeDowngrade(planId: string): Promise<UpgradeDowngradeResponse> {
-    const { data } = await backendInstance.post<UpgradeDowngradeResponse>(
+    const { data } = await this.api.post<UpgradeDowngradeResponse>(
       "/subscriptions/upgrade-downgrade",
       { plan_id: planId },
     );
     return data;
-  },
+  }
 
   async cancel(): Promise<{ status: string }> {
-    const { data } = await backendInstance.delete<{ status: string }>(
+    const { data } = await this.api.delete<{ status: string }>(
       "/subscriptions/cancel",
     );
     return data;
-  },
-};
+  }
+}
+
+export const subscriptionService = new SubscriptionService();
