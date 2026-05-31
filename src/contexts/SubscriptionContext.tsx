@@ -14,6 +14,7 @@ import {
   type Plan,
 } from "src/services/backend/subscriptionService.ts";
 import { getErrorMessage } from "src/utils/getErrorMessage";
+import { setUsageInvalidationHandler } from "src/utils/usageInvalidationBus.ts";
 
 // ── Context ───────────────────────────────────────────────────────────────────
 
@@ -44,8 +45,11 @@ export default function SubscriptionProvider({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAll = useCallback(async () => {
-    setLoading(true);
+  // `silent` skips the loading toggle so background refreshes (fired by the
+  // usage-invalidation bus after a write) don't flash spinners in UsageCard /
+  // PlanCards. The mount fetch and explicit refresh() calls show loading.
+  const fetchAll = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setLoading(true);
     try {
       const [statusResult, usageResult, plansResult] = await Promise.allSettled([
         subscriptionService.getStatus().catch((e) => {
@@ -64,12 +68,22 @@ export default function SubscriptionProvider({
       if (usageResult.status === "fulfilled") setUsage(usageResult.value);
       if (plansResult.status === "fulfilled") setPlans(plansResult.value);
     } finally {
-      setLoading(false);
+      if (!opts?.silent) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     void fetchAll();
+  }, [fetchAll]);
+
+  // Keep usage fresh after any successful count-changing mutation, app-wide.
+  // Services fire the bus (debounced); we re-fetch silently so proactive gates
+  // always read a current count without a page reload.
+  useEffect(() => {
+    setUsageInvalidationHandler(() => {
+      void fetchAll({ silent: true });
+    });
+    return () => setUsageInvalidationHandler(null);
   }, [fetchAll]);
 
   return (
