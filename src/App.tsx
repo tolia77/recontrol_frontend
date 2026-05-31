@@ -4,6 +4,7 @@ import Index from "src/pages/Index";
 import Login from "src/pages/Login";
 import Signup from "src/pages/Signup";
 import DeviceControl from "src/pages/DeviceControl/DeviceControl";
+import SubscriptionProvider from "src/contexts/SubscriptionContext";
 import Dashboard from "src/pages/Dashboard";
 import Devices from "src/pages/Devices/Devices";
 import DeviceSettings from "src/pages/DeviceSettings/DeviceSettings";
@@ -43,7 +44,9 @@ function App() {
         <Route
           path="/device-control"
           element={
-            <DeviceControl wsUrl={import.meta.env.VITE_WEBSOCKETS_URL} />
+            <SubscriptionProvider>
+              <DeviceControl wsUrl={import.meta.env.VITE_WEBSOCKETS_URL} />
+            </SubscriptionProvider>
           }
         />
       </Routes>
