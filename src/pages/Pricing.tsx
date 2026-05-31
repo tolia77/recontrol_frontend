@@ -64,12 +64,17 @@ interface PlanCardProps {
   highlighted: boolean;
 }
 
+interface PlanFeature {
+  text: string;
+  included: boolean;
+}
+
 function PlanCard({ planKey, highlighted }: PlanCardProps) {
   const { t } = useTranslation("pricing");
   const name = t(`plans.${planKey}.name`);
   const features = t(`plans.${planKey}.features`, {
     returnObjects: true,
-  }) as string[];
+  }) as PlanFeature[];
 
   return (
     <div
@@ -104,8 +109,10 @@ function PlanCard({ planKey, highlighted }: PlanCardProps) {
       <ul className="mb-8 flex flex-col gap-3">
         {features.map((feature, i) => (
           <li key={i} className="flex items-start gap-2.5 text-sm">
-            <CheckIcon />
-            <span className="text-text">{feature}</span>
+            {feature.included ? <CheckIcon /> : <ExcludedIcon />}
+            <span className={feature.included ? "text-text" : "text-darkgray"}>
+              {feature.text}
+            </span>
           </li>
         ))}
       </ul>
@@ -138,6 +145,21 @@ function CheckIcon() {
       aria-hidden="true"
     >
       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+    </svg>
+  );
+}
+
+function ExcludedIcon() {
+  return (
+    <svg
+      className="text-lightgray mt-0.5 h-4 w-4 flex-shrink-0"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2.5}
+      aria-hidden="true"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 12h12" />
     </svg>
   );
 }
