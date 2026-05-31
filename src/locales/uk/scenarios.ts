@@ -23,6 +23,8 @@ export const scenarios = {
     stepCount_other: "{{count}} кроку",
     lastRun: "Останній запуск {{relative}}",
     lastRunNever: "Ніколи не запускався",
+    runDisabledHint:
+      "Відкрийте сесію керування пристроєм, щоб запускати сценарії. Тут їх можна створювати, редагувати та впорядковувати.",
     actions: {
       edit: "Редагувати",
       duplicate: "Дублювати",

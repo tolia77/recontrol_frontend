@@ -479,3 +479,29 @@ describe("ScenariosPanel — history list & detail navigation", () => {
     expect(screen.queryByTestId("scenarios-history-detail")).toBeNull();
   });
 });
+
+describe("ScenariosPanel — runEnabled={false} (device-less /scenarios page)", () => {
+  it("removes row [▶ Run] and shows the run-disabled hint", async () => {
+    render(
+      <ToastProvider>
+        <ScenariosPanel deviceId="" ws={null} deviceName="" runEnabled={false} />
+      </ToastProvider>,
+    );
+    await waitFor(() => {
+      expect(screen.getByTestId("scenarios-list")).toBeDefined();
+    });
+    expect(screen.getByTestId("scenarios-run-disabled-hint")).toBeDefined();
+    expect(screen.queryByTestId("scenarios-row-run")).toBeNull();
+  });
+
+  it("renders row [▶ Run] and hides the hint by default", async () => {
+    renderPanel();
+    await waitFor(() => {
+      expect(screen.getByTestId("scenarios-list")).toBeDefined();
+    });
+    expect(screen.queryByTestId("scenarios-run-disabled-hint")).toBeNull();
+    expect(
+      (screen.getByTestId("scenarios-row-run") as HTMLButtonElement).disabled,
+    ).toBe(false);
+  });
+});

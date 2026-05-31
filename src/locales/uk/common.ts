@@ -7,6 +7,7 @@ export const common = {
   nav: {
     dashboard: "Панель",
     devices: "Пристрої",
+    scenarios: "Сценарії",
     help: "Допомога",
     settings: "Налаштування",
     subscription: "Підписка",

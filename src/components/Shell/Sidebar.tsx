@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import logo from "src/assets/img/logo-full-white-text.svg";
 import dashboardIcon from "src/assets/img/icons/dashboard.svg";
 import devicesIcon from "src/assets/img/icons/device.svg";
+import scenariosIcon from "src/assets/img/icons/scenarios.svg";
 import settingsIcon from "src/assets/img/icons/settings.svg";
 import helpIcon from "src/assets/img/icons/help.svg";
 import subscriptionIcon from "src/assets/img/icons/subscription.svg";
@@ -44,6 +45,13 @@ function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         >
           <img src={devicesIcon} alt={t("nav.devices")} />
           <p>{t("nav.devices")}</p>
+        </Link>
+        <Link
+          to="/scenarios"
+          className="flex h-[45px] items-center gap-1 transition-opacity hover:opacity-80"
+        >
+          <img src={scenariosIcon} alt={t("nav.scenarios")} />
+          <p>{t("nav.scenarios")}</p>
         </Link>
         <Link
           to="/settings"

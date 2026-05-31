@@ -8,6 +8,7 @@ import DeviceControl from "src/pages/DeviceControl/DeviceControl";
 import SubscriptionProvider from "src/contexts/SubscriptionContext";
 import Dashboard from "src/pages/Dashboard";
 import Devices from "src/pages/Devices/Devices";
+import Scenarios from "src/pages/Scenarios/Scenarios";
 import DeviceSettings from "src/pages/DeviceSettings/DeviceSettings";
 import Help from "src/pages/Help";
 import UserSettings from "src/pages/UserSettings";
@@ -27,6 +28,7 @@ function App() {
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/devices" element={<Devices />} />
+          <Route path="/scenarios" element={<Scenarios />} />
           <Route
             path="/devices/:deviceId/settings"
             element={<DeviceSettings />}

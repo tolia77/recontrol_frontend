@@ -7,6 +7,7 @@ export const common = {
   nav: {
     dashboard: "Dashboard",
     devices: "Devices",
+    scenarios: "Scenarios",
     help: "Help",
     settings: "Settings",
     subscription: "Subscription",

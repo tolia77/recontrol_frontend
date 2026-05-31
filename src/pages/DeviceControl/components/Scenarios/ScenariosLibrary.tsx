@@ -25,6 +25,10 @@ export interface ScenariosLibraryProps {
   // Single-in-flight signal — when an active run is running on this device id,
   // every row pinned to that device disables its [▶ Run] button.
   activeRunDeviceId?: string | null;
+  // Device-less hosting (standalone /scenarios dashboard page): no live device
+  // socket exists, so running is impossible. When false, every row's [▶ Run]
+  // is hidden and a hint explains that running requires a device session.
+  runEnabled?: boolean;
 }
 
 export default function ScenariosLibrary({
@@ -33,6 +37,7 @@ export default function ScenariosLibrary({
   onNew,
   onRun,
   activeRunDeviceId = null,
+  runEnabled = true,
 }: ScenariosLibraryProps) {
   const { t } = useTranslation("scenarios");
   const gate = useGate("scenario_limit");
@@ -174,6 +179,14 @@ export default function ScenariosLibrary({
           )}
         </select>
       </div>
+      {!runEnabled && (
+        <div
+          className="border-tertiary bg-tertiary/40 text-darkgray rounded border px-3 py-2 text-xs"
+          data-testid="scenarios-run-disabled-hint"
+        >
+          {t("library.runDisabledHint")}
+        </div>
+      )}
       {loading && (
         <div data-testid="scenarios-loading">
           <LoadingState />
@@ -209,6 +222,7 @@ export default function ScenariosLibrary({
             onDuplicate={() => handleDuplicate(s)}
             onDelete={() => handleDelete(s)}
             onRun={() => onRun(s)}
+            showRun={runEnabled}
             runDisabled={
               !!activeRunDeviceId && s.pinned_device_id === activeRunDeviceId
             }

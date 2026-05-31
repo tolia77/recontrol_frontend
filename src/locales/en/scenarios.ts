@@ -19,6 +19,8 @@ export const scenarios = {
     stepCount_other: "{{count}} steps",
     lastRun: "Last run {{relative}}",
     lastRunNever: "Never run",
+    runDisabledHint:
+      "Open a device session to run scenarios. Here you can create, edit, and manage them.",
     actions: {
       edit: "Edit",
       duplicate: "Duplicate",

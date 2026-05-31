@@ -71,12 +71,17 @@ export interface ScenariosPanelProps {
   deviceId: string;
   ws: WebSocket | null;
   deviceName: string;
+  // When false, the library renders with [▶ Run] disabled (no live device
+  // socket to dispatch a run over). Used by the standalone /scenarios page,
+  // which hosts the panel device-less for authoring/management only.
+  runEnabled?: boolean;
 }
 
 export default function ScenariosPanel({
   deviceId,
   ws,
   deviceName,
+  runEnabled = true,
 }: ScenariosPanelProps) {
   const { t } = useTranslation("scenarios");
 
@@ -184,6 +189,7 @@ export default function ScenariosPanel({
             onNew={() => setMode({ kind: "editor", editingId: "new" })}
             onRun={handleRunClick}
             activeRunDeviceId={scenariosState.activeRun?.deviceId ?? null}
+            runEnabled={runEnabled}
           />
         )}
         {mode.kind === "history" && (

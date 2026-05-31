@@ -12,6 +12,9 @@ export interface ScenariosRowProps {
   // D-22-08: disables [▶ Run] when the parent ScenariosLibrary knows a run is
   // already in-flight on this row's pinned device (single-in-flight signal).
   runDisabled?: boolean;
+  // Hides [▶ Run] entirely. Used by the device-less /scenarios dashboard page,
+  // where there is no live device socket to launch a run over.
+  showRun?: boolean;
 }
 
 function relative(dateIso: string | null | undefined): string {
@@ -35,6 +38,7 @@ export default function ScenariosRow({
   onDelete,
   onRun,
   runDisabled = false,
+  showRun = true,
 }: ScenariosRowProps) {
   const { t } = useTranslation("scenarios");
   // SHARE-06: owner vs recipient. Recipients get a read-only marker and do NOT
@@ -51,17 +55,20 @@ export default function ScenariosRow({
     >
       {/* D-22-08: primary [▶ Run] action on left edge in accent token. The
         Button primitive's variant="primary" sets bg-primary; the !bg-accent
-        override forces the accent token per UI-SPEC §[▶ Run] on library row. */}
-      <Button
-        variant="primary"
-        size="sm"
-        className="!bg-accent hover:opacity-90"
-        onClick={onRun}
-        disabled={runDisabled}
-        data-testid="scenarios-row-run"
-      >
-        ▶ {t("library.actions.run")}
-      </Button>
+        override forces the accent token per UI-SPEC §[▶ Run] on library row.
+        Hidden entirely on the device-less /scenarios page (showRun=false). */}
+      {showRun && (
+        <Button
+          variant="primary"
+          size="sm"
+          className="!bg-accent hover:opacity-90"
+          onClick={onRun}
+          disabled={runDisabled}
+          data-testid="scenarios-row-run"
+        >
+          ▶ {t("library.actions.run")}
+        </Button>
+      )}
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-primary truncate font-medium">
