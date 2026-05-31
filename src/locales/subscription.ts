@@ -20,6 +20,7 @@ export const subscription = {
 
   statusHeader: {
     renews: "Renews {{date}}",
+    switchesToFree: "Switches to Free on {{date}}",
     state: {
       active: "Active",
       upgrading: "Upgrading",
@@ -155,6 +156,7 @@ export const subscription_uk = {
 
   statusHeader: {
     renews: "Поновлюється {{date}}",
+    switchesToFree: "Перейде на безкоштовний план {{date}}",
     state: {
       active: "Активна",
       upgrading: "Оновлення",

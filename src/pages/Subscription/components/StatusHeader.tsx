@@ -26,12 +26,20 @@ function StatusHeader({ status }: StatusHeaderProps) {
   const stateLabel = status?.state ?? "active";
   const badgeClass = stateBadgeClasses[stateLabel] ?? "text-darkgray bg-lightgray";
 
-  const renewalDate = status?.period_end
+  const periodEndDate = status?.period_end
     ? new Date(status.period_end).toLocaleDateString(i18n.language, {
         year: "numeric",
         month: "long",
         day: "numeric",
       })
+    : null;
+
+  // A cancelled subscription keeps its paid plan until period_end, then reverts to Free
+  // (Phase 32 job). Say so explicitly rather than the misleading "Renews {date}".
+  const dateLine = periodEndDate
+    ? stateLabel === "cancelled"
+      ? t("statusHeader.switchesToFree", { date: periodEndDate })
+      : t("statusHeader.renews", { date: periodEndDate })
     : null;
 
   return (
@@ -41,10 +49,8 @@ function StatusHeader({ status }: StatusHeaderProps) {
           <p className="text-2xl font-semibold capitalize">
             {t(`plan.${planLabel}`)}
           </p>
-          {renewalDate && (
-            <p className="text-sm text-darkgray mt-1">
-              {t("statusHeader.renews", { date: renewalDate })}
-            </p>
+          {dateLine && (
+            <p className="text-sm text-darkgray mt-1">{dateLine}</p>
           )}
         </div>
         <span
