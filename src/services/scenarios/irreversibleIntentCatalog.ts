@@ -21,6 +21,8 @@
  * frontend mirror is presentational defense-in-depth.
  */
 
+// TODO: why tf it's here
+
 export const IRREVERSIBLE_IDS = [
   "rm",
   "truncate",
