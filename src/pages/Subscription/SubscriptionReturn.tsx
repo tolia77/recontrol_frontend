@@ -81,7 +81,9 @@ function SubscriptionReturn() {
             </div>
             <h2 className="text-xl font-semibold">{t("return.successHeading")}</h2>
             <p className="text-sm text-darkgray">
-              {t("return.successBody", { plan: activePlan ?? "" })}
+              {t("return.successBody", {
+                plan: activePlan ? t(`plan.${activePlan}`) : "",
+              })}
             </p>
             <Link
               to="/subscription"
