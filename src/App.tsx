@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router";
 import Layout from "src/components/Shell/Layout";
 import Index from "src/pages/Index";
+import Pricing from "src/pages/Pricing";
 import Login from "src/pages/Login";
 import Signup from "src/pages/Signup";
 import DeviceControl from "src/pages/DeviceControl/DeviceControl";
@@ -20,6 +21,7 @@ function App() {
       <Routes>
         {/* Public landing page without sidebar */}
         <Route path="/" element={<Index />} />
+        <Route path="/pricing" element={<Pricing />} />
 
         {/* App pages with sidebar layout */}
         <Route element={<Layout />}>

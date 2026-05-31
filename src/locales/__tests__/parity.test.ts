@@ -22,6 +22,8 @@ import { help as en_help } from "../en/help";
 import { help as uk_help } from "../uk/help";
 import { indexPage as en_index } from "../en/index";
 import { indexPage as uk_index } from "../uk/index";
+import { pricing as en_pricing } from "../en/pricing";
+import { pricing as uk_pricing } from "../uk/pricing";
 import { scenarios as en_scenarios } from "../en/scenarios";
 import { scenarios as uk_scenarios } from "../uk/scenarios";
 import { subscription as en_subscription, subscription_uk as uk_subscription } from "../subscription";
@@ -59,6 +61,7 @@ const NAMESPACE_PAIRS = [
   ["fileManager", en_fileManager, uk_fileManager],
   ["help", en_help, uk_help],
   ["index", en_index, uk_index],
+  ["pricing", en_pricing, uk_pricing],
   ["userSettings", en_userSettings, uk_userSettings],
   ["scenarios", en_scenarios, uk_scenarios],
   ["subscription", en_subscription, uk_subscription],

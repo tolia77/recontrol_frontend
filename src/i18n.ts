@@ -9,6 +9,8 @@ import { common } from "src/locales/en/common.ts";
 import { common as common_uk } from "src/locales/uk/common.ts";
 import { indexPage } from "src/locales/en/index.ts";
 import { indexPage as indexPage_uk } from "src/locales/uk/index.ts";
+import { pricing } from "src/locales/en/pricing.ts";
+import { pricing as pricing_uk } from "src/locales/uk/pricing.ts";
 import { auth } from "src/locales/en/auth.ts";
 import { auth as auth_uk } from "src/locales/uk/auth.ts";
 import { devices } from "src/locales/en/devices.ts";
@@ -41,6 +43,7 @@ void i18n
       "common",
       "help",
       "index",
+      "pricing",
       "auth",
       "devices",
       "deviceSettings",
@@ -59,6 +62,7 @@ void i18n
         common,
         help,
         index: indexPage,
+        pricing,
         auth,
         devices,
         deviceSettings,
@@ -75,6 +79,7 @@ void i18n
         common: common_uk,
         help: help_uk,
         index: indexPage_uk,
+        pricing: pricing_uk,
         auth: auth_uk,
         devices: devices_uk,
         deviceSettings: deviceSettings_uk,

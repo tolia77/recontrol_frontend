@@ -1,4 +1,13 @@
 export const indexPage = {
+  header: {
+    pricing: "Pricing",
+    help: "Help",
+    login: "Log in",
+    signup: "Sign up",
+    dashboard: "Dashboard",
+    openMenu: "Open menu",
+    closeMenu: "Close menu",
+  },
   hero: {
     headline: "Remote device control, simplified",
     sub: "Securely manage and control your devices from anywhere. Stream screens, send inputs, and run commands with confidence.",

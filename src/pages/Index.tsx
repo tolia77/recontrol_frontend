@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import logoFull from "src/assets/img/logo-full.svg";
+import SiteHeader from "src/components/Shell/SiteHeader";
 import connectIcon from "src/assets/img/icons/connect.svg";
 import dashboardIcon from "src/assets/img/icons/dashboard.svg";
 import deviceIcon from "src/assets/img/icons/device.svg";
@@ -11,7 +11,9 @@ function Index() {
   const { t } = useTranslation("index");
 
   return (
-    <main className="bg-background min-h-screen">
+    <div className="bg-background min-h-screen">
+      <SiteHeader />
+
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10">
@@ -21,7 +23,6 @@ function Index() {
         </div>
         <div className="container mx-auto flex items-center justify-center px-6 py-20">
           <div className="max-w-3xl text-center">
-            <img src={logoFull} alt="ReControl" className="mx-auto mb-8 h-16" />
             <h1 className="text-primary mb-4 text-4xl font-extrabold tracking-tight md:text-6xl">
               {t("hero.headline")}
             </h1>
@@ -125,7 +126,7 @@ function Index() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }
 
