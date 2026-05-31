@@ -19,7 +19,7 @@ export function computeRealImageCoords(
   nW: number,
   nH: number,
   clientX: number,
-  clientY: number
+  clientY: number,
 ): RealCoords {
   const scale = Math.min(rect.width / nW, rect.height / nH);
   const dispW = nW * scale;
@@ -39,4 +39,3 @@ export function computeRealImageCoords(
     debug: { clientX, clientY, rect, nW, nH, dispW, dispH, offsetX, offsetY },
   };
 }
-

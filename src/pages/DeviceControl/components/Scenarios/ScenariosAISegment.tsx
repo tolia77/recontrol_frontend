@@ -25,18 +25,18 @@
  *     AbortController + signal.aborted guards on resolve/reject.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
-import { Card } from 'src/components/ui/Card.tsx';
-import { Button } from 'src/components/ui/Button.tsx';
+import Card from "src/components/ui/Card.tsx";
+import Button from "src/components/ui/Button.tsx";
 import type {
   DraftQuota,
   DraftResponse,
-} from 'src/services/backend/scenariosService.ts';
+} from "src/services/backend/scenariosService.ts";
 
-import { useDraftGeneration } from './useDraftGeneration';
-import i18n from 'src/i18n.ts';
+import { useDraftGeneration } from "./useDraftGeneration";
+import { i18n } from "src/i18n.ts";
 
 export interface ScenariosAISegmentProps {
   /**
@@ -50,7 +50,7 @@ export interface ScenariosAISegmentProps {
    * could not parse the usage block (graceful — backend nullifies bogus
    * values, frontend simply stamps whatever it received).
    */
-  onDraftReady: (draft: DraftResponse['draft'], totalTokens: number) => void;
+  onDraftReady: (draft: DraftResponse["draft"], totalTokens: number) => void;
   /**
    * Optional initial quota snapshot supplied by the parent (typically from a
    * GET /ai_usages/today fetch on segment mount). When omitted, the quota
@@ -90,20 +90,20 @@ const LAST_PROMPT_TRUNCATE = 60;
  */
 function errorCodeToLocaleKey(code: string): string {
   switch (code) {
-    case 'draft_unparseable':
-      return 'ai.errors.unparseable';
-    case 'draft_unsafe':
-      return 'ai.errors.unsafe';
-    case 'draft_attempts_exceeded':
-      return 'ai.errors.quotaDrafts';
-    case 'tokens_exceeded':
-      return 'ai.errors.quotaTokens';
-    case 'upstream_rate_limited':
-      return 'ai.errors.rateLimited';
-    case 'ai_service_unreachable':
-    case 'network':
+    case "draft_unparseable":
+      return "ai.errors.unparseable";
+    case "draft_unsafe":
+      return "ai.errors.unsafe";
+    case "draft_attempts_exceeded":
+      return "ai.errors.quotaDrafts";
+    case "tokens_exceeded":
+      return "ai.errors.quotaTokens";
+    case "upstream_rate_limited":
+      return "ai.errors.rateLimited";
+    case "ai_service_unreachable":
+    case "network":
     default:
-      return 'ai.errors.network';
+      return "ai.errors.network";
   }
 }
 
@@ -132,29 +132,30 @@ function isAmberQuota(q: DraftQuota): boolean {
   );
 }
 
-export function ScenariosAISegment({
+function ScenariosAISegment({
   onDraftReady,
   initialQuota,
   onPromptSubmitted,
   regenerateToken,
   regeneratePrompt,
 }: ScenariosAISegmentProps) {
-  const { t } = useTranslation('scenarios');
+  const { t } = useTranslation("scenarios");
   const { state, generate, cancel } = useDraftGeneration();
 
-  const [prompt, setPrompt] = useState('');
+  const [prompt, setPrompt] = useState("");
   const [errorDismissed, setErrorDismissed] = useState(false);
-  const [lastPrompt, setLastPrompt] = useState<{ text: string; at: number } | null>(
-    null,
-  );
+  const [lastPrompt, setLastPrompt] = useState<{
+    text: string;
+    at: number;
+  } | null>(null);
   const [quota, setQuota] = useState<DraftQuota | null>(initialQuota ?? null);
   const [elapsedSec, setElapsedSec] = useState(0);
 
-  const isGenerating = state.kind === 'generating';
+  const isGenerating = state.kind === "generating";
 
   // Tick the elapsed counter every second while generating; cleared on exit.
   useEffect(() => {
-    if (state.kind !== 'generating') {
+    if (state.kind !== "generating") {
       setElapsedSec(0);
       return;
     }
@@ -171,7 +172,7 @@ export function ScenariosAISegment({
   // Phase 23 / Plan 23-11 (AI-10): forward `usage.total_tokens` so the panel
   // can persist it as `created_via_ai_token_count` on [Accept and save].
   useEffect(() => {
-    if (state.kind !== 'success') return;
+    if (state.kind !== "success") return;
     setQuota(state.draft.quota);
     onDraftReady(state.draft.draft, state.draft.usage?.total_tokens ?? 0);
   }, [state, onDraftReady]);
@@ -179,7 +180,7 @@ export function ScenariosAISegment({
   // Error-branch effect: re-show the error card whenever the hook surfaces a
   // new error (in case the operator had previously dismissed an older one).
   useEffect(() => {
-    if (state.kind === 'error') {
+    if (state.kind === "error") {
       setErrorDismissed(false);
     }
   }, [state]);
@@ -219,9 +220,9 @@ export function ScenariosAISegment({
     setErrorDismissed(true);
   }, []);
 
-  const errorCode = state.kind === 'error' ? state.code : null;
+  const errorCode = state.kind === "error" ? state.code : null;
   const errorDetails =
-    state.kind === 'error'
+    state.kind === "error"
       ? (state.details as { response?: { data?: Record<string, unknown> } })
       : null;
   const errorBodyKey = errorCode ? errorCodeToLocaleKey(errorCode) : null;
@@ -230,70 +231,69 @@ export function ScenariosAISegment({
   const errorInterpolation = useMemo<Record<string, unknown>>(() => {
     if (!errorCode || !errorDetails) return {};
     const data = errorDetails.response?.data;
-    if (errorCode === 'draft_unsafe' && data && typeof data === 'object') {
+    if (errorCode === "draft_unsafe" && data && typeof data === "object") {
       const stepIndex = (data as { step_index?: unknown }).step_index;
-      return { stepIndex: typeof stepIndex === 'number' ? stepIndex + 1 : 1 };
+      return { stepIndex: typeof stepIndex === "number" ? stepIndex + 1 : 1 };
     }
     if (
-      (errorCode === 'draft_attempts_exceeded' ||
-        errorCode === 'tokens_exceeded') &&
+      (errorCode === "draft_attempts_exceeded" ||
+        errorCode === "tokens_exceeded") &&
       data &&
-      typeof data === 'object'
+      typeof data === "object"
     ) {
-      const reset = (data as { reset_at?: unknown; resets_in?: unknown });
+      const reset = data as { reset_at?: unknown; resets_in?: unknown };
       const rel =
-        typeof reset.resets_in === 'string'
+        typeof reset.resets_in === "string"
           ? reset.resets_in
-          : typeof reset.reset_at === 'string'
+          : typeof reset.reset_at === "string"
             ? reset.reset_at
-            : 'soon';
+            : "soon";
       return { resetRelative: rel };
     }
     return {};
   }, [errorCode, errorDetails]);
 
   const showError =
-    state.kind === 'error' && !errorDismissed && errorBodyKey !== null;
+    state.kind === "error" && !errorDismissed && errorBodyKey !== null;
 
   const submitDisabled = isGenerating || prompt.trim().length === 0;
 
   const ctaLabel = isGenerating
-    ? `⏹ ${t('ai.cancelGenerate')}`
-    : t('ai.generate');
+    ? `⏹ ${t("ai.cancelGenerate")}`
+    : t("ai.generate");
 
   const quotaIsAmber = quota !== null && isAmberQuota(quota);
 
-  const showEmptyState = lastPrompt === null && state.kind !== 'generating';
+  const showEmptyState = lastPrompt === null && state.kind !== "generating";
 
   return (
-    <div className="flex flex-col gap-4 h-full">
+    <div className="flex h-full flex-col gap-4">
       <Card padding="md">
         <div className="flex flex-col gap-3">
           <label
             htmlFor="scenarios-ai-prompt"
-            className="text-body-small font-medium text-text"
+            className="text-body-small text-text font-medium"
           >
-            {t('ai.promptLabel')}
+            {t("ai.promptLabel")}
           </label>
           <textarea
             id="scenarios-ai-prompt"
-            aria-label={t('ai.promptLabel')}
+            aria-label={t("ai.promptLabel")}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder={t('ai.promptPlaceholder')}
+            placeholder={t("ai.promptPlaceholder")}
             maxLength={PROMPT_MAX_LENGTH}
             disabled={isGenerating}
-            className="w-full min-h-[80px] resize-y rounded-lg border border-lightgray px-4 py-3 text-body text-text placeholder:text-darkgray focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="border-lightgray text-body text-text placeholder:text-darkgray focus:border-primary focus:ring-primary/20 min-h-[80px] w-full resize-y rounded-lg border px-4 py-3 focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
           />
           <div className="flex items-center justify-between gap-3">
             {isGenerating ? (
               <span className="text-caption-small text-darkgray">
-                ⏳{' '}
-                {t('ai.generatingCounter', { count: elapsedSec })}
+                ⏳ {t("ai.generatingCounter", { count: elapsedSec })}
               </span>
             ) : showEmptyState ? (
               <span className="text-body-small text-darkgray">
-                {t('ai.emptyStateBody')}
+                {t("ai.emptyStateBody")}
               </span>
             ) : (
               <span aria-hidden="true" />
@@ -325,18 +325,18 @@ export function ScenariosAISegment({
       {quota !== null && (
         <Card padding="sm" data-testid="ai-quota-card">
           <div
-            className={`flex flex-col gap-1 text-caption-small ${
-              quotaIsAmber ? 'text-amber' : 'text-darkgray'
+            className={`text-caption-small flex flex-col gap-1 ${
+              quotaIsAmber ? "text-amber" : "text-darkgray"
             }`}
           >
             <span>
-              {t('ai.quotaDrafts', {
+              {t("ai.quotaDrafts", {
                 used: quota.drafts_used,
                 limit: quota.drafts_limit,
               })}
             </span>
             <span>
-              {t('ai.quotaTokens', {
+              {t("ai.quotaTokens", {
                 used: quota.tokens_used,
                 limit: quota.tokens_limit,
               })}
@@ -350,7 +350,7 @@ export function ScenariosAISegment({
           className="text-caption-small text-darkgray"
           data-testid="ai-last-prompt"
         >
-          {t('ai.lastPrompt', {
+          {t("ai.lastPrompt", {
             prompt: truncatePrompt(lastPrompt.text),
             relative: formatRelative(lastPrompt.at, Date.now()),
           })}
@@ -360,7 +360,7 @@ export function ScenariosAISegment({
       {showError && errorBodyKey && (
         <Card
           padding="sm"
-          className="border-l-4 border-error"
+          className="border-error border-l-4"
           role="alert"
           data-testid="ai-error-card"
         >
@@ -374,7 +374,7 @@ export function ScenariosAISegment({
               onClick={handleDismissError}
               type="button"
             >
-              {t('ai.dismiss')}
+              {t("ai.dismiss")}
             </Button>
           </div>
         </Card>

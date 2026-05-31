@@ -1,6 +1,6 @@
-import type { FileEntry } from '../../../services/files';
-import type { SortState } from '../types';
-import { classify } from './fileTypes';
+import type { FileEntry } from "src/pages/DeviceControl/services/files/filesProtocol.generated";
+import type { SortState } from "src/pages/DeviceControl/components/FileManager/types";
+import { classify } from "./fileTypes";
 
 /**
  * Folders-first comparator. Within each bucket (directories first, then
@@ -19,16 +19,16 @@ export function compareEntries(
   if (a.isDirectory !== b.isDirectory) {
     return a.isDirectory ? -1 : 1;
   }
-  const dir = sort.direction === 'asc' ? 1 : -1;
+  const dir = sort.direction === "asc" ? 1 : -1;
   switch (sort.column) {
-    case 'name':
+    case "name":
       return a.name.localeCompare(b.name) * dir;
-    case 'size': {
+    case "size": {
       const diff = (a.sizeBytes ?? 0) - (b.sizeBytes ?? 0);
       if (diff !== 0) return diff * dir;
       return a.name.localeCompare(b.name) * dir;
     }
-    case 'modified': {
+    case "modified": {
       const at = new Date(a.modifiedUtc).getTime();
       const bt = new Date(b.modifiedUtc).getTime();
       const safeA = Number.isFinite(at) ? at : 0;
@@ -36,7 +36,7 @@ export function compareEntries(
       if (safeA !== safeB) return (safeA - safeB) * dir;
       return a.name.localeCompare(b.name) * dir;
     }
-    case 'type': {
+    case "type": {
       const byType = classify(a.name).localeCompare(classify(b.name)) * dir;
       if (byType !== 0) return byType;
       return a.name.localeCompare(b.name);

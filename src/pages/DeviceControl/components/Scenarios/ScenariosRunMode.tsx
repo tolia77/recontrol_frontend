@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useMemo } from 'react';
-import type { JSX } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Button, useToast } from 'src/components/ui';
-import { RunOutput } from './RunOutput';
-import { copyAsMarkdown } from '../Assistant/copyAsMarkdown';
-import type { ActiveRun, ActiveRunStatus } from './scenariosReducer';
-import type { ToolRow } from '../Assistant/transcriptReducer';
+import { useCallback, useEffect, useMemo } from "react";
+import type { JSX } from "react";
+import { useTranslation } from "react-i18next";
+import { Button, useToast } from "src/components/ui";
+import RunOutput from "./RunOutput";
+import { copyAsMarkdown } from "src/pages/DeviceControl/components/Assistant/copyAsMarkdown";
+import type { ActiveRun, ActiveRunStatus } from "./scenariosReducer";
+import type { ToolRow } from "src/pages/DeviceControl/components/Assistant/transcriptReducer";
 
 /**
  * ScenariosRunMode — full-takeover panel that owns the device-control right
@@ -31,14 +31,14 @@ import type { ToolRow } from '../Assistant/transcriptReducer';
 // don't export from the reducer to avoid coupling — this is the smallest
 // duplication needed and stays in lockstep with the reducer's set).
 const TERMINAL_STATUSES: ReadonlyArray<ActiveRunStatus> = [
-  'completed',
-  'failed',
-  'user_stopped',
-  'policy_deny',
-  'access_revoked',
-  'tab_closed',
-  'abandoned',
-  'error',
+  "completed",
+  "failed",
+  "user_stopped",
+  "policy_deny",
+  "access_revoked",
+  "tab_closed",
+  "abandoned",
+  "error",
 ];
 
 function isTerminal(status: ActiveRunStatus): boolean {
@@ -56,7 +56,7 @@ export interface ScenariosRunModeCommandStep {
 export interface ScenariosRunModeProps {
   activeRun: ActiveRun;
   deviceName: string;
-  backTo: 'library' | 'history';
+  backTo: "library" | "history";
   onStop: () => void;
   onBack: () => void;
   /**
@@ -69,7 +69,7 @@ export interface ScenariosRunModeProps {
   commandSteps: ReadonlyArray<ScenariosRunModeCommandStep>;
 }
 
-export function ScenariosRunMode({
+function ScenariosRunMode({
   activeRun,
   deviceName,
   backTo,
@@ -77,33 +77,31 @@ export function ScenariosRunMode({
   onBack,
   commandSteps,
 }: ScenariosRunModeProps): JSX.Element {
-  const { t } = useTranslation('scenarios');
+  const { t } = useTranslation("scenarios");
   const toast = useToast();
 
   const terminal = isTerminal(activeRun.status);
-  const isRunning = activeRun.status === 'running';
-  const isStopping = activeRun.status === 'stopping';
+  const isRunning = activeRun.status === "running";
+  const isStopping = activeRun.status === "stopping";
 
   // beforeunload guard: only while running. Registers fresh on transition to
   // running (T-22-32 — never while terminal).
   useEffect(() => {
-    if (activeRun.status !== 'running') return;
-    const message = t('run.beforeUnloadMessage');
+    if (activeRun.status !== "running") return;
+    const message = t("run.beforeUnloadMessage");
     const handler = (e: BeforeUnloadEvent) => {
       e.preventDefault();
       e.returnValue = message;
       return message;
     };
-    window.addEventListener('beforeunload', handler);
-    return () => window.removeEventListener('beforeunload', handler);
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
   }, [activeRun.status, t]);
 
   // Tool rows (filter the transcript down to ToolRow kind).
   const toolRows: ToolRow[] = useMemo(
     () =>
-      activeRun.transcript.rows.filter(
-        (r): r is ToolRow => r.kind === 'tool',
-      ),
+      activeRun.transcript.rows.filter((r): r is ToolRow => r.kind === "tool"),
     [activeRun.transcript.rows],
   );
 
@@ -119,7 +117,7 @@ export function ScenariosRunMode({
 
   // Step counter: (# of done tool rows) + (1 if running), capped at stepCount.
   const currentStep = useMemo(() => {
-    const doneCount = toolRows.filter((r) => r.state === 'done').length;
+    const doneCount = toolRows.filter((r) => r.state === "done").length;
     const inflight = isRunning ? 1 : 0;
     return Math.min(doneCount + inflight, activeRun.stepCount);
   }, [toolRows, isRunning, activeRun.stepCount]);
@@ -127,47 +125,45 @@ export function ScenariosRunMode({
   const handleCopyMarkdown = useCallback(async () => {
     const md = copyAsMarkdown(activeRun.transcript.rows);
     try {
-      if (typeof navigator === 'undefined' || !navigator.clipboard?.writeText) {
-        throw new Error('clipboard_unavailable');
+      if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) {
+        throw new Error("clipboard_unavailable");
       }
       await navigator.clipboard.writeText(md);
-      toast.success(t('run.copyMarkdownSuccess'));
+      toast.success(t("run.copyMarkdownSuccess"));
     } catch {
-      toast.error(t('run.copyMarkdownError'));
+      toast.error(t("run.copyMarkdownError"));
     }
   }, [activeRun.transcript.rows, toast, t]);
 
   const backLabel =
-    backTo === 'library'
-      ? t('editor.backToLibrary')
-      : t('run.backToHistory');
+    backTo === "library" ? t("editor.backToLibrary") : t("run.backToHistory");
 
   return (
     <div
       data-testid="scenarios-run-mode"
-      className="flex flex-col h-full bg-background"
+      className="bg-background flex h-full flex-col"
     >
       {/* Header */}
-      <header className="px-4 py-2 border-b border-lightgray flex items-center justify-between">
-        <div className="flex items-center gap-2 min-w-0">
+      <header className="border-lightgray flex items-center justify-between border-b px-4 py-2">
+        <div className="flex min-w-0 items-center gap-2">
           <span
-            className="font-medium text-primary text-sm truncate max-w-[180px]"
+            className="text-primary max-w-[180px] truncate text-sm font-medium"
             data-testid="scenarios-run-scenario-name"
             title={activeRun.scenarioName}
           >
             {activeRun.scenarioName}
           </span>
           <span
-            className="bg-gray-100 text-xs px-2 py-1 rounded ml-2"
+            className="ml-2 rounded bg-gray-100 px-2 py-1 text-xs"
             data-testid="scenarios-run-device-chip"
           >
             {deviceName}
           </span>
           <span
-            className="text-xs text-darkgray ml-2"
+            className="text-darkgray ml-2 text-xs"
             data-testid="scenarios-run-step-counter"
           >
-            {t('run.stepCounter', {
+            {t("run.stepCounter", {
               current: currentStep,
               total: activeRun.stepCount,
               count: activeRun.stepCount,
@@ -185,7 +181,7 @@ export function ScenariosRunMode({
               onClick={onStop}
               data-testid="scenarios-run-stop"
             >
-              {isStopping ? t('run.stopping') : t('run.stop')}
+              {isStopping ? t("run.stopping") : t("run.stop")}
             </Button>
           )}
           {terminal && (
@@ -204,7 +200,7 @@ export function ScenariosRunMode({
                 onClick={handleCopyMarkdown}
                 data-testid="scenarios-run-copy-md"
               >
-                {t('run.copyMarkdown')}
+                {t("run.copyMarkdown")}
               </Button>
             </>
           )}
@@ -213,7 +209,7 @@ export function ScenariosRunMode({
 
       {/* Body */}
       <div
-        className="flex-1 overflow-y-auto px-4 py-3 space-y-2"
+        className="flex-1 space-y-2 overflow-y-auto px-4 py-3"
         data-testid="scenarios-run-body"
       >
         {toolRows.map((row) => (

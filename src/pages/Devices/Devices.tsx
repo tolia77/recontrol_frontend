@@ -1,25 +1,25 @@
-import { useEffect, useState, useRef } from 'react';
-import DevicesTable from 'src/pages/Devices/DevicesTable';
-import type { Device } from 'src/types/global';
-import type { GetMyDevicesParams } from 'src/services/backend/devicesRequests';
-import { getMyDevicesRequest } from 'src/services/backend/devicesRequests';
-import { useTranslation } from 'react-i18next';
-import { Button } from 'src/components/ui/Button';
-import { Spinner } from 'src/components/ui/Spinner';
+import { useEffect, useState, useRef } from "react";
+import DevicesTable from "src/pages/Devices/DevicesTable";
+import type { Device } from "src/types";
+import type { GetMyDevicesParams } from "src/services/backend/devicesService";
+import { getMyDevicesRequest } from "src/services/backend/devicesService";
+import { useTranslation } from "react-i18next";
+import Button from "src/components/ui/Button";
+import { LoadingState } from "src/components/ui";
 
 function Devices() {
-  const { t } = useTranslation('devices');
+  const { t } = useTranslation("devices");
 
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(false);
   const requestIdRef = useRef(0);
 
   // Filter state
-  const [name, setName] = useState('');
-  const [owner, setOwner] = useState<GetMyDevicesParams['owner']>('');
-  const [status, setStatus] = useState<GetMyDevicesParams['status']>('');
-  const [lastFrom, setLastFrom] = useState('');
-  const [lastTo, setLastTo] = useState('');
+  const [name, setName] = useState("");
+  const [owner, setOwner] = useState<GetMyDevicesParams["owner"]>("");
+  const [status, setStatus] = useState<GetMyDevicesParams["status"]>("");
+  const [lastFrom, setLastFrom] = useState("");
+  const [lastTo, setLastTo] = useState("");
 
   const debounceRef = useRef<number | null>(null);
 
@@ -27,7 +27,7 @@ function Devices() {
     const currentId = ++requestIdRef.current;
     setLoading(true);
     getMyDevicesRequest(params)
-      .then(res => {
+      .then((res) => {
         if (currentId === requestIdRef.current) {
           setDevices(res.data.devices);
         }
@@ -65,109 +65,109 @@ function Devices() {
   }, [name, owner, status, lastFrom, lastTo]);
 
   const clearFilters = () => {
-    setName('');
-    setOwner('');
-    setStatus('');
-    setLastFrom('');
-    setLastTo('');
+    setName("");
+    setOwner("");
+    setStatus("");
+    setLastFrom("");
+    setLastTo("");
     fetchDevices();
   };
 
   return (
-    <div className="ml-5 mr-5 lg:ml-20 lg:mr-10 mt-6">
-      <h1 className="mb-4">{t('title')}</h1>
+    <div className="mt-6 mr-5 ml-5 lg:mr-10 lg:ml-20">
+      <h1 className="mb-4">{t("title")}</h1>
 
       {/* Filters */}
-      <div className="mb-6 flex flex-col gap-4 rounded-xl border border-lightgray bg-white p-4">
-        <div className="flex flex-col md:flex-row md:items-end gap-4">
-          <div className="flex flex-col w-full md:w-1/4">
+      <div className="border-lightgray mb-6 flex flex-col gap-4 rounded-xl border bg-white p-4">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end">
+          <div className="flex w-full flex-col md:w-1/4">
             <label className="mb-1 text-sm" htmlFor="device-search">
-              {t('filters.nameLabel')}
+              {t("filters.nameLabel")}
             </label>
             <input
               id="device-search"
               type="text"
               value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder={t('filters.namePlaceholder')}
-              className="rounded border border-lightgray px-3 py-2 text-sm outline-none focus:border-primary"
+              onChange={(e) => setName(e.target.value)}
+              placeholder={t("filters.namePlaceholder")}
+              className="border-lightgray focus:border-primary rounded border px-3 py-2 text-sm outline-none"
             />
           </div>
 
-          <div className="flex flex-col w-full md:w-1/5">
+          <div className="flex w-full flex-col md:w-1/5">
             <label className="mb-1 text-sm" htmlFor="device-owner">
-              {t('filters.ownerLabel')}
+              {t("filters.ownerLabel")}
             </label>
             <select
               id="device-owner"
-              value={owner ?? ''}
-              onChange={e => setOwner((e.target.value || '') as GetMyDevicesParams['owner'])}
-              className="rounded border border-lightgray px-3 py-2 text-sm outline-none focus:border-primary"
+              value={owner ?? ""}
+              onChange={(e) =>
+                setOwner((e.target.value || "") as GetMyDevicesParams["owner"])
+              }
+              className="border-lightgray focus:border-primary rounded border px-3 py-2 text-sm outline-none"
             >
-              <option value="">{t('filters.ownerAny')}</option>
-              <option value="me">{t('filters.ownerMe')}</option>
-              <option value="shared">{t('filters.ownerShared')}</option>
+              <option value="">{t("filters.ownerAny")}</option>
+              <option value="me">{t("filters.ownerMe")}</option>
+              <option value="shared">{t("filters.ownerShared")}</option>
             </select>
           </div>
 
-          <div className="flex flex-col w-full md:w-1/5">
+          <div className="flex w-full flex-col md:w-1/5">
             <label className="mb-1 text-sm" htmlFor="device-status">
-              {t('filters.statusLabel')}
+              {t("filters.statusLabel")}
             </label>
             <select
               id="device-status"
-              value={status ?? ''}
-              onChange={e => setStatus((e.target.value || '') as GetMyDevicesParams['status'])}
-              className="rounded border border-lightgray px-3 py-2 text-sm outline-none focus:border-primary"
+              value={status ?? ""}
+              onChange={(e) =>
+                setStatus(
+                  (e.target.value || "") as GetMyDevicesParams["status"],
+                )
+              }
+              className="border-lightgray focus:border-primary rounded border px-3 py-2 text-sm outline-none"
             >
-              <option value="">{t('filters.statusAny')}</option>
-              <option value="active">{t('table.statusActive')}</option>
-              <option value="inactive">{t('table.statusInactive')}</option>
+              <option value="">{t("filters.statusAny")}</option>
+              <option value="active">{t("table.statusActive")}</option>
+              <option value="inactive">{t("table.statusInactive")}</option>
             </select>
           </div>
 
-          <div className="flex flex-col w-full md:w-1/5">
+          <div className="flex w-full flex-col md:w-1/5">
             <label className="mb-1 text-sm" htmlFor="last-from">
-              {t('filters.lastFrom')}
+              {t("filters.lastFrom")}
             </label>
             <input
               id="last-from"
               type="datetime-local"
               value={lastFrom}
-              onChange={e => setLastFrom(e.target.value)}
-              className="rounded border border-lightgray px-3 py-2 text-sm outline-none focus:border-primary"
+              onChange={(e) => setLastFrom(e.target.value)}
+              className="border-lightgray focus:border-primary rounded border px-3 py-2 text-sm outline-none"
             />
           </div>
 
-          <div className="flex flex-col w-full md:w-1/5">
+          <div className="flex w-full flex-col md:w-1/5">
             <label className="mb-1 text-sm" htmlFor="last-to">
-              {t('filters.lastTo')}
+              {t("filters.lastTo")}
             </label>
             <input
               id="last-to"
               type="datetime-local"
               value={lastTo}
-              onChange={e => setLastTo(e.target.value)}
-              className="rounded border border-lightgray px-3 py-2 text-sm outline-none focus:border-primary"
+              onChange={(e) => setLastTo(e.target.value)}
+              className="border-lightgray focus:border-primary rounded border px-3 py-2 text-sm outline-none"
             />
           </div>
         </div>
 
         <div className="flex flex-row gap-3">
           <Button variant="secondary" size="sm" onClick={clearFilters}>
-            {t('filters.clear')}
+            {t("filters.clear")}
           </Button>
         </div>
       </div>
 
       {/* Content */}
-      {loading ? (
-        <div className="flex w-full justify-center py-10" aria-live="polite">
-          <Spinner size="lg" />
-        </div>
-      ) : (
-        <DevicesTable devices={devices} />
-      )}
+      {loading ? <LoadingState /> : <DevicesTable devices={devices} />}
     </div>
   );
 }

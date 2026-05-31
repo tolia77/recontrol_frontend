@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 .env
+
+# Local design/spec docs — never committed
+docs/

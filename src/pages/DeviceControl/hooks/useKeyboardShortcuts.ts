@@ -1,7 +1,7 @@
-import { useCallback } from 'react';
-import type { RefObject, KeyboardEvent } from 'react';
-import type { FileEntry } from '../services/files';
-import type { useFileManagerSelection } from './useFileManagerSelection';
+import { useCallback } from "react";
+import type { RefObject, KeyboardEvent } from "react";
+import type { FileEntry } from "src/pages/DeviceControl/services/files/filesProtocol.generated";
+import type { useFileManagerSelection } from "./state/useFileManagerSelection";
 
 /**
  * Scoped keyboard handler for the file manager panel. Returns an `onKeyDown`
@@ -72,14 +72,14 @@ export function useKeyboardShortcuts(params: {
       const ctrlOrMeta = e.ctrlKey || e.metaKey;
 
       // F5 -- Refresh
-      if (e.key === 'F5' && !ctrlOrMeta && !e.shiftKey && !e.altKey) {
+      if (e.key === "F5" && !ctrlOrMeta && !e.shiftKey && !e.altKey) {
         e.preventDefault();
         onRefresh();
         return;
       }
 
       // F2 -- Rename (single selection only)
-      if (e.key === 'F2' && !ctrlOrMeta && !e.shiftKey && !e.altKey) {
+      if (e.key === "F2" && !ctrlOrMeta && !e.shiftKey && !e.altKey) {
         if (selection.state.selected.size === 1) {
           e.preventDefault();
           onRequestRename();
@@ -88,7 +88,7 @@ export function useKeyboardShortcuts(params: {
       }
 
       // Delete -- Delete (1+ selection)
-      if (e.key === 'Delete' && !ctrlOrMeta && !e.shiftKey && !e.altKey) {
+      if (e.key === "Delete" && !ctrlOrMeta && !e.shiftKey && !e.altKey) {
         if (selection.state.selected.size > 0) {
           e.preventDefault();
           onRequestDelete();
@@ -97,33 +97,38 @@ export function useKeyboardShortcuts(params: {
       }
 
       // Ctrl/Cmd+A -- Select all visible
-      if (ctrlOrMeta && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'a') {
+      if (
+        ctrlOrMeta &&
+        !e.shiftKey &&
+        !e.altKey &&
+        e.key.toLowerCase() === "a"
+      ) {
         e.preventDefault();
         selection.selectAll();
         return;
       }
 
       // Escape -- Clear selection
-      if (e.key === 'Escape' && !ctrlOrMeta && !e.shiftKey && !e.altKey) {
+      if (e.key === "Escape" && !ctrlOrMeta && !e.shiftKey && !e.altKey) {
         e.preventDefault();
         selection.clear();
         return;
       }
 
       // Backspace OR Alt+ArrowLeft -- Navigate up
-      if (e.key === 'Backspace' && !ctrlOrMeta && !e.shiftKey && !e.altKey) {
+      if (e.key === "Backspace" && !ctrlOrMeta && !e.shiftKey && !e.altKey) {
         e.preventDefault();
         onNavigateUp();
         return;
       }
-      if (e.key === 'ArrowLeft' && e.altKey && !ctrlOrMeta && !e.shiftKey) {
+      if (e.key === "ArrowLeft" && e.altKey && !ctrlOrMeta && !e.shiftKey) {
         e.preventDefault();
         onNavigateUp();
         return;
       }
 
       // Enter -- Activate focused row
-      if (e.key === 'Enter' && !ctrlOrMeta && !e.shiftKey && !e.altKey) {
+      if (e.key === "Enter" && !ctrlOrMeta && !e.shiftKey && !e.altKey) {
         if (focusedIndex >= 0 && focusedIndex <= max) {
           e.preventDefault();
           onActivate(entries[focusedIndex]);
@@ -132,7 +137,7 @@ export function useKeyboardShortcuts(params: {
       }
 
       // Arrow navigation (no wrap; top/bottom are hard edges)
-      if (e.key === 'ArrowDown' && !ctrlOrMeta && !e.altKey) {
+      if (e.key === "ArrowDown" && !ctrlOrMeta && !e.altKey) {
         if (max < 0) return;
         e.preventDefault();
         const next = focusedIndex < 0 ? 0 : Math.min(focusedIndex + 1, max);
@@ -144,7 +149,7 @@ export function useKeyboardShortcuts(params: {
         }
         return;
       }
-      if (e.key === 'ArrowUp' && !ctrlOrMeta && !e.altKey) {
+      if (e.key === "ArrowUp" && !ctrlOrMeta && !e.altKey) {
         if (max < 0) return;
         e.preventDefault();
         const next = focusedIndex < 0 ? 0 : Math.max(focusedIndex - 1, 0);

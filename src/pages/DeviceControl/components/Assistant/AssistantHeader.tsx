@@ -1,7 +1,7 @@
-import type { FC } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Button } from 'src/components/ui/Button';
-import type { PanelStatus } from './transcriptReducer';
+import type { FC } from "react";
+import { useTranslation } from "react-i18next";
+import Button from "src/components/ui/Button";
+import type { PanelStatus } from "./transcriptReducer";
 
 const MAX_STEPS = 25;
 
@@ -36,25 +36,26 @@ export interface AssistantHeaderProps {
  *
  * No quota meter (D-08 — deferred to v1.5+ admin tooling).
  */
-export const AssistantHeader: FC<AssistantHeaderProps> = ({
+const AssistantHeader: FC<AssistantHeaderProps> = ({
   status,
   stepCount,
   onStop,
   onCopy,
 }) => {
-  const { t } = useTranslation('assistant');
-  const loopActive = status === 'streaming' || status === 'awaiting_confirmation';
+  const { t } = useTranslation("assistant");
+  const loopActive =
+    status === "streaming" || status === "awaiting_confirmation";
   const stopDisabled = !loopActive;
 
   return (
-    <div className="flex items-center gap-3 border-b border-gray-200 px-4 py-2 bg-white">
+    <div className="flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-2">
       {stepCount > 0 && (
         <span
-          className="text-xs text-darkgray font-mono"
+          className="text-darkgray font-mono text-xs"
           aria-live="polite"
           data-testid="assistant-step-counter"
         >
-          {t('header.step', {
+          {t("header.step", {
             n: stepCount,
             max: MAX_STEPS,
             defaultValue: `Step ${stepCount} / ${MAX_STEPS}`,
@@ -67,23 +68,25 @@ export const AssistantHeader: FC<AssistantHeaderProps> = ({
           variant="ghost"
           size="sm"
           onClick={onCopy}
-          aria-label={t('header.copy', { defaultValue: 'Copy as Markdown' })}
-          title={t('header.copy', { defaultValue: 'Copy as Markdown' })}
+          aria-label={t("header.copy", { defaultValue: "Copy as Markdown" })}
+          title={t("header.copy", { defaultValue: "Copy as Markdown" })}
         >
-          {t('header.copy', { defaultValue: 'Copy as Markdown' })}
+          {t("header.copy", { defaultValue: "Copy as Markdown" })}
         </Button>
         <Button
           variant="danger"
           size="sm"
           onClick={onStop}
           disabled={stopDisabled}
-          aria-label={t('header.stop', { defaultValue: 'Stop' })}
-          title={t('header.stop', { defaultValue: 'Stop' })}
+          aria-label={t("header.stop", { defaultValue: "Stop" })}
+          title={t("header.stop", { defaultValue: "Stop" })}
           data-testid="assistant-stop-button"
         >
-          {t('header.stop', { defaultValue: 'Stop' })}
+          {t("header.stop", { defaultValue: "Stop" })}
         </Button>
       </div>
     </div>
   );
 };
+
+export default AssistantHeader;

@@ -1,820 +1,578 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { generateUUID } from 'src/utils/uuid';
-import { TopBar } from 'src/pages/DeviceControl/TopBar';
-import { MainContent } from 'src/pages/DeviceControl/MainContent';
-import { getAccessToken, getUserId } from 'src/utils/auth';
-import { refreshAccessTokenOnce } from 'src/services/backend/config';
-import { useToast } from 'src/components/ui';
-import type { Mode } from 'src/pages/DeviceControl/types';
-import { getMyDeviceSharesForDeviceRequest } from 'src/services/backend/deviceSharesRequests';
-import { getDeviceRequest } from 'src/services/backend/devicesRequests';
-import type { DeviceShare } from 'src/types/global';
-import { useWebRtc } from './hooks/useWebRtc';
-import { useStreamStats } from './hooks/useStreamStats';
-import { useFilesChannel } from './hooks/useFilesChannel';
-import { useClipboardSync } from './hooks/useClipboardSync';
-import { useClipboardCapability } from './hooks/useClipboardCapability';
-import { useRefusalToastThrottle } from './hooks/useRefusalToastThrottle';
-import { useTranslation } from 'react-i18next';
-import { useFileManagerState } from './hooks/useFileManagerState';
-import { useTransferQueue } from './hooks/useTransferQueue';
-import { FileManagerPanel } from './components/FileManager/FileManagerPanel';
-import { AssistantPanel } from './components/Assistant/AssistantPanel';
-import ScenariosPanel from './components/Scenarios/ScenariosPanel';
-import {
-    TransferQueue,
-    createRunUpload,
-    createRunDownload,
-} from './services/transfer';
-import type { DownloadTransfer } from './services/transfer';
+import { useState, useEffect, useRef, useCallback } from "react";
+import { generateUUID } from "src/utils/uuid";
+import TopBar from "./components/Layout/TopBar";
+import MainContent from "./components/Layout/MainContent";
+import { getUserId } from "src/utils/auth";
+import { useToast } from "src/components/ui";
+import type { Mode } from "src/pages/DeviceControl/types";
+import { getDeviceRequest } from "src/services/backend/devicesService";
+import { usePermissions } from "./hooks/state/usePermissions";
+import { useTerminalSession } from "./hooks/state/useTerminalSession";
+import { useStreamControls } from "./hooks/state/useStreamControls";
+import { useDeviceSocket } from "./hooks/realtime/useDeviceSocket";
+import { useWebRtc } from "./hooks/realtime/useWebRtc";
+import { useStreamStats } from "./hooks/realtime/useStreamStats";
+import { useFilesChannel } from "./hooks/realtime/useFilesChannel";
+import { useClipboardSync } from "./hooks/realtime/useClipboardSync";
+import { useClipboardCapability } from "./hooks/useClipboardCapability";
+import { useRefusalToastThrottle } from "./hooks/useRefusalToastThrottle";
+import { useTranslation } from "react-i18next";
+import { useFileManagerState } from "./hooks/state/useFileManagerState";
+import { useTransferQueue } from "./hooks/state/useTransferQueue";
+import FileManagerPanel from "./components/FileManager/FileManagerPanel";
+import AssistantPanel from "./components/Assistant/AssistantPanel";
+import ScenariosPanel from "./components/Scenarios/ScenariosPanel";
+import { TransferQueue } from "./services/transfer/TransferQueue";
+import { createRunUpload } from "./services/transfer/runUpload";
+import { createRunDownload } from "./services/transfer/runDownload";
+import type { DownloadTransfer } from "./services/transfer/DownloadTransfer";
 
 interface CommandWebSocketProps {
-    wsUrl: string;
+  wsUrl: string;
 }
 
-interface InnerMessage {
-    id?: string;
-    command?: string;
-    payload?: Record<string, unknown>;
-    status?: string;
-    result?: string | number | boolean | null | Record<string, unknown> | Array<unknown>;
-}
+function DeviceControl({ wsUrl }: CommandWebSocketProps) {
+  // Orchestrator-level identity state (3 remaining useState after Wave C)
+  const [deviceId, setDeviceId] = useState("");
+  const [deviceName, setDeviceName] = useState<string>("");
+  const [activeMode, setActiveMode] = useState<Mode>("interactive");
 
-// Derived permissions interface for easier gating
-interface DevicePermissions {
-    see_screen: boolean;
-    see_system_info: boolean;
-    access_mouse: boolean;
-    access_keyboard: boolean;
-    access_terminal: boolean;
-    manage_power: boolean;
-    // convenience compound flags
-    any_input: boolean; // mouse or keyboard
-    any_screen: boolean; // currently same as see_screen
-}
+  // Feature state sub-hooks (Wave B)
+  const terminalSession = useTerminalSession();
+  const {
+    terminalResults,
+    processes,
+    processesLoading,
+    appendTerminalResult,
+    setProcesses,
+    setProcessesLoading,
+  } = terminalSession;
 
-/**
- * Decode a JWT access token's `exp` claim and report whether it is already
- * expired or within `skewSeconds` of expiring. Best-effort: malformed tokens
- * are treated as expired so callers refresh rather than connect with a bad
- * token. Access tokens are short-lived (~1 min), so this gate lets the socket
- * refresh proactively before (re)connecting instead of eating a guaranteed
- * unauthorized rejection and retry.
- */
-function isAccessTokenExpired(token: string, skewSeconds = 10): boolean {
-    try {
-        const payload = token.split('.')[1];
-        if (!payload) return true;
-        const json = JSON.parse(
-            atob(payload.replace(/-/g, '+').replace(/_/g, '/')),
-        ) as { exp?: number };
-        if (typeof json.exp !== 'number') return true;
-        return Date.now() >= (json.exp - skewSeconds) * 1000;
-    } catch {
-        return true;
-    }
-}
+  // stream stats and FPS state
+  const {
+    showStats,
+    setShowStats,
+    currentFps,
+    setCurrentFps,
+    currentResolution,
+    setCurrentResolution,
+  } = useStreamControls();
 
-export function DeviceControl({wsUrl}: CommandWebSocketProps) {
-    const wsRef = useRef<WebSocket | null>(null);
-    const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const heartbeatInterval = useRef<ReturnType<typeof setInterval> | null>(null);
-    const isHandlingAuthReconnect = useRef(false);
-    const lastDeviceIdRef = useRef<string | null>(null);
-    const pendingCommandsRef = useRef<Map<string, string>>(new Map());
+  const {
+    permissions,
+    permissionsLoading,
+    setIsOwner,
+    fetchPermissions,
+    canSend,
+  } = usePermissions();
+  const toast = useToast();
 
-    const [connected, setConnected] = useState(false);
-    // The live, OPEN WebSocket exposed as state (not just wsRef). Channel hooks
-    // that subscribe via React effects (AssistantChannel, ScenariosChannel) need
-    // the socket as reactive state so they deterministically re-subscribe on
-    // every reconnect. wsRef alone is a mutable ref: reassigning it on reconnect
-    // does NOT re-render, so those hooks would keep a stale (closed) socket and
-    // silently fail to re-subscribe. CommandChannel sidesteps this by subscribing
-    // imperatively in ws.onopen below; these hooks rely on this state instead.
-    const [activeSocket, setActiveSocket] = useState<WebSocket | null>(null);
-    const [deviceId, setDeviceId] = useState("");
-    const [deviceName, setDeviceName] = useState<string>("");
+  // Stale-closure ref for handleSignalingMessage: useDeviceSocket must be called
+  // before useWebRtc (because useWebRtc depends on webRtcSend from deviceSocket),
+  // but handleSignalingMessage comes from useWebRtc. A ref bridges the ordering:
+  // onSignaling reads from the ref; the ref is updated after useWebRtc resolves.
+  const handleSignalingRef = useRef<
+    ((command: string, payload: Record<string, unknown>) => void) | null
+  >(null);
 
-    const [activeMode, setActiveMode] = useState<Mode>("interactive");
-
-    const [terminalResults, setTerminalResults] = useState<{ id: string; status: string; result: string }[]>([]);
-    const [processes, setProcesses] = useState<{ Pid: number; Name: string; MemoryMB?: number; CpuTime?: string; StartTime?: string }[]>([]);
-    const [processesLoading, setProcessesLoading] = useState(false);
-
-    // stream stats and FPS state
-    const [showStats, setShowStats] = useState(false);
-    const [currentFps, setCurrentFps] = useState(24);
-    const [currentResolution, setCurrentResolution] = useState(1080);
-
-    // permissions state
-    const [permissionsLoading, setPermissionsLoading] = useState(false);
-    const [permissions, setPermissions] = useState<DevicePermissions | null>(null);
-    const [isOwner, setIsOwner] = useState<boolean>(false);
-    const toast = useToast();
-
-    const buildPermissions = (share: DeviceShare | null): DevicePermissions => {
-        const pg = share?.permissions_group;
-        const ownDefaults: DevicePermissions = {
-            see_screen: true,
-            see_system_info: true,
-            access_mouse: true,
-            access_keyboard: true,
-            access_terminal: true,
-            manage_power: true,
-            any_input: true,
-            any_screen: true,
-        };
-        if (!pg) return ownDefaults;
-        return {
-            see_screen: !!pg.see_screen,
-            see_system_info: !!pg.see_system_info,
-            access_mouse: !!pg.access_mouse,
-            access_keyboard: !!pg.access_keyboard,
-            access_terminal: !!pg.access_terminal,
-            manage_power: !!pg.manage_power,
-            any_input: !!pg.access_mouse || !!pg.access_keyboard,
-            any_screen: !!pg.see_screen,
-        };
-    };
-
-    const fetchPermissions = async (devId: string, ownerOverride: boolean) => {
-        if (!devId) return;
-        setPermissionsLoading(true);
-        try {
-            if (ownerOverride) {
-                setPermissions(buildPermissions(null)); // full access
-                return;
-            }
-            const res = await getMyDeviceSharesForDeviceRequest(devId);
-            const share = res.data.items && res.data.items.length ? res.data.items[0] : null;
-            setPermissions(buildPermissions(share));
-        } catch (e) {
-            console.warn('Failed to load device permissions', e);
-            setPermissions(buildPermissions(null));
-        } finally {
-            setPermissionsLoading(false);
-        }
-    };
-
-    const refreshAccessToken = async (): Promise<string | null> => {
-        return refreshAccessTokenOnce();
-    };
-
-    const connectWebSocket = async (deviceIdParam?: string | null) => {
-        const idToUse = (deviceIdParam ?? lastDeviceIdRef.current ?? deviceId) || "";
-
-        // Persist last known device id for future reconnects
-        lastDeviceIdRef.current = idToUse;
-
-        if (wsRef.current && wsRef.current.readyState < 2) {
-            console.warn("WebSocket connection already in progress.");
-            return;
-        }
-
-        if (reconnectTimeout.current) {
-            clearTimeout(reconnectTimeout.current);
-            reconnectTimeout.current = null;
-        }
-
-        // Access tokens live ~1 minute, so on a reconnect the stored token is
-        // almost always stale. Refresh proactively instead of connecting with an
-        // expired token and eating a guaranteed unauthorized rejection + retry.
-        let token = getAccessToken();
-        if (!token || isAccessTokenExpired(token)) {
-            token = await refreshAccessTokenOnce();
-        }
-        if (!token) {
-            console.error("No valid token available for WebSocket connection");
-            return;
-        }
-
-        const urlWithToken = `${wsUrl}?access_token=${encodeURIComponent(token)}&device_id=${encodeURIComponent(idToUse)}`;
-        const ws = new WebSocket(urlWithToken);
-        wsRef.current = ws;
-
-        ws.onopen = () => {
-            console.log("WebSocket connected");
-            setConnected(true);
-            // Expose the now-OPEN socket as state so effect-based channel hooks
-            // (AssistantChannel / ScenariosChannel) deterministically (re)subscribe
-            // on this socket. See the activeSocket declaration for full rationale.
-            setActiveSocket(ws);
-            isHandlingAuthReconnect.current = false;
-
-            if (reconnectTimeout.current) {
-                clearTimeout(reconnectTimeout.current);
-                reconnectTimeout.current = null;
-            }
-
-            ws.send(
-                JSON.stringify({
-                    command: "subscribe",
-                    identifier: JSON.stringify({channel: "CommandChannel"}),
-                })
-            );
-
-            // Backend uses a TTL'd cache entry refreshed by these heartbeats
-            // to derive the device's "used" status. Without this, the row
-            // would flip back to "active" 45s after page open.
-            if (heartbeatInterval.current) clearInterval(heartbeatInterval.current);
-            heartbeatInterval.current = setInterval(() => {
-                if (ws.readyState !== WebSocket.OPEN) return;
-                ws.send(
-                    JSON.stringify({
-                        command: "message",
-                        identifier: JSON.stringify({channel: "CommandChannel"}),
-                        data: JSON.stringify({command: "heartbeat"}),
-                    })
-                );
-            }, 15000);
-        };
-
-        ws.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-
-                if (data.type === "ping") {
-                    return;
-                }
-
-                if (data.type === "reject_subscription") {
-                    console.warn("WebSocket subscription rejected, refreshing token...");
-                    isHandlingAuthReconnect.current = true;
-                    handleReconnection();
-                    return;
-                }
-
-                if (data.type === "disconnect" && data.reason === "unauthorized") {
-                    console.warn("WebSocket 'unauthorized' message received, refreshing token...");
-                    isHandlingAuthReconnect.current = true;
-                    handleReconnection();
-                    return;
-                }
-
-                const stringifyResult = (val: unknown): string => {
-                    try {
-                        if (val === null || val === undefined) return String(val);
-                        if (typeof val === 'string') return val;
-                        if (typeof val === 'object') return JSON.stringify(val, null, 2);
-                        return String(val);
-                    } catch {
-                        try {
-                            return String(val);
-                        } catch {
-                            return '';
-                        }
-                    }
-                };
-
-                const handleInnerMessage = (inner: unknown) => {
-                    try {
-                        if (!inner || typeof inner !== 'object') return;
-                        const msg = inner as InnerMessage;
-                        const cmd = msg.command;
-                        const payload = msg.payload ?? {};
-                        const originalCmd = msg.id ? pendingCommandsRef.current.get(msg.id) : undefined;
-
-                        // WebRTC signaling
-                        if (cmd === 'webrtc.answer' || cmd === 'webrtc.ice_candidate') {
-                            handleSignalingMessage(cmd, payload);
-                            return;
-                        }
-
-                        // streaming terminal output chunks
-                        if (cmd === 'terminal.output') {
-                            const chunk = (payload as Record<string, unknown>).data as string;
-                            const sessionId = (payload as Record<string, unknown>).sessionId as string;
-                            const stream = (payload as Record<string, unknown>).stream as string || 'stdout';
-                            if (chunk) {
-                                setTerminalResults(prev => {
-                                    const next = [...prev, {id: sessionId || 'stream', status: stream, result: chunk}];
-                                    return next.slice(-100);
-                                });
-                            }
-                            return;
-                        }
-
-                        // terminal & misc results
-                        if (msg.status && msg.id && Object.prototype.hasOwnProperty.call(msg, 'result')) {
-                            const resultStr = stringifyResult(msg.result);
-                            setTerminalResults(prev => {
-                                const next = [...prev, {id: msg.id as string, status: msg.status as string, result: resultStr}];
-                                return next.slice(-100);
-                            });
-                            // detect processes list by original command id mapping
-                            const isProc = (r: unknown): r is { Pid: number; Name: string; MemoryMB?: number; CpuTime?: string; StartTime?: string } => {
-                                return !!r && typeof r === 'object' && 'Pid' in (r as Record<string, unknown>) && 'Name' in (r as Record<string, unknown>);
-                            };
-                            if (originalCmd === 'terminal.listProcesses') {
-                                if (Array.isArray(msg.result)) {
-                                    const proc = msg.result.filter(isProc);
-                                    setProcesses(proc);
-                                } else {
-                                    setProcesses([]);
-                                }
-                                setProcessesLoading(false);
-                                // cleanup mapping for this id
-                                pendingCommandsRef.current.delete(msg.id);
-                            }
-                        }
-                    } catch (e) {
-                        console.warn("Failed to process inner message", e);
-                    }
-                };
-
-                // ActionCable-style direct message envelope
-                if (data && typeof data.message === 'object' && data.message !== null) {
-                    handleInnerMessage(data.message);
-                    return;
-                }
-
-                // ActionCable-style wrapper where our payload is inside `data` string
-                if (data.command === "message" && typeof data.data === "string") {
-                    try {
-                        const inner = JSON.parse(data.data);
-                        handleInnerMessage(inner);
-                    } catch (e) {
-                        console.warn("Failed parsing inner data for message", e);
-                    }
-                    return;
-                }
-            } catch (err) {
-                console.error("Failed to parse WS message:", err);
-            }
-        };
-
-        ws.onclose = async (event) => {
-            console.log("WebSocket closed", event.code, event.reason);
-            setConnected(false);
-            // Drop the socket from state so effect-based channel hooks unsubscribe
-            // and go idle until the next socket opens. Guard on identity so a late
-            // close from a superseded socket cannot clear a newer live one.
-            setActiveSocket(prev => (prev === ws ? null : prev));
-
-            if (isHandlingAuthReconnect.current) {
-                console.log("Auth reconnect in progress, skipping default onclose logic.");
-                return;
-            }
-
-            if (event.code === 4001 || (event.reason || "").includes("unauthorized")) {
-                console.warn("WebSocket closed due to auth, attempting token refresh...");
-                await handleReconnection();
-                return;
-            }
-
-            if (!reconnectTimeout.current) {
-                console.log("Scheduling reconnect in 3s...");
-                reconnectTimeout.current = setTimeout(() => {
-                    reconnectTimeout.current = null;
-                    connectWebSocket();
-                }, 3000);
-            }
-        };
-
-        ws.onerror = (err) => {
-            console.error("WebSocket error", err);
-        };
-    };
-
-    const handleReconnection = async () => {
-        console.log("Attempting WebSocket reconnection (auth)...");
-        isHandlingAuthReconnect.current = true;
-
-        if (wsRef.current && wsRef.current.readyState < 2) {
-            wsRef.current.close(4001, "Reauth - closing old socket");
-        }
-
-        const newToken = await refreshAccessToken();
-        if (newToken) {
-            connectWebSocket(lastDeviceIdRef.current ?? deviceId);
-        } else {
-            console.error("Unable to refresh token, user may need to re-login.");
-            isHandlingAuthReconnect.current = false;
-        }
-    };
-
-    useEffect(() => {
-        return () => {
-            if (reconnectTimeout.current) {
-                clearTimeout(reconnectTimeout.current);
-            }
-            if (heartbeatInterval.current) {
-                clearInterval(heartbeatInterval.current);
-                heartbeatInterval.current = null;
-            }
-            if (wsRef.current) {
-                wsRef.current.close(1000, "Component unmounting");
-                wsRef.current = null;
-            }
-        };
-    }, []);
-
-    useEffect(() => {
-        const init = async () => {
-            const params = new URLSearchParams(window.location.search);
-            const paramDeviceId = params.get("device_id");
-            if (!paramDeviceId) return;
-            setDeviceId(paramDeviceId);
-            lastDeviceIdRef.current = paramDeviceId;
-            // Determine ownership first
-            try {
-                const deviceRes = await getDeviceRequest(paramDeviceId);
-                const deviceUserId = deviceRes.data?.user?.id;
-                const currentUserId = getUserId();
-                const owner = deviceUserId && currentUserId && String(deviceUserId) === String(currentUserId);
-                setIsOwner(!!owner);
-                if (deviceRes.data?.name) setDeviceName(deviceRes.data.name);
-                await fetchPermissions(paramDeviceId, !!owner);
-            } catch (e) {
-                console.warn('Failed to fetch device info for ownership', e);
-                // fallback assume not owner but grant full to avoid lockout
-                setIsOwner(false);
-                await fetchPermissions(paramDeviceId, false);
-            }
-            // Connect after permissions resolved
-            connectWebSocket(paramDeviceId);
-        };
-        void init();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    // gating logic for outgoing commands based on permissions
-    const canSend = (type: string): boolean => {
-        if (!permissions) return false; // still loading
-        if (isOwner) return true; // owners bypass all restrictions
-        if (type.startsWith('screen.')) return permissions.see_screen;
-        if (type.startsWith('mouse.')) return permissions.access_mouse;
-        if (type.startsWith('keyboard.')) return permissions.access_keyboard;
-        if (type.startsWith('terminal.')) return permissions.access_terminal;
-        if (type.startsWith('power.')) return permissions.manage_power;
-        return true;
-    };
-
-    const sendMessagePayload = (payloadObj: unknown) => {
-        if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-            console.warn("Cannot send message, WebSocket is not open.");
-            return;
-        }
-
-        wsRef.current.send(
-            JSON.stringify({
-                command: "message",
-                identifier: JSON.stringify({channel: "CommandChannel"}),
-                data: JSON.stringify(payloadObj),
-            })
-        );
-    };
-
-    const sendWebRtcSignal = useCallback((command: string, payload: Record<string, unknown>) => {
-        sendMessagePayload({ command, payload });
-    }, []);
-
-    const { videoRef, setVideoNode, pcRef, startWebRtc, stopWebRtc, retryWebRtc, handleSignalingMessage, connectionState, hasReceivedFrame, desktopStats, filesClientRef, filesDataRef, filesDataChannelRef, filesCtlOpen, clipboardCtlRef, clipboardOriginIdRef, clipboardLoopGate, lastRemoteApplyTimeRef, clipboardCtlOpen } = useWebRtc({ sendMessage: sendWebRtcSignal });
-    const streamStats = useStreamStats(pcRef, showStats && connectionState === 'connected', desktopStats);
-
-    // File manager panel (Phase 10) -- Plan 11-04 threads filesDataRef so the
-    // upload runner has a live ref to the binary channel; Plan 11-05 also
-    // threads filesDataChannelRef so the download runner can reach the chunk
-    // router wrapper (registerDownload / unregisterDownload).
-    const filesChannel = useFilesChannel(filesClientRef, connectionState, filesDataRef, filesDataChannelRef, filesCtlOpen);
-
-    // Phase 14: clipboard sync hook. Lives at DeviceControl mount level so isPaused
-    // survives WebRTC reconnects within this session (POLICY-05). Phase 16 will mount
-    // the pill UI and wire togglePause to it; Phase 14 leaves the return value unused
-    // by the JSX (the hook still binds focus/visibility listeners + inbound subscription).
-    // Phase 15 CAP-01 / D-18: detect browser-side clipboard capabilities so
-    // useClipboardSync can advertise them to the desktop on every channel open.
-    const clipboardCaps = useClipboardCapability();
-    const clipboardSync = useClipboardSync({
-        pcRef,
-        connectionState,
-        clipboardCtlRef,
-        clipboardOriginIdRef,
-        loopGate: clipboardLoopGate,
-        lastRemoteApplyTimeRef,
-        clipboardCtlOpen,
-        caps: clipboardCaps,
-    });
-    // Phase 16: consume useClipboardSync outputs to drive the pill, the first-sync
-    // banner, and refusal toasts.
-    const {
-        isPaused: clipboardIsPaused,
-        togglePause: clipboardTogglePause,
-        status: clipboardStatus,
-        lastSyncAt: clipboardLastSyncAt,
-        cachedDesktopCaps: clipboardCachedDesktopCaps,
-        lastRefusal: clipboardLastRefusal,
-    } = clipboardSync;
-
-    const fireRefusalToast = useRefusalToastThrottle();
-    const { t: tClipboard } = useTranslation('clipboard');
-
-    // PILL-06 / D-13: fire a single info toast on the first successful sync of
-    // each browser session per device. sessionStorage namespace mirrors Phase
-    // 10's per-device-id convention. The literal lives in clipboard:toast.firstSync
-    // (en/clipboard.ts, em dash U+2014) — never hardcoded here per Pitfall 1.
-    useEffect(() => {
-        if (clipboardLastSyncAt == null || clipboardLastSyncAt === 0) return;
-        if (!deviceId) return;
-        const key = `recontrol.clipboard.firstSyncToasted.${deviceId}`;
-        try {
-            if (sessionStorage.getItem(key)) return;
-            sessionStorage.setItem(key, '1');
-        } catch {
-            // sessionStorage may throw in private browsing / strict modes — fail
-            // closed (skip the toast rather than spam on every sync).
-            return;
-        }
-        toast.info(tClipboard('toast.firstSync'));
-    }, [clipboardLastSyncAt, deviceId, toast, tClipboard]);
-
-    // PILL-07 / D-12: throttle refusal toasts at most one per 2 seconds per
-    // reason category. useRefusalToastThrottle internally suppresses
-    // CAPS_UNKNOWN (RESEARCH OQ 2).
-    useEffect(() => {
-        if (!clipboardLastRefusal) return;
-        fireRefusalToast(clipboardLastRefusal.reason);
-    }, [clipboardLastRefusal, fireRefusalToast]);
-
-    const {
-        state: fmState,
-        setSplitRatio: fmSetSplitRatio,
-        setRightPaneActive: fmSetRightPaneActive,
-        setCurrentPath: fmSetCurrentPath,
-        setSort: fmSetSort,
-        setShowHidden: fmSetShowHidden,
-    } = useFileManagerState(deviceId);
-
-    const filesByItemIdRef = useRef<Map<string, File>>(new Map());
-    const activeDownloadRef = useRef<DownloadTransfer | null>(null);
-    const toastRef = useRef(toast);
-    useEffect(() => {
-        toastRef.current = toast;
-    }, [toast]);
-
-    const channelRequestRef = useRef(filesChannel.request);
-    useEffect(() => {
-        channelRequestRef.current = filesChannel.request;
-    }, [filesChannel.request]);
-
-    const filesClientLiveRef = useRef(filesChannel.filesClient);
-    useEffect(() => {
-        filesClientLiveRef.current = filesChannel.filesClient;
-    }, [filesChannel.filesClient]);
-
-    const filesDataChannelLiveRef = useRef(filesChannel.filesDataChannel);
-    useEffect(() => {
-        filesDataChannelLiveRef.current = filesChannel.filesDataChannel;
-    }, [filesChannel.filesDataChannel]);
-
-    const transferQueueRef = useRef<TransferQueue | null>(null);
-    if (transferQueueRef.current === null) {
-        transferQueueRef.current = new TransferQueue(
-            createRunUpload({
-                filesDataRef,
-                getRequest: () => channelRequestRef.current,
-                getFile: (id) => filesByItemIdRef.current.get(id) ?? null,
-            }),
-            createRunDownload({
-                getRequest: () => channelRequestRef.current,
-                getFilesClient: () => filesClientLiveRef.current,
-                getFilesDataChannel: () => filesDataChannelLiveRef.current,
-                onSuccess: (name) => toastRef.current.info(`Downloaded ${name}`),
-                onActiveChange: (active) => {
-                    activeDownloadRef.current = active;
-                },
-            }),
-        );
-    }
-    const transferQueue = transferQueueRef.current!;
-    const transferSnapshot = useTransferQueue(transferQueue);
-
-    useEffect(() => {
-        return transferQueue.subscribe((snap) => {
-            const liveIds = new Set(snap.items.map((i) => i.id));
-            for (const id of filesByItemIdRef.current.keys()) {
-                if (!liveIds.has(id)) filesByItemIdRef.current.delete(id);
-            }
+  // Wave C: socket hook — the lynchpin extraction (D-04/D-05/D-06/D-07)
+  const deviceSocket = useDeviceSocket({
+    wsUrl,
+    onSignaling: useCallback(
+      (command: string, payload: Record<string, unknown>) => {
+        handleSignalingRef.current?.(command, payload);
+      },
+      [],
+    ),
+    onTerminalOutput: useCallback(
+      (chunk: string, sessionId: string, stream: string) => {
+        appendTerminalResult({
+          id: sessionId,
+          status: stream,
+          result: chunk,
         });
-    }, [transferQueue]);
+      },
+      [appendTerminalResult],
+    ),
+    onCommandResult: useCallback(
+      (id: string, status: string, result: string) => {
+        appendTerminalResult({ id, status, result });
+      },
+      [appendTerminalResult],
+    ),
+    onProcessList: useCallback(
+      (procs, id) => {
+        setProcesses(procs);
+        setProcessesLoading(false);
+        void id; // id is used by the dispatcher to delete from pendingCommandsRef
+      },
+      [setProcesses, setProcessesLoading],
+    ),
+  });
 
-    const sendSingleAction = (action: { id?: string; type: string; payload?: Record<string, unknown> }) => {
-        if (!canSend(action.type)) {
-            console.warn(`Blocked command '${action.type}' due to insufficient permissions`);
-            return;
-        }
-        const msg: Record<string, unknown> = {
-            command: action.type,
-            payload: action.payload ?? {},
-        };
-        if (action.id) {
-            msg.id = action.id;
-            pendingCommandsRef.current.set(action.id, action.type);
-            if (pendingCommandsRef.current.size > 200) {
-                const firstKey = pendingCommandsRef.current.keys().next().value as string | undefined;
-                if (firstKey) pendingCommandsRef.current.delete(firstKey);
-            }
-        }
-        sendMessagePayload(msg);
-    };
+  const { connected, activeSocket } = deviceSocket;
 
-    const handleFpsChange = (fps: number) => {
-        setCurrentFps(fps);
-        sendSingleAction({ id: generateUUID(), type: 'webrtc.set_fps', payload: { fps } });
-    };
+  // Stable sendMessage wrapper for useWebRtc (Landmine 4 — sendMessage from
+  // useDeviceSocket is already stable/memoized; wrap in useCallback so the
+  // webRtcSend identity also stays stable across renders).
+  // Destructure sendMessage so the useCallback dep is a direct ref rather than
+  // a property-access expression. sendMessage is stable (useMemo — Landmine 4).
+  const { sendMessage: socketSendMessage } = deviceSocket;
+  const webRtcSend = useCallback(
+    (command: string, payload: Record<string, unknown>) => {
+      socketSendMessage(command, payload);
+    },
+    [socketSendMessage],
+  );
 
-    const handleResolutionChange = (resolution: number) => {
-        setCurrentResolution(resolution);
-        sendSingleAction({ id: generateUUID(), type: 'webrtc.set_resolution', payload: { resolution } });
-    };
+  const {
+    videoRef,
+    setVideoNode,
+    pcRef,
+    startWebRtc,
+    stopWebRtc,
+    retryWebRtc,
+    handleSignalingMessage,
+    connectionState,
+    hasReceivedFrame,
+    desktopStats,
+    filesClientRef,
+    filesDataRef,
+    filesDataChannelRef,
+    filesCtlOpen,
+    clipboardCtlRef,
+    clipboardOriginIdRef,
+    clipboardLoopGate,
+    lastRemoteApplyTimeRef,
+    clipboardCtlOpen,
+  } = useWebRtc({ sendMessage: webRtcSend });
 
-    const requestListProcesses = () => {
-        if (!connected) return;
-        if (!permissions?.access_terminal) return; // gate
-        setProcessesLoading(true);
-        setProcesses([]);
-        sendSingleAction({ type: 'terminal.listProcesses' });
-    };
+  // Update the signaling ref so the onSignaling callback (above) always calls
+  // the latest handleSignalingMessage from useWebRtc without needing to change
+  // the useDeviceSocket options object reference.
+  handleSignalingRef.current = handleSignalingMessage;
 
-    const killProcess = (pid: number) => {
-        if (!connected || !pid) return;
-        if (!permissions?.access_terminal) return; // gate
-        setProcesses(prev => prev.filter(p => p.Pid !== pid));
-        sendSingleAction({ type: 'terminal.killProcess', payload: { pid } });
-    };
+  const streamStats = useStreamStats(
+    pcRef,
+    showStats && connectionState === "connected",
+    desktopStats,
+  );
 
-    const overallDisabled = !connected || permissionsLoading || !permissions;
+  // File manager panel (Phase 10) -- Plan 11-04 threads filesDataRef so the
+  // upload runner has a live ref to the binary channel; Plan 11-05 also
+  // threads filesDataChannelRef so the download runner can reach the chunk
+  // router wrapper (registerDownload / unregisterDownload).
+  const filesChannel = useFilesChannel(
+    filesClientRef,
+    connectionState,
+    filesDataRef,
+    filesDataChannelRef,
+    filesCtlOpen,
+  );
 
-    // Ctrl+Shift+F toggles the file manager panel; Ctrl+Shift+A toggles the
-    // AssistantPanel (Phase 20-06, mirrors the F hotkey). Both share the same
-    // focus-guard: bail if focus is inside the interactive overlay (which owns
-    // its own keyboard capture) or inside any editable element. The overlay is
-    // identified by the `.overlay` class (MainContent sets it on the video
-    // overlay div). The two hotkeys live in the same useEffect so they share
-    // the listener lifecycle.
-    const fmSetRightPaneActiveRef = useRef(fmSetRightPaneActive);
-    useEffect(() => { fmSetRightPaneActiveRef.current = fmSetRightPaneActive; }, [fmSetRightPaneActive]);
-    const fmRightPaneActiveRef = useRef(fmState.rightPaneActive);
-    useEffect(() => { fmRightPaneActiveRef.current = fmState.rightPaneActive; }, [fmState.rightPaneActive]);
+  // Phase 14: clipboard sync hook. Lives at DeviceControl mount level so isPaused
+  // survives WebRTC reconnects within this session (POLICY-05). Phase 16 will mount
+  // the pill UI and wire togglePause to it; Phase 14 leaves the return value unused
+  // by the JSX (the hook still binds focus/visibility listeners + inbound subscription).
+  // Phase 15 CAP-01 / D-18: detect browser-side clipboard capabilities so
+  // useClipboardSync can advertise them to the desktop on every channel open.
+  const clipboardCaps = useClipboardCapability();
+  const clipboardSync = useClipboardSync({
+    pcRef,
+    connectionState,
+    clipboardCtlRef,
+    clipboardOriginIdRef,
+    loopGate: clipboardLoopGate,
+    lastRemoteApplyTimeRef,
+    clipboardCtlOpen,
+    caps: clipboardCaps,
+  });
+  // Phase 16: consume useClipboardSync outputs to drive the pill, the first-sync
+  // banner, and refusal toasts.
+  const {
+    isPaused: clipboardIsPaused,
+    togglePause: clipboardTogglePause,
+    status: clipboardStatus,
+    lastSyncAt: clipboardLastSyncAt,
+    cachedDesktopCaps: clipboardCachedDesktopCaps,
+    lastRefusal: clipboardLastRefusal,
+  } = clipboardSync;
 
-    useEffect(() => {
-        const onKeyDown = (e: KeyboardEvent) => {
-            const isFilesShortcut =
-                (e.ctrlKey || e.metaKey) &&
-                e.shiftKey &&
-                (e.key === 'F' || e.key === 'f');
-            const isAssistantShortcut =
-                (e.ctrlKey || e.metaKey) &&
-                e.shiftKey &&
-                (e.key === 'A' || e.key === 'a');
-            // Phase 21 UI-01: Ctrl+Shift+S toggles the Scenarios panel.
-            const isScenariosShortcut =
-                (e.ctrlKey || e.metaKey) &&
-                e.shiftKey &&
-                (e.key === 'S' || e.key === 's');
-            if (!isFilesShortcut && !isAssistantShortcut && !isScenariosShortcut) return;
+  const fireRefusalToast = useRefusalToastThrottle();
+  const { t: tClipboard } = useTranslation("clipboard");
 
-            // Guard: don't hijack when focus is inside the interactive overlay
-            // or any editable element.
-            const active = document.activeElement as HTMLElement | null;
-            if (active) {
-                const tag = active.tagName;
-                if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-                if (active.isContentEditable) return;
-                if (active.closest('.overlay')) return;
-            }
-            const target = e.target as HTMLElement | null;
-            if (target && target.closest && target.closest('.overlay')) return;
+  // PILL-06 / D-13: fire a single info toast on the first successful sync of
+  // each browser session per device. sessionStorage namespace mirrors Phase
+  // 10's per-device-id convention. The literal lives in clipboard:toast.firstSync
+  // (en/clipboard.ts, em dash U+2014) — never hardcoded here per Pitfall 1.
+  useEffect(() => {
+    if (clipboardLastSyncAt == null || clipboardLastSyncAt === 0) return;
+    if (!deviceId) return;
+    const key = `recontrol.clipboard.firstSyncToasted.${deviceId}`;
+    try {
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, "1");
+    } catch {
+      // sessionStorage may throw in private browsing / strict modes — fail
+      // closed (skip the toast rather than spam on every sync).
+      return;
+    }
+    toast.info(tClipboard("toast.firstSync"));
+  }, [clipboardLastSyncAt, deviceId, toast, tClipboard]);
 
-            e.preventDefault();
-            if (isFilesShortcut) {
-                // Mutex setter: opening Files closes Assistant; toggling off
-                // when already open clears the right pane.
-                const next = fmRightPaneActiveRef.current === 'files' ? null : 'files';
-                fmSetRightPaneActiveRef.current(next);
-            } else if (isAssistantShortcut) {
-                const next = fmRightPaneActiveRef.current === 'assistant' ? null : 'assistant';
-                fmSetRightPaneActiveRef.current(next);
-            } else {
-                // Phase 21 UI-01: Scenarios mutex toggle.
-                const next = fmRightPaneActiveRef.current === 'scenarios' ? null : 'scenarios';
-                fmSetRightPaneActiveRef.current(next);
-            }
-        };
-        window.addEventListener('keydown', onKeyDown);
-        return () => window.removeEventListener('keydown', onKeyDown);
-    }, []);
+  // PILL-07 / D-12: throttle refusal toasts at most one per 2 seconds per
+  // reason category. useRefusalToastThrottle internally suppresses
+  // CAPS_UNKNOWN (RESEARCH OQ 2).
+  useEffect(() => {
+    if (!clipboardLastRefusal) return;
+    fireRefusalToast(clipboardLastRefusal.reason);
+  }, [clipboardLastRefusal, fireRefusalToast]);
 
-    // Phase 20-06: gate FileManager on rightPaneActive='files' so the D-01
-    // mutex with AssistantPanel works. `fmState.panelOpen` is kept in sync by
-    // useFileManagerState (it tracks rightPaneActive === 'files') for any
-    // legacy consumer that still reads the boolean.
-    const fileManagerNode = fmState.rightPaneActive === 'files' ? (
-        <FileManagerPanel
-            deviceId={deviceId}
-            channel={filesChannel}
-            state={fmState}
-            setCurrentPath={fmSetCurrentPath}
-            setSort={fmSetSort}
-            setShowHidden={fmSetShowHidden}
-            queue={transferQueue}
-            filesByItemIdRef={filesByItemIdRef}
-            activeDownloadRef={activeDownloadRef}
-        />
-    ) : null;
+  const {
+    state: fmState,
+    setSplitRatio: fmSetSplitRatio,
+    setRightPaneActive: fmSetRightPaneActive,
+    setCurrentPath: fmSetCurrentPath,
+    setSort: fmSetSort,
+    setShowHidden: fmSetShowHidden,
+  } = useFileManagerState(deviceId);
 
-    // Phase 20-06: AssistantPanel scaffold rendered when rightPaneActive='assistant'.
-    // Reuses the existing raw WebSocket (CommandChannel) for the AssistantChannel
-    // subscription per RESEARCH §Pattern 4. deviceName falls back to deviceId
-    // when the device record has not loaded yet.
-    const assistantPanelNode = fmState.rightPaneActive === 'assistant' ? (
-        <AssistantPanel
-            deviceId={deviceId}
-            ws={activeSocket}
-            deviceName={deviceName || deviceId}
-        />
-    ) : null;
+  const filesByItemIdRef = useRef<Map<string, File>>(new Map());
+  const activeDownloadRef = useRef<DownloadTransfer | null>(null);
+  const toastRef = useRef(toast);
+  useEffect(() => {
+    toastRef.current = toast;
+  }, [toast]);
 
-    // Phase 21-06: ScenariosPanel scaffold mount. Library + editor land in
-    // Plans 21-09 / 21-10; for this plan we render a placeholder so the
-    // Splitter's right slot has a non-null node when rightPaneActive='scenarios'.
-    const scenariosPanelNode = fmState.rightPaneActive === 'scenarios' ? (
-        <ScenariosPanel
-            deviceId={deviceId}
-            ws={activeSocket}
-            deviceName={deviceName || deviceId}
-        />
-    ) : null;
+  const channelRequestRef = useRef(filesChannel.request);
+  useEffect(() => {
+    channelRequestRef.current = filesChannel.request;
+  }, [filesChannel.request]);
 
-    return (
-        <div className="command-websocket flex flex-col h-screen w-full font-sans antialiased bg-[#F3F4F6]">
-            <TopBar
-                activeMode={activeMode}
-                setActiveMode={setActiveMode}
-                addAction={sendSingleAction}
-                permissions={permissions || undefined}
-                disabled={overallDisabled}
-                deviceName={deviceName}
-                onStartStream={startWebRtc}
-                onStopStream={stopWebRtc}
-                connectionState={connectionState}
-                showStats={showStats}
-                onToggleStats={() => setShowStats(s => !s)}
-                currentFps={currentFps}
-                onFpsChange={handleFpsChange}
-                currentResolution={currentResolution}
-                onResolutionChange={handleResolutionChange}
-                onTogglePanel={() =>
-                    fmSetRightPaneActive(fmState.rightPaneActive === 'files' ? null : 'files')
-                }
-                panelOpen={fmState.rightPaneActive === 'files'}
-                onToggleAiPanel={() =>
-                    fmSetRightPaneActive(fmState.rightPaneActive === 'assistant' ? null : 'assistant')
-                }
-                aiPanelOpen={fmState.rightPaneActive === 'assistant'}
-                onToggleScenarios={() =>
-                    fmSetRightPaneActive(fmState.rightPaneActive === 'scenarios' ? null : 'scenarios')
-                }
-                scenariosPanelOpen={fmState.rightPaneActive === 'scenarios'}
-                transferSnapshot={transferSnapshot}
-                onOpenPanel={() => fmSetRightPaneActive('files')}
-                clipboardPill={{
-                    webRtcUp: connectionState === 'connected',
-                    isPaused: clipboardIsPaused,
-                    togglePause: clipboardTogglePause,
-                    status: clipboardStatus,
-                    cachedDesktopCaps: clipboardCachedDesktopCaps,
-                    lastRefusal: clipboardLastRefusal,
-                    lastSyncAt: clipboardLastSyncAt,
-                    browserCaps: clipboardCaps,
-                }}
-            />
-            <main className={`flex-1 min-h-0 flex flex-col ${activeMode === 'interactive' ? 'overflow-hidden' : ''}`}>
-                <MainContent
-                    disabled={overallDisabled}
-                    addAction={sendSingleAction}
-                    activeMode={activeMode}
-                    terminalResults={terminalResults}
-                    processes={processes}
-                    processesLoading={processesLoading}
-                    requestListProcesses={requestListProcesses}
-                    killProcess={killProcess}
-                    permissions={permissions || undefined}
-                    videoRef={videoRef}
-                    setVideoNode={setVideoNode}
-                    connectionState={connectionState}
-                    hasReceivedFrame={hasReceivedFrame}
-                    retryWebRtc={retryWebRtc}
-                    streamStats={streamStats}
-                    showStats={showStats}
-                    panelOpen={fmState.rightPaneActive === 'files'}
-                    fileManagerNode={fileManagerNode}
-                    assistantPanelNode={assistantPanelNode}
-                    scenariosPanelNode={scenariosPanelNode}
-                    splitRatio={fmState.splitRatio}
-                    setSplitRatio={fmSetSplitRatio}
-                />
-            </main>
-        </div>
+  const filesClientLiveRef = useRef(filesChannel.filesClient);
+  useEffect(() => {
+    filesClientLiveRef.current = filesChannel.filesClient;
+  }, [filesChannel.filesClient]);
+
+  const filesDataChannelLiveRef = useRef(filesChannel.filesDataChannel);
+  useEffect(() => {
+    filesDataChannelLiveRef.current = filesChannel.filesDataChannel;
+  }, [filesChannel.filesDataChannel]);
+
+  const transferQueueRef = useRef<TransferQueue | null>(null);
+  if (transferQueueRef.current === null) {
+    transferQueueRef.current = new TransferQueue(
+      createRunUpload({
+        filesDataRef,
+        getRequest: () => channelRequestRef.current,
+        getFile: (id) => filesByItemIdRef.current.get(id) ?? null,
+      }),
+      createRunDownload({
+        getRequest: () => channelRequestRef.current,
+        getFilesClient: () => filesClientLiveRef.current,
+        getFilesDataChannel: () => filesDataChannelLiveRef.current,
+        onSuccess: (name) => toastRef.current.info(`Downloaded ${name}`),
+        onActiveChange: (active) => {
+          activeDownloadRef.current = active;
+        },
+      }),
     );
+  }
+  const transferQueue = transferQueueRef.current!;
+  const transferSnapshot = useTransferQueue(transferQueue);
+
+  useEffect(() => {
+    return transferQueue.subscribe((snap) => {
+      const liveIds = new Set(snap.items.map((i) => i.id));
+      for (const id of filesByItemIdRef.current.keys()) {
+        if (!liveIds.has(id)) filesByItemIdRef.current.delete(id);
+      }
+    });
+  }, [transferQueue]);
+
+  // Orchestrator startup — device id resolution, ownership check, permissions,
+  // and initial socket connect. This init useEffect stays in DeviceControl
+  // because it is orchestrator-level startup, not socket lifecycle.
+  useEffect(() => {
+    const init = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const paramDeviceId = params.get("device_id");
+      if (!paramDeviceId) return;
+      setDeviceId(paramDeviceId);
+      // Determine ownership first
+      try {
+        const deviceRes = await getDeviceRequest(paramDeviceId);
+        const deviceUserId = deviceRes.data?.user?.id;
+        const currentUserId = getUserId();
+        const owner =
+          deviceUserId &&
+          currentUserId &&
+          String(deviceUserId) === String(currentUserId);
+        setIsOwner(!!owner);
+        if (deviceRes.data?.name) setDeviceName(deviceRes.data.name);
+        await fetchPermissions(paramDeviceId, !!owner);
+      } catch (e) {
+        console.warn("Failed to fetch device info for ownership", e);
+        // fallback assume not owner but grant full to avoid lockout
+        setIsOwner(false);
+        await fetchPermissions(paramDeviceId, false);
+      }
+      // Connect after permissions resolved
+      void deviceSocket.connect(paramDeviceId);
+    };
+    void init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // sendSingleAction: thin orchestrator combining permission gating (canSend),
+  // pending command registration (registerPendingCommand), and send.
+  const sendSingleAction = (action: {
+    id?: string;
+    type: string;
+    payload?: Record<string, unknown>;
+  }) => {
+    if (!canSend(action.type)) {
+      console.warn(
+        `Blocked command '${action.type}' due to insufficient permissions`,
+      );
+      return;
+    }
+    const msg: Record<string, unknown> = {
+      command: action.type,
+      payload: action.payload ?? {},
+    };
+    if (action.id) {
+      msg.id = action.id;
+      deviceSocket.registerPendingCommand(action.id, action.type);
+    }
+    deviceSocket.sendMessagePayload(msg);
+  };
+
+  const handleFpsChange = (fps: number) => {
+    setCurrentFps(fps);
+    sendSingleAction({
+      id: generateUUID(),
+      type: "webrtc.set_fps",
+      payload: { fps },
+    });
+  };
+
+  const handleResolutionChange = (resolution: number) => {
+    setCurrentResolution(resolution);
+    sendSingleAction({
+      id: generateUUID(),
+      type: "webrtc.set_resolution",
+      payload: { resolution },
+    });
+  };
+
+  const requestListProcesses = () => {
+    if (!connected) return;
+    if (!permissions?.access_terminal) return; // gate
+    setProcessesLoading(true);
+    setProcesses([]);
+    sendSingleAction({ type: "terminal.listProcesses" });
+  };
+
+  const killProcess = (pid: number) => {
+    if (!connected || !pid) return;
+    if (!permissions?.access_terminal) return; // gate
+    setProcesses((prev) => prev.filter((p) => p.Pid !== pid));
+    sendSingleAction({ type: "terminal.killProcess", payload: { pid } });
+  };
+
+  const overallDisabled = !connected || permissionsLoading || !permissions;
+
+  // Ctrl+Shift+F toggles the file manager panel; Ctrl+Shift+A toggles the
+  // AssistantPanel (Phase 20-06, mirrors the F hotkey). Both share the same
+  // focus-guard: bail if focus is inside the interactive overlay (which owns
+  // its own keyboard capture) or inside any editable element. The overlay is
+  // identified by the `.overlay` class (MainContent sets it on the video
+  // overlay div). The two hotkeys live in the same useEffect so they share
+  // the listener lifecycle.
+  const fmSetRightPaneActiveRef = useRef(fmSetRightPaneActive);
+  useEffect(() => {
+    fmSetRightPaneActiveRef.current = fmSetRightPaneActive;
+  }, [fmSetRightPaneActive]);
+  const fmRightPaneActiveRef = useRef(fmState.rightPaneActive);
+  useEffect(() => {
+    fmRightPaneActiveRef.current = fmState.rightPaneActive;
+  }, [fmState.rightPaneActive]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const isFilesShortcut =
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        (e.key === "F" || e.key === "f");
+      const isAssistantShortcut =
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        (e.key === "A" || e.key === "a");
+      // Phase 21 UI-01: Ctrl+Shift+S toggles the Scenarios panel.
+      const isScenariosShortcut =
+        (e.ctrlKey || e.metaKey) &&
+        e.shiftKey &&
+        (e.key === "S" || e.key === "s");
+      if (!isFilesShortcut && !isAssistantShortcut && !isScenariosShortcut)
+        return;
+
+      // Guard: don't hijack when focus is inside the interactive overlay
+      // or any editable element.
+      const active = document.activeElement as HTMLElement | null;
+      if (active) {
+        const tag = active.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+        if (active.isContentEditable) return;
+        if (active.closest(".overlay")) return;
+      }
+      const target = e.target as HTMLElement | null;
+      if (target && target.closest && target.closest(".overlay")) return;
+
+      e.preventDefault();
+      if (isFilesShortcut) {
+        // Mutex setter: opening Files closes Assistant; toggling off
+        // when already open clears the right pane.
+        const next = fmRightPaneActiveRef.current === "files" ? null : "files";
+        fmSetRightPaneActiveRef.current(next);
+      } else if (isAssistantShortcut) {
+        const next =
+          fmRightPaneActiveRef.current === "assistant" ? null : "assistant";
+        fmSetRightPaneActiveRef.current(next);
+      } else {
+        // Phase 21 UI-01: Scenarios mutex toggle.
+        const next =
+          fmRightPaneActiveRef.current === "scenarios" ? null : "scenarios";
+        fmSetRightPaneActiveRef.current(next);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  // Phase 20-06: gate FileManager on rightPaneActive='files' so the D-01
+  // mutex with AssistantPanel works. `fmState.panelOpen` is kept in sync by
+  // useFileManagerState (it tracks rightPaneActive === 'files') for any
+  // legacy consumer that still reads the boolean.
+  const fileManagerNode =
+    fmState.rightPaneActive === "files" ? (
+      <FileManagerPanel
+        deviceId={deviceId}
+        channel={filesChannel}
+        state={fmState}
+        setCurrentPath={fmSetCurrentPath}
+        setSort={fmSetSort}
+        setShowHidden={fmSetShowHidden}
+        queue={transferQueue}
+        filesByItemIdRef={filesByItemIdRef}
+        activeDownloadRef={activeDownloadRef}
+      />
+    ) : null;
+
+  // Phase 20-06: AssistantPanel scaffold rendered when rightPaneActive='assistant'.
+  // Reuses the existing raw WebSocket (CommandChannel) for the AssistantChannel
+  // subscription per RESEARCH §Pattern 4. deviceName falls back to deviceId
+  // when the device record has not loaded yet.
+  const assistantPanelNode =
+    fmState.rightPaneActive === "assistant" ? (
+      <AssistantPanel
+        deviceId={deviceId}
+        ws={activeSocket}
+        deviceName={deviceName || deviceId}
+      />
+    ) : null;
+
+  // Phase 21-06: ScenariosPanel scaffold mount. Library + editor land in
+  // Plans 21-09 / 21-10; for this plan we render a placeholder so the
+  // Splitter's right slot has a non-null node when rightPaneActive='scenarios'.
+  const scenariosPanelNode =
+    fmState.rightPaneActive === "scenarios" ? (
+      <ScenariosPanel
+        deviceId={deviceId}
+        ws={activeSocket}
+        deviceName={deviceName || deviceId}
+      />
+    ) : null;
+
+  return (
+    <div className="command-websocket flex h-screen w-full flex-col bg-[#F3F4F6] font-sans antialiased">
+      <TopBar
+        activeMode={activeMode}
+        setActiveMode={setActiveMode}
+        addAction={sendSingleAction}
+        permissions={permissions || undefined}
+        disabled={overallDisabled}
+        deviceName={deviceName}
+        onStartStream={startWebRtc}
+        onStopStream={stopWebRtc}
+        connectionState={connectionState}
+        showStats={showStats}
+        onToggleStats={() => setShowStats(!showStats)}
+        currentFps={currentFps}
+        onFpsChange={handleFpsChange}
+        currentResolution={currentResolution}
+        onResolutionChange={handleResolutionChange}
+        onTogglePanel={() =>
+          fmSetRightPaneActive(
+            fmState.rightPaneActive === "files" ? null : "files",
+          )
+        }
+        panelOpen={fmState.rightPaneActive === "files"}
+        onToggleAiPanel={() =>
+          fmSetRightPaneActive(
+            fmState.rightPaneActive === "assistant" ? null : "assistant",
+          )
+        }
+        aiPanelOpen={fmState.rightPaneActive === "assistant"}
+        onToggleScenarios={() =>
+          fmSetRightPaneActive(
+            fmState.rightPaneActive === "scenarios" ? null : "scenarios",
+          )
+        }
+        scenariosPanelOpen={fmState.rightPaneActive === "scenarios"}
+        transferSnapshot={transferSnapshot}
+        onOpenPanel={() => fmSetRightPaneActive("files")}
+        clipboardPill={{
+          webRtcUp: connectionState === "connected",
+          isPaused: clipboardIsPaused,
+          togglePause: clipboardTogglePause,
+          status: clipboardStatus,
+          cachedDesktopCaps: clipboardCachedDesktopCaps,
+          lastRefusal: clipboardLastRefusal,
+          lastSyncAt: clipboardLastSyncAt,
+          browserCaps: clipboardCaps,
+        }}
+      />
+      <main
+        className={`flex min-h-0 flex-1 flex-col ${activeMode === "interactive" ? "overflow-hidden" : ""}`}
+      >
+        <MainContent
+          disabled={overallDisabled}
+          addAction={sendSingleAction}
+          activeMode={activeMode}
+          terminalResults={terminalResults}
+          processes={processes}
+          processesLoading={processesLoading}
+          requestListProcesses={requestListProcesses}
+          killProcess={killProcess}
+          permissions={permissions || undefined}
+          videoRef={videoRef}
+          setVideoNode={setVideoNode}
+          connectionState={connectionState}
+          hasReceivedFrame={hasReceivedFrame}
+          retryWebRtc={retryWebRtc}
+          streamStats={streamStats}
+          showStats={showStats}
+          panelOpen={fmState.rightPaneActive === "files"}
+          fileManagerNode={fileManagerNode}
+          assistantPanelNode={assistantPanelNode}
+          scenariosPanelNode={scenariosPanelNode}
+          splitRatio={fmState.splitRatio}
+          setSplitRatio={fmSetSplitRatio}
+        />
+      </main>
+    </div>
+  );
 }
+
+export default DeviceControl;

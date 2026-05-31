@@ -6,9 +6,9 @@
  * per-device-id in localStorage via `useFileManagerState`.
  */
 
-export type SortColumn = 'name' | 'size' | 'modified' | 'type';
+export type SortColumn = "name" | "size" | "modified" | "type";
 
-export type SortDirection = 'asc' | 'desc';
+export type SortDirection = "asc" | "desc";
 
 export interface SortState {
   column: SortColumn;
@@ -24,7 +24,7 @@ export interface FileManagerState {
   panelOpen: boolean;
   splitRatio: number;
   /** Phase 20 D-01/D-02 + Phase 21 UI-02: which right pane is active (mutex). null = all closed. */
-  rightPaneActive: 'files' | 'assistant' | 'scenarios' | null;
+  rightPaneActive: "files" | "assistant" | "scenarios" | null;
   currentPath: string | null;
   sort: SortState;
   showHidden: boolean;
@@ -34,12 +34,12 @@ export interface FileManagerState {
  * Coarse file-type classification used for icon + "Type" column text.
  */
 export type FileTypeKind =
-  | 'image'
-  | 'video'
-  | 'code'
-  | 'doc'
-  | 'text'
-  | 'other';
+  | "image"
+  | "video"
+  | "code"
+  | "doc"
+  | "text"
+  | "other";
 
 /**
  * In-memory selection state for the file manager listing. Plan 10-03 wires

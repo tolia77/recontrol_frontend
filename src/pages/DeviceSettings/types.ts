@@ -1,18 +1,10 @@
-import type { PermissionsGroup } from 'src/types/global';
+import type { PermissionsGroup, PermissionsGroupAttributes } from "src/types";
 
 export interface ShareFormState {
   userEmail: string;
   permissionsGroupId: string;
   expiresAt: string;
-  newGroup: {
-    name: string;
-    see_screen: boolean;
-    see_system_info: boolean;
-    access_mouse: boolean;
-    access_keyboard: boolean;
-    access_terminal: boolean;
-    manage_power: boolean;
-  };
+  newGroup: PermissionsGroupAttributes;
 }
 
 export interface DeviceInfoFormState {
@@ -44,15 +36,7 @@ export interface EditShareFormState {
   shareId: string;
   permissionsGroupId: string;
   expiresAt: string;
-  newGroup: {
-    name: string;
-    see_screen: boolean;
-    see_system_info: boolean;
-    access_mouse: boolean;
-    access_keyboard: boolean;
-    access_terminal: boolean;
-    manage_power: boolean;
-  };
+  newGroup: PermissionsGroupAttributes;
 }
 
 export interface EditShareFormProps {

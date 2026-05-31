@@ -1,4 +1,10 @@
-import { useCallback, useRef, useState, type ClipboardEvent, type KeyboardEvent } from 'react';
+import {
+  useCallback,
+  useRef,
+  useState,
+  type ClipboardEvent,
+  type KeyboardEvent,
+} from "react";
 
 export interface ChipInputProps {
   value: string[];
@@ -9,10 +15,10 @@ export interface ChipInputProps {
   /** EDIT-02 / D-05: cap on per-chip length (default 1024). */
   maxChipLength?: number;
   disabled?: boolean;
-  'aria-label'?: string;
-  'data-testid'?: string;
+  "aria-label"?: string;
+  "data-testid"?: string;
   /** Notifies when a chip is rejected because of a cap. */
-  onChipOverflow?: (reason: 'count' | 'length') => void;
+  onChipOverflow?: (reason: "count" | "length") => void;
 }
 
 const DEFAULT_MAX_CHIPS = 32;
@@ -28,7 +34,7 @@ export default function ChipInput({
   onChipOverflow,
   ...aria
 }: ChipInputProps) {
-  const [draft, setDraft] = useState('');
+  const [draft, setDraft] = useState("");
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const commitDraft = useCallback(
@@ -36,11 +42,11 @@ export default function ChipInput({
       const trimmed = raw.trim();
       if (!trimmed) return false;
       if (trimmed.length > maxChipLength) {
-        onChipOverflow?.('length');
+        onChipOverflow?.("length");
         return false;
       }
       if (value.length >= maxChips) {
-        onChipOverflow?.('count');
+        onChipOverflow?.("count");
         return false;
       }
       onChange([...value, trimmed]);
@@ -51,26 +57,26 @@ export default function ChipInput({
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (disabled) return;
-    if (e.key === 'Enter' || e.key === 'Tab') {
+    if (e.key === "Enter" || e.key === "Tab") {
       if (draft.trim()) {
         e.preventDefault();
-        if (commitDraft(draft)) setDraft('');
+        if (commitDraft(draft)) setDraft("");
       }
-    } else if (e.key === 'Backspace' && draft === '' && value.length > 0) {
+    } else if (e.key === "Backspace" && draft === "" && value.length > 0) {
       e.preventDefault();
       onChange(value.slice(0, -1));
-    } else if (e.key === ',') {
+    } else if (e.key === ",") {
       // Commit on comma too (common chip-input convention).
       if (draft.trim()) {
         e.preventDefault();
-        if (commitDraft(draft)) setDraft('');
+        if (commitDraft(draft)) setDraft("");
       }
     }
   };
 
   const onPaste = (e: ClipboardEvent<HTMLInputElement>) => {
     if (disabled) return;
-    const text = e.clipboardData.getData('text');
+    const text = e.clipboardData.getData("text");
     if (!text) return;
     // D-07: split on whitespace, no quote awareness.
     const tokens = text.split(/\s+/).filter((t) => t.length > 0);
@@ -80,11 +86,11 @@ export default function ChipInput({
     const accepted: string[] = [];
     for (const t of tokens) {
       if (remaining <= 0) {
-        onChipOverflow?.('count');
+        onChipOverflow?.("count");
         break;
       }
       if (t.length > maxChipLength) {
-        onChipOverflow?.('length');
+        onChipOverflow?.("length");
         continue;
       }
       accepted.push(t);
@@ -100,8 +106,8 @@ export default function ChipInput({
 
   return (
     <div
-      className="flex flex-wrap items-center gap-1 rounded border border-lightgray px-2 py-1 focus-within:border-primary"
-      data-testid={aria['data-testid']}
+      className="border-lightgray focus-within:border-primary flex flex-wrap items-center gap-1 rounded border px-2 py-1"
+      data-testid={aria["data-testid"]}
       onClick={() => inputRef.current?.focus()}
     >
       {value.map((chip, i) => (
@@ -131,10 +137,10 @@ export default function ChipInput({
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={onKeyDown}
         onPaste={onPaste}
-        placeholder={value.length === 0 ? placeholder : ''}
+        placeholder={value.length === 0 ? placeholder : ""}
         disabled={disabled}
-        aria-label={aria['aria-label']}
-        className="flex-1 min-w-[6ch] border-none bg-transparent text-sm outline-none"
+        aria-label={aria["aria-label"]}
+        className="min-w-[6ch] flex-1 border-none bg-transparent text-sm outline-none"
       />
     </div>
   );

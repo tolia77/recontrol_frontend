@@ -1,15 +1,19 @@
-import { useEffect, useState } from 'react';
-import { getUserId, clearAuth } from 'src/utils/auth';
-import { getUserRequest, updateUserSelfRequest } from 'src/services/backend/usersRequests';
-import { logoutRequest } from 'src/services/backend/authRequests';
-import type { UserResponse } from 'src/services/backend/usersRequests';
-import { useTranslation } from 'react-i18next';
-import { useToast } from 'src/components/ui/Toast';
-import { Button } from 'src/components/ui/Button';
-import { LoadingOverlay } from 'src/components/ui/Spinner';
+import { useEffect, useState } from "react";
+import { getUserId, clearAuth } from "src/utils/auth";
+import {
+  getUserRequest,
+  updateUserSelfRequest,
+} from "src/services/backend/usersService";
+import { logoutRequest } from "src/services/backend/authService";
+import type { UserResponse } from "src/services/backend/usersService";
+import { getErrorMessage } from "src/utils/getErrorMessage";
+import { useTranslation } from "react-i18next";
+import { useToast } from "src/components/ui/Toast";
+import Button from "src/components/ui/Button";
+import { LoadingState } from "src/components/ui";
 
 function UserSettings() {
-  const { t } = useTranslation('userSettings');
+  const { t } = useTranslation("userSettings");
   const toast = useToast();
   const userId = getUserId();
 
@@ -17,9 +21,9 @@ function UserSettings() {
   const [saving, setSaving] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [user, setUser] = useState<UserResponse | null>(null);
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -33,7 +37,7 @@ function UserSettings() {
         setUsername(res.data.username);
         setEmail(res.data.email);
       } catch {
-        toast.error(t('errors.loadFailed'));
+        toast.error(t("errors.loadFailed"));
       } finally {
         setLoading(false);
       }
@@ -47,35 +51,23 @@ function UserSettings() {
 
     setSaving(true);
     try {
-      const payload: { username?: string; email?: string; password?: string } = {};
+      const payload: { username?: string; email?: string; password?: string } =
+        {};
       if (username !== user?.username) payload.username = username;
       if (email !== user?.email) payload.email = email;
       if (password.length > 0) payload.password = password;
 
       const res = await updateUserSelfRequest(userId, payload);
       setUser(res.data);
-      setPassword('');
-      toast.success(t('messages.saved'));
+      setPassword("");
+      toast.success(t("messages.saved"));
     } catch (error) {
-      const resp = (error as { response?: { status?: number; data?: unknown } }).response;
-      if (resp?.status === 422) {
-        const data = resp.data;
-        const msgs: string[] = [];
-        if (data && typeof data === 'object') {
-          Object.entries(data as Record<string, unknown>).forEach(([key, value]) => {
-            const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
-            if (Array.isArray(value)) {
-              value.forEach(v => msgs.push(`${capitalizedKey} ${String(v)}`));
-            } else {
-              msgs.push(`${capitalizedKey} ${String(value)}`);
-            }
-          });
-        }
-        toast.error(msgs.length ? msgs.join(', ') : t('errors.saveFailed'));
-      } else if (resp?.status === 403) {
-        toast.error(t('errors.forbidden'));
+      const status = (error as { response?: { status?: number } }).response
+        ?.status;
+      if (status === 403) {
+        toast.error(t("errors.forbidden"));
       } else {
-        toast.error(t('errors.saveFailed'));
+        toast.error(getErrorMessage(error) || t("errors.saveFailed"));
       }
     } finally {
       setSaving(false);
@@ -90,72 +82,72 @@ function UserSettings() {
       // ignore error; proceed with local cleanup
     } finally {
       clearAuth();
-      window.location.replace('/login');
+      window.location.replace("/login");
     }
   }
 
   if (loading) {
-    return <LoadingOverlay message={t('loading')} />;
+    return <LoadingState message={t("loading")} />;
   }
 
   if (!userId) {
     return (
       <div className="p-6">
-        <p>{t('errors.notLoggedIn')}</p>
+        <p>{t("errors.notLoggedIn")}</p>
       </div>
     );
   }
 
   return (
-    <div className="p-6 max-w-xl">
-      <h1 className="text-2xl font-semibold mb-4">{t('title')}</h1>
-      
+    <div className="max-w-xl p-6">
+      <h1 className="mb-4 text-2xl font-semibold">{t("title")}</h1>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="text-sm font-medium text-text" htmlFor="username">
-            {t('fields.username')}
+          <label className="text-text text-sm font-medium" htmlFor="username">
+            {t("fields.username")}
           </label>
           <input
             id="username"
             type="text"
-            className="w-full mt-1"
+            className="mt-1 w-full"
             value={username}
-            onChange={e => setUsername(e.target.value)}
+            onChange={(e) => setUsername(e.target.value)}
             required
           />
         </div>
 
         <div>
-          <label className="text-sm font-medium text-text" htmlFor="email">
-            {t('fields.email')}
+          <label className="text-text text-sm font-medium" htmlFor="email">
+            {t("fields.email")}
           </label>
           <input
             id="email"
             type="email"
-            className="w-full mt-1"
+            className="mt-1 w-full"
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
         </div>
 
         <div>
-          <label className="text-sm font-medium text-text" htmlFor="password">
-            {t('fields.password')}{' '}
-            <span className="opacity-60">({t('fields.passwordHelp')})</span>
+          <label className="text-text text-sm font-medium" htmlFor="password">
+            {t("fields.password")}{" "}
+            <span className="opacity-60">({t("fields.passwordHelp")})</span>
           </label>
           <input
             id="password"
             type="password"
-            className="w-full mt-1"
+            className="mt-1 w-full"
             value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder={t('fields.passwordPlaceholder')}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder={t("fields.passwordPlaceholder")}
           />
         </div>
 
         <Button type="submit" loading={saving}>
-          {saving ? t('buttons.saving') : t('buttons.save')}
+          {saving ? t("buttons.saving") : t("buttons.save")}
         </Button>
       </form>
 
@@ -163,9 +155,9 @@ function UserSettings() {
         variant="danger"
         onClick={handleLogout}
         loading={logoutLoading}
-        className="w-full mt-8"
+        className="mt-8 w-full"
       >
-        {t('buttons.logout')}
+        {t("buttons.logout")}
       </Button>
     </div>
   );

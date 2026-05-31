@@ -1,4 +1,4 @@
-import type { ChunkHeader } from '../files/ChunkHeader';
+import type { ChunkHeader } from "src/pages/DeviceControl/services/files/ChunkHeader";
 
 /**
  * Closed state machine for a single browser-side download.
@@ -25,11 +25,11 @@ import type { ChunkHeader } from '../files/ChunkHeader';
  * revocation safety -- synchronous revoke can break the in-flight save).
  */
 export type DownloadState =
-  | 'pending'
-  | 'receiving'
-  | 'finalizing'
-  | 'done'
-  | 'cancelled';
+  | "pending"
+  | "receiving"
+  | "finalizing"
+  | "done"
+  | "cancelled";
 
 export class DownloadTransfer {
   // erasableSyntaxOnly tsconfig forbids constructor parameter properties; use
@@ -42,7 +42,7 @@ export class DownloadTransfer {
 
   private chunks: ArrayBuffer[] = [];
   private receivedBytes = 0;
-  private state: DownloadState = 'pending';
+  private state: DownloadState = "pending";
   private blobUrl: string | null = null;
 
   /**
@@ -64,8 +64,8 @@ export class DownloadTransfer {
   }
 
   start(): void {
-    if (this.state !== 'pending') return;
-    this.state = 'receiving';
+    if (this.state !== "pending") return;
+    this.state = "receiving";
   }
 
   /**
@@ -79,7 +79,7 @@ export class DownloadTransfer {
    * a JS number; safe to ~9 PiB for any realistic browser-memory download).
    */
   onChunk(header: ChunkHeader, payload: ArrayBuffer): boolean {
-    if (this.state !== 'receiving') return false;
+    if (this.state !== "receiving") return false;
     if (header.offset !== this.receivedBytes) {
       // Sanity: SCTP delivers in order. Mismatch = corruption -- abort.
       this.cancel();
@@ -104,16 +104,16 @@ export class DownloadTransfer {
    * listener so we ride the user gesture on Safari too.
    */
   finalize(): void {
-    if (this.state === 'cancelled') return;
-    if (this.state === 'done') return;
-    this.state = 'finalizing';
+    if (this.state === "cancelled") return;
+    if (this.state === "done") return;
+    this.state = "finalizing";
 
-    const blob = new Blob(this.chunks, { type: 'application/octet-stream' });
+    const blob = new Blob(this.chunks, { type: "application/octet-stream" });
     // Release ArrayBuffer references; the Blob now owns the bytes.
     this.chunks.length = 0;
     this.blobUrl = URL.createObjectURL(blob);
 
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = this.blobUrl;
     a.download = this.name;
     document.body.appendChild(a);
@@ -125,9 +125,11 @@ export class DownloadTransfer {
     // write. 60s gives every browser plenty of headroom while still
     // releasing the URL eventually.
     const url = this.blobUrl;
-    setTimeout(() => { URL.revokeObjectURL(url); }, 60_000);
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 60_000);
     this.blobUrl = null;
-    this.state = 'done';
+    this.state = "done";
   }
 
   /**
@@ -137,8 +139,8 @@ export class DownloadTransfer {
    * point would not undo the user's downloaded copy).
    */
   cancel(): void {
-    if (this.state === 'done') return;
-    this.state = 'cancelled';
+    if (this.state === "done") return;
+    this.state = "cancelled";
     this.chunks.length = 0;
     if (this.blobUrl) {
       URL.revokeObjectURL(this.blobUrl);

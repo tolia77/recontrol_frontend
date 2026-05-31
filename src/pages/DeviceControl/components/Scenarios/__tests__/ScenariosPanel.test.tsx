@@ -1,31 +1,39 @@
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import {
   cleanup,
   fireEvent,
   render,
   screen,
   waitFor,
-} from '@testing-library/react';
-import i18next from 'i18next';
-import { initReactI18next } from 'react-i18next';
+} from "@testing-library/react";
+import i18next from "i18next";
+import { initReactI18next } from "react-i18next";
 
-import scenariosEn from '../../../../../locales/en/scenarios';
-import { ToastProvider } from '../../../../../components/ui';
-import type { ScenarioRunBroadcast } from '../../../hooks/useScenarioRunChannel';
-import type { Scenario } from '../../../../../services/backend/scenariosService';
+import { scenarios as scenariosEn } from "src/locales/en/scenarios";
+import { ToastProvider } from "src/components/ui";
+import type { ScenarioRunBroadcast } from "src/pages/DeviceControl/hooks/realtime/useScenarioRunChannel";
+import type { Scenario } from "src/services/backend/scenariosService";
 import type {
   ScenarioRun,
   ScenarioRunStatus,
-} from '../../../../../services/backend/scenarioRunsService';
+} from "src/services/backend/scenarioRunsService";
 
 // -----------------------------------------------------------------------------
 // Mocks — must be defined BEFORE importing the component.
 // -----------------------------------------------------------------------------
 
-vi.mock('../../../../../services/backend/scenariosService', async () => {
+vi.mock("src/services/backend/scenariosService", async () => {
   const actual = await vi.importActual<
-    typeof import('../../../../../services/backend/scenariosService')
-  >('../../../../../services/backend/scenariosService');
+    typeof import("src/services/backend/scenariosService")
+  >("src/services/backend/scenariosService");
   return {
     ...actual,
     scenariosService: {
@@ -40,10 +48,10 @@ vi.mock('../../../../../services/backend/scenariosService', async () => {
   };
 });
 
-vi.mock('../../../../../services/backend/scenarioRunsService', async () => {
+vi.mock("src/services/backend/scenarioRunsService", async () => {
   const actual = await vi.importActual<
-    typeof import('../../../../../services/backend/scenarioRunsService')
-  >('../../../../../services/backend/scenarioRunsService');
+    typeof import("src/services/backend/scenarioRunsService")
+  >("src/services/backend/scenarioRunsService");
   return {
     ...actual,
     scenarioRunsService: {
@@ -59,19 +67,21 @@ vi.mock('../../../../../services/backend/scenarioRunsService', async () => {
 let capturedOnBroadcast: ((msg: ScenarioRunBroadcast) => void) | null = null;
 const mockDispatch = vi.fn();
 
-vi.mock('../../../hooks/useScenarioRunChannel', () => ({
-  useScenarioRunChannel: (
-    _ws: WebSocket | null,
-    onBroadcast: (msg: ScenarioRunBroadcast) => void,
-  ) => {
+vi.mock("src/pages/DeviceControl/hooks/realtime/useScenarioRunChannel", () => ({
+  useScenarioRunChannel: ({
+    onBroadcast,
+  }: {
+    socket: WebSocket | null;
+    onBroadcast: (msg: ScenarioRunBroadcast) => void;
+  }) => {
     capturedOnBroadcast = onBroadcast;
     return { dispatch: mockDispatch };
   },
 }));
 
-import { scenariosService } from '../../../../../services/backend/scenariosService';
-import { scenarioRunsService } from '../../../../../services/backend/scenarioRunsService';
-import ScenariosPanel from '../ScenariosPanel';
+import { scenariosService } from "src/services/backend/scenariosService";
+import { scenarioRunsService } from "src/services/backend/scenarioRunsService";
+import ScenariosPanel from "../ScenariosPanel";
 
 const mockedScenariosIndex = vi.mocked(scenariosService.index);
 const mockedScenariosShow = vi.mocked(scenariosService.show);
@@ -84,69 +94,72 @@ const mockedRunsIndex = vi.mocked(scenarioRunsService.index);
 
 function makeScenario(overrides: Partial<Scenario> = {}): Scenario {
   return {
-    id: 'scen-1',
-    user_id: 'user-1',
-    name: 'Diagnose nginx',
+    id: "scen-1",
+    user_id: "user-1",
+    name: "Diagnose nginx",
     description: null,
     command_steps: [
-      { id: 'cs-0', binary: 'ls', args: ['-la'], cwd: '/' },
-      { id: 'cs-1', binary: 'echo', args: ['hi'], cwd: '/' },
+      { id: "cs-0", binary: "ls", args: ["-la"], cwd: "/" },
+      { id: "cs-1", binary: "echo", args: ["hi"], cwd: "/" },
     ],
     pinned_device_id: null,
     is_shared: false,
     created_via_ai: false,
     owner_email: null,
-    created_at: '2026-05-19T00:00:00Z',
-    updated_at: '2026-05-19T00:00:00Z',
+    created_at: "2026-05-19T00:00:00Z",
+    updated_at: "2026-05-19T00:00:00Z",
     last_run_at: null,
     run_count: 0,
     ...overrides,
   };
 }
 
-function makeRun(id: string, status: ScenarioRunStatus = 'completed'): ScenarioRun {
+function makeRun(
+  id: string,
+  status: ScenarioRunStatus = "completed",
+): ScenarioRun {
   return {
     id,
-    user_id: 'user-1',
-    device_id: 'dev-1',
-    scenario_id: 'scen-1',
+    user_id: "user-1",
+    device_id: "dev-1",
+    scenario_id: "scen-1",
     scenario_name_snapshot: `Run ${id}`,
     step_count: 2,
-    started_at: '2026-05-19T00:00:00Z',
-    ended_at: '2026-05-19T00:00:30Z',
+    started_at: "2026-05-19T00:00:00Z",
+    ended_at: "2026-05-19T00:00:30Z",
     status,
     failed_step_index: null,
     total_ai_gen_tokens: null,
-    created_at: '2026-05-19T00:00:00Z',
-    updated_at: '2026-05-19T00:00:30Z',
+    created_at: "2026-05-19T00:00:00Z",
+    updated_at: "2026-05-19T00:00:30Z",
   };
 }
 
-function makePolicyPreview(scenarioId: string = 'scen-1') {
+function makePolicyPreview(scenarioId: string = "scen-1") {
   return {
     steps: [
       {
         step_index: 0,
-        id: 'cs-0',
-        decision: 'allow' as const,
-        reason: 'ok',
-        resolved_binary: '/bin/ls',
+        id: "cs-0",
+        decision: "allow" as const,
+        reason: "ok",
+        resolved_binary: "/bin/ls",
       },
       {
         step_index: 1,
-        id: 'cs-1',
-        decision: 'allow' as const,
-        reason: 'ok',
-        resolved_binary: '/bin/echo',
+        id: "cs-1",
+        decision: "allow" as const,
+        reason: "ok",
+        resolved_binary: "/bin/echo",
       },
     ],
-    current_policy_version: 'v1',
+    current_policy_version: "v1",
     policy_drift: false,
     scenario_id: scenarioId,
   };
 }
 
-function renderPanel(deviceId: string = 'dev-1') {
+function renderPanel(deviceId: string = "dev-1") {
   // Provide a fake ws shape that satisfies the prop type (we mock the hook so
   // the panel never touches the socket directly).
   const fakeWs = { readyState: 1 } as unknown as WebSocket;
@@ -164,16 +177,16 @@ function renderPanel(deviceId: string = 'dev-1') {
 beforeAll(async () => {
   if (!i18next.isInitialized) {
     await i18next.use(initReactI18next).init({
-      lng: 'en',
-      fallbackLng: 'en',
-      ns: ['scenarios'],
-      defaultNS: 'scenarios',
+      lng: "en",
+      fallbackLng: "en",
+      ns: ["scenarios"],
+      defaultNS: "scenarios",
       resources: { en: { scenarios: scenariosEn } },
       interpolation: { escapeValue: false },
       react: { useSuspense: false },
     });
   } else {
-    await i18next.changeLanguage('en');
+    await i18next.changeLanguage("en");
   }
 });
 
@@ -200,8 +213,11 @@ function ensureStorageStubs(): void {
     };
   };
   try {
-    if (typeof localStorage === 'undefined' || typeof localStorage.getItem !== 'function') {
-      Object.defineProperty(globalThis, 'localStorage', {
+    if (
+      typeof localStorage === "undefined" ||
+      typeof localStorage.getItem !== "function"
+    ) {
+      Object.defineProperty(globalThis, "localStorage", {
         configurable: true,
         value: memoryStorage(),
       });
@@ -210,8 +226,11 @@ function ensureStorageStubs(): void {
     /* ignore */
   }
   try {
-    if (typeof sessionStorage === 'undefined' || typeof sessionStorage.getItem !== 'function') {
-      Object.defineProperty(globalThis, 'sessionStorage', {
+    if (
+      typeof sessionStorage === "undefined" ||
+      typeof sessionStorage.getItem !== "function"
+    ) {
+      Object.defineProperty(globalThis, "sessionStorage", {
         configurable: true,
         value: memoryStorage(),
       });
@@ -228,7 +247,10 @@ beforeEach(() => {
   mockedScenariosIndex.mockResolvedValue([makeScenario()]);
   mockedScenariosShow.mockResolvedValue(makeScenario());
   mockedPolicyPreview.mockResolvedValue(makePolicyPreview());
-  mockedRunsIndex.mockResolvedValue({ runs: [makeRun('r1'), makeRun('r2')], total: 2 });
+  mockedRunsIndex.mockResolvedValue({
+    runs: [makeRun("r1"), makeRun("r2")],
+    total: 2,
+  });
   mockDispatch.mockReset();
   capturedOnBroadcast = null;
 });
@@ -242,215 +264,213 @@ afterEach(() => {
 // Tests
 // -----------------------------------------------------------------------------
 
-describe('ScenariosPanel — segmented control & sessionStorage', () => {
-  it('renders SegmentedControl in library mode', async () => {
+describe("ScenariosPanel — segmented control & sessionStorage", () => {
+  it("renders SegmentedControl in library mode", async () => {
     renderPanel();
     await waitFor(() => {
-      expect(screen.getByTestId('scenarios-panel-segment')).toBeDefined();
+      expect(screen.getByTestId("scenarios-panel-segment")).toBeDefined();
     });
   });
 
-  it('renders SegmentedControl in history mode', async () => {
+  it("renders SegmentedControl in history mode", async () => {
     renderPanel();
     await waitFor(() => {
-      expect(screen.getByTestId('scenarios-panel-segment')).toBeDefined();
+      expect(screen.getByTestId("scenarios-panel-segment")).toBeDefined();
     });
-    fireEvent.click(screen.getByTestId('scenarios-panel-segment-history'));
+    fireEvent.click(screen.getByTestId("scenarios-panel-segment-history"));
     await waitFor(() => {
-      expect(screen.getByTestId('scenarios-history')).toBeDefined();
+      expect(screen.getByTestId("scenarios-history")).toBeDefined();
     });
     // Segmented control still visible in history mode
-    expect(screen.getByTestId('scenarios-panel-segment')).toBeDefined();
+    expect(screen.getByTestId("scenarios-panel-segment")).toBeDefined();
   });
 
-  it('hides SegmentedControl in editor mode', async () => {
+  it("hides SegmentedControl in editor mode", async () => {
     renderPanel();
     await waitFor(() => {
-      expect(screen.getByTestId('scenarios-panel-segment')).toBeDefined();
+      expect(screen.getByTestId("scenarios-panel-segment")).toBeDefined();
     });
     // Click + New scenario to enter editor mode
-    fireEvent.click(screen.getByTestId('scenarios-new-button'));
+    fireEvent.click(screen.getByTestId("scenarios-new-button"));
     await waitFor(() => {
-      expect(screen.queryByTestId('scenarios-panel-segment')).toBeNull();
+      expect(screen.queryByTestId("scenarios-panel-segment")).toBeNull();
     });
   });
 
-  it('persists segment to sessionStorage on change', async () => {
+  it("persists segment to sessionStorage on change", async () => {
     renderPanel();
     await waitFor(() => {
-      expect(screen.getByTestId('scenarios-panel-segment')).toBeDefined();
+      expect(screen.getByTestId("scenarios-panel-segment")).toBeDefined();
     });
-    fireEvent.click(screen.getByTestId('scenarios-panel-segment-history'));
+    fireEvent.click(screen.getByTestId("scenarios-panel-segment-history"));
     await waitFor(() => {
-      expect(sessionStorage.getItem('scenarios_panel_segment')).toBe('history');
+      expect(sessionStorage.getItem("scenarios_panel_segment")).toBe("history");
     });
   });
 
-  it('rehydrates segment from sessionStorage on mount', async () => {
-    sessionStorage.setItem('scenarios_panel_segment', 'history');
+  it("rehydrates segment from sessionStorage on mount", async () => {
+    sessionStorage.setItem("scenarios_panel_segment", "history");
     renderPanel();
     await waitFor(() => {
-      expect(screen.getByTestId('scenarios-history')).toBeDefined();
+      expect(screen.getByTestId("scenarios-history")).toBeDefined();
     });
   });
 });
 
-describe('ScenariosPanel — launch flow (library → modal → run)', () => {
-  it('opens PolicyPreviewModal when [▶ Run] is clicked', async () => {
+describe("ScenariosPanel — launch flow (library → modal → run)", () => {
+  it("opens PolicyPreviewModal when [▶ Run] is clicked", async () => {
     renderPanel();
     await waitFor(() => {
-      expect(screen.getByTestId('scenarios-list')).toBeDefined();
+      expect(screen.getByTestId("scenarios-list")).toBeDefined();
     });
     // Click the row's run button
-    const runBtn = screen.getByTestId('scenarios-row-run');
+    const runBtn = screen.getByTestId("scenarios-row-run");
     fireEvent.click(runBtn);
     // Modal should open (in loading state initially)
     await waitFor(() => {
-      expect(screen.getByTestId('policy-preview-backdrop')).toBeDefined();
+      expect(screen.getByTestId("policy-preview-backdrop")).toBeDefined();
     });
   });
 
-  it('fetches policyPreview after [▶ Run] click using the row scenario', async () => {
+  it("fetches policyPreview after [▶ Run] click using the row scenario", async () => {
     renderPanel();
     await waitFor(() => {
-      expect(screen.getByTestId('scenarios-list')).toBeDefined();
+      expect(screen.getByTestId("scenarios-list")).toBeDefined();
     });
-    fireEvent.click(screen.getByTestId('scenarios-row-run'));
+    fireEvent.click(screen.getByTestId("scenarios-row-run"));
     await waitFor(() => {
-      expect(mockedPolicyPreview).toHaveBeenCalledWith('scen-1', 'dev-1');
+      expect(mockedPolicyPreview).toHaveBeenCalledWith("scen-1", "dev-1");
     });
     expect(mockedScenariosShow).not.toHaveBeenCalled();
   });
 
-  it('renders the per-step rows from the policyPreview response', async () => {
+  it("renders the per-step rows from the policyPreview response", async () => {
     renderPanel();
     await waitFor(() => {
-      expect(screen.getByTestId('scenarios-list')).toBeDefined();
+      expect(screen.getByTestId("scenarios-list")).toBeDefined();
     });
-    fireEvent.click(screen.getByTestId('scenarios-row-run'));
+    fireEvent.click(screen.getByTestId("scenarios-row-run"));
     await waitFor(() => {
-      expect(screen.getByTestId('policy-preview-step-0')).toBeDefined();
+      expect(screen.getByTestId("policy-preview-step-0")).toBeDefined();
     });
-    expect(screen.getByTestId('policy-preview-step-1')).toBeDefined();
+    expect(screen.getByTestId("policy-preview-step-1")).toBeDefined();
   });
 
-  it('dispatches start_run via the channel hook on modal [Run all]', async () => {
+  it("dispatches start_run via the channel hook on modal [Run all]", async () => {
     renderPanel();
     await waitFor(() => {
-      expect(screen.getByTestId('scenarios-list')).toBeDefined();
+      expect(screen.getByTestId("scenarios-list")).toBeDefined();
     });
-    fireEvent.click(screen.getByTestId('scenarios-row-run'));
+    fireEvent.click(screen.getByTestId("scenarios-row-run"));
     await waitFor(() => {
-      expect(screen.getByTestId('policy-preview-run-all')).toBeDefined();
+      expect(screen.getByTestId("policy-preview-run-all")).toBeDefined();
     });
-    fireEvent.click(screen.getByTestId('policy-preview-run-all'));
+    fireEvent.click(screen.getByTestId("policy-preview-run-all"));
     await waitFor(() => {
       expect(mockDispatch).toHaveBeenCalledWith(
-        'start_run',
-        expect.objectContaining({ scenario_id: 'scen-1' }),
+        "start_run",
+        expect.objectContaining({ scenario_id: "scen-1" }),
       );
     });
   });
 
-  it('transitions to Run-mode after [Run all] and closes the modal', async () => {
+  it("transitions to Run-mode after [Run all] and closes the modal", async () => {
     renderPanel();
     await waitFor(() => {
-      expect(screen.getByTestId('scenarios-list')).toBeDefined();
+      expect(screen.getByTestId("scenarios-list")).toBeDefined();
     });
-    fireEvent.click(screen.getByTestId('scenarios-row-run'));
+    fireEvent.click(screen.getByTestId("scenarios-row-run"));
     await waitFor(() => {
-      expect(screen.getByTestId('policy-preview-run-all')).toBeDefined();
+      expect(screen.getByTestId("policy-preview-run-all")).toBeDefined();
     });
-    fireEvent.click(screen.getByTestId('policy-preview-run-all'));
+    fireEvent.click(screen.getByTestId("policy-preview-run-all"));
     await waitFor(() => {
-      expect(screen.queryByTestId('policy-preview-backdrop')).toBeNull();
+      expect(screen.queryByTestId("policy-preview-backdrop")).toBeNull();
     });
     await waitFor(() => {
-      expect(screen.getByTestId('scenarios-run-mode')).toBeDefined();
+      expect(screen.getByTestId("scenarios-run-mode")).toBeDefined();
     });
   });
 
-  it('closes the modal on [Dismiss] without transitioning mode', async () => {
+  it("closes the modal on [Dismiss] without transitioning mode", async () => {
     renderPanel();
     await waitFor(() => {
-      expect(screen.getByTestId('scenarios-list')).toBeDefined();
+      expect(screen.getByTestId("scenarios-list")).toBeDefined();
     });
-    fireEvent.click(screen.getByTestId('scenarios-row-run'));
+    fireEvent.click(screen.getByTestId("scenarios-row-run"));
     await waitFor(() => {
-      expect(screen.getByTestId('policy-preview-dismiss')).toBeDefined();
+      expect(screen.getByTestId("policy-preview-dismiss")).toBeDefined();
     });
-    fireEvent.click(screen.getByTestId('policy-preview-dismiss'));
+    fireEvent.click(screen.getByTestId("policy-preview-dismiss"));
     await waitFor(() => {
-      expect(screen.queryByTestId('policy-preview-backdrop')).toBeNull();
+      expect(screen.queryByTestId("policy-preview-backdrop")).toBeNull();
     });
     // Mode still library — list is visible
-    expect(screen.getByTestId('scenarios-list')).toBeDefined();
+    expect(screen.getByTestId("scenarios-list")).toBeDefined();
   });
 });
 
-describe('ScenariosPanel — single-in-flight Toast (D-22-11)', () => {
-  it('surfaces run_in_progress as a Toast and stays in modal', async () => {
+describe("ScenariosPanel — single-in-flight Toast (D-22-11)", () => {
+  it("surfaces run_in_progress as a Toast and stays in modal", async () => {
     renderPanel();
     await waitFor(() => {
-      expect(screen.getByTestId('scenarios-list')).toBeDefined();
+      expect(screen.getByTestId("scenarios-list")).toBeDefined();
     });
-    fireEvent.click(screen.getByTestId('scenarios-row-run'));
+    fireEvent.click(screen.getByTestId("scenarios-row-run"));
     await waitFor(() => {
-      expect(screen.getByTestId('policy-preview-run-all')).toBeDefined();
+      expect(screen.getByTestId("policy-preview-run-all")).toBeDefined();
     });
     // Simulate the backend transmitting a single-in-flight rejection.
     expect(capturedOnBroadcast).not.toBeNull();
     capturedOnBroadcast!({
-      type: 'error',
-      message: 'run_in_progress',
+      type: "error",
+      message: "run_in_progress",
     });
     // Toast surfaces with the inProgressToast copy.
     await waitFor(() => {
       // The Toast portal renders the message text; the EN locale string
       // includes the deviceName: "A run is already in progress on dev-1."
-      expect(
-        screen.getByText(/already in progress/i),
-      ).toBeDefined();
+      expect(screen.getByText(/already in progress/i)).toBeDefined();
     });
   });
 });
 
-describe('ScenariosPanel — history list & detail navigation', () => {
-  it('transitions to history_detail when a History row is clicked', async () => {
-    sessionStorage.setItem('scenarios_panel_segment', 'history');
+describe("ScenariosPanel — history list & detail navigation", () => {
+  it("transitions to history_detail when a History row is clicked", async () => {
+    sessionStorage.setItem("scenarios_panel_segment", "history");
     renderPanel();
     await waitFor(() => {
-      expect(screen.getByTestId('history-row-r1')).toBeDefined();
+      expect(screen.getByTestId("history-row-r1")).toBeDefined();
     });
     // Mock show for the detail fetch
     vi.mocked(scenarioRunsService.show).mockResolvedValue({
-      ...makeRun('r1'),
+      ...makeRun("r1"),
       steps: [],
     });
-    fireEvent.click(screen.getByTestId('history-row-r1'));
+    fireEvent.click(screen.getByTestId("history-row-r1"));
     await waitFor(() => {
-      expect(screen.getByTestId('scenarios-history-detail')).toBeDefined();
+      expect(screen.getByTestId("scenarios-history-detail")).toBeDefined();
     });
   });
 
-  it('returns to history when HistoryDetail [← History] is called', async () => {
-    sessionStorage.setItem('scenarios_panel_segment', 'history');
+  it("returns to history when HistoryDetail [← History] is called", async () => {
+    sessionStorage.setItem("scenarios_panel_segment", "history");
     renderPanel();
     await waitFor(() => {
-      expect(screen.getByTestId('history-row-r1')).toBeDefined();
+      expect(screen.getByTestId("history-row-r1")).toBeDefined();
     });
     vi.mocked(scenarioRunsService.show).mockResolvedValue({
-      ...makeRun('r1'),
+      ...makeRun("r1"),
       steps: [],
     });
-    fireEvent.click(screen.getByTestId('history-row-r1'));
+    fireEvent.click(screen.getByTestId("history-row-r1"));
     await waitFor(() => {
-      expect(screen.getByTestId('history-detail-back')).toBeDefined();
+      expect(screen.getByTestId("history-detail-back")).toBeDefined();
     });
-    fireEvent.click(screen.getByTestId('history-detail-back'));
+    fireEvent.click(screen.getByTestId("history-detail-back"));
     await waitFor(() => {
-      expect(screen.getByTestId('scenarios-history')).toBeDefined();
+      expect(screen.getByTestId("scenarios-history")).toBeDefined();
     });
-    expect(screen.queryByTestId('scenarios-history-detail')).toBeNull();
+    expect(screen.queryByTestId("scenarios-history-detail")).toBeNull();
   });
 });

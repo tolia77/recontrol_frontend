@@ -1,4 +1,4 @@
-import type { KeyboardEvent } from 'react';
+import type { KeyboardEvent } from "react";
 
 /**
  * SegmentedControl — generic pill-group view-switcher primitive.
@@ -20,29 +20,32 @@ export interface SegmentedControlProps<T extends string> {
   value: T;
   options: ReadonlyArray<SegmentedControlOption<T>>;
   onChange: (next: T) => void;
-  'data-testid'?: string;
+  "data-testid"?: string;
   className?: string;
   ariaLabel?: string;
 }
 
-const CONTAINER_CLASS = 'flex bg-gray-100 rounded-lg p-1 gap-1';
+const CONTAINER_CLASS = "flex bg-gray-100 rounded-lg p-1 gap-1";
 const PILL_BASE_CLASS =
-  'px-3 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20';
-const PILL_ACTIVE_CLASS = 'bg-accent text-white';
-const PILL_INACTIVE_CLASS = 'bg-transparent text-primary hover:bg-gray-100';
+  "px-3 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20";
+const PILL_ACTIVE_CLASS = "bg-accent text-white";
+const PILL_INACTIVE_CLASS = "bg-transparent text-primary hover:bg-gray-100";
 
-export function SegmentedControl<T extends string>({
+function SegmentedControl<T extends string>({
   value,
   options,
   onChange,
-  className = '',
+  className = "",
   ariaLabel,
   ...rest
 }: SegmentedControlProps<T>) {
-  const rootTestId = rest['data-testid'];
+  const rootTestId = rest["data-testid"];
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLButtonElement>, optionValue: T) => {
-    if (e.key === 'Enter' || e.key === ' ') {
+  const handleKeyDown = (
+    e: KeyboardEvent<HTMLButtonElement>,
+    optionValue: T,
+  ) => {
+    if (e.key === "Enter" || e.key === " ") {
       // Space scrolls by default; prevent that for keyboard activation.
       e.preventDefault();
       onChange(optionValue);
@@ -64,7 +67,9 @@ export function SegmentedControl<T extends string>({
             type="button"
             role="tab"
             aria-selected={isActive}
-            data-testid={rootTestId ? `${rootTestId}-${option.value}` : undefined}
+            data-testid={
+              rootTestId ? `${rootTestId}-${option.value}` : undefined
+            }
             className={`${PILL_BASE_CLASS} ${isActive ? PILL_ACTIVE_CLASS : PILL_INACTIVE_CLASS}`}
             onClick={() => onChange(option.value)}
             onKeyDown={(e) => handleKeyDown(e, option.value)}

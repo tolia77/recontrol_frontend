@@ -1,5 +1,5 @@
-import type { FC } from 'react';
-import { Streamdown } from 'streamdown';
+import type { FC } from "react";
+import { Streamdown } from "streamdown";
 
 /**
  * Full-width assistant message rendered through Streamdown.
@@ -20,14 +20,19 @@ export interface AssistantMessageProps {
   isStreaming: boolean;
 }
 
-export const AssistantMessage: FC<AssistantMessageProps> = ({ markdown, isStreaming }) => (
+const AssistantMessage: FC<AssistantMessageProps> = ({
+  markdown,
+  isStreaming,
+}) => (
   <div className="prose prose-sm max-w-none">
     <Streamdown>{markdown}</Streamdown>
     {isStreaming && (
       <span
-        className="inline-block w-2 h-4 ml-1 align-middle bg-darkgray animate-pulse"
+        className="bg-darkgray ml-1 inline-block h-4 w-2 animate-pulse align-middle"
         aria-hidden="true"
       />
     )}
   </div>
 );
+
+export default AssistantMessage;

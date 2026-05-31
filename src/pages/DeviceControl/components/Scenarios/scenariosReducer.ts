@@ -28,37 +28,37 @@ import {
   transcriptReducer,
   initialTranscriptState,
   type TranscriptState,
-} from '../Assistant/transcriptReducer';
-import type { AssistantBroadcast } from '../../hooks/useAssistantChannel';
-import type { ScenarioRunBroadcast } from '../../hooks/useScenarioRunChannel';
+} from "src/pages/DeviceControl/components/Assistant/transcriptReducer";
+import type { AssistantBroadcast } from "src/pages/DeviceControl/hooks/realtime/useAssistantChannel";
+import type { ScenarioRunBroadcast } from "src/pages/DeviceControl/hooks/realtime/useScenarioRunChannel";
 
 // ----------------------------------------------------------------------------
 // Types
 // ----------------------------------------------------------------------------
 
 export type ActiveRunStatus =
-  | 'idle'
-  | 'pre_approving'
-  | 'running'
-  | 'stopping'
-  | 'completed'
-  | 'failed'
-  | 'user_stopped'
-  | 'policy_deny'
-  | 'access_revoked'
-  | 'tab_closed'
-  | 'abandoned'
-  | 'error';
+  | "idle"
+  | "pre_approving"
+  | "running"
+  | "stopping"
+  | "completed"
+  | "failed"
+  | "user_stopped"
+  | "policy_deny"
+  | "access_revoked"
+  | "tab_closed"
+  | "abandoned"
+  | "error";
 
 const TERMINAL_STATUSES: ReadonlyArray<ActiveRunStatus> = [
-  'completed',
-  'failed',
-  'user_stopped',
-  'policy_deny',
-  'access_revoked',
-  'tab_closed',
-  'abandoned',
-  'error',
+  "completed",
+  "failed",
+  "user_stopped",
+  "policy_deny",
+  "access_revoked",
+  "tab_closed",
+  "abandoned",
+  "error",
 ];
 
 function isTerminal(status: ActiveRunStatus): boolean {
@@ -78,7 +78,7 @@ export interface ActiveRun {
   transcript: TranscriptState;
 }
 
-export type ScenariosSegment = 'library' | 'history' | 'ai';
+export type ScenariosSegment = "library" | "history" | "ai";
 
 export interface ScenariosState {
   activeRun: ActiveRun | null;
@@ -87,13 +87,13 @@ export interface ScenariosState {
 
 export const initialScenariosState: ScenariosState = {
   activeRun: null,
-  segment: 'library',
+  segment: "library",
 };
 
 export type ScenariosAction =
-  | { type: 'segment_set'; segment: ScenariosSegment }
+  | { type: "segment_set"; segment: ScenariosSegment }
   | {
-      type: 'run_launch';
+      type: "run_launch";
       runId: string;
       scenarioId: string;
       scenarioName: string;
@@ -101,9 +101,9 @@ export type ScenariosAction =
       stepCount: number;
       startedAt?: number;
     }
-  | { type: 'broadcast'; broadcast: ScenarioRunBroadcast }
-  | { type: 'run_stop_requested' }
-  | { type: 'run_clear' };
+  | { type: "broadcast"; broadcast: ScenarioRunBroadcast }
+  | { type: "run_stop_requested" }
+  | { type: "run_clear" };
 
 // ----------------------------------------------------------------------------
 // mapStopReasonToStatus — exported so the test can target it directly.
@@ -111,24 +111,24 @@ export type ScenariosAction =
 
 export function mapStopReasonToStatus(reason: string): ActiveRunStatus {
   switch (reason) {
-    case 'completed':
-      return 'completed';
-    case 'failed':
-      return 'failed';
-    case 'user_stopped':
-      return 'user_stopped';
-    case 'policy_deny':
-      return 'policy_deny';
-    case 'access_revoked':
-      return 'access_revoked';
-    case 'tab_closed':
-      return 'tab_closed';
-    case 'abandoned':
-      return 'abandoned';
-    case 'error':
-      return 'error';
+    case "completed":
+      return "completed";
+    case "failed":
+      return "failed";
+    case "user_stopped":
+      return "user_stopped";
+    case "policy_deny":
+      return "policy_deny";
+    case "access_revoked":
+      return "access_revoked";
+    case "tab_closed":
+      return "tab_closed";
+    case "abandoned":
+      return "abandoned";
+    case "error":
+      return "error";
     default:
-      return 'error';
+      return "error";
   }
 }
 
@@ -154,7 +154,7 @@ function delegateToTranscript(
 ): ScenariosState {
   if (!state.activeRun) return state;
   const nextTranscript = transcriptReducer(state.activeRun.transcript, {
-    type: 'broadcast',
+    type: "broadcast",
     broadcast: toAssistantBroadcast(msg),
   });
   if (nextTranscript === state.activeRun.transcript) return state;
@@ -169,12 +169,12 @@ export function scenariosReducer(
   action: ScenariosAction,
 ): ScenariosState {
   switch (action.type) {
-    case 'segment_set': {
+    case "segment_set": {
       if (state.segment === action.segment) return state;
       return { ...state, segment: action.segment };
     }
 
-    case 'run_launch': {
+    case "run_launch": {
       const run: ActiveRun = {
         runId: action.runId,
         scenarioId: action.scenarioId,
@@ -182,7 +182,7 @@ export function scenariosReducer(
         deviceId: action.deviceId,
         startedAt: action.startedAt ?? Date.now(),
         stepCount: action.stepCount,
-        status: 'running',
+        status: "running",
         skipped: [],
         // Initialize transcript.sessionToken to runId so the inner reducer's
         // STREAM-04 filter passes our broadcasts (Pitfall 3). The runner emits
@@ -192,7 +192,7 @@ export function scenariosReducer(
       return { ...state, activeRun: run };
     }
 
-    case 'broadcast': {
+    case "broadcast": {
       const msg = action.broadcast;
       const activeRun = state.activeRun;
 
@@ -209,16 +209,16 @@ export function scenariosReducer(
       // transcriptReducer's session_token check.
       if (
         activeRun &&
-        msg.type !== 'run_started' &&
-        'run_id' in msg &&
-        typeof msg.run_id === 'string' &&
+        msg.type !== "run_started" &&
+        "run_id" in msg &&
+        typeof msg.run_id === "string" &&
         msg.run_id !== activeRun.runId
       ) {
         return state;
       }
 
       switch (msg.type) {
-        case 'run_started': {
+        case "run_started": {
           // If we have an activeRun that matches the broadcast's run_id, this
           // is the in-band marker after run_launch already set things up —
           // no-op. Otherwise initialize activeRun from the broadcast (used by
@@ -227,18 +227,18 @@ export function scenariosReducer(
           const run: ActiveRun = {
             runId: msg.run_id,
             scenarioId: msg.scenario_id,
-            scenarioName: '',
-            deviceId: '',
+            scenarioName: "",
+            deviceId: "",
             startedAt: Date.parse(msg.started_at) || Date.now(),
             stepCount: msg.step_count,
-            status: 'running',
+            status: "running",
             skipped: [],
             transcript: { ...initialTranscriptState, sessionToken: msg.run_id },
           };
           return { ...state, activeRun: run };
         }
 
-        case 'scenario_step_skipped': {
+        case "scenario_step_skipped": {
           if (!activeRun) return state;
           return {
             ...state,
@@ -252,13 +252,13 @@ export function scenariosReducer(
           };
         }
 
-        case 'tool_call_start':
-        case 'tool_call_result': {
+        case "tool_call_start":
+        case "tool_call_result": {
           // Delegate to transcriptReducer for the live-step transcript sub-state.
           return delegateToTranscript(state, msg);
         }
 
-        case 'done': {
+        case "done": {
           if (!activeRun) return state;
           // Idempotent terminal — once we hit a terminal status, ignore
           // further done broadcasts.
@@ -278,7 +278,7 @@ export function scenariosReducer(
           };
         }
 
-        case 'error': {
+        case "error": {
           // Single-in-flight rejection (no run_id, no seq) is consumed by the
           // PolicyPreviewModal / Toast layer directly — the reducer only
           // tracks errors that bear on the active run.
@@ -286,7 +286,7 @@ export function scenariosReducer(
           if (isTerminal(activeRun.status)) return state;
           return {
             ...state,
-            activeRun: { ...activeRun, status: 'error' },
+            activeRun: { ...activeRun, status: "error" },
           };
         }
 
@@ -296,16 +296,16 @@ export function scenariosReducer(
       }
     }
 
-    case 'run_stop_requested': {
+    case "run_stop_requested": {
       if (!state.activeRun) return state;
-      if (state.activeRun.status !== 'running') return state;
+      if (state.activeRun.status !== "running") return state;
       return {
         ...state,
-        activeRun: { ...state.activeRun, status: 'stopping' },
+        activeRun: { ...state.activeRun, status: "stopping" },
       };
     }
 
-    case 'run_clear': {
+    case "run_clear": {
       if (state.activeRun === null) return state;
       return { ...state, activeRun: null };
     }

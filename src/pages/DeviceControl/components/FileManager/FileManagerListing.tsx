@@ -1,17 +1,17 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { KeyboardEvent, MouseEvent } from 'react';
-import { useTranslation } from 'react-i18next';
-import type { TFunction } from 'i18next';
-import { useVirtualizer } from '@tanstack/react-virtual';
-import type { FileEntry, FilesListResponse } from '../../services/files';
-import { FilesChannelError } from '../../services/files';
-import { useToast } from 'src/components/ui';
-import type { UseFilesChannel } from '../../hooks/useFilesChannel';
-import type { useFileManagerSelection } from '../../hooks/useFileManagerSelection';
-import type { SortColumn, SortState } from './types';
-import { ROW_HEIGHT_PX, FileManagerRow } from './FileManagerRow';
-import { FolderIcon } from './icons';
-import { compareEntries } from './utils/sort';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { KeyboardEvent, MouseEvent } from "react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import type { FileEntry, FilesListResponse } from "src/pages/DeviceControl/services/files/filesProtocol.generated";
+import { FilesChannelError } from "src/pages/DeviceControl/services/files/FilesChannelClient";
+import { useToast } from "src/components/ui";
+import type { UseFilesChannel } from "src/pages/DeviceControl/hooks/realtime/useFilesChannel";
+import type { useFileManagerSelection } from "src/pages/DeviceControl/hooks/state/useFileManagerSelection";
+import type { SortColumn, SortState } from "./types";
+import FileManagerRow, { ROW_HEIGHT_PX } from "./FileManagerRow";
+import { FolderIcon } from "./icons";
+import { compareEntries } from "./utils/sort";
 
 /**
  * Threshold for "second click on already-selected-and-focused row arms rename"
@@ -65,30 +65,30 @@ interface FileManagerListingProps {
 }
 
 type ListingState =
-  | { kind: 'idle' }
-  | { kind: 'loading' }
-  | { kind: 'error'; message: string }
-  | { kind: 'ready'; entries: FileEntry[] };
+  | { kind: "idle" }
+  | { kind: "loading" }
+  | { kind: "error"; message: string }
+  | { kind: "ready"; entries: FileEntry[] };
 
 function errorMessageFor(
   err: FilesChannelError,
-  t: TFunction<'fileManager'>,
+  t: TFunction<"fileManager">,
 ): string {
   switch (err.info.code) {
-    case 'ALLOWLIST_VIOLATION':
-      return t('errors.listing.allowlistViolation');
-    case 'NOT_FOUND':
-      return t('errors.listing.notFound');
-    case 'PERMISSION_DENIED':
-      return t('errors.listing.permissionDenied');
-    case 'TIMEOUT':
-      return t('errors.listing.timeout');
-    case 'CHANNEL_NOT_OPEN':
-      return t('errors.listing.channelNotOpen');
-    case 'DISPOSED':
-      return t('errors.listing.disposed');
+    case "ALLOWLIST_VIOLATION":
+      return t("errors.listing.allowlistViolation");
+    case "NOT_FOUND":
+      return t("errors.listing.notFound");
+    case "PERMISSION_DENIED":
+      return t("errors.listing.permissionDenied");
+    case "TIMEOUT":
+      return t("errors.listing.timeout");
+    case "CHANNEL_NOT_OPEN":
+      return t("errors.listing.channelNotOpen");
+    case "DISPOSED":
+      return t("errors.listing.disposed");
     default:
-      return t('errors.listing.couldNotLoadFolder');
+      return t("errors.listing.couldNotLoadFolder");
   }
 }
 
@@ -109,7 +109,7 @@ function errorMessageFor(
  *     500ms after the previous click on it, arms inline rename. A click within
  *     500ms is left to React's onDoubleClick to handle as activation.
  */
-export function FileManagerListing({
+function FileManagerListing({
   channel,
   path,
   sort,
@@ -129,8 +129,8 @@ export function FileManagerListing({
   onEmptyContextMenu,
   onRenameArm,
 }: FileManagerListingProps) {
-  const { t } = useTranslation('fileManager');
-  const [state, setState] = useState<ListingState>({ kind: 'idle' });
+  const { t } = useTranslation("fileManager");
+  const [state, setState] = useState<ListingState>({ kind: "idle" });
   const toast = useToast();
 
   // Monotonic request id; drop any response whose id is not the current max.
@@ -144,7 +144,7 @@ export function FileManagerListing({
   // Reset when the channel closes entirely.
   useEffect(() => {
     if (!channel.request) {
-      setState({ kind: 'idle' });
+      setState({ kind: "idle" });
     }
   }, [channel.request]);
 
@@ -153,23 +153,23 @@ export function FileManagerListing({
   useEffect(() => {
     const request = channel.request;
     if (!request || !path) {
-      setState({ kind: 'idle' });
+      setState({ kind: "idle" });
       return;
     }
     const myId = ++requestIdRef.current;
-    setState({ kind: 'loading' });
-    request<{ path: string }, FilesListResponse>('files.list', { path })
+    setState({ kind: "loading" });
+    request<{ path: string }, FilesListResponse>("files.list", { path })
       .then((res) => {
         if (myId !== requestIdRef.current) return; // stale
-        setState({ kind: 'ready', entries: res.entries });
+        setState({ kind: "ready", entries: res.entries });
       })
       .catch((err: unknown) => {
         if (myId !== requestIdRef.current) return; // stale
         const message =
           err instanceof FilesChannelError
             ? errorMessageFor(err, t)
-            : t('errors.listing.unexpectedLoadingFolder');
-        setState({ kind: 'error', message });
+            : t("errors.listing.unexpectedLoadingFolder");
+        setState({ kind: "error", message });
         toast.error(message);
       });
   }, [channel.request, path, refreshKey, toast, t]);
@@ -177,7 +177,7 @@ export function FileManagerListing({
   // Apply the show-hidden filter BEFORE sorting (NAV-14; isHidden guaranteed
   // by plan 10-01).
   const visibleEntries = useMemo<FileEntry[]>(() => {
-    if (state.kind !== 'ready') return [];
+    if (state.kind !== "ready") return [];
     const filtered = showHidden
       ? state.entries
       : state.entries.filter((e) => !e.isHidden);
@@ -249,13 +249,13 @@ export function FileManagerListing({
 
   const handleNewFolderKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') {
+      if (e.key === "Enter") {
         e.preventDefault();
         e.stopPropagation();
         onNewFolderCommit(e.currentTarget.value);
         return;
       }
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         e.preventDefault();
         e.stopPropagation();
         onNewFolderCancel();
@@ -280,20 +280,24 @@ export function FileManagerListing({
   const sortIndicator = (col: SortColumn) => {
     if (sort.column !== col) return null;
     return (
-      <span className="text-xs ml-1">
-        {sort.direction === 'asc' ? '▲' : '▼'}
+      <span className="ml-1 text-xs">
+        {sort.direction === "asc" ? "▲" : "▼"}
       </span>
     );
   };
 
-  const renderHeaderButton = (label: string, col: SortColumn, align: 'left' | 'right' = 'left') => (
+  const renderHeaderButton = (
+    label: string,
+    col: SortColumn,
+    align: "left" | "right" = "left",
+  ) => (
     <button
       type="button"
       onClick={() => onToggleSort(col)}
       className={[
-        'flex items-center gap-1 px-3 h-full select-none cursor-pointer hover:bg-tertiary/60 transition-colors',
-        align === 'right' ? 'justify-end' : 'justify-start',
-      ].join(' ')}
+        "hover:bg-tertiary/60 flex h-full cursor-pointer items-center gap-1 px-3 transition-colors select-none",
+        align === "right" ? "justify-end" : "justify-start",
+      ].join(" ")}
     >
       <span>{label}</span>
       {sortIndicator(col)}
@@ -311,17 +315,17 @@ export function FileManagerListing({
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0">
+    <div className="flex min-h-0 flex-1 flex-col">
       {/* Sticky 4-column header */}
       <div
         role="row"
-        className="grid grid-cols-[1fr_120px_180px_140px] bg-background border-b border-lightgray font-semibold text-sm text-text flex-shrink-0"
+        className="bg-background border-lightgray text-text grid flex-shrink-0 grid-cols-[1fr_120px_180px_140px] border-b text-sm font-semibold"
         style={{ height: `${ROW_HEIGHT_PX}px` }}
       >
-        {renderHeaderButton(t('listing.columnName'), 'name', 'left')}
-        {renderHeaderButton(t('listing.columnSize'), 'size', 'right')}
-        {renderHeaderButton(t('listing.columnModified'), 'modified', 'left')}
-        {renderHeaderButton(t('listing.columnType'), 'type', 'left')}
+        {renderHeaderButton(t("listing.columnName"), "name", "left")}
+        {renderHeaderButton(t("listing.columnSize"), "size", "right")}
+        {renderHeaderButton(t("listing.columnModified"), "modified", "left")}
+        {renderHeaderButton(t("listing.columnType"), "type", "left")}
       </div>
 
       {/* New-folder pseudo-row, rendered ABOVE the scroll container so it's
@@ -329,21 +333,21 @@ export function FileManagerListing({
       {newFolderPending && (
         <div
           role="row"
-          className="grid grid-cols-[1fr_120px_180px_140px] items-center px-3 text-sm border-b border-lightgray/50 bg-tertiary/30 flex-shrink-0"
+          className="border-lightgray/50 bg-tertiary/30 grid flex-shrink-0 grid-cols-[1fr_120px_180px_140px] items-center border-b px-3 text-sm"
           style={{ height: `${ROW_HEIGHT_PX}px` }}
           onContextMenu={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center min-w-0">
-            <FolderIcon className="w-4 h-4 mr-2 flex-shrink-0 text-primary" />
+          <div className="flex min-w-0 items-center">
+            <FolderIcon className="text-primary mr-2 h-4 w-4 flex-shrink-0" />
             <input
               ref={newFolderInputRef}
               type="text"
-              defaultValue={t('listing.defaultNewFolderName')}
+              defaultValue={t("listing.defaultNewFolderName")}
               onKeyDown={handleNewFolderKeyDown}
               onBlur={onNewFolderCancel}
               onClick={(e) => e.stopPropagation()}
               onDoubleClick={(e) => e.stopPropagation()}
-              className="flex-1 min-w-0 bg-background text-text border border-accent rounded px-1 py-0.5 outline-none text-sm"
+              className="bg-background text-text border-accent min-w-0 flex-1 rounded border px-1 py-0.5 text-sm outline-none"
             />
           </div>
           <div />
@@ -354,26 +358,35 @@ export function FileManagerListing({
 
       <div
         ref={parentRef}
-        className="flex-1 overflow-auto min-h-0"
+        className="min-h-0 flex-1 overflow-auto"
         onContextMenu={handleScrollContainerContextMenu}
       >
-        {state.kind === 'idle' && !path && (
-          <div className="p-4 text-sm text-darkgray">
-            {t('listing.selectFolderPrompt')}
+        {state.kind === "idle" && !path && (
+          <div className="text-darkgray p-4 text-sm">
+            {t("listing.selectFolderPrompt")}
           </div>
         )}
-        {state.kind === 'loading' && (
-          <div className="p-4 text-sm text-darkgray">{t('listing.loading')}</div>
+        {state.kind === "loading" && (
+          <div className="text-darkgray p-4 text-sm">
+            {t("listing.loading")}
+          </div>
         )}
-        {state.kind === 'error' && (
-          <div className="p-4 text-sm text-error">{state.message}</div>
+        {state.kind === "error" && (
+          <div className="text-error p-4 text-sm">{state.message}</div>
         )}
-        {state.kind === 'ready' && visibleEntries.length === 0 && !newFolderPending && (
-          <div className="p-4 text-sm text-darkgray">{t('listing.emptyFolder')}</div>
-        )}
-        {state.kind === 'ready' && visibleEntries.length > 0 && (
+        {state.kind === "ready" &&
+          visibleEntries.length === 0 &&
+          !newFolderPending && (
+            <div className="text-darkgray p-4 text-sm">
+              {t("listing.emptyFolder")}
+            </div>
+          )}
+        {state.kind === "ready" && visibleEntries.length > 0 && (
           <div
-            style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}
+            style={{
+              height: `${virtualizer.getTotalSize()}px`,
+              position: "relative",
+            }}
           >
             {virtualizer.getVirtualItems().map((virtualRow) => {
               const entry = visibleEntries[virtualRow.index];
@@ -383,10 +396,10 @@ export function FileManagerListing({
                 <div
                   key={entry.path}
                   style={{
-                    position: 'absolute',
+                    position: "absolute",
                     top: 0,
                     left: 0,
-                    width: '100%',
+                    width: "100%",
                     transform: `translateY(${virtualRow.start}px)`,
                     height: `${ROW_HEIGHT_PX}px`,
                   }}
@@ -414,3 +427,5 @@ export function FileManagerListing({
     </div>
   );
 }
+
+export default FileManagerListing;

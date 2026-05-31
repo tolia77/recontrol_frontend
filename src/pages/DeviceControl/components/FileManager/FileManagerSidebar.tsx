@@ -1,7 +1,8 @@
-import type { FileEntry } from '../../services/files';
-import { LockIcon, FolderIcon } from './icons';
-import { isAncestor } from './utils/pathUtils';
-import { useTranslation } from 'react-i18next';
+import type { FileEntry } from "src/pages/DeviceControl/services/files/filesProtocol.generated";
+import { LockIcon, FolderIcon } from "./icons";
+import { isAncestor } from "./utils/pathUtils";
+import { useTranslation } from "react-i18next";
+import { ErrorState } from "src/components/ui";
 
 interface FileManagerSidebarProps {
   roots: FileEntry[] | null;
@@ -17,37 +18,35 @@ interface FileManagerSidebarProps {
  * noted as a follow-up (Research Pitfall 6) and can ship later without
  * changing this signature.
  */
-export function FileManagerSidebar({
+function FileManagerSidebar({
   roots,
   isLoading,
   error,
   currentPath,
   onSelectRoot,
 }: FileManagerSidebarProps) {
-  const { t } = useTranslation('fileManager');
+  const { t } = useTranslation("fileManager");
   return (
-    <aside className="w-60 border-r border-lightgray overflow-y-auto bg-background flex-shrink-0">
-      <div className="px-3 py-2 border-b border-lightgray">
-        <span className="text-xs text-darkgray uppercase font-bold tracking-wide">
-          {t('sidebar.sharedFolders')}
+    <aside className="border-lightgray bg-background w-60 flex-shrink-0 overflow-y-auto border-r">
+      <div className="border-lightgray border-b px-3 py-2">
+        <span className="text-darkgray text-xs font-bold tracking-wide uppercase">
+          {t("sidebar.sharedFolders")}
         </span>
       </div>
 
       {isLoading && (
-        <div className="p-2 space-y-2">
+        <div className="space-y-2 p-2">
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="h-8 rounded bg-lightgray/60 animate-pulse"
+              className="bg-lightgray/60 h-8 animate-pulse rounded"
               aria-hidden="true"
             />
           ))}
         </div>
       )}
 
-      {error && !isLoading && (
-        <div className="p-3 text-sm text-error">{error}</div>
-      )}
+      {error && !isLoading && <ErrorState message={error} />}
 
       {!isLoading && !error && roots && roots.length > 0 && (
         <ul className="py-1">
@@ -62,20 +61,20 @@ export function FileManagerSidebar({
                   onClick={() => onSelectRoot(root.path)}
                   title={root.path}
                   className={[
-                    'w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left cursor-pointer transition-colors',
+                    "flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-left text-sm transition-colors",
                     active
-                      ? 'bg-tertiary text-primary font-medium'
-                      : 'text-text hover:bg-tertiary/60',
-                  ].join(' ')}
+                      ? "bg-tertiary text-primary font-medium"
+                      : "text-text hover:bg-tertiary/60",
+                  ].join(" ")}
                 >
-                  <FolderIcon className="w-4 h-4 text-primary flex-shrink-0" />
-                  <span className="truncate flex-1">{root.name}</span>
+                  <FolderIcon className="text-primary h-4 w-4 flex-shrink-0" />
+                  <span className="flex-1 truncate">{root.name}</span>
                   <span
-                    title={t('sidebar.sharedByDesktopUser')}
-                    aria-label={t('sidebar.sharedByDesktopUser')}
+                    title={t("sidebar.sharedByDesktopUser")}
+                    aria-label={t("sidebar.sharedByDesktopUser")}
                     className="flex-shrink-0"
                   >
-                    <LockIcon className="w-3 h-3 text-darkgray flex-shrink-0" />
+                    <LockIcon className="text-darkgray h-3 w-3 flex-shrink-0" />
                   </span>
                 </button>
               </li>
@@ -86,3 +85,5 @@ export function FileManagerSidebar({
     </aside>
   );
 }
+
+export default FileManagerSidebar;

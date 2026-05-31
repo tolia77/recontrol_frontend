@@ -1,17 +1,14 @@
-import { useCallback, useEffect, useReducer, useRef } from 'react';
-import type { JSX } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useToast } from 'src/components/ui';
-import { useAssistantChannel } from '../../hooks/useAssistantChannel';
-import type { AssistantBroadcast } from '../../hooks/useAssistantChannel';
-import {
-  initialTranscriptState,
-  transcriptReducer,
-} from './transcriptReducer';
-import { Transcript } from './Transcript';
-import { AssistantHeader } from './AssistantHeader';
-import { InputBox } from './InputBox';
-import { copyAsMarkdown } from './copyAsMarkdown';
+import { useCallback, useEffect, useReducer, useRef } from "react";
+import type { JSX } from "react";
+import { useTranslation } from "react-i18next";
+import { useToast } from "src/components/ui";
+import { useAssistantChannel } from "src/pages/DeviceControl/hooks/realtime/useAssistantChannel";
+import type { AssistantBroadcast } from "src/pages/DeviceControl/hooks/realtime/useAssistantChannel";
+import { initialTranscriptState, transcriptReducer } from "./transcriptReducer";
+import Transcript from "./Transcript";
+import AssistantHeader from "./AssistantHeader";
+import InputBox from "./InputBox";
+import { copyAsMarkdown } from "./copyAsMarkdown";
 
 export interface AssistantPanelProps {
   deviceId: string;
@@ -34,7 +31,10 @@ export interface AssistantPanelProps {
  * token (deferred — see threat model T-20-09-04).
  */
 function generateSessionToken(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
     return crypto.randomUUID();
   }
   return `s-${Date.now().toString(16)}-${Math.random().toString(16).slice(2, 10)}`;
@@ -60,17 +60,24 @@ function generateSessionToken(): string {
  * Conversation state lives in `useReducer` state — nothing in localStorage,
  * nothing in the backend (CHAT-11). Closing the tab clears the panel.
  */
-export function AssistantPanel({ deviceId, ws, deviceName }: AssistantPanelProps): JSX.Element {
-  const { t } = useTranslation('assistant');
+function AssistantPanel({
+  deviceId,
+  ws,
+  deviceName,
+}: AssistantPanelProps): JSX.Element {
+  const { t } = useTranslation("assistant");
   const toast = useToast();
-  const [state, dispatchTranscript] = useReducer(transcriptReducer, initialTranscriptState);
+  const [state, dispatchTranscript] = useReducer(
+    transcriptReducer,
+    initialTranscriptState,
+  );
   const quotaWarningShownRef = useRef(false);
 
   const onBroadcast = useCallback((msg: AssistantBroadcast): void => {
-    dispatchTranscript({ type: 'broadcast', broadcast: msg });
+    dispatchTranscript({ type: "broadcast", broadcast: msg });
   }, []);
 
-  const { dispatch } = useAssistantChannel(ws, onBroadcast);
+  const { dispatch } = useAssistantChannel({ socket: ws, onBroadcast });
 
   // 80% quota Toast — fires once when the reducer flips the flag (which
   // happens at most once per run; the reducer resets the flag on
@@ -81,7 +88,7 @@ export function AssistantPanel({ deviceId, ws, deviceName }: AssistantPanelProps
     if (state.quotaWarningShown && !quotaWarningShownRef.current) {
       quotaWarningShownRef.current = true;
       toast.warning(
-        t('quota.warningToast', {
+        t("quota.warningToast", {
           defaultValue: "You've used 80% of today's AI quota.",
         }),
       );
@@ -91,8 +98,8 @@ export function AssistantPanel({ deviceId, ws, deviceName }: AssistantPanelProps
   }, [state.quotaWarningShown, toast, t]);
 
   const handleConfirm = useCallback(
-    (confirmationId: string, decision: 'allow' | 'deny') => {
-      dispatch('confirm_tool_call', {
+    (confirmationId: string, decision: "allow" | "deny") => {
+      dispatch("confirm_tool_call", {
         confirmation_id: confirmationId,
         decision,
       });
@@ -103,36 +110,38 @@ export function AssistantPanel({ deviceId, ws, deviceName }: AssistantPanelProps
   const handleSubmit = useCallback(
     (text: string) => {
       const sessionToken = generateSessionToken();
-      dispatchTranscript({ type: 'submit_prompt', text, sessionToken });
-      dispatch('run_prompt', { prompt: text, session_token: sessionToken });
+      dispatchTranscript({ type: "submit_prompt", text, sessionToken });
+      dispatch("run_prompt", { prompt: text, session_token: sessionToken });
     },
     [dispatch],
   );
 
   const handleStop = useCallback(() => {
-    dispatch('stop_loop', {});
+    dispatch("stop_loop", {});
   }, [dispatch]);
 
   const handleCopy = useCallback(() => {
     const md = copyAsMarkdown(state.rows);
-    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
       void navigator.clipboard
         .writeText(md)
         .then(() =>
           toast.success(
-            t('header.copySuccess', {
-              defaultValue: 'Transcript copied to clipboard',
+            t("header.copySuccess", {
+              defaultValue: "Transcript copied to clipboard",
             }),
           ),
         )
         .catch(() =>
           toast.error(
-            t('header.copyError', { defaultValue: 'Could not copy to clipboard' }),
+            t("header.copyError", {
+              defaultValue: "Could not copy to clipboard",
+            }),
           ),
         );
     } else {
       toast.error(
-        t('header.copyError', { defaultValue: 'Could not copy to clipboard' }),
+        t("header.copyError", { defaultValue: "Could not copy to clipboard" }),
       );
     }
   }, [state.rows, toast, t]);
@@ -143,7 +152,7 @@ export function AssistantPanel({ deviceId, ws, deviceName }: AssistantPanelProps
     <div
       data-testid="assistant-panel"
       data-device-id={deviceId}
-      className="outline-none flex h-full w-full bg-background text-text flex-col"
+      className="bg-background text-text flex h-full w-full flex-col outline-none"
     >
       <AssistantHeader
         status={state.status}
@@ -153,8 +162,8 @@ export function AssistantPanel({ deviceId, ws, deviceName }: AssistantPanelProps
       />
 
       {isEmpty ? (
-        <div className="flex-1 flex items-center justify-center text-darkgray text-sm px-4 text-center">
-          {t('idle.greeting', {
+        <div className="text-darkgray flex flex-1 items-center justify-center px-4 text-center text-sm">
+          {t("idle.greeting", {
             deviceName,
             defaultValue: `What can I help with on ${deviceName}?`,
           })}
@@ -167,3 +176,5 @@ export function AssistantPanel({ deviceId, ws, deviceName }: AssistantPanelProps
     </div>
   );
 }
+
+export default AssistantPanel;

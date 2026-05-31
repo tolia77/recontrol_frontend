@@ -1,12 +1,15 @@
-const ACCESS_TOKEN_KEY = 'access_token';
-const REFRESH_TOKEN_KEY = 'refresh_token';
-const USER_ROLE_KEY = 'user_role';
-const USER_ID_KEY = 'user_id';
+const ACCESS_TOKEN_KEY = "access_token";
+const REFRESH_TOKEN_KEY = "refresh_token";
+const USER_ROLE_KEY = "user_role";
+const USER_ID_KEY = "user_id";
 
 /**
  * Save authentication tokens to localStorage
  */
-export function saveTokens(accessToken: string | null, refreshToken: string | null): void {
+export function saveTokens(
+  accessToken: string | null,
+  refreshToken: string | null,
+): void {
   if (accessToken === null) {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
   } else {
@@ -46,7 +49,7 @@ export function clearTokens(): void {
  * Save user ID to localStorage
  */
 export function saveUserId(userId: string | null): void {
-  if (userId === null || userId === '') {
+  if (userId === null || userId === "") {
     localStorage.removeItem(USER_ID_KEY);
   } else {
     localStorage.setItem(USER_ID_KEY, userId);

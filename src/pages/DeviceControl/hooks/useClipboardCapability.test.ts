@@ -5,14 +5,14 @@
 //     detectCapability function directly with various navigator shapes.
 //   - Per PATTERNS.md "No Analog Found": pure-helper coverage is preferred over
 //     installing a render harness for a one-shot capability check.
-import { describe, expect, it } from 'vitest';
-import { detectCapability } from '../services/clipboard';
+import { describe, expect, it } from "vitest";
+import { detectCapability } from "src/pages/DeviceControl/services/clipboard/clipboardCore";
 
-describe('useClipboardCapability (underlying detectCapability)', () => {
-  it('returns canRead=true when navigator.clipboard.readText is a function', () => {
+describe("useClipboardCapability (underlying detectCapability)", () => {
+  it("returns canRead=true when navigator.clipboard.readText is a function", () => {
     const fakeNav = {
       clipboard: {
-        readText: async () => '',
+        readText: async () => "",
         writeText: async () => {},
       },
     } as unknown as Navigator;
@@ -23,7 +23,7 @@ describe('useClipboardCapability (underlying detectCapability)', () => {
     });
   });
 
-  it('returns canRead=false when clipboard is missing', () => {
+  it("returns canRead=false when clipboard is missing", () => {
     const fakeNav = {} as unknown as Navigator;
     expect(detectCapability(fakeNav, true)).toEqual({
       canRead: false,
@@ -32,19 +32,19 @@ describe('useClipboardCapability (underlying detectCapability)', () => {
     });
   });
 
-  it('reports isSecureContext=false when not secure', () => {
+  it("reports isSecureContext=false when not secure", () => {
     const fakeNav = {
       clipboard: {
-        readText: async () => '',
+        readText: async () => "",
         writeText: async () => {},
       },
     } as unknown as Navigator;
     expect(detectCapability(fakeNav, false).isSecureContext).toBe(false);
   });
 
-  it('returns canRead=true, canWrite=false when only readText is present', () => {
+  it("returns canRead=true, canWrite=false when only readText is present", () => {
     const fakeNav = {
-      clipboard: { readText: async () => '' },
+      clipboard: { readText: async () => "" },
     } as unknown as Navigator;
     const caps = detectCapability(fakeNav, true);
     expect(caps.canRead).toBe(true);
@@ -52,7 +52,7 @@ describe('useClipboardCapability (underlying detectCapability)', () => {
     expect(caps.isSecureContext).toBe(true);
   });
 
-  it('returns all-false when navigator is undefined', () => {
+  it("returns all-false when navigator is undefined", () => {
     expect(detectCapability(undefined, false)).toEqual({
       canRead: false,
       canWrite: false,
@@ -60,14 +60,16 @@ describe('useClipboardCapability (underlying detectCapability)', () => {
     });
   });
 
-  it('does not call navigator.permissions.query (DEGRADE-03 byproduct: function does not touch permissions API)', () => {
+  it("does not call navigator.permissions.query (DEGRADE-03 byproduct: function does not touch permissions API)", () => {
     let called = false;
     const fakeNav = {
-      clipboard: { readText: async () => '', writeText: async () => {} },
+      clipboard: { readText: async () => "", writeText: async () => {} },
       permissions: {
         query: () => {
           called = true;
-          return Promise.resolve({ state: 'granted' } as unknown as PermissionStatus);
+          return Promise.resolve({
+            state: "granted",
+          } as unknown as PermissionStatus);
         },
       },
     } as unknown as Navigator;

@@ -1,7 +1,7 @@
-import type { FC } from 'react';
-import { useTranslation } from 'react-i18next';
-import { ToolCallCard } from '../Assistant/ToolCallCard';
-import type { ToolRow } from '../Assistant/transcriptReducer';
+import type { FC } from "react";
+import { useTranslation } from "react-i18next";
+import ToolCallCard from "src/pages/DeviceControl/components/Assistant/ToolCallCard";
+import type { ToolRow } from "src/pages/DeviceControl/components/Assistant/transcriptReducer";
 
 /**
  * RunOutput — thin presentational wrapper around the existing v1.4 ToolCallCard
@@ -23,8 +23,8 @@ export interface RunOutputProps {
   skippedReason?: string;
 }
 
-export const RunOutput: FC<RunOutputProps> = ({ row, skippedReason }) => {
-  const { t } = useTranslation('scenarios');
+const RunOutput: FC<RunOutputProps> = ({ row, skippedReason }) => {
+  const { t } = useTranslation("scenarios");
 
   if (!skippedReason) {
     return <ToolCallCard row={row} />;
@@ -36,8 +36,8 @@ export const RunOutput: FC<RunOutputProps> = ({ row, skippedReason }) => {
       data-testid={`run-output-skipped-${row.toolCallId}`}
     >
       <ToolCallCard row={row} />
-      <span className="mt-1 inline-block text-xs text-darkgray">
-        ⊘ {t('history.stepStatus.skipped')}
+      <span className="text-darkgray mt-1 inline-block text-xs">
+        ⊘ {t("history.stepStatus.skipped")}
       </span>
     </div>
   );

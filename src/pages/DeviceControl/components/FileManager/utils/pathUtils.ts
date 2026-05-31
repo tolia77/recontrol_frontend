@@ -8,7 +8,7 @@
  * plan 10-02 and by the move/copy destination builder in plan 10-05.
  */
 
-export type PathSeparator = '/' | '\\';
+export type PathSeparator = "/" | "\\";
 
 /**
  * Detect the path separator from a root path. Windows roots look like
@@ -16,9 +16,9 @@ export type PathSeparator = '/' | '\\';
  * backslash anywhere; otherwise POSIX.
  */
 export function detectSeparator(rootPath: string): PathSeparator {
-  if (/^[A-Za-z]:[\\/]/.test(rootPath)) return '\\';
-  if (rootPath.includes('\\')) return '\\';
-  return '/';
+  if (/^[A-Za-z]:[\\/]/.test(rootPath)) return "\\";
+  if (rootPath.includes("\\")) return "\\";
+  return "/";
 }
 
 /**
@@ -30,20 +30,18 @@ export function detectSeparator(rootPath: string): PathSeparator {
 export function splitIntoSegments(path: string, sep: PathSeparator): string[] {
   if (!path) return [];
   // On Windows, handle `C:\...` or `C:/...` by keeping `C:` as the first segment.
-  if (sep === '\\') {
+  if (sep === "\\") {
     const m = /^([A-Za-z]:)([\\/]?)(.*)$/.exec(path);
     if (m) {
       const drive = m[1];
       const rest = m[3];
-      const restSegments = rest
-        .split(/[\\/]/)
-        .filter((s) => s.length > 0);
+      const restSegments = rest.split(/[\\/]/).filter((s) => s.length > 0);
       return [drive, ...restSegments];
     }
     return path.split(/[\\/]/).filter((s) => s.length > 0);
   }
   // POSIX
-  return path.split('/').filter((s) => s.length > 0);
+  return path.split("/").filter((s) => s.length > 0);
 }
 
 /**
@@ -65,22 +63,22 @@ export function splitIntoSegments(path: string, sep: PathSeparator): string[] {
  * duplicate separators -- callers pass clean parts.
  */
 export function joinPath(parts: string[], sep: PathSeparator): string {
-  if (parts.length === 0) return '';
-  if (sep === '\\') {
+  if (parts.length === 0) return "";
+  if (sep === "\\") {
     // Windows: if the first part is a drive letter (e.g. `C:`), glue with `\`.
     const [head, ...tail] = parts;
     if (/^[A-Za-z]:$/.test(head)) {
       if (tail.length === 0) return `${head}\\`;
-      return `${head}\\${tail.join('\\')}`;
+      return `${head}\\${tail.join("\\")}`;
     }
-    return parts.join('\\');
+    return parts.join("\\");
   }
   // POSIX: if first part is '' treat as absolute root.
-  if (parts[0] === '') {
+  if (parts[0] === "") {
     const tail = parts.slice(1).filter((s) => s.length > 0);
-    return `/${tail.join('/')}`;
+    return `/${tail.join("/")}`;
   }
-  return parts.join('/');
+  return parts.join("/");
 }
 
 /**
@@ -91,21 +89,21 @@ export function joinPath(parts: string[], sep: PathSeparator): string {
 export function parentPath(path: string, sep: PathSeparator): string | null {
   const segments = splitIntoSegments(path, sep);
   if (segments.length === 0) return null;
-  if (sep === '\\') {
+  if (sep === "\\") {
     // Windows: if only a drive letter remains, we're at the root.
     if (segments.length === 1 && /^[A-Za-z]:$/.test(segments[0])) {
       return null;
     }
     const parent = segments.slice(0, -1);
-    return joinPath(parent, '\\');
+    return joinPath(parent, "\\");
   }
   // POSIX
   if (segments.length === 1) {
-    return '/';
+    return "/";
   }
   // Preserve leading slash for absolute POSIX paths.
   const parent = segments.slice(0, -1);
-  return joinPath(['', ...parent], '/');
+  return joinPath(["", ...parent], "/");
 }
 
 /**
@@ -118,10 +116,10 @@ export function isAncestor(ancestorRoot: string, candidate: string): boolean {
   const sep = detectSeparator(ancestorRoot);
   // Normalize trailing separators on the ancestor so we match exactly one
   // separator boundary, not a suffix match.
-  const rootTrimmed = ancestorRoot.replace(/[\\/]+$/, '');
+  const rootTrimmed = ancestorRoot.replace(/[\\/]+$/, "");
   const separatorChar = sep;
   return (
     candidate.startsWith(rootTrimmed + separatorChar) ||
-    candidate.startsWith(rootTrimmed + (sep === '\\' ? '/' : '\\'))
+    candidate.startsWith(rootTrimmed + (sep === "\\" ? "/" : "\\"))
   );
 }

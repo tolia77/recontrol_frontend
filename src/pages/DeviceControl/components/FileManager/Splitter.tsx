@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface SplitterProps {
   /** 0..1 initial width ratio for the left pane. */
@@ -27,7 +27,12 @@ interface SplitterProps {
  * divider + right pane are omitted. The left pane stays the container's first
  * child in both layouts, so toggling the right pane does not remount `left`.
  */
-export function Splitter({ initialRatio, onRatioChange, left, right }: SplitterProps) {
+function Splitter({
+  initialRatio,
+  onRatioChange,
+  left,
+  right,
+}: SplitterProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [ratio, setRatio] = useState<number>(() => clamp(initialRatio));
   const draggingRef = useRef(false);
@@ -74,7 +79,7 @@ export function Splitter({ initialRatio, onRatioChange, left, right }: SplitterP
   return (
     <div ref={containerRef} className="flex h-full w-full">
       <div
-        style={{ width: hasRight ? `${ratio * 100}%` : '100%' }}
+        style={{ width: hasRight ? `${ratio * 100}%` : "100%" }}
         className="h-full min-w-0 overflow-hidden"
       >
         {left}
@@ -88,9 +93,12 @@ export function Splitter({ initialRatio, onRatioChange, left, right }: SplitterP
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerUp}
-            className="w-1 bg-lightgray hover:bg-primary cursor-col-resize transition-colors flex-shrink-0"
+            className="bg-lightgray hover:bg-primary w-1 flex-shrink-0 cursor-col-resize transition-colors"
           />
-          <div style={{ width: `${(1 - ratio) * 100}%` }} className="h-full min-w-0 overflow-hidden">
+          <div
+            style={{ width: `${(1 - ratio) * 100}%` }}
+            className="h-full min-w-0 overflow-hidden"
+          >
             {right}
           </div>
         </>
@@ -103,3 +111,5 @@ function clamp(r: number): number {
   if (!Number.isFinite(r)) return 0.5;
   return Math.min(0.9, Math.max(0.1, r));
 }
+
+export default Splitter;

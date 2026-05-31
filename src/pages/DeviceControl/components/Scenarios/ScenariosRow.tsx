@@ -1,6 +1,6 @@
-import { useTranslation } from 'react-i18next';
-import type { Scenario } from 'src/services/backend/scenariosService';
-import { Button } from 'src/components/ui';
+import { useTranslation } from "react-i18next";
+import type { Scenario } from "src/services/backend/scenariosService";
+import { Button } from "src/components/ui";
 
 export interface ScenariosRowProps {
   scenario: Scenario;
@@ -15,11 +15,11 @@ export interface ScenariosRowProps {
 }
 
 function relative(dateIso: string | null | undefined): string {
-  if (!dateIso) return '';
+  if (!dateIso) return "";
   const diff = Date.now() - new Date(dateIso).getTime();
-  if (Number.isNaN(diff)) return '';
+  if (Number.isNaN(diff)) return "";
   const minutes = Math.floor(diff / 60_000);
-  if (minutes < 1) return 'just now';
+  if (minutes < 1) return "just now";
   if (minutes < 60) return `${minutes}m ago`;
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
@@ -36,17 +36,17 @@ export default function ScenariosRow({
   onRun,
   runDisabled = false,
 }: ScenariosRowProps) {
-  const { t } = useTranslation('scenarios');
+  const { t } = useTranslation("scenarios");
   // SHARE-06: owner vs recipient. Recipients get a read-only marker and do NOT
   // see [Edit] / [Duplicate] / [Delete] (those endpoints would 403 server-side).
   const isOwner = scenario.user_id === currentUserId;
-  const descriptionPreview = (scenario.description || '').slice(0, 80);
+  const descriptionPreview = (scenario.description || "").slice(0, 80);
   const stepCount = scenario.command_steps?.length ?? 0;
   const runCount = scenario.run_count ?? 0;
 
   return (
     <li
-      className="flex items-start gap-2 rounded border border-lightgray bg-white px-3 py-2"
+      className="border-lightgray bg-background flex items-start gap-2 rounded border px-3 py-2"
       data-testid={`scenarios-row-${scenario.id}`}
     >
       {/* D-22-08: primary [▶ Run] action on left edge in accent token. The
@@ -60,39 +60,45 @@ export default function ScenariosRow({
         disabled={runDisabled}
         data-testid="scenarios-row-run"
       >
-        ▶ {t('library.actions.run')}
+        ▶ {t("library.actions.run")}
       </Button>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="truncate font-medium text-primary">{scenario.name}</span>
+          <span className="text-primary truncate font-medium">
+            {scenario.name}
+          </span>
           {!isOwner && scenario.owner_email && (
             <span
               className="rounded bg-blue-50 px-1.5 py-0.5 text-xs text-blue-700"
               data-testid="shared-by-badge"
             >
-              {t('library.sharedByBadge', { owner: scenario.owner_email })}
+              {t("library.sharedByBadge", { owner: scenario.owner_email })}
             </span>
           )}
           {scenario.pinned_device_id && (
-            <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-700">
-              {t('library.pinnedDeviceChip', {
+            <span className="bg-tertiary text-text rounded px-1.5 py-0.5 text-xs">
+              {t("library.pinnedDeviceChip", {
                 device: scenario.pinned_device_id.slice(0, 8),
               })}
             </span>
           )}
         </div>
         {descriptionPreview && (
-          <div className="truncate text-sm text-gray-600">{descriptionPreview}</div>
+          <div className="text-darkgray truncate text-sm">
+            {descriptionPreview}
+          </div>
         )}
-        <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
-          <span>{t('library.runCount', { count: runCount })}</span>
+        <div className="text-darkgray flex flex-wrap items-center gap-2 text-xs">
+          <span>{t("library.runCount", { count: runCount })}</span>
           <span aria-hidden="true">·</span>
-          <span>{t('library.stepCount', { count: stepCount })}</span>
+          <span>{t("library.stepCount", { count: stepCount })}</span>
           <span aria-hidden="true">·</span>
           <span>
             {scenario.last_run_at
-              ? t('library.lastRun', { relative: relative(scenario.last_run_at) })
-              : t('library.lastRunNever')}
+              ? t("library.lastRun", {
+                  relative: relative(scenario.last_run_at),
+                })
+              : t("library.lastRunNever")}
           </span>
         </div>
       </div>
@@ -103,27 +109,27 @@ export default function ScenariosRow({
         <div className="flex shrink-0 items-center gap-1">
           <button
             type="button"
-            className="rounded px-2 py-1 text-xs text-primary hover:bg-gray-100"
+            className="text-primary hover:bg-tertiary rounded px-2 py-1 text-xs"
             onClick={onEdit}
             data-testid="scenarios-row-edit"
           >
-            {t('library.actions.edit')}
+            {t("library.actions.edit")}
           </button>
           <button
             type="button"
-            className="rounded px-2 py-1 text-xs text-primary hover:bg-gray-100"
+            className="text-primary hover:bg-tertiary rounded px-2 py-1 text-xs"
             onClick={onDuplicate}
             data-testid="scenarios-row-duplicate"
           >
-            {t('library.actions.duplicate')}
+            {t("library.actions.duplicate")}
           </button>
           <button
             type="button"
-            className="rounded px-2 py-1 text-xs text-error hover:bg-red-50"
+            className="text-error rounded px-2 py-1 text-xs hover:bg-red-50"
             onClick={onDelete}
             data-testid="scenarios-row-delete"
           >
-            {t('library.actions.delete')}
+            {t("library.actions.delete")}
           </button>
         </div>
       )}

@@ -1,5 +1,7 @@
-import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import { getRefreshToken, saveTokens } from 'src/utils/auth';
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
+import { getRefreshToken, saveTokens, getAccessToken } from "src/utils/auth";
+import { triggerPlanLimitNudge } from "src/utils/planLimitBus.ts";
+import type { PlanLimitEnvelope } from "src/services/backend/subscriptionService.ts";
 
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
@@ -10,7 +12,18 @@ interface ErrorResponseData {
 }
 
 export const backendInstance = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL
+  baseURL: import.meta.env.VITE_BACKEND_URL,
+});
+
+// ── Request interceptor ────────────────────────────────────────────────────
+// Injects Authorization on every request unless config.skipAuth is true.
+backendInstance.interceptors.request.use((config) => {
+  if (config.skipAuth) return config;
+  const token = getAccessToken();
+  if (token) {
+    config.headers.Authorization = token;
+  }
+  return config;
 });
 
 // ── Refresh mutex ──────────────────────────────────────────────────────────
@@ -28,7 +41,7 @@ export async function refreshAccessTokenOnce(): Promise<string | null> {
       const res = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/auth/refresh`,
         {},
-        { headers: { 'Refresh-Token': refreshToken } }
+        { headers: { "Refresh-Token": refreshToken } },
       );
 
       const tokens = res.data ?? {};
@@ -51,13 +64,20 @@ export async function refreshAccessTokenOnce(): Promise<string | null> {
 
 // ── Response interceptor ───────────────────────────────────────────────────
 backendInstance.interceptors.response.use(
-  response => response,
+  (response) => response,
   async (error: AxiosError<ErrorResponseData>) => {
-    const originalRequest = error.config as ExtendedAxiosRequestConfig | undefined;
+    const originalRequest = error.config as
+      | ExtendedAxiosRequestConfig
+      | undefined;
     const status = error.response?.status;
     const messageText = error.response?.data?.error;
 
-    if (status === 401 && messageText === 'Unauthorized' && originalRequest && !originalRequest._retry) {
+    if (
+      status === 401 &&
+      messageText === "Unauthorized" &&
+      originalRequest &&
+      !originalRequest._retry
+    ) {
       originalRequest._retry = true;
 
       const newAccess = await refreshAccessTokenOnce();
@@ -67,8 +87,13 @@ backendInstance.interceptors.response.use(
       }
 
       return Promise.reject(error);
+    } else if (status === 402 && messageText === "plan_limit_reached") {
+      // D-15: global upgrade nudge — fire once and re-reject; no retry loop.
+      const envelope = error.response?.data as PlanLimitEnvelope;
+      triggerPlanLimitNudge(envelope);
+      return Promise.reject(error);
     }
 
     return Promise.reject(error);
-  }
+  },
 );

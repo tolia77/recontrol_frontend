@@ -28,5 +28,12 @@ jobs:
       - name: Build frontend bundle
         run: npm run build
 
+      - name: Scan bundle for leaked secrets
+        run: |
+          if grep -rE 'LIQPAY_PRIVATE|sandbox_' dist/; then
+            echo "secret leak detected in dist/"
+            exit 1
+          fi
+
       - name: Run vitest test suite
         run: npx vitest run

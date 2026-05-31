@@ -1,11 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useTransferQueue } from '../../hooks/useTransferQueue';
-import type {
-  TransferItem,
-  TransferQueue,
-  TransferState,
-} from '../../services/transfer';
-import { SpeedTracker } from '../../services/transfer/speedTracker';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useTransferQueue } from "src/pages/DeviceControl/hooks/state/useTransferQueue";
+import type { TransferItem, TransferState } from "src/pages/DeviceControl/services/transfer/types";
+import type { TransferQueue } from "src/pages/DeviceControl/services/transfer/TransferQueue";
+import { SpeedTracker } from "src/pages/DeviceControl/services/transfer/speedTracker";
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -13,8 +10,8 @@ import {
   TrashIcon,
   UploadIcon,
   XIcon,
-} from './icons';
-import { useTranslation } from 'react-i18next';
+} from "./icons";
+import { useTranslation } from "react-i18next";
 
 interface TransferQueuePanelProps {
   queue: TransferQueue;
@@ -51,22 +48,22 @@ interface TransferQueuePanelProps {
  * not own queue lifecycle. {@link FileManagerPanel} constructs the queue once
  * via useRef and threads it down.
  */
-export function TransferQueuePanel({
+function TransferQueuePanel({
   queue,
   disconnectMessage,
   onDismissDisconnect,
 }: TransferQueuePanelProps) {
-  const { t } = useTranslation('fileManager');
+  const { t } = useTranslation("fileManager");
   const snapshot = useTransferQueue(queue);
   const [collapsed, setCollapsed] = useState(true);
   const speedTrackersRef = useRef<Map<string, SpeedTracker>>(new Map());
 
   const inFlightCount = snapshot.items.filter(
     (i) =>
-      i.state === 'queued' ||
-      i.state === 'active' ||
-      i.state === 'cancelling' ||
-      i.state === 'stalled',
+      i.state === "queued" ||
+      i.state === "active" ||
+      i.state === "cancelling" ||
+      i.state === "stalled",
   ).length;
   // Auto-expand whenever there is at least one in-flight transfer; user can
   // still collapse manually but a NEW enqueue will re-expand. Once the queue
@@ -76,12 +73,15 @@ export function TransferQueuePanel({
   const hasTerminal = snapshot.items.some((i) => isTerminal(i.state));
   const speedById = useMemo(() => {
     const now = Date.now();
-    const out = new Map<string, { bytesPerSecond: number | null; etaSeconds: number | null }>();
+    const out = new Map<
+      string,
+      { bytesPerSecond: number | null; etaSeconds: number | null }
+    >();
     for (const item of snapshot.items) {
       if (
-        item.state !== 'active' &&
-        item.state !== 'cancelling' &&
-        item.state !== 'stalled'
+        item.state !== "active" &&
+        item.state !== "cancelling" &&
+        item.state !== "stalled"
       ) {
         continue;
       }
@@ -103,7 +103,7 @@ export function TransferQueuePanel({
   }, [snapshot.items]);
 
   return (
-    <div className="border-t border-lightgray bg-tertiary text-text text-sm flex-shrink-0">
+    <div className="border-lightgray bg-tertiary text-text flex-shrink-0 border-t text-sm">
       <div className="flex items-center justify-between px-3 py-1.5">
         <button
           type="button"
@@ -112,14 +112,14 @@ export function TransferQueuePanel({
           aria-expanded={expanded}
         >
           {expanded ? (
-            <ChevronDownIcon className="w-3 h-3" />
+            <ChevronDownIcon className="h-3 w-3" />
           ) : (
-            <ChevronUpIcon className="w-3 h-3" />
+            <ChevronUpIcon className="h-3 w-3" />
           )}
-          <span className="font-medium">{t('transfer.title')}</span>
+          <span className="font-medium">{t("transfer.title")}</span>
           {snapshot.items.length > 0 && (
-            <span className="text-xs text-darkgray">
-              {t('transfer.activeTotal', {
+            <span className="text-darkgray text-xs">
+              {t("transfer.activeTotal", {
                 active: inFlightCount,
                 total: snapshot.items.length,
               })}
@@ -130,37 +130,37 @@ export function TransferQueuePanel({
           <button
             type="button"
             onClick={() => queue.clearCompleted()}
-            title={t('transfer.clearCompleted')}
-            aria-label={t('transfer.clearCompleted')}
-            className="p-1 rounded hover:bg-background"
+            title={t("transfer.clearCompleted")}
+            aria-label={t("transfer.clearCompleted")}
+            className="hover:bg-background rounded p-1"
           >
-            <TrashIcon className="w-3.5 h-3.5" />
+            <TrashIcon className="h-3.5 w-3.5" />
           </button>
         )}
       </div>
       {expanded && (
-        <div className="max-h-[180px] overflow-auto px-2 pb-2 space-y-1">
+        <div className="max-h-[180px] space-y-1 overflow-auto px-2 pb-2">
           {/* Plan 11-06: disconnect banner. Renders ABOVE the row list when
               FileManagerPanel detects a status transition out of 'open' while
               a transfer is active. CONTEXT-locked verbatim copy comes from
               the panel; this component is purely presentational. */}
           {disconnectMessage && (
-            <div className="flex items-center justify-between gap-2 px-3 py-2 bg-error/10 border border-error rounded text-sm text-error">
+            <div className="bg-error/10 border-error text-error flex items-center justify-between gap-2 rounded border px-3 py-2 text-sm">
               <span>{disconnectMessage}</span>
               <button
                 type="button"
                 onClick={onDismissDisconnect}
-                title={t('transfer.dismiss')}
-                aria-label={t('transfer.dismiss')}
-                className="p-0.5 rounded hover:bg-background"
+                title={t("transfer.dismiss")}
+                aria-label={t("transfer.dismiss")}
+                className="hover:bg-background rounded p-0.5"
               >
-                <XIcon className="w-3.5 h-3.5" />
+                <XIcon className="h-3.5 w-3.5" />
               </button>
             </div>
           )}
           {snapshot.items.length === 0 && (
-            <p className="text-xs text-darkgray px-2 py-1">
-              {t('transfer.noTransfersYet')}
+            <p className="text-darkgray px-2 py-1 text-xs">
+              {t("transfer.noTransfersYet")}
             </p>
           )}
           {snapshot.items.map((item) => (
@@ -182,23 +182,25 @@ interface TransferRowProps {
   item: TransferItem;
   onCancel: () => void;
   speedEstimate?: { bytesPerSecond: number | null; etaSeconds: number | null };
-  t: ReturnType<typeof useTranslation<'fileManager'>>['t'];
+  t: ReturnType<typeof useTranslation<"fileManager">>["t"];
 }
 
 function TransferRow({ item, onCancel, speedEstimate, t }: TransferRowProps) {
   const pct =
-    item.size > 0 ? Math.min(100, Math.floor((item.bytesSoFar / item.size) * 100)) : 0;
-  const Icon = item.direction === 'upload' ? UploadIcon : DownloadIcon;
-  const isActive = item.state === 'active' || item.state === 'stalled';
-  const isStalled = item.state === 'stalled';
+    item.size > 0
+      ? Math.min(100, Math.floor((item.bytesSoFar / item.size) * 100))
+      : 0;
+  const Icon = item.direction === "upload" ? UploadIcon : DownloadIcon;
+  const isActive = item.state === "active" || item.state === "stalled";
+  const isStalled = item.state === "stalled";
   const canCancel =
-    item.state === 'queued' ||
-    item.state === 'active' ||
-    item.state === 'stalled';
+    item.state === "queued" ||
+    item.state === "active" ||
+    item.state === "stalled";
   const showSpeedEta =
-    item.state === 'active' ||
-    item.state === 'cancelling' ||
-    item.state === 'stalled';
+    item.state === "active" ||
+    item.state === "cancelling" ||
+    item.state === "stalled";
 
   // Plan 11-06: Wait dismissal is component-local UI state (NOT persisted,
   // NOT crossing the wire). Hides the inline Wait+Cancel buttons until the
@@ -222,56 +224,56 @@ function TransferRow({ item, onCancel, speedEstimate, t }: TransferRowProps) {
   //   failed / cancelled / disconnected -> red (bg-error)
   //   cancelling -> blue (still in flight; treated like active for the bar)
   let barClass: string;
-  if (item.state === 'completed') {
-    barClass = 'h-full bg-accent transition-all';
+  if (item.state === "completed") {
+    barClass = "h-full bg-accent transition-all";
   } else if (
-    item.state === 'failed' ||
-    item.state === 'cancelled' ||
-    item.state === 'disconnected'
+    item.state === "failed" ||
+    item.state === "cancelled" ||
+    item.state === "disconnected"
   ) {
-    barClass = 'h-full bg-error';
-  } else if (item.state === 'stalled') {
-    barClass = 'h-full bg-amber transition-all';
-  } else if (isActive || item.state === 'cancelling') {
-    barClass = 'h-full bg-secondary transition-all';
+    barClass = "h-full bg-error";
+  } else if (item.state === "stalled") {
+    barClass = "h-full bg-amber transition-all";
+  } else if (isActive || item.state === "cancelling") {
+    barClass = "h-full bg-secondary transition-all";
   } else {
     // 'queued'
-    barClass = 'h-full bg-darkgray';
+    barClass = "h-full bg-darkgray";
   }
 
   return (
-    <div className="rounded border border-lightgray bg-background px-2 py-1.5">
+    <div className="border-lightgray bg-background rounded border px-2 py-1.5">
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <Icon className="h-3.5 w-3.5 flex-shrink-0" />
           <span className="truncate" title={item.name}>
             {item.name}
           </span>
-            <span className="text-xs text-darkgray whitespace-nowrap">
-              {stateLabel(item.state, t)}
-            </span>
-          </div>
+          <span className="text-darkgray text-xs whitespace-nowrap">
+            {stateLabel(item.state, t)}
+          </span>
+        </div>
         {/* Plan 11-06: stalled rows surface Wait + Cancel inline (replacing
             the X-icon-only treatment). Wait hides the buttons via local
             state until the next state transition; Cancel uses the standard
             queue.cancelById path that the X-icon also drives. */}
         {showStallButtons ? (
-          <div className="flex items-center gap-1 flex-shrink-0">
+          <div className="flex flex-shrink-0 items-center gap-1">
             <button
               type="button"
               onClick={() => setWaitDismissed(true)}
-              aria-label={t('transfer.keepWaitingFor', { name: item.name })}
-              className="px-2 py-0.5 text-xs border border-lightgray rounded hover:bg-tertiary"
+              aria-label={t("transfer.keepWaitingFor", { name: item.name })}
+              className="border-lightgray hover:bg-tertiary rounded border px-2 py-0.5 text-xs"
             >
-              {t('transfer.wait')}
+              {t("transfer.wait")}
             </button>
             <button
               type="button"
               onClick={onCancel}
-              aria-label={t('transfer.cancelItem', { name: item.name })}
-              className="px-2 py-0.5 text-xs border border-error text-error rounded hover:bg-error/10"
+              aria-label={t("transfer.cancelItem", { name: item.name })}
+              className="border-error text-error hover:bg-error/10 rounded border px-2 py-0.5 text-xs"
             >
-              {t('transfer.cancel')}
+              {t("transfer.cancel")}
             </button>
           </div>
         ) : (
@@ -279,17 +281,17 @@ function TransferRow({ item, onCancel, speedEstimate, t }: TransferRowProps) {
             <button
               type="button"
               onClick={onCancel}
-              title={t('transfer.cancelTransfer')}
-              aria-label={t('transfer.cancelItem', { name: item.name })}
-              className="p-0.5 rounded hover:bg-tertiary"
+              title={t("transfer.cancelTransfer")}
+              aria-label={t("transfer.cancelItem", { name: item.name })}
+              className="hover:bg-tertiary rounded p-0.5"
             >
-              <XIcon className="w-3.5 h-3.5" />
+              <XIcon className="h-3.5 w-3.5" />
             </button>
           )
         )}
       </div>
-      <div className="mt-1 flex items-center gap-2 text-xs text-darkgray">
-        <div className="flex-1 h-1.5 bg-lightgray rounded overflow-hidden">
+      <div className="text-darkgray mt-1 flex items-center gap-2 text-xs">
+        <div className="bg-lightgray h-1.5 flex-1 overflow-hidden rounded">
           <div className={barClass} style={{ width: `${pct}%` }} />
         </div>
         <span className="whitespace-nowrap tabular-nums">
@@ -297,20 +299,20 @@ function TransferRow({ item, onCancel, speedEstimate, t }: TransferRowProps) {
         </span>
       </div>
       {showSpeedEta && (
-        <p className="mt-1 text-xs text-darkgray tabular-nums">
+        <p className="text-darkgray mt-1 text-xs tabular-nums">
           {(speedEstimate?.bytesPerSecond ?? null) !== null
             ? `${formatBytes(speedEstimate?.bytesPerSecond ?? 0)}/s`
-            : t('transfer.speedUnknown')}{' '}
-          · {t('transfer.etaLabel')}{' '}
+            : t("transfer.speedUnknown")}{" "}
+          · {t("transfer.etaLabel")}{" "}
           {speedEstimate?.etaSeconds !== null &&
           speedEstimate?.etaSeconds !== undefined
             ? formatEta(speedEstimate.etaSeconds)
-            : t('transfer.etaUnknown')}
+            : t("transfer.etaUnknown")}
         </p>
       )}
       {item.error && (
         <p
-          className="mt-1 text-xs text-error truncate"
+          className="text-error mt-1 truncate text-xs"
           title={item.error.message}
         >
           {item.error.message}
@@ -322,34 +324,34 @@ function TransferRow({ item, onCancel, speedEstimate, t }: TransferRowProps) {
 
 function isTerminal(s: TransferState): boolean {
   return (
-    s === 'completed' ||
-    s === 'cancelled' ||
-    s === 'failed' ||
-    s === 'disconnected'
+    s === "completed" ||
+    s === "cancelled" ||
+    s === "failed" ||
+    s === "disconnected"
   );
 }
 
 function stateLabel(
   s: TransferState,
-  t: ReturnType<typeof useTranslation<'fileManager'>>['t'],
+  t: ReturnType<typeof useTranslation<"fileManager">>["t"],
 ): string {
   switch (s) {
-    case 'queued':
-      return t('transfer.states.queued');
-    case 'active':
-      return t('transfer.states.transferring');
-    case 'stalled':
-      return t('transfer.states.stalled');
-    case 'cancelling':
-      return t('transfer.states.cancelling');
-    case 'completed':
-      return t('transfer.states.completed');
-    case 'cancelled':
-      return t('transfer.states.cancelled');
-    case 'disconnected':
-      return t('transfer.states.disconnected');
-    case 'failed':
-      return t('transfer.states.failed');
+    case "queued":
+      return t("transfer.states.queued");
+    case "active":
+      return t("transfer.states.transferring");
+    case "stalled":
+      return t("transfer.states.stalled");
+    case "cancelling":
+      return t("transfer.states.cancelling");
+    case "completed":
+      return t("transfer.states.completed");
+    case "cancelled":
+      return t("transfer.states.cancelled");
+    case "disconnected":
+      return t("transfer.states.disconnected");
+    case "failed":
+      return t("transfer.states.failed");
   }
 }
 
@@ -371,9 +373,11 @@ function formatEta(totalSeconds: number): string {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    return `${hours}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   }
   const minutes = Math.floor(seconds / 60);
   const secs = seconds % 60;
-  return `${minutes}:${String(secs).padStart(2, '0')}`;
+  return `${minutes}:${String(secs).padStart(2, "0")}`;
 }
+
+export default TransferQueuePanel;

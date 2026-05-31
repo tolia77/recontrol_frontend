@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useRef, type FC } from 'react';
-import type { Row } from './transcriptReducer';
-import { OperatorBubble } from './OperatorBubble';
-import { AssistantMessage } from './AssistantMessage';
-import { ToolCallCard } from './ToolCallCard';
-import { ConfirmationCard } from './ConfirmationCard';
+import { useCallback, useEffect, useRef, type FC } from "react";
+import type { Row } from "./transcriptReducer";
+import OperatorBubble from "./OperatorBubble";
+import AssistantMessage from "./AssistantMessage";
+import ToolCallCard from "./ToolCallCard";
+import ConfirmationCard from "./ConfirmationCard";
 
 /**
  * Scroll container + RowRenderer dispatcher (Plan 20-07; ToolRowPlaceholder
@@ -33,25 +33,30 @@ import { ConfirmationCard } from './ConfirmationCard';
 
 interface TranscriptProps {
   rows: Row[];
-  onConfirm: (confirmationId: string, decision: 'allow' | 'deny') => void;
+  onConfirm: (confirmationId: string, decision: "allow" | "deny") => void;
 }
 
 function rowKey(row: Row): string {
-  if (row.kind === 'tool') return `tool:${row.toolCallId}`;
+  if (row.kind === "tool") return `tool:${row.toolCallId}`;
   return `${row.kind}:${row.id}`;
 }
 
 const RowRenderer: FC<{
   row: Row;
-  onConfirm: TranscriptProps['onConfirm'];
+  onConfirm: TranscriptProps["onConfirm"];
 }> = ({ row, onConfirm }) => {
   switch (row.kind) {
-    case 'operator':
+    case "operator":
       return <OperatorBubble text={row.text} />;
-    case 'assistant':
-      return <AssistantMessage markdown={row.markdown} isStreaming={row.isStreaming} />;
-    case 'tool':
-      if (row.state === 'awaiting_confirmation') {
+    case "assistant":
+      return (
+        <AssistantMessage
+          markdown={row.markdown}
+          isStreaming={row.isStreaming}
+        />
+      );
+    case "tool":
+      if (row.state === "awaiting_confirmation") {
         return (
           <ConfirmationCard
             row={row}
@@ -70,7 +75,7 @@ const RowRenderer: FC<{
   }
 };
 
-export const Transcript: FC<TranscriptProps> = ({ rows, onConfirm }) => {
+const Transcript: FC<TranscriptProps> = ({ rows, onConfirm }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const stickyToBottomRef = useRef(true);
 
@@ -100,7 +105,7 @@ export const Transcript: FC<TranscriptProps> = ({ rows, onConfirm }) => {
     <div
       ref={containerRef}
       onScroll={onScroll}
-      className="flex-1 overflow-y-auto px-4 py-2 space-y-3"
+      className="flex-1 space-y-3 overflow-y-auto px-4 py-2"
       data-testid="assistant-transcript"
     >
       {rows.map((row) => (
@@ -109,3 +114,5 @@ export const Transcript: FC<TranscriptProps> = ({ rows, onConfirm }) => {
     </div>
   );
 };
+
+export default Transcript;

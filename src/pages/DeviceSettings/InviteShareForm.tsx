@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import type { InviteShareFormProps } from './types';
-import { PermissionsEditor } from './components/PermissionsEditor';
-import { LoadGroupPanel } from './components/LoadGroupPanel';
-import { SaveGroupPanel } from './components/SaveGroupPanel';
+import React, { useState } from "react";
+import type { InviteShareFormProps } from "./types";
+import PermissionsEditor from "./components/PermissionsEditor";
+import LoadGroupPanel from "./components/LoadGroupPanel";
+import SaveGroupPanel from "./components/SaveGroupPanel";
+import { Input, Button } from "src/components/ui";
 
-export const InviteShareForm: React.FC<InviteShareFormProps> = ({
+const InviteShareForm: React.FC<InviteShareFormProps> = ({
   t,
   shareForm,
   permissionsGroups,
@@ -18,37 +19,40 @@ export const InviteShareForm: React.FC<InviteShareFormProps> = ({
   const [showSavePanel, setShowSavePanel] = useState(false);
 
   return (
-    <form onSubmit={onSubmit} className="mb-6 p-4 border border-gray-200 rounded-lg">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+    <form
+      onSubmit={onSubmit}
+      className="border-lightgray mb-6 rounded-lg border p-4"
+    >
+      <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t('form.userEmail')}
-          </label>
-          <input
+          <Input
+            label={t("form.userEmail")}
             type="email"
             value={shareForm.userEmail}
-            onChange={(e) => onChange({ ...shareForm, userEmail: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            onChange={(e) =>
+              onChange({ ...shareForm, userEmail: e.target.value })
+            }
             required
           />
         </div>
 
         {/* Action buttons to reveal load/save panels */}
         <div className="flex gap-2 md:col-span-2">
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="sm"
             onClick={() => setShowLoadPanel(!showLoadPanel)}
-            className="px-2 py-1 border border-gray-300 rounded text-xs font-medium hover:bg-gray-50"
           >
-            {t('form.loadGroup')}
-          </button>
-          <button
+            {t("form.loadGroup")}
+          </Button>
+          <Button
             type="button"
+            size="sm"
             onClick={() => setShowSavePanel(!showSavePanel)}
-            className="px-2 py-1 bg-gray-700 text-white rounded text-xs font-medium hover:bg-gray-600"
           >
-            {t('form.saveGroup')}
-          </button>
+            {t("form.saveGroup")}
+          </Button>
         </div>
 
         {showLoadPanel && (
@@ -56,7 +60,9 @@ export const InviteShareForm: React.FC<InviteShareFormProps> = ({
             t={t}
             groups={permissionsGroups}
             value={shareForm.permissionsGroupId}
-            onChange={(id) => onChange({ ...shareForm, permissionsGroupId: id })}
+            onChange={(id) =>
+              onChange({ ...shareForm, permissionsGroupId: id })
+            }
             onLoad={onLoadGroup}
           />
         )}
@@ -64,8 +70,13 @@ export const InviteShareForm: React.FC<InviteShareFormProps> = ({
         {showSavePanel && (
           <SaveGroupPanel
             t={t}
-            name={shareForm.newGroup.name}
-            onChange={(name) => onChange({ ...shareForm, newGroup: { ...shareForm.newGroup, name } })}
+            name={shareForm.newGroup.name ?? ""}
+            onChange={(name) =>
+              onChange({
+                ...shareForm,
+                newGroup: { ...shareForm.newGroup, name },
+              })
+            }
             onSave={onSaveGroup}
           />
         )}
@@ -73,30 +84,38 @@ export const InviteShareForm: React.FC<InviteShareFormProps> = ({
         {/* Always visible permissions editor */}
         <PermissionsEditor
           t={t}
-          value={shareForm.newGroup}
-          onChange={(next) => onChange({ ...shareForm, newGroup: { ...shareForm.newGroup, ...next } })}
+          value={{
+            see_screen: !!shareForm.newGroup.see_screen,
+            see_system_info: !!shareForm.newGroup.see_system_info,
+            access_mouse: !!shareForm.newGroup.access_mouse,
+            access_keyboard: !!shareForm.newGroup.access_keyboard,
+            access_terminal: !!shareForm.newGroup.access_terminal,
+            manage_power: !!shareForm.newGroup.manage_power,
+          }}
+          onChange={(next) =>
+            onChange({
+              ...shareForm,
+              newGroup: { ...shareForm.newGroup, ...next },
+            })
+          }
         />
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t('form.expiresAt')}
-          </label>
-          <input
+          <Input
+            label={t("form.expiresAt")}
             type="datetime-local"
             value={shareForm.expiresAt}
-            onChange={(e) => onChange({ ...shareForm, expiresAt: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            onChange={(e) =>
+              onChange({ ...shareForm, expiresAt: e.target.value })
+            }
           />
         </div>
       </div>
       <div className="flex justify-end">
-        <button
-          type="submit"
-          className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
-        >
-          {t('form.sendInvitation')}
-        </button>
+        <Button type="submit">{t("form.sendInvitation")}</Button>
       </div>
     </form>
   );
 };
+
+export default InviteShareForm;

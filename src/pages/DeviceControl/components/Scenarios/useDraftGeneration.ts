@@ -29,12 +29,12 @@
  *     'cancelled' state with a stale 'success' or 'error'.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   scenariosService,
   type DraftResponse,
-} from 'src/services/backend/scenariosService.ts';
+} from "src/services/backend/scenariosService.ts";
 
 /**
  * Discriminated union — exactly 5 kinds per UI-SPEC State Machine table.
@@ -49,11 +49,11 @@ import {
  * so callers can extract per-error specifics (e.g. step_index, reset_at).
  */
 export type DraftGenerationState =
-  | { kind: 'idle' }
-  | { kind: 'generating'; startedAt: number }
-  | { kind: 'success'; draft: DraftResponse }
-  | { kind: 'error'; code: string; details?: unknown }
-  | { kind: 'cancelled' };
+  | { kind: "idle" }
+  | { kind: "generating"; startedAt: number }
+  | { kind: "success"; draft: DraftResponse }
+  | { kind: "error"; code: string; details?: unknown }
+  | { kind: "cancelled" };
 
 export interface UseDraftGenerationResult {
   state: DraftGenerationState;
@@ -69,13 +69,13 @@ export interface UseDraftGenerationResult {
  * key only — never as a control-flow gate (T-23-32 mitigation).
  */
 function extractErrorCode(err: unknown): string {
-  const code = (err as { response?: { data?: { error?: unknown } } })
-    ?.response?.data?.error;
-  return typeof code === 'string' && code.length > 0 ? code : 'network';
+  const code = (err as { response?: { data?: { error?: unknown } } })?.response
+    ?.data?.error;
+  return typeof code === "string" && code.length > 0 ? code : "network";
 }
 
 export function useDraftGeneration(): UseDraftGenerationResult {
-  const [state, setState] = useState<DraftGenerationState>({ kind: 'idle' });
+  const [state, setState] = useState<DraftGenerationState>({ kind: "idle" });
   const controllerRef = useRef<AbortController | null>(null);
 
   // Unmount cleanup: abort whatever is in flight so a late resolve doesn't
@@ -95,7 +95,7 @@ export function useDraftGeneration(): UseDraftGenerationResult {
       const controller = new AbortController();
       controllerRef.current = controller;
 
-      setState({ kind: 'generating', startedAt: Date.now() });
+      setState({ kind: "generating", startedAt: Date.now() });
 
       try {
         const draft = await scenariosService.createDraft(
@@ -108,7 +108,7 @@ export function useDraftGeneration(): UseDraftGenerationResult {
         if (controller.signal.aborted) {
           return;
         }
-        setState({ kind: 'success', draft });
+        setState({ kind: "success", draft });
       } catch (err) {
         // If the abort was operator-initiated (cancel() or new generate()),
         // surface as 'cancelled', NOT 'error'. axios surfaces aborts as
@@ -117,7 +117,7 @@ export function useDraftGeneration(): UseDraftGenerationResult {
           return;
         }
         const code = extractErrorCode(err);
-        setState({ kind: 'error', code, details: err });
+        setState({ kind: "error", code, details: err });
       }
     },
     [],
@@ -125,14 +125,12 @@ export function useDraftGeneration(): UseDraftGenerationResult {
 
   const cancel = useCallback((): void => {
     controllerRef.current?.abort();
-    setState({ kind: 'cancelled' });
+    setState({ kind: "cancelled" });
   }, []);
 
   const reset = useCallback((): void => {
-    setState({ kind: 'idle' });
+    setState({ kind: "idle" });
   }, []);
 
   return { state, generate, cancel, reset };
 }
-
-export default useDraftGeneration;

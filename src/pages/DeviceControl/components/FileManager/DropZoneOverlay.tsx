@@ -1,4 +1,4 @@
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
 
 /**
  * Visual-only overlay rendered while the user is dragging files over the file
@@ -14,18 +14,20 @@ import { useTranslation } from 'react-i18next';
  * unobscured so the user can still read the destination context (active root +
  * shared-folders list) while dragging.
  */
-export function DropZoneOverlay() {
-  const { t } = useTranslation('fileManager');
+function DropZoneOverlay() {
+  const { t } = useTranslation("fileManager");
   return (
     <div
-      className="absolute inset-0 z-40 pointer-events-none flex items-center justify-center"
+      className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center"
       aria-hidden="true"
     >
-      <div className="bg-accent/10 border-2 border-dashed border-accent rounded-lg w-[92%] h-[92%] flex items-center justify-center">
+      <div className="bg-accent/10 border-accent flex h-[92%] w-[92%] items-center justify-center rounded-lg border-2 border-dashed">
         <p className="text-accent text-base font-medium">
-          {t('dropZone.drop')}
+          {t("dropZone.drop")}
         </p>
       </div>
     </div>
   );
 }
+
+export default DropZoneOverlay;

@@ -1,7 +1,7 @@
-import { useRef, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useToast } from 'src/components/ui';
-import type { ClipboardRefusalReason } from '../services/clipboard/clipboardProtocol.generated';
+import { useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import { useToast } from "src/components/ui";
+import type { ClipboardRefusalReason } from "src/pages/DeviceControl/services/clipboard/clipboardProtocol.generated";
 
 const THROTTLE_MS = 2_000;
 
@@ -17,11 +17,11 @@ const THROTTLE_MS = 2_000;
  *   schema bump adds the enum member, add it to this map.
  */
 const REASON_TO_KEY: Partial<Record<ClipboardRefusalReason, string>> = {
-  TOO_LARGE: 'toast.refused.tooLarge',
-  NON_TEXT: 'toast.refused.nonText',
-  MASTER_DISABLED: 'toast.refused.masterDisabled',
-  INBOUND_DISABLED: 'toast.refused.inboundDisabled',
-  PAUSED: 'toast.refused.paused',
+  TOO_LARGE: "toast.refused.tooLarge",
+  NON_TEXT: "toast.refused.nonText",
+  MASTER_DISABLED: "toast.refused.masterDisabled",
+  INBOUND_DISABLED: "toast.refused.inboundDisabled",
+  PAUSED: "toast.refused.paused",
   // CAPS_UNKNOWN intentionally omitted (suppressed per RESEARCH OQ 2)
 };
 
@@ -35,16 +35,18 @@ const REASON_TO_KEY: Partial<Record<ClipboardRefusalReason, string>> = {
  * `NaN >= THROTTLE_MS === false` would *block* the first-ever toast. Coercing
  * to 0 makes `now - 0 >= THROTTLE_MS` true on the first fire.
  */
-export function useRefusalToastThrottle(): (reason: ClipboardRefusalReason) => void {
+export function useRefusalToastThrottle(): (
+  reason: ClipboardRefusalReason,
+) => void {
   const { warning } = useToast();
-  const { t } = useTranslation('clipboard');
+  const { t } = useTranslation("clipboard");
   const lastFiredRef = useRef<Map<ClipboardRefusalReason, number>>(new Map());
 
   return useCallback(
     (reason: ClipboardRefusalReason) => {
       // RESEARCH OQ 2 — CAPS_UNKNOWN is intentionally not toasted (no operator
       // action applies). Defensive: it is also unmapped in REASON_TO_KEY below.
-      if (reason === 'CAPS_UNKNOWN') return;
+      if (reason === "CAPS_UNKNOWN") return;
 
       const key = REASON_TO_KEY[reason];
       if (!key) return; // unknown / unmapped reason — fail closed

@@ -1,13 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Modal } from "src/components/ui";
 import type {
   FileEntry,
   FilesListResponse,
   FilesListRootsResponse,
-} from '../../services/files';
-import type { UseFilesChannel } from '../../hooks/useFilesChannel';
-import { ChevronRightIcon, ChevronDownIcon, FolderIcon } from './icons';
-import { mapFilesErrorToMessage } from './utils/errors';
+} from "src/pages/DeviceControl/services/files/filesProtocol.generated";
+import type { UseFilesChannel } from "src/pages/DeviceControl/hooks/realtime/useFilesChannel";
+import { ChevronRightIcon, ChevronDownIcon, FolderIcon } from "./icons";
+import { mapFilesErrorToMessage } from "./utils/errors";
 
 interface FolderPickerModalProps {
   open: boolean;
@@ -37,7 +38,8 @@ interface FolderPickerModalProps {
    * In-flight gate. When true, the panel is iterating files.move /
    * files.copy sequentially over the source paths. Confirm + Cancel both
    * disabled, Confirm shows a spinner, Esc / overlay-click cancellation
-   * suppressed -- mirrors {@link ConfirmDialog}'s `isBusy` semantics.
+   * suppressed -- mirrors the `isBusy` semantics used across file manager
+   * dialogs.
    */
   isBusy?: boolean;
   onConfirm: (destinationPath: string) => void;
@@ -65,9 +67,8 @@ const EMPTY_NODE: NodeState = {
 /**
  * Tree-view folder picker used by Move to… and Copy to… (plan 10-05).
  *
- * Visual language matches {@link ConfirmDialog} (fixed-inset overlay +
- * centered card + z-50). Card is wider (`max-w-lg`) since the tree wants a
- * little horizontal breathing room.
+ * Card is wider (`size="lg"`) since the tree wants a little horizontal
+ * breathing room.
  *
  * Lazy-loaded tree:
  *   - On open, calls `files.listRoots({})` and seeds the top-level nodes.
@@ -86,10 +87,11 @@ const EMPTY_NODE: NodeState = {
  *
  * In-flight safety (`isBusy`): once Confirm fires the panel's move/copy
  * loop, the modal stays mounted with `isBusy=true`. Confirm + Cancel are
- * disabled, Esc and overlay-click cancellation are suppressed -- the
- * panel will dismiss the modal in its `finally` block.
+ * disabled, Esc and overlay-click cancellation are suppressed via
+ * suppressEsc/suppressOverlayClick -- the panel will dismiss the modal in
+ * its `finally` block.
  */
-export function FolderPickerModal({
+function FolderPickerModal({
   open,
   title,
   confirmLabel,
@@ -100,7 +102,7 @@ export function FolderPickerModal({
   onConfirm,
   onCancel,
 }: FolderPickerModalProps) {
-  const { t } = useTranslation('fileManager');
+  const { t } = useTranslation("fileManager");
   const [roots, setRoots] = useState<FileEntry[] | null>(null);
   const [rootsError, setRootsError] = useState<string | null>(null);
   // Per-path expansion + child cache.
@@ -133,12 +135,12 @@ export function FolderPickerModal({
     if (!open) return;
     const request = channel.request;
     if (!request) {
-      setRootsError(t('panel.filesChannelDisconnected'));
+      setRootsError(t("panel.filesChannelDisconnected"));
       return;
     }
     let cancelled = false;
     request<Record<string, never>, FilesListRootsResponse>(
-      'files.listRoots',
+      "files.listRoots",
       {},
     )
       .then((res) => {
@@ -154,19 +156,6 @@ export function FolderPickerModal({
     };
   }, [open, channel.request, t]);
 
-  // Esc cancels only when not busy.
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !isBusy) {
-        e.preventDefault();
-        onCancel();
-      }
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [open, isBusy, onCancel]);
-
   const fetchChildren = useCallback(
     async (path: string) => {
       const request = channel.request;
@@ -177,7 +166,7 @@ export function FolderPickerModal({
       setNodeTick((tick) => tick + 1);
       try {
         const res = await request<{ path: string }, FilesListResponse>(
-          'files.list',
+          "files.list",
           { path },
         );
         // Folders only -- this is a folder picker.
@@ -233,41 +222,28 @@ export function FolderPickerModal({
     [isDisallowed],
   );
 
-  const handleOverlayClick = () => {
-    if (isBusy) return;
-    onCancel();
-  };
-
-  const canConfirm =
-    !!selectedPath && !isDisallowed(selectedPath) && !isBusy;
-
-  if (!open) return null;
+  const canConfirm = !!selectedPath && !isDisallowed(selectedPath) && !isBusy;
 
   return (
-    <div
-      className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center"
-      onClick={handleOverlayClick}
-      role="presentation"
+    <Modal
+      open={open}
+      onClose={onCancel}
+      size="lg"
+      suppressEsc={!!isBusy}
+      suppressOverlayClick={!!isBusy}
     >
-      <div
-        className="bg-background border border-lightgray rounded-lg shadow-xl max-w-lg w-[90%] p-6"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-      >
-        <h2 className="text-lg font-semibold mb-3 text-text">{title}</h2>
-
-        <div className="max-h-[60vh] overflow-auto border border-lightgray rounded-md p-1 mb-4 bg-background">
+      <Modal.Header>{title}</Modal.Header>
+      <Modal.Body>
+        <div className="border-lightgray bg-background mb-4 max-h-[60vh] overflow-auto rounded-md border p-1">
           {rootsError ? (
-            <div className="p-3 text-sm text-error">{rootsError}</div>
+            <div className="text-error p-3 text-sm">{rootsError}</div>
           ) : roots === null ? (
-            <div className="p-3 text-sm text-darkgray">
-              {t('dialogs.folderPicker.loading')}
+            <div className="text-darkgray p-3 text-sm">
+              {t("dialogs.folderPicker.loading")}
             </div>
           ) : roots.length === 0 ? (
-            <div className="p-3 text-sm text-darkgray">
-              {t('dialogs.folderPicker.noSharedFolders')}
+            <div className="text-darkgray p-3 text-sm">
+              {t("dialogs.folderPicker.noSharedFolders")}
             </div>
           ) : (
             <ul role="tree" className="text-sm">
@@ -290,35 +266,34 @@ export function FolderPickerModal({
             </ul>
           )}
         </div>
-
-        <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={!!isBusy}
-            className="px-4 py-2 border border-lightgray rounded-md text-text hover:bg-tertiary disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {t('dialogs.cancel')}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              if (selectedPath) onConfirm(selectedPath);
-            }}
-            disabled={!canConfirm}
-            className="px-4 py-2 bg-accent text-white rounded-md hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2"
-          >
-            {isBusy && (
-              <span
-                className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"
-                aria-hidden="true"
-              />
-            )}
-            {confirmLabel}
-          </button>
-        </div>
-      </div>
-    </div>
+      </Modal.Body>
+      <Modal.Footer>
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={!!isBusy}
+          className="border-lightgray text-text hover:bg-tertiary rounded-md border px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {t("dialogs.cancel")}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            if (selectedPath) onConfirm(selectedPath);
+          }}
+          disabled={!canConfirm}
+          className="bg-accent inline-flex items-center gap-2 rounded-md px-4 py-2 text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isBusy && (
+            <span
+              className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent"
+              aria-hidden="true"
+            />
+          )}
+          {confirmLabel}
+        </button>
+      </Modal.Footer>
+    </Modal>
   );
 }
 
@@ -348,7 +323,7 @@ function TreeNode({
   nodes,
   nodeTick,
 }: TreeNodeProps) {
-  const { t } = useTranslation('fileManager');
+  const { t } = useTranslation("fileManager");
   const isExpanded = expanded.has(entry.path);
   const isSelected = selectedPath === entry.path;
   const disallowed = isDisallowed(entry.path);
@@ -365,20 +340,20 @@ function TreeNode({
   // forbidden cursor but keep full text colour -- the badge carries the
   // semantics, not the greyed-out look.
   const rowCls = [
-    'flex items-center gap-1 py-1 pl-1 pr-2 rounded transition-colors',
+    "flex items-center gap-1 py-1 pl-1 pr-2 rounded transition-colors",
     isSelected
-      ? 'bg-accent/20 border-l-4 border-accent'
+      ? "bg-accent/20 border-l-4 border-accent"
       : isCurrent
-        ? 'bg-primary/5 border-l-4 border-primary/40'
-        : 'border-l-4 border-transparent',
+        ? "bg-primary/5 border-l-4 border-primary/40"
+        : "border-l-4 border-transparent",
     disallowed
       ? isCurrent
-        ? 'cursor-default'
-        : 'opacity-50 cursor-not-allowed'
-      : 'hover:bg-tertiary cursor-pointer',
+        ? "cursor-default"
+        : "opacity-50 cursor-not-allowed"
+      : "hover:bg-tertiary cursor-pointer",
   ]
     .filter(Boolean)
-    .join(' ');
+    .join(" ");
 
   return (
     <li role="treeitem" aria-expanded={isExpanded}>
@@ -391,43 +366,43 @@ function TreeNode({
           type="button"
           aria-label={
             isExpanded
-              ? t('dialogs.folderPicker.collapse')
-              : t('dialogs.folderPicker.expand')
+              ? t("dialogs.folderPicker.collapse")
+              : t("dialogs.folderPicker.expand")
           }
           onClick={(e) => {
             e.stopPropagation();
             onToggle(entry.path);
           }}
-          className="p-0.5 rounded hover:bg-lightgray/30 text-text"
+          className="hover:bg-lightgray/30 text-text rounded p-0.5"
         >
           {isExpanded ? (
-            <ChevronDownIcon className="w-3 h-3" />
+            <ChevronDownIcon className="h-3 w-3" />
           ) : (
-            <ChevronRightIcon className="w-3 h-3" />
+            <ChevronRightIcon className="h-3 w-3" />
           )}
         </button>
-        <FolderIcon className="w-4 h-4 text-primary" />
-        <span className="truncate text-text" title={entry.path}>
+        <FolderIcon className="text-primary h-4 w-4" />
+        <span className="text-text truncate" title={entry.path}>
           {entry.name}
         </span>
         {isCurrent && (
           <span
-            className="ml-1 shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wide bg-primary/15 text-primary border border-primary/30"
-            aria-label={t('dialogs.folderPicker.currentLabel')}
+            className="bg-primary/15 text-primary border-primary/30 ml-1 inline-flex shrink-0 items-center rounded border px-1.5 py-0.5 text-[10px] tracking-wide uppercase"
+            aria-label={t("dialogs.folderPicker.currentLabel")}
           >
-            {t('dialogs.folderPicker.currentLabel')}
+            {t("dialogs.folderPicker.currentLabel")}
           </span>
         )}
         {node.loading && (
           <span
-            className="ml-1 inline-block w-3 h-3 border-2 border-darkgray border-t-transparent rounded-full animate-spin"
+            className="border-darkgray ml-1 inline-block h-3 w-3 animate-spin rounded-full border-2 border-t-transparent"
             aria-hidden="true"
           />
         )}
       </div>
       {node.error && isExpanded && (
         <div
-          className="text-xs text-error pl-2 py-1"
+          className="text-error py-1 pl-2 text-xs"
           style={{ paddingLeft: `${(depth + 1) * 16 + 4}px` }}
         >
           {node.error}
@@ -435,10 +410,10 @@ function TreeNode({
       )}
       {isExpanded && node.loaded && node.children.length === 0 && (
         <div
-          className="text-xs text-darkgray py-1"
+          className="text-darkgray py-1 text-xs"
           style={{ paddingLeft: `${(depth + 1) * 16 + 4}px` }}
         >
-          {t('dialogs.folderPicker.noFolders')}
+          {t("dialogs.folderPicker.noFolders")}
         </div>
       )}
       {isExpanded && node.children.length > 0 && (
@@ -463,3 +438,5 @@ function TreeNode({
     </li>
   );
 }
+
+export default FolderPickerModal;

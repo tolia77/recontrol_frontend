@@ -1,17 +1,18 @@
-import { useState } from 'react';
-import logoFull from 'src/assets/img/logo-full.svg';
-import { Link, useNavigate } from 'react-router';
-import { loginRequest } from 'src/services/backend/authRequests';
-import { saveTokens, saveUserId, saveUserRole } from 'src/utils/auth';
-import { useTranslation, Trans } from 'react-i18next';
-import { Button } from 'src/components/ui/Button';
+import { useState } from "react";
+import logoFull from "src/assets/img/logo-full.svg";
+import { Link, useNavigate } from "react-router";
+import { loginRequest } from "src/services/backend/authService";
+import { saveTokens, saveUserId, saveUserRole } from "src/utils/auth";
+import { useTranslation, Trans } from "react-i18next";
+import Button from "src/components/ui/Button";
+import { Input } from "src/components/ui";
 
 function Login() {
-  const { t } = useTranslation('auth');
+  const { t } = useTranslation("auth");
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -26,13 +27,13 @@ function Login() {
       saveUserId(res.data.user_id);
       const role = res.data.role || null;
       saveUserRole(role);
-      navigate('/dashboard');
+      navigate("/dashboard");
     } catch (error: unknown) {
       const err = error as { response?: { status?: number } } | undefined;
       if (err?.response?.status === 401) {
-        setErrors([t('login.errors.invalid')]);
+        setErrors([t("login.errors.invalid")]);
       } else {
-        setErrors([t('login.errors.generic', 'Something went wrong')]);
+        setErrors([t("login.errors.generic", "Something went wrong")]);
       }
     } finally {
       setLoading(false);
@@ -40,62 +41,59 @@ function Login() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-tertiary/30 to-background">
+    <main className="from-tertiary/30 to-background flex min-h-screen items-center justify-center bg-gradient-to-b">
       <div className="flex flex-col items-center space-y-8 p-8">
         <img src={logoFull} alt="logo" className="h-16" />
-        <h1 className="text-3xl font-bold text-primary">{t('login.title')}</h1>
+        <h1 className="text-primary text-3xl font-bold">{t("login.title")}</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-4 min-w-[350px]">
+        <form onSubmit={handleSubmit} className="min-w-[350px] space-y-4">
           {errors.length > 0 && (
-            <div className="p-3 bg-error/10 border border-error/20 rounded-lg">
-              {errors.map(err => (
-                <p key={err} className="text-error text-sm">{err}</p>
+            <div className="bg-error/10 border-error/20 rounded-lg border p-3">
+              {errors.map((err) => (
+                <p key={err} className="text-error text-sm">
+                  {err}
+                </p>
               ))}
             </div>
           )}
 
-          <div>
-            <label className="text-sm font-medium" htmlFor="email">
-              {t('login.email')}
-            </label>
-            <input
-              className="w-full mt-1"
-              type="email"
-              id="email"
-              name="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-            />
-          </div>
+          <Input
+            label={t("login.email")}
+            type="email"
+            id="email"
+            name="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+          />
 
-          <div>
-            <label className="text-sm font-medium" htmlFor="password">
-              {t('login.password')}
-            </label>
-            <input
-              className="w-full mt-1"
-              type="password"
-              id="password"
-              name="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-            />
-          </div>
+          <Input
+            label={t("login.password")}
+            type="password"
+            id="password"
+            name="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+          />
 
           <Button type="submit" loading={loading} className="w-full">
-            {t('login.submit')}
+            {t("login.submit")}
           </Button>
 
-          <p className="text-sm text-center">
+          <p className="text-center text-sm">
             <Trans
               ns="auth"
               i18nKey="login.noAccount"
               components={{
-                signupLink: <Link className="text-secondary hover:underline" to="/signup" />
+                signupLink: (
+                  <Link
+                    className="text-secondary hover:underline"
+                    to="/signup"
+                  />
+                ),
               }}
             />
           </p>

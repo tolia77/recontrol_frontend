@@ -1,4 +1,4 @@
-import type { FilesError, FilesErrorCode } from './filesProtocol.generated';
+import type { FilesError, FilesErrorCode } from "./filesProtocol.generated";
 
 /**
  * Error thrown (via Promise rejection) by FilesChannelClient.request when the
@@ -14,7 +14,7 @@ export class FilesChannelError extends Error {
 
   constructor(info: FilesError) {
     super(info.message);
-    this.name = 'FilesChannelError';
+    this.name = "FilesChannelError";
     this.info = info;
   }
 }
@@ -27,7 +27,7 @@ interface PendingEntry {
 
 interface FilesResponse {
   id?: string;
-  status?: 'success' | 'error';
+  status?: "success" | "error";
   result?: unknown;
   error?: FilesError;
 }
@@ -50,14 +50,17 @@ export class FilesChannelClient {
   private readonly dc: RTCDataChannel;
   private readonly defaultTimeoutMs: number;
   private readonly pending = new Map<string, PendingEntry>();
-  private readonly eventListeners = new Map<string, Set<(payload: unknown) => void>>();
+  private readonly eventListeners = new Map<
+    string,
+    Set<(payload: unknown) => void>
+  >();
   private disposed = false;
 
   constructor(dc: RTCDataChannel, defaultTimeoutMs: number = 15_000) {
     this.dc = dc;
     this.defaultTimeoutMs = defaultTimeoutMs;
-    dc.addEventListener('message', this.onMessage);
-    dc.addEventListener('close', this.onClose);
+    dc.addEventListener("message", this.onMessage);
+    dc.addEventListener("close", this.onClose);
   }
 
   /**
@@ -77,15 +80,15 @@ export class FilesChannelClient {
     if (this.disposed) {
       return Promise.reject(
         new FilesChannelError({
-          code: 'DISPOSED' as FilesErrorCode,
-          message: 'FilesChannelClient is disposed',
+          code: "DISPOSED" as FilesErrorCode,
+          message: "FilesChannelClient is disposed",
         }),
       );
     }
-    if (this.dc.readyState !== 'open') {
+    if (this.dc.readyState !== "open") {
       return Promise.reject(
         new FilesChannelError({
-          code: 'CHANNEL_NOT_OPEN' as FilesErrorCode,
+          code: "CHANNEL_NOT_OPEN" as FilesErrorCode,
           message: `files-ctl state is ${this.dc.readyState}`,
         }),
       );
@@ -100,7 +103,7 @@ export class FilesChannelClient {
         this.pending.delete(id);
         reject(
           new FilesChannelError({
-            code: 'TIMEOUT' as FilesErrorCode,
+            code: "TIMEOUT" as FilesErrorCode,
             message: `${command} timed out after ${ms} ms`,
             data: { command, timeoutMs: ms },
           }),
@@ -120,7 +123,7 @@ export class FilesChannelClient {
         clearTimeout(timer);
         reject(
           new FilesChannelError({
-            code: 'CHANNEL_NOT_OPEN' as FilesErrorCode,
+            code: "CHANNEL_NOT_OPEN" as FilesErrorCode,
             message: `send failed: ${(err as Error).message}`,
           }),
         );
@@ -157,7 +160,7 @@ export class FilesChannelClient {
     let parsed: FilesResponse;
     try {
       const raw =
-        typeof ev.data === 'string'
+        typeof ev.data === "string"
           ? ev.data
           : new TextDecoder().decode(ev.data);
       parsed = JSON.parse(raw);
@@ -170,15 +173,22 @@ export class FilesChannelClient {
     // they correlate by command name to the listener registry, NOT to
     // the pending-request map. Returns immediately so the rest of the
     // method only runs for request/response correlation.
-    const maybeEvent = parsed as unknown as { status?: string; command?: string; payload?: unknown };
-    if (maybeEvent.status === 'event' && typeof maybeEvent.command === 'string') {
+    const maybeEvent = parsed as unknown as {
+      status?: string;
+      command?: string;
+      payload?: unknown;
+    };
+    if (
+      maybeEvent.status === "event" &&
+      typeof maybeEvent.command === "string"
+    ) {
       const set = this.eventListeners.get(maybeEvent.command);
       if (set) {
         for (const cb of set) {
           try {
             cb(maybeEvent.payload);
           } catch (err) {
-            console.error('[files-ctl] event listener threw', err);
+            console.error("[files-ctl] event listener threw", err);
           }
         }
       }
@@ -193,15 +203,15 @@ export class FilesChannelClient {
     this.pending.delete(parsed.id);
     clearTimeout(entry.timer);
 
-    if (parsed.status === 'success') {
+    if (parsed.status === "success") {
       entry.resolve(parsed.result);
-    } else if (parsed.status === 'error' && parsed.error) {
+    } else if (parsed.status === "error" && parsed.error) {
       entry.reject(new FilesChannelError(parsed.error));
     } else {
       entry.reject(
         new FilesChannelError({
-          code: 'MALFORMED_RESPONSE' as FilesErrorCode,
-          message: 'files-ctl response missing status or error',
+          code: "MALFORMED_RESPONSE" as FilesErrorCode,
+          message: "files-ctl response missing status or error",
         }),
       );
     }
@@ -212,8 +222,8 @@ export class FilesChannelClient {
       clearTimeout(entry.timer);
       entry.reject(
         new FilesChannelError({
-          code: 'CHANNEL_NOT_OPEN' as FilesErrorCode,
-          message: 'files-ctl closed while request was pending',
+          code: "CHANNEL_NOT_OPEN" as FilesErrorCode,
+          message: "files-ctl closed while request was pending",
         }),
       );
     }
@@ -232,14 +242,14 @@ export class FilesChannelClient {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
-    this.dc.removeEventListener('message', this.onMessage);
-    this.dc.removeEventListener('close', this.onClose);
+    this.dc.removeEventListener("message", this.onMessage);
+    this.dc.removeEventListener("close", this.onClose);
     for (const [, entry] of this.pending) {
       clearTimeout(entry.timer);
       entry.reject(
         new FilesChannelError({
-          code: 'DISPOSED' as FilesErrorCode,
-          message: 'FilesChannelClient disposed',
+          code: "DISPOSED" as FilesErrorCode,
+          message: "FilesChannelClient disposed",
         }),
       );
     }

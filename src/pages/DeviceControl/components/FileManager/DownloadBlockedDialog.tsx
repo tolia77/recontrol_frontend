@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { Modal } from "src/components/ui";
 
 /**
  * Modal shown when a user attempts to download a file > 100 MiB on a browser
@@ -23,34 +24,14 @@ interface DownloadBlockedDialogProps {
   onClose: () => void;
 }
 
-export function DownloadBlockedDialog({
+function DownloadBlockedDialog({
   open,
   fileName,
   sizeBytes,
   onClose,
 }: DownloadBlockedDialogProps) {
-  const { t } = useTranslation('fileManager');
+  const { t } = useTranslation("fileManager");
   const okRef = useRef<HTMLButtonElement>(null);
-
-  // Focus the OK button on open so Enter/Space dismisses without a click.
-  useEffect(() => {
-    if (open) okRef.current?.focus();
-  }, [open]);
-
-  // Esc dismisses; mirrors ConfirmDialog's pattern.
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
-      }
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
-
-  if (!open) return null;
 
   // Decimal MB display matches user mental model (1 MB = 1 million bytes in
   // marketing copy). The underlying capability check is binary MiB
@@ -58,32 +39,31 @@ export function DownloadBlockedDialog({
   const sizeMb = Math.round(sizeBytes / 1_000_000);
 
   return (
-    <div
-      className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center"
-      onClick={onClose}
+    <Modal
+      open={open}
+      onClose={onClose}
+      size="md"
+      initialFocusRef={okRef as React.RefObject<HTMLElement | null>}
     >
-      <div
-        className="bg-background border border-lightgray rounded-lg shadow-xl max-w-md w-[90%] p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="text-lg font-semibold mb-3 text-text">
-          {t('dialogs.downloadBlocked.title')}
-        </h2>
-        <p className="text-sm text-text/80 mb-2 break-all">{fileName}</p>
-        <p className="text-sm text-text/80 mb-4">
-          {t('dialogs.downloadBlocked.body', { sizeMb })}
+      <Modal.Header>{t("dialogs.downloadBlocked.title")}</Modal.Header>
+      <Modal.Body>
+        <p className="text-text/80 mb-2 text-sm break-all">{fileName}</p>
+        <p className="text-text/80 text-sm">
+          {t("dialogs.downloadBlocked.body", { sizeMb })}
         </p>
-        <div className="flex justify-end">
-          <button
-            ref={okRef}
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 bg-accent text-white rounded-md hover:opacity-90"
-          >
-            {t('dialogs.ok')}
-          </button>
-        </div>
-      </div>
-    </div>
+      </Modal.Body>
+      <Modal.Footer>
+        <button
+          ref={okRef}
+          type="button"
+          onClick={onClose}
+          className="bg-accent rounded-md px-4 py-2 text-white hover:opacity-90"
+        >
+          {t("dialogs.ok")}
+        </button>
+      </Modal.Footer>
+    </Modal>
   );
 }
+
+export default DownloadBlockedDialog;
