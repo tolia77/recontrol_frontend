@@ -4,7 +4,7 @@ import {
   getUserRequest,
   updateUserSelfRequest,
 } from "src/services/backend/usersService";
-import { logoutRequest } from "src/services/backend/authService";
+import { authService } from "src/services/backend/authService";
 import type { UserResponse } from "src/services/backend/usersService";
 import { getErrorMessage } from "src/utils/getErrorMessage";
 import { useTranslation } from "react-i18next";
@@ -77,7 +77,7 @@ function UserSettings() {
   async function handleLogout() {
     setLogoutLoading(true);
     try {
-      await logoutRequest();
+      await authService.logout();
     } catch {
       // ignore error; proceed with local cleanup
     } finally {

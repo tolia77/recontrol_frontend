@@ -1,7 +1,7 @@
 import { useState } from "react";
 import logoFull from "src/assets/img/logo-full.svg";
 import { Link, useNavigate } from "react-router";
-import { registerRequest } from "src/services/backend/authService";
+import { authService } from "src/services/backend/authService";
 import { saveTokens, saveUserId } from "src/utils/auth";
 import { getErrorMessage } from "src/utils/getErrorMessage";
 import { useTranslation, Trans } from "react-i18next";
@@ -33,7 +33,7 @@ function Signup() {
     setLoading(true);
 
     try {
-      const res = await registerRequest(username, email, password);
+      const res = await authService.register(username, email, password);
       saveTokens(res.data.access_token, res.data.refresh_token);
       saveUserId(res.data.user_id);
       navigate("/dashboard");

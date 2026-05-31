@@ -1,7 +1,7 @@
 import { useState } from "react";
 import logoFull from "src/assets/img/logo-full.svg";
 import { Link, useNavigate } from "react-router";
-import { loginRequest } from "src/services/backend/authService";
+import { authService } from "src/services/backend/authService";
 import { saveTokens, saveUserId, saveUserRole } from "src/utils/auth";
 import { useTranslation, Trans } from "react-i18next";
 import Button from "src/components/ui/Button";
@@ -22,7 +22,7 @@ function Login() {
     setLoading(true);
 
     try {
-      const res = await loginRequest(email, password);
+      const res = await authService.login(email, password);
       saveTokens(res.data.access_token, res.data.refresh_token);
       saveUserId(res.data.user_id);
       const role = res.data.role || null;
