@@ -1,10 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router";
-import {
-  getDeviceRequest,
-  updateDeviceRequest,
-  deleteDeviceRequest,
-} from "src/services/backend/devicesService";
+import { devicesService } from "src/services/backend/devicesService";
 import {
   listDeviceSharesRequest,
   createDeviceShareRequest,
@@ -119,7 +115,7 @@ export function useDeviceSettings(
 
   const loadDeviceData = useCallback(async () => {
     try {
-      const response = await getDeviceRequest(deviceId!);
+      const response = await devicesService.get(deviceId!);
       setDevice(response.data);
       setDeviceForm({ name: response.data.name });
     } catch {
@@ -160,7 +156,7 @@ export function useDeviceSettings(
     async (e: React.FormEvent) => {
       e.preventDefault();
       try {
-        const response = await updateDeviceRequest(deviceId!, {
+        const response = await devicesService.update(deviceId!, {
           name: deviceForm.name,
         });
         setDevice(response.data);
@@ -403,7 +399,7 @@ export function useDeviceSettings(
   const handleDeleteDevice = useCallback(async () => {
     if (!confirm(t("info.deleteConfirm"))) return;
     try {
-      await deleteDeviceRequest(deviceId!);
+      await devicesService.remove(deviceId!);
       toast.success(t("info.deleted"));
       navigate("/devices");
     } catch {

@@ -7,7 +7,7 @@ import UpgradeModal from "src/components/ui/UpgradeModal";
 import { getUserId } from "src/utils/auth";
 import { useToast } from "src/components/ui";
 import type { Mode } from "src/pages/DeviceControl/types";
-import { getDeviceRequest } from "src/services/backend/devicesService";
+import { devicesService } from "src/services/backend/devicesService";
 import { usePermissions } from "./hooks/state/usePermissions";
 import { useTerminalSession } from "./hooks/state/useTerminalSession";
 import { useStreamControls } from "./hooks/state/useStreamControls";
@@ -310,7 +310,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
       setDeviceId(paramDeviceId);
       // Determine ownership first
       try {
-        const deviceRes = await getDeviceRequest(paramDeviceId);
+        const deviceRes = await devicesService.get(paramDeviceId);
         const deviceUserId = deviceRes.data?.user?.id;
         const currentUserId = getUserId();
         const owner =

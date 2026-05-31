@@ -1,8 +1,10 @@
 import { useEffect, useState, useRef } from "react";
 import DevicesTable from "src/pages/Devices/DevicesTable";
 import type { Device } from "src/types";
-import type { GetMyDevicesParams } from "src/services/backend/devicesService";
-import { getMyDevicesRequest } from "src/services/backend/devicesService";
+import {
+  devicesService,
+  type GetMyDevicesParams,
+} from "src/services/backend/devicesService";
 import { useTranslation } from "react-i18next";
 import Button from "src/components/ui/Button";
 import { LoadingState } from "src/components/ui";
@@ -26,7 +28,7 @@ function Devices() {
   const fetchDevices = (params?: GetMyDevicesParams) => {
     const currentId = ++requestIdRef.current;
     setLoading(true);
-    getMyDevicesRequest(params)
+    devicesService.list(params)
       .then((res) => {
         if (currentId === requestIdRef.current) {
           setDevices(res.data.devices);

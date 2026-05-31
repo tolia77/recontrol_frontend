@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
-import { getMyDevicesRequest } from "src/services/backend/devicesService";
+import { devicesService } from "src/services/backend/devicesService";
 import Card from "src/components/ui/Card";
 import CardHeader from "src/components/ui/CardHeader";
 import Button from "src/components/ui/Button";
@@ -30,7 +30,7 @@ function Dashboard() {
 
   useEffect(() => {
     setLoadingDevices(true);
-    getMyDevicesRequest()
+    devicesService.list()
       .then((res) => {
         setDevices(res.data.devices || []);
         setLastUpdated(new Date().toLocaleTimeString());
