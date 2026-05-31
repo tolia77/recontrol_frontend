@@ -132,6 +132,16 @@ export const subscription = {
     manageCta: "Go to subscription",
     backCta: "Back to subscription",
   },
+
+  gate: {
+    device_sharing:       { header: "Device sharing requires an upgrade" },
+    device_limit:         { header: "You've reached your device limit ({{current}}/{{limit}})" },
+    scenario_limit:       { header: "You've reached your scenario limit ({{current}}/{{limit}})" },
+    ai_draft_daily_limit: { header: "You've reached your daily AI draft limit ({{current}}/{{limit}})" },
+    ai_access:            { header: "AI assistant requires an upgrade" },
+    viewPlans: "View plans",
+    dismiss:   "Dismiss",
+  },
 };
 
 // UK subscription namespace
@@ -267,5 +277,15 @@ export const subscription_uk = {
     refreshCta: "Оновити",
     manageCta: "Перейти до підписки",
     backCta: "Назад до підписки",
+  },
+
+  gate: {
+    device_sharing:       { header: "Спільний доступ до пристроїв потребує оновлення плану" },
+    device_limit:         { header: "Ви досягли ліміту пристроїв ({{current}}/{{limit}})" },
+    scenario_limit:       { header: "Ви досягли ліміту сценаріїв ({{current}}/{{limit}})" },
+    ai_draft_daily_limit: { header: "Ви досягли денного ліміту AI-чернеток ({{current}}/{{limit}})" },
+    ai_access:            { header: "AI-асистент потребує оновлення плану" },
+    viewPlans: "Переглянути плани",
+    dismiss:   "Закрити",
   },
 };
