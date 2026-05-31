@@ -1,16 +1,18 @@
-import { backendInstance } from "src/services/backend/config.ts";
+import { BaseService } from "src/services/backend/BaseService.ts";
 import type { PermissionsGroup, PermissionCapabilities } from "src/types";
 
-export async function listPermissionsGroupsRequest() {
-  return await backendInstance.get<{ items: PermissionsGroup[] }>(
-    "/permissions-groups",
-  );
+class PermissionsGroupsService extends BaseService {
+  async list() {
+    return await this.api.get<{ items: PermissionsGroup[] }>(
+      "/permissions-groups",
+    );
+  }
+
+  async create(attrs: PermissionCapabilities & { name: string }) {
+    return await this.api.post("/permissions-groups", {
+      permissions_group: attrs,
+    });
+  }
 }
 
-export async function createPermissionsGroupRequest(
-  attrs: PermissionCapabilities & { name: string },
-) {
-  return await backendInstance.post("/permissions-groups", {
-    permissions_group: attrs,
-  });
-}
+export const permissionsGroupsService = new PermissionsGroupsService();

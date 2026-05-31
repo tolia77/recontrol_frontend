@@ -2,10 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { devicesService } from "src/services/backend/devicesService";
 import { deviceSharesService } from "src/services/backend/deviceSharesService";
-import {
-  listPermissionsGroupsRequest,
-  createPermissionsGroupRequest,
-} from "src/services/backend/permissionsGroupsService";
+import { permissionsGroupsService } from "src/services/backend/permissionsGroupsService";
 import { useTranslation } from "react-i18next";
 import { useToast } from "src/components/ui/Toast";
 import type {
@@ -131,7 +128,7 @@ export function useDeviceSettings(
 
   const loadPermissionsGroups = useCallback(async () => {
     try {
-      const response = await listPermissionsGroupsRequest();
+      const response = await permissionsGroupsService.list();
       setPermissionsGroups(response.data.items || []);
     } catch {
       console.error("Failed to load permissions groups");
@@ -233,7 +230,7 @@ export function useDeviceSettings(
       return;
     }
     try {
-      await createPermissionsGroupRequest({
+      await permissionsGroupsService.create({
         name: name.trim(),
         see_screen: see_screen ?? null,
         see_system_info: see_system_info ?? null,
