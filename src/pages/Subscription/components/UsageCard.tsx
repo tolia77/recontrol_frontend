@@ -1,28 +1,15 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import Card from "src/components/ui/Card";
 import CardHeader from "src/components/ui/CardHeader";
 import { LoadingState } from "src/components/ui";
-import {
-  subscriptionService,
-  type SubscriptionUsage,
-} from "src/services/backend/subscriptionService";
+import { useSubscription } from "src/contexts/SubscriptionContext";
 import UsageBar from "./UsageBar";
 
 function UsageCard() {
   const { t } = useTranslation("subscription");
   const navigate = useNavigate();
-  const [usage, setUsage] = useState<SubscriptionUsage | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    subscriptionService
-      .getUsage()
-      .then((u) => setUsage(u))
-      .catch(() => setUsage(null))
-      .finally(() => setLoading(false));
-  }, []);
+  const { usage, loading } = useSubscription();
 
   const handleUpgradeClick = () => {
     void navigate("/subscription");

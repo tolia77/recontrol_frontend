@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Card, Button, ConfirmModal } from "src/components/ui";
+import { Button, ConfirmModal } from "src/components/ui";
 import { useToast } from "src/components/ui";
 import { useSubscription } from "src/contexts/SubscriptionContext";
 import {
@@ -11,6 +11,7 @@ import {
 } from "src/services/backend/subscriptionService";
 import { getErrorMessage } from "src/utils/getErrorMessage";
 import { formatPrice } from "src/utils/formatPrice";
+import PlanComparison from "./PlanComparison";
 
 // ── Free-tier limits for cancel-impact diff (D-16) ───────────────────────────
 const FREE_DEVICE_LIMIT = 2;
@@ -68,11 +69,9 @@ interface PlanCardsProps {
 // ── Component ─────────────────────────────────────────────────────────────────
 function PlanCards({ status }: PlanCardsProps) {
   const { t } = useTranslation("subscription");
-  const { refresh } = useSubscription();
+  const { plans, loading: loadingPlans, refresh } = useSubscription();
   const { error: toastError } = useToast();
 
-  const [plans, setPlans] = useState<Plan[]>([]);
-  const [loadingPlans, setLoadingPlans] = useState(true);
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -83,14 +82,6 @@ function PlanCards({ status }: PlanCardsProps) {
     ai_drafts_used: number;
     device_sharing: boolean;
   } | null>(null);
-
-  useEffect(() => {
-    subscriptionService
-      .getPlans()
-      .then((data) => setPlans(data))
-      .catch(() => setPlans([]))
-      .finally(() => setLoadingPlans(false));
-  }, []);
 
   // ── Derive current plan price from fetched plans list ─────────────────────
   const currentPlanName = status?.plan_name ?? "free";
@@ -369,32 +360,17 @@ function PlanCards({ status }: PlanCardsProps) {
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+      {/* Read-only plan comparison grid — extracted to PlanComparison */}
+      <PlanComparison plans={plans} />
+
+      {/* CTA row — one action per plan column, aligned below the comparison grid */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4 mt-4">
         {plans.map((plan) => {
           const cta = getCta(plan);
           const isCurrent = cta === "current";
 
           return (
-            <Card key={plan.id} padding="lg" className="flex flex-col">
-              {/* Plan name */}
-              <h3 className="text-xl font-semibold mb-2">
-                {t(`plan.${plan.name}`)}
-              </h3>
-
-              {/* Price */}
-              <h2 className="text-2xl font-semibold mb-4">
-                {plan.monthly_price === 0
-                  ? t("price.free")
-                  : t("price.paid", { price: formatPrice(plan.monthly_price) })}
-              </h2>
-
-              {/* Feature highlights (placeholder list key — locale provides copy) */}
-              <ul className="text-sm text-darkgray space-y-1 mb-6 flex-1">
-                {["feature1", "feature2", "feature3"].map((key) => (
-                  <li key={key}>{t(`planFeature.${plan.name}.${key}`, { defaultValue: "" })}</li>
-                ))}
-              </ul>
-
+            <div key={plan.id} className="flex flex-col">
               {/* Pending downgrade note — D-04: read-only, NO revert button */}
               {status?.scheduled_plan && plan.name === currentPlanName && (
                 <p className="text-sm text-darkgray mb-3">
@@ -431,7 +407,7 @@ function PlanCards({ status }: PlanCardsProps) {
                   {t("planCard.switchTo", { plan: t(`plan.${plan.name}`) })}
                 </Button>
               )}
-            </Card>
+            </div>
           );
         })}
       </div>
