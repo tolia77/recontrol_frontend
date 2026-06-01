@@ -166,6 +166,10 @@ export const fileManager = {
       CHANNEL_NOT_OPEN: "Files channel is disconnected. Reconnect the stream.",
       DISPOSED: "Files channel is disconnected. Reconnect the stream.",
       PERMISSION_DENIED: "Permission denied on the remote computer.",
+      PERMISSION_DENIED_FILES_READ:
+        "Browsing and downloading files is not permitted for this session.",
+      PERMISSION_DENIED_FILES_WRITE:
+        "Modifying or uploading files is not permitted for this session.",
       NOT_FOUND: "Item not found. It may have been moved or deleted.",
       IO_ERROR: "I/O error on the remote computer. Retry the operation.",
       TRANSFER_NOT_FOUND: "Transfer no longer active.",

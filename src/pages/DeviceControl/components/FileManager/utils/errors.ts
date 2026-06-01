@@ -54,6 +54,20 @@ export function mapFilesErrorToMessage(
     }
   }
 
+  // Share-level files permission denials carry `data.permission` to discriminate
+  // read vs write so the user knows which capability the session lacks. OS-level
+  // permission denials (PERMISSION_READ / PERMISSION_WRITE) keep their existing
+  // generic mapping below.
+  if (code === "PERMISSION_DENIED") {
+    const permission = (data as { permission?: string } | undefined)?.permission;
+    if (permission === "files_write") {
+      return t("errors.codes.PERMISSION_DENIED_FILES_WRITE");
+    }
+    if (permission === "files_read") {
+      return t("errors.codes.PERMISSION_DENIED_FILES_READ");
+    }
+  }
+
   const key = `errors.codes.${code}` as const;
   const translated = t(key);
   return translated === key ? t("errors.unknownOperation") : translated;
