@@ -67,12 +67,6 @@ export interface SubscriptionContextValue {
   refresh: () => void;
 }
 
-// ── Internal response envelopes ───────────────────────────────────────────────
-
-interface PlansResponse {
-  plans: Plan[];
-}
-
 // ── subscriptionService ───────────────────────────────────────────────────────
 
 class SubscriptionService extends BaseService {
@@ -84,8 +78,8 @@ class SubscriptionService extends BaseService {
   }
 
   async getPlans(): Promise<Plan[]> {
-    const { data } = await this.api.get<PlansResponse>("/plans");
-    return data.plans;
+    const { data } = await this.api.get<Plan[]>("/plans");
+    return data;
   }
 
   async getUsage(): Promise<SubscriptionUsage> {
