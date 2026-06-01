@@ -120,7 +120,7 @@ export function useDeviceSettings(
   const loadShares = useCallback(async () => {
     try {
       const response = await deviceSharesService.list(deviceId!);
-      setShares(response.data.items || []);
+      setShares(response.items);
     } catch {
       console.error("Failed to load shares");
     }
@@ -129,7 +129,7 @@ export function useDeviceSettings(
   const loadPermissionsGroups = useCallback(async () => {
     try {
       const response = await permissionsGroupsService.list();
-      setPermissionsGroups(response.data.items || []);
+      setPermissionsGroups(response.items);
     } catch {
       console.error("Failed to load permissions groups");
     }

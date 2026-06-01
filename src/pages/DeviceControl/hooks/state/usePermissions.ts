@@ -79,8 +79,7 @@ export function usePermissions(): UsePermissionsReturn {
           return;
         }
         const res = await deviceSharesService.mineForDevice(devId);
-        const share =
-          res.data.items && res.data.items.length ? res.data.items[0] : null;
+        const share = res.items.length ? res.items[0] : null;
         setPermissions(buildPermissions(share));
       } catch (e) {
         console.warn("Failed to load device permissions", e);

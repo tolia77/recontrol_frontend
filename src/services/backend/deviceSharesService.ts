@@ -1,4 +1,5 @@
 import { BaseService } from "src/services/backend/BaseService.ts";
+import type { Meta } from "./envelope";
 import type {
   DeviceShare,
   DeviceShareCreatePayload,
@@ -6,14 +7,16 @@ import type {
 } from "src/types";
 
 class DeviceSharesService extends BaseService {
-  async list(deviceId: string) {
-    return await this.api.get<{ items: DeviceShare[] }>("/device-shares", {
+  async list(deviceId: string): Promise<{ items: DeviceShare[]; meta: Meta | null }> {
+    const res = await this.api.get<DeviceShare[]>("/device-shares", {
       params: { device_id: deviceId },
     });
+    return { items: res.data ?? [], meta: res.meta ?? null };
   }
 
   async create(payload: DeviceShareCreatePayload) {
-    return await this.api.post("/device-shares", { device_share: payload });
+    const res = await this.api.post<DeviceShare>("/device-shares", { device_share: payload });
+    return res.data;
   }
 
   async remove(shareId: string) {
@@ -26,16 +29,18 @@ class DeviceSharesService extends BaseService {
       permissions_group_attributes?: PermissionsGroupAttributes;
     },
   ) {
-    return await this.api.patch(`/device-shares/${shareId}`, {
+    const res = await this.api.patch<DeviceShare>(`/device-shares/${shareId}`, {
       device_share: payload,
     });
+    return res.data;
   }
 
   // current user's shares (me) for a specific device
-  async mineForDevice(deviceId: string) {
-    return await this.api.get<{ items: DeviceShare[] }>("/device-shares/me", {
+  async mineForDevice(deviceId: string): Promise<{ items: DeviceShare[]; meta: Meta | null }> {
+    const res = await this.api.get<DeviceShare[]>("/device-shares/me", {
       params: { device_id: deviceId },
     });
+    return { items: res.data ?? [], meta: res.meta ?? null };
   }
 }
 
