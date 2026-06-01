@@ -59,11 +59,6 @@ export interface ScenarioRunIndexParams {
   per_page?: number;
 }
 
-interface ScenarioRunIndexResponse {
-  scenario_runs: ScenarioRun[];
-  meta: { page: number; per_page: number; total: number };
-}
-
 export interface ScenarioRunIndexResult {
   runs: ScenarioRun[];
   total: number;
@@ -73,21 +68,18 @@ class ScenarioRunsService extends BaseService {
   async index(
     params?: ScenarioRunIndexParams,
   ): Promise<ScenarioRunIndexResult> {
-    const { data } = await this.api.get<ScenarioRunIndexResponse>(
-      "/scenario-runs",
-      {
-        params: {
-          ...(params?.page ? { page: params.page } : {}),
-          ...(params?.per_page ? { per_page: params.per_page } : {}),
-        },
+    const res = await this.api.get<ScenarioRun[]>("/scenario-runs", {
+      params: {
+        ...(params?.page ? { page: params.page } : {}),
+        ...(params?.per_page ? { per_page: params.per_page } : {}),
       },
-    );
-    return { runs: data.scenario_runs, total: data.meta.total };
+    });
+    return { runs: res.data, total: res.meta?.total ?? 0 };
   }
 
   async show(id: string): Promise<ScenarioRun> {
-    const { data } = await this.api.get<ScenarioRun>(`/scenario-runs/${id}`);
-    return data;
+    const res = await this.api.get<ScenarioRun>(`/scenario-runs/${id}`);
+    return res.data;
   }
 
   // AUDIT-05 / D-14
