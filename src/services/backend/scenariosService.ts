@@ -158,14 +158,9 @@ export interface ScenarioIndexParams {
   per_page?: number;
 }
 
-interface ScenarioIndexResponse {
-  scenarios: Scenario[];
-  meta: { page: number; per_page: number; total: number };
-}
-
 class ScenariosService extends BaseService {
   async index(params?: ScenarioIndexParams): Promise<Scenario[]> {
-    const { data } = await this.api.get<ScenarioIndexResponse>("/scenarios", {
+    const { data } = await this.api.get<Scenario[]>("/scenarios", {
       params: {
         ...(params?.q ? { q: params.q } : {}),
         ...(params?.pinned_device_id
@@ -175,7 +170,7 @@ class ScenariosService extends BaseService {
         ...(params?.per_page ? { per_page: params.per_page } : {}),
       },
     });
-    return data.scenarios;
+    return data;
   }
 
   async show(id: string): Promise<Scenario> {

@@ -67,11 +67,21 @@ export interface UseDraftGenerationResult {
  * 'network' when no structured body is present (5xx, transport failure,
  * upstream timeout). Per D-06 the frontend treats the code as a locale-lookup
  * key only — never as a control-flow gate (T-23-32 mitigation).
+ *
+ * Supports both the new envelope error shape (`error: { code, message, details }`)
+ * and a plain string for test/legacy compatibility.
  */
 function extractErrorCode(err: unknown): string {
-  const code = (err as { response?: { data?: { error?: unknown } } })?.response
-    ?.data?.error;
-  return typeof code === "string" && code.length > 0 ? code : "network";
+  const errorField = (err as { response?: { data?: { error?: unknown } } })
+    ?.response?.data?.error;
+  // New envelope: error is an object with a `code` string field.
+  if (errorField && typeof errorField === "object" && "code" in errorField) {
+    const code = (errorField as { code: unknown }).code;
+    if (typeof code === "string" && code.length > 0) return code;
+  }
+  // Legacy/fallback: error is a plain string.
+  if (typeof errorField === "string" && errorField.length > 0) return errorField;
+  return "network";
 }
 
 export function useDraftGeneration(): UseDraftGenerationResult {

@@ -132,7 +132,17 @@ describe("useDraftGeneration", () => {
 
     await act(async () => {
       const p = result.current.generate("x", "en");
-      d.reject({ response: { data: { error: "draft_unparseable" } } });
+      d.reject({
+        response: {
+          data: {
+            error: {
+              code: "draft_unparseable",
+              message: "Draft failed schema validation",
+              details: {},
+            },
+          },
+        },
+      });
       await p;
     });
 
@@ -269,7 +279,17 @@ describe("useDraftGeneration", () => {
 
     await act(async () => {
       const p = result.current.generate("x", "en");
-      d.reject({ response: { data: { error: "draft_unsafe" } } });
+      d.reject({
+        response: {
+          data: {
+            error: {
+              code: "draft_unsafe",
+              message: "Draft contains unsafe commands",
+              details: {},
+            },
+          },
+        },
+      });
       await p;
     });
 
