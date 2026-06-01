@@ -4,11 +4,13 @@ export interface PermissionsEditorProps {
   t: any;
   value: {
     see_screen: boolean;
-    see_system_info: boolean;
     access_mouse: boolean;
     access_keyboard: boolean;
     access_terminal: boolean;
     manage_power: boolean;
+    access_clipboard: boolean;
+    files_read: boolean;
+    files_write: boolean;
   };
   onChange: (next: PermissionsEditorProps["value"]) => void;
 }
@@ -25,12 +27,14 @@ const PermissionsEditor: React.FC<PermissionsEditorProps> = ({
     };
 
   const items = [
-    { key: "see_screen", label: t("form.perms.see_screen") },
-    { key: "see_system_info", label: t("form.perms.see_system_info") },
-    { key: "access_mouse", label: t("form.perms.access_mouse") },
-    { key: "access_keyboard", label: t("form.perms.access_keyboard") },
-    { key: "access_terminal", label: t("form.perms.access_terminal") },
-    { key: "manage_power", label: t("form.perms.manage_power") },
+    { key: "see_screen",       label: t("form.perms.see_screen") },
+    { key: "access_mouse",     label: t("form.perms.access_mouse") },
+    { key: "access_keyboard",  label: t("form.perms.access_keyboard") },
+    { key: "access_terminal",  label: t("form.perms.access_terminal") },
+    { key: "manage_power",     label: t("form.perms.manage_power") },
+    { key: "access_clipboard", label: t("form.perms.access_clipboard") },
+    { key: "files_read",       label: t("form.perms.files_read") },
+    { key: "files_write",      label: t("form.perms.files_write") },
   ] as const;
 
   return (

@@ -86,11 +86,13 @@ const InviteShareForm: React.FC<InviteShareFormProps> = ({
           t={t}
           value={{
             see_screen: !!shareForm.newGroup.see_screen,
-            see_system_info: !!shareForm.newGroup.see_system_info,
             access_mouse: !!shareForm.newGroup.access_mouse,
             access_keyboard: !!shareForm.newGroup.access_keyboard,
             access_terminal: !!shareForm.newGroup.access_terminal,
             manage_power: !!shareForm.newGroup.manage_power,
+            access_clipboard: !!shareForm.newGroup.access_clipboard,
+            files_read: !!shareForm.newGroup.files_read,
+            files_write: !!shareForm.newGroup.files_write,
           }}
           onChange={(next) =>
             onChange({

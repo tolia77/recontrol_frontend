@@ -81,11 +81,13 @@ const EditShareForm: React.FC<EditShareFormProps> = ({
           t={t}
           value={{
             see_screen: !!editForm.newGroup.see_screen,
-            see_system_info: !!editForm.newGroup.see_system_info,
             access_mouse: !!editForm.newGroup.access_mouse,
             access_keyboard: !!editForm.newGroup.access_keyboard,
             access_terminal: !!editForm.newGroup.access_terminal,
             manage_power: !!editForm.newGroup.manage_power,
+            access_clipboard: !!editForm.newGroup.access_clipboard,
+            files_read: !!editForm.newGroup.files_read,
+            files_write: !!editForm.newGroup.files_write,
           }}
           onChange={(next) =>
             onChange({

@@ -9,11 +9,13 @@ import type { DeviceShare } from "src/types";
  */
 export interface DevicePermissions {
   see_screen: boolean;
-  see_system_info: boolean;
   access_mouse: boolean;
   access_keyboard: boolean;
   access_terminal: boolean;
   manage_power: boolean;
+  access_clipboard: boolean;
+  files_read: boolean;
+  files_write: boolean;
   // convenience compound flags
   any_input: boolean; // mouse or keyboard
   any_screen: boolean; // currently same as see_screen
@@ -46,22 +48,26 @@ export function usePermissions(): UsePermissionsReturn {
       const pg = share?.permissions_group;
       const ownDefaults: DevicePermissions = {
         see_screen: true,
-        see_system_info: true,
         access_mouse: true,
         access_keyboard: true,
         access_terminal: true,
         manage_power: true,
+        access_clipboard: true,
+        files_read: true,
+        files_write: true,
         any_input: true,
         any_screen: true,
       };
       if (!pg) return ownDefaults;
       return {
         see_screen: !!pg.see_screen,
-        see_system_info: !!pg.see_system_info,
         access_mouse: !!pg.access_mouse,
         access_keyboard: !!pg.access_keyboard,
         access_terminal: !!pg.access_terminal,
         manage_power: !!pg.manage_power,
+        access_clipboard: !!pg.access_clipboard,
+        files_read: !!pg.files_read,
+        files_write: !!pg.files_write,
         any_input: !!pg.access_mouse || !!pg.access_keyboard,
         any_screen: !!pg.see_screen,
       };

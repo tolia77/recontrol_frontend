@@ -21,11 +21,13 @@ export interface DeviceShare {
     | "id"
     | "name"
     | "see_screen"
-    | "see_system_info"
     | "access_mouse"
     | "access_keyboard"
     | "access_terminal"
     | "manage_power"
+    | "access_clipboard"
+    | "files_read"
+    | "files_write"
   >;
 }
 

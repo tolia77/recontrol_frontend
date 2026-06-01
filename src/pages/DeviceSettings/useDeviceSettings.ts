@@ -20,11 +20,13 @@ import type {
 /** Resolved boolean permission bits used in edit-share comparison. */
 export interface PermGroupBits {
   see_screen: boolean;
-  see_system_info: boolean;
   access_mouse: boolean;
   access_keyboard: boolean;
   access_terminal: boolean;
   manage_power: boolean;
+  access_clipboard: boolean;
+  files_read: boolean;
+  files_write: boolean;
 }
 
 export interface UseDeviceSettingsArgs {
@@ -90,11 +92,13 @@ export function useDeviceSettings(
     newGroup: {
       name: "",
       see_screen: false,
-      see_system_info: false,
       access_mouse: false,
       access_keyboard: false,
       access_terminal: false,
       manage_power: false,
+      access_clipboard: false,
+      files_read: false,
+      files_write: false,
     },
   });
   const [permissionsGroups, setPermissionsGroups] = useState<PermissionsGroup[]>(
@@ -174,11 +178,13 @@ export function useDeviceSettings(
       newGroup: {
         name: `${group.name} ${t("form.cloneSuffix")}`.trim(),
         see_screen: !!group.see_screen,
-        see_system_info: !!group.see_system_info,
         access_mouse: !!group.access_mouse,
         access_keyboard: !!group.access_keyboard,
         access_terminal: !!group.access_terminal,
         manage_power: !!group.manage_power,
+        access_clipboard: !!group.access_clipboard,
+        files_read: !!group.files_read,
+        files_write: !!group.files_write,
       },
     }));
     toast.info(t("form.loadedGroup"));
@@ -195,11 +201,13 @@ export function useDeviceSettings(
     if (!group) return;
     const updatedPerms: PermGroupBits = {
       see_screen: !!group.see_screen,
-      see_system_info: !!group.see_system_info,
       access_mouse: !!group.access_mouse,
       access_keyboard: !!group.access_keyboard,
       access_terminal: !!group.access_terminal,
       manage_power: !!group.manage_power,
+      access_clipboard: !!group.access_clipboard,
+      files_read: !!group.files_read,
+      files_write: !!group.files_write,
     };
     setEditOriginalGroup(updatedPerms);
     setEditForm(
@@ -219,11 +227,13 @@ export function useDeviceSettings(
     const {
       name,
       see_screen,
-      see_system_info,
       access_mouse,
       access_keyboard,
       access_terminal,
       manage_power,
+      access_clipboard,
+      files_read,
+      files_write,
     } = shareForm.newGroup;
     if (!name?.trim()) {
       toast.warning(t("sharing.nameRequired"));
@@ -233,11 +243,13 @@ export function useDeviceSettings(
       await permissionsGroupsService.create({
         name: name.trim(),
         see_screen: see_screen ?? null,
-        see_system_info: see_system_info ?? null,
         access_mouse: access_mouse ?? null,
         access_keyboard: access_keyboard ?? null,
         access_terminal: access_terminal ?? null,
         manage_power: manage_power ?? null,
+        access_clipboard: access_clipboard ?? null,
+        files_read: files_read ?? null,
+        files_write: files_write ?? null,
       });
       await loadPermissionsGroups();
       toast.success(t("form.groupSaved"));
@@ -263,11 +275,13 @@ export function useDeviceSettings(
       } else {
         payload.permissions_group_attributes = {
           see_screen: shareForm.newGroup.see_screen,
-          see_system_info: shareForm.newGroup.see_system_info,
           access_mouse: shareForm.newGroup.access_mouse,
           access_keyboard: shareForm.newGroup.access_keyboard,
           access_terminal: shareForm.newGroup.access_terminal,
           manage_power: shareForm.newGroup.manage_power,
+          access_clipboard: shareForm.newGroup.access_clipboard,
+          files_read: shareForm.newGroup.files_read,
+          files_write: shareForm.newGroup.files_write,
         };
       }
       try {
@@ -279,11 +293,13 @@ export function useDeviceSettings(
           newGroup: {
             name: "",
             see_screen: false,
-            see_system_info: false,
             access_mouse: false,
             access_keyboard: false,
             access_terminal: false,
             manage_power: false,
+            access_clipboard: false,
+            files_read: false,
+            files_write: false,
           },
         });
         setShowShareForm(false);
@@ -313,11 +329,13 @@ export function useDeviceSettings(
   const beginEditShare = useCallback((share: DeviceShare) => {
     const originalPerms: PermGroupBits = {
       see_screen: !!share.permissions_group?.see_screen,
-      see_system_info: !!share.permissions_group?.see_system_info,
       access_mouse: !!share.permissions_group?.access_mouse,
       access_keyboard: !!share.permissions_group?.access_keyboard,
       access_terminal: !!share.permissions_group?.access_terminal,
       manage_power: !!share.permissions_group?.manage_power,
+      access_clipboard: !!share.permissions_group?.access_clipboard,
+      files_read: !!share.permissions_group?.files_read,
+      files_write: !!share.permissions_group?.files_write,
     };
     setEditOriginalGroup(originalPerms);
     setEditForm({
@@ -340,11 +358,13 @@ export function useDeviceSettings(
         permissions_group_attributes?: {
           name?: string;
           see_screen?: boolean | null;
-          see_system_info?: boolean | null;
           access_mouse?: boolean | null;
           access_keyboard?: boolean | null;
           access_terminal?: boolean | null;
           manage_power?: boolean | null;
+          access_clipboard?: boolean | null;
+          files_read?: boolean | null;
+          files_write?: boolean | null;
         };
       };
       const payload: PatchPayload = {
@@ -354,25 +374,29 @@ export function useDeviceSettings(
       const changed =
         editOriginalGroup &&
         (editOriginalGroup.see_screen !== editForm.newGroup.see_screen ||
-          editOriginalGroup.see_system_info !==
-            editForm.newGroup.see_system_info ||
           editOriginalGroup.access_mouse !== editForm.newGroup.access_mouse ||
           editOriginalGroup.access_keyboard !==
             editForm.newGroup.access_keyboard ||
           editOriginalGroup.access_terminal !==
             editForm.newGroup.access_terminal ||
-          editOriginalGroup.manage_power !== editForm.newGroup.manage_power);
+          editOriginalGroup.manage_power !== editForm.newGroup.manage_power ||
+          editOriginalGroup.access_clipboard !==
+            editForm.newGroup.access_clipboard ||
+          editOriginalGroup.files_read !== editForm.newGroup.files_read ||
+          editOriginalGroup.files_write !== editForm.newGroup.files_write);
       if (editForm.permissionsGroupId && !changed) {
         payload.permissions_group_id = editForm.permissionsGroupId;
       } else {
         payload.permissions_group_attributes = {
           name: editForm.newGroup.name || undefined,
           see_screen: editForm.newGroup.see_screen,
-          see_system_info: editForm.newGroup.see_system_info,
           access_mouse: editForm.newGroup.access_mouse,
           access_keyboard: editForm.newGroup.access_keyboard,
           access_terminal: editForm.newGroup.access_terminal,
           manage_power: editForm.newGroup.manage_power,
+          access_clipboard: editForm.newGroup.access_clipboard,
+          files_read: editForm.newGroup.files_read,
+          files_write: editForm.newGroup.files_write,
         };
       }
       try {
