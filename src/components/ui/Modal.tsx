@@ -31,7 +31,7 @@ const sizeCardClasses: Record<"sm" | "md" | "lg" | "full", string> = {
   sm: "bg-background border border-lightgray rounded-lg shadow-xl max-w-sm w-[90%] p-6",
   md: "bg-background border border-lightgray rounded-lg shadow-xl max-w-md w-[90%] p-6",
   lg: "bg-background border border-lightgray rounded-lg shadow-xl max-w-lg w-[90%] p-6",
-  full: "bg-background w-full max-w-5xl",
+  full: "bg-background border border-lightgray rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto",
 };
 
 const wrapperClasses: Record<"sm" | "md" | "lg" | "full", string> = {

@@ -48,6 +48,7 @@ function UpgradeModal({
       open={true}
       onClose={onClose}
       size="full"
+      className="p-6"
       initialFocusRef={viewPlansRef as React.RefObject<HTMLElement | null>}
     >
       <Modal.Header>
