@@ -107,9 +107,9 @@ export function useDeviceSettings(
 
   const loadDeviceData = useCallback(async () => {
     try {
-      const response = await devicesService.get(deviceId!);
-      setDevice(response.data);
-      setDeviceForm({ name: response.data.name });
+      const device = await devicesService.get(deviceId!);
+      setDevice(device);
+      setDeviceForm({ name: device.name });
     } catch {
       toast.error(t("errors.loadDetails"));
     } finally {
@@ -148,10 +148,10 @@ export function useDeviceSettings(
     async (e: React.FormEvent) => {
       e.preventDefault();
       try {
-        const response = await devicesService.update(deviceId!, {
+        const device = await devicesService.update(deviceId!, {
           name: deviceForm.name,
         });
-        setDevice(response.data);
+        setDevice(device);
         toast.success(t("info.updated"));
       } catch {
         toast.error(t("info.updateError"));

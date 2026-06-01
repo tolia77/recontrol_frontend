@@ -1,4 +1,6 @@
 import { BaseService } from "src/services/backend/BaseService.ts";
+import type { Meta } from "src/services/backend/envelope.ts";
+import type { Device } from "src/types";
 
 export interface GetMyDevicesParams {
   owner?: "me" | "owned" | "shared" | "";
@@ -11,8 +13,8 @@ export interface GetMyDevicesParams {
 }
 
 class DevicesService extends BaseService {
-  async list(params?: GetMyDevicesParams) {
-    return await this.api.get("/devices/me", {
+  async list(params?: GetMyDevicesParams): Promise<{ devices: Device[]; meta: Meta | null }> {
+    const res = await this.api.get<Device[]>("/devices/me", {
       params: {
         // only include defined values
         ...(params?.owner ? { owner: params.owner } : {}),
@@ -28,14 +30,17 @@ class DevicesService extends BaseService {
         ...(params?.per_page ? { per_page: params.per_page } : {}),
       },
     });
+    return { devices: res.data ?? [], meta: res.meta ?? null };
   }
 
-  async get(deviceId: string) {
-    return await this.api.get(`/devices/${deviceId}`);
+  async get(deviceId: string): Promise<Device> {
+    const res = await this.api.get<Device>(`/devices/${deviceId}`);
+    return res.data;
   }
 
-  async update(deviceId: string, payload: { name: string }) {
-    return await this.api.patch(`/devices/${deviceId}`, { device: payload });
+  async update(deviceId: string, payload: { name: string }): Promise<Device> {
+    const res = await this.api.patch<Device>(`/devices/${deviceId}`, { device: payload });
+    return res.data;
   }
 
   async remove(deviceId: string) {

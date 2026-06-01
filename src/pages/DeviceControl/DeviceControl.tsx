@@ -310,15 +310,15 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
       setDeviceId(paramDeviceId);
       // Determine ownership first
       try {
-        const deviceRes = await devicesService.get(paramDeviceId);
-        const deviceUserId = deviceRes.data?.user?.id;
+        const device = await devicesService.get(paramDeviceId);
+        const deviceUserId = device?.user?.id;
         const currentUserId = getUserId();
         const owner =
           deviceUserId &&
           currentUserId &&
           String(deviceUserId) === String(currentUserId);
         setIsOwner(!!owner);
-        if (deviceRes.data?.name) setDeviceName(deviceRes.data.name);
+        if (device?.name) setDeviceName(device.name);
         await fetchPermissions(paramDeviceId, !!owner);
       } catch (e) {
         console.warn("Failed to fetch device info for ownership", e);

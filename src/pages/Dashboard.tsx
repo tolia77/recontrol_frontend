@@ -31,8 +31,8 @@ function Dashboard() {
   useEffect(() => {
     setLoadingDevices(true);
     devicesService.list()
-      .then((res) => {
-        setDevices(res.data.devices || []);
+      .then(({ devices }) => {
+        setDevices(devices);
         setLastUpdated(new Date().toLocaleTimeString());
       })
       .catch(() => {

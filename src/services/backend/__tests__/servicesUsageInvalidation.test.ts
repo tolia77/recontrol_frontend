@@ -38,7 +38,8 @@ beforeEach(() => {
   post.mockResolvedValue({ data: { scenario: { id: "s1" } } });
   del.mockResolvedValue({ data: {} });
   get.mockResolvedValue({
-    data: { scenarios: [], meta: { page: 1, per_page: 20, total: 0 } },
+    data: [],
+    meta: { page: 1, per_page: 20, total: 0 },
   });
   patch.mockResolvedValue({ data: { scenario: { id: "s1" } } });
 });

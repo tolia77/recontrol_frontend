@@ -29,9 +29,9 @@ function Devices() {
     const currentId = ++requestIdRef.current;
     setLoading(true);
     devicesService.list(params)
-      .then((res) => {
+      .then(({ devices }) => {
         if (currentId === requestIdRef.current) {
-          setDevices(res.data.devices);
+          setDevices(devices);
         }
       })
       .catch(() => {
