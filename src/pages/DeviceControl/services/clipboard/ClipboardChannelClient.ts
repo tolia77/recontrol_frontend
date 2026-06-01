@@ -20,6 +20,7 @@ const VALID_REFUSAL_REASONS: ReadonlySet<ClipboardRefusalReason> =
     "PAUSED",
     "NON_TEXT",
     "CAPS_UNKNOWN",
+    "PERMISSION_DENIED",
   ]);
 
 type SetHandler = (env: ClipboardSetEnvelope) => void;

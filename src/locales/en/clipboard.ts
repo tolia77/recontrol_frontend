@@ -38,6 +38,7 @@ export const clipboard = {
         "The desktop is not accepting clipboard from this browser",
       outboundDisabled: "The desktop is not sending clipboard to this browser",
       paused: "Clipboard sync is paused on the desktop",
+      permissionDenied: "Clipboard access is not granted for this session",
     },
   },
   sizeCap_one: "Clipboard exceeds {{count}} byte limit",

@@ -202,6 +202,25 @@ describe("useClipboardSync — Phase 15 Plan 04", () => {
     expect(typeof result.current.lastRefusal?.at).toBe("number");
   });
 
+  it("inbound refused PERMISSION_DENIED is accepted (not dropped by WR-01 gate)", () => {
+    const h = makeHarness();
+    const { result } = renderHook(() => useClipboardSync(h.args()));
+    act(() => {
+      h.dc.dispatch(
+        JSON.stringify({
+          kind: "refused",
+          originId: "origin-browser-1",
+          reason: "PERMISSION_DENIED",
+          seq: 6,
+          ts: Date.now(),
+        }),
+      );
+    });
+    expect(result.current.lastRefusal).not.toBeNull();
+    expect(result.current.lastRefusal?.reason).toBe("PERMISSION_DENIED");
+    expect(result.current.lastRefusal?.source).toBe("remote");
+  });
+
   it("local refused-local from prepareOutbound sets lastRefusal source='local'", async () => {
     // C11 fixture from clipboardCore.test.ts: 24 control chars + 1 letter -> 96% control
     const controlText = "\x01".repeat(24) + "a";

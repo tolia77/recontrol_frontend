@@ -22,6 +22,7 @@ const REASON_TO_KEY: Partial<Record<ClipboardRefusalReason, string>> = {
   MASTER_DISABLED: "toast.refused.masterDisabled",
   INBOUND_DISABLED: "toast.refused.inboundDisabled",
   PAUSED: "toast.refused.paused",
+  PERMISSION_DENIED: "toast.refused.permissionDenied",
   // CAPS_UNKNOWN intentionally omitted (suppressed per RESEARCH OQ 2)
 };
 
