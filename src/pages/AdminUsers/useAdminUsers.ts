@@ -76,8 +76,8 @@ export function useAdminUsers(): UseAdminUsersReturn {
   const loadUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await usersService.list();
-      setUsers(res.data);
+      const users = await usersService.list();
+      setUsers(users);
     } catch {
       toast.error(t("errors.loadFailed"));
     } finally {
@@ -140,11 +140,11 @@ export function useAdminUsers(): UseAdminUsersReturn {
           payload.password = row.password.trim();
         if (row.role !== originalUser?.role) payload.role = row.role;
 
-        const res = await usersService.updateAdmin(row.id, payload);
-        setUsers((prev) => prev.map((u) => (u.id === row.id ? res.data : u)));
+        const updated = await usersService.updateAdmin(row.id, payload);
+        setUsers((prev) => prev.map((u) => (u.id === row.id ? updated : u)));
 
-        if (String(row.id) === String(currentUserId) && res.data.role) {
-          saveUserRole(res.data.role);
+        if (String(row.id) === String(currentUserId) && updated.role) {
+          saveUserRole(updated.role);
         }
 
         toast.success(t("messages.saved"));
@@ -192,13 +192,13 @@ export function useAdminUsers(): UseAdminUsersReturn {
       setCreating(true);
 
       try {
-        const res = await usersService.createAdmin({
+        const created = await usersService.createAdmin({
           username: newUser.username.trim(),
           email: newUser.email.trim(),
           password: newUser.password,
           role: newUser.role,
         });
-        setUsers((prev) => [...prev, res.data]);
+        setUsers((prev) => [...prev, created]);
         toast.success(t("messages.created"));
         setNewUser({ username: "", email: "", password: "", role: "user" });
       } catch (e) {

@@ -46,8 +46,8 @@ const TOTAL_TIMEOUT_MS = 20000;
 
 async function fetchIceServers(): Promise<RTCIceServer[]> {
   try {
-    const { data } = await turnService.getCredentials();
-    if (data?.ice_servers?.length) return data.ice_servers;
+    const credentials = await turnService.getCredentials();
+    if (credentials?.ice_servers?.length) return credentials.ice_servers;
     console.warn(
       "[webrtc] /turn_credentials returned empty list, falling back to STUN-only",
     );

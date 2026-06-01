@@ -29,10 +29,10 @@ function UserSettings() {
         return;
       }
       try {
-        const res = await usersService.get(userId);
-        setUser(res.data);
-        setUsername(res.data.username);
-        setEmail(res.data.email);
+        const user = await usersService.get(userId);
+        setUser(user);
+        setUsername(user.username);
+        setEmail(user.email);
       } catch {
         toast.error(t("errors.loadFailed"));
       } finally {
@@ -54,8 +54,8 @@ function UserSettings() {
       if (email !== user?.email) payload.email = email;
       if (password.length > 0) payload.password = password;
 
-      const res = await usersService.updateSelf(userId, payload);
-      setUser(res.data);
+      const updated = await usersService.updateSelf(userId, payload);
+      setUser(updated);
       setPassword("");
       toast.success(t("messages.saved"));
     } catch (error) {

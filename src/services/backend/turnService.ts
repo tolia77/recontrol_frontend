@@ -5,8 +5,9 @@ export interface TurnCredentialsResponse {
 }
 
 class TurnService extends BaseService {
-  async getCredentials() {
-    return await this.api.get<TurnCredentialsResponse>("/turn-credentials");
+  async getCredentials(): Promise<TurnCredentialsResponse> {
+    const res = await this.api.get<TurnCredentialsResponse>("/turn-credentials");
+    return res.data;
   }
 }
 

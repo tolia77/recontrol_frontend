@@ -30,33 +30,38 @@ export type UserUpdateAdmin = {
 };
 
 class UsersService extends BaseService {
-  async get(userId: string) {
-    return await this.api.get<UserResponse>(`/users/${userId}`);
+  async get(userId: string): Promise<UserResponse> {
+    const res = await this.api.get<UserResponse>(`/users/${userId}`);
+    return res.data;
   }
 
-  async updateSelf(userId: string, payload: UserUpdateSelf) {
-    return await this.api.patch<UserResponse>(`/users/${userId}`, {
+  async updateSelf(userId: string, payload: UserUpdateSelf): Promise<UserResponse> {
+    const res = await this.api.patch<UserResponse>(`/users/${userId}`, {
       user: payload,
     });
+    return res.data;
   }
 
   // Admin endpoints
-  async list() {
-    return await this.api.get<UserResponse[]>(`/users`);
+  async list(): Promise<UserResponse[]> {
+    const res = await this.api.get<UserResponse[]>(`/users`);
+    return res.data;
   }
 
-  async createAdmin(payload: UserCreateAdmin) {
-    return await this.api.post<UserResponse>(`/users`, { user: payload });
+  async createAdmin(payload: UserCreateAdmin): Promise<UserResponse> {
+    const res = await this.api.post<UserResponse>(`/users`, { user: payload });
+    return res.data;
   }
 
-  async updateAdmin(userId: number | string, payload: UserUpdateAdmin) {
-    return await this.api.patch<UserResponse>(`/users/${userId}`, {
+  async updateAdmin(userId: number | string, payload: UserUpdateAdmin): Promise<UserResponse> {
+    const res = await this.api.patch<UserResponse>(`/users/${userId}`, {
       user: payload,
     });
+    return res.data;
   }
 
-  async removeAdmin(userId: number | string) {
-    return await this.api.delete<void>(`/users/${userId}`);
+  async removeAdmin(userId: number | string): Promise<void> {
+    await this.api.delete<void>(`/users/${userId}`);
   }
 }
 
