@@ -2,13 +2,14 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { getRefreshToken, saveTokens, getAccessToken } from "src/utils/auth";
 import { triggerPlanLimitNudge } from "src/utils/planLimitBus.ts";
 import type { PlanLimitEnvelope } from "src/services/backend/subscriptionService.ts";
+import { isApiEnvelope, type ApiError } from "./envelope";
 
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
 
 interface ErrorResponseData {
-  error?: string;
+  error?: ApiError;
 }
 
 export const backendInstance = axios.create({
@@ -44,7 +45,7 @@ export async function refreshAccessTokenOnce(): Promise<string | null> {
         { headers: { "Refresh-Token": refreshToken } },
       );
 
-      const tokens = res.data ?? {};
+      const tokens = res.data?.data ?? {};
       const newAccess: string | undefined = tokens.access_token;
       const newRefresh: string | undefined = tokens.refresh_token;
 
@@ -64,17 +65,27 @@ export async function refreshAccessTokenOnce(): Promise<string | null> {
 
 // ── Response interceptor ───────────────────────────────────────────────────
 backendInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const body = response.data;
+    if (isApiEnvelope(body)) {
+      response.meta = body.meta;
+      response.data = body.data as typeof response.data;
+    }
+    return response;
+  },
   async (error: AxiosError<ErrorResponseData>) => {
+    const envelopeError: ApiError | undefined =
+      error.response?.data?.error ?? undefined;
+    if (envelopeError) error.apiError = envelopeError;
+    const status = error.response?.status;
+    const code = envelopeError?.code;
+
     const originalRequest = error.config as
       | ExtendedAxiosRequestConfig
       | undefined;
-    const status = error.response?.status;
-    const messageText = error.response?.data?.error;
 
     if (
       status === 401 &&
-      messageText === "Unauthorized" &&
       originalRequest &&
       !originalRequest._retry
     ) {
@@ -87,10 +98,19 @@ backendInstance.interceptors.response.use(
       }
 
       return Promise.reject(error);
-    } else if (status === 402 && messageText === "plan_limit_reached") {
+    } else if (status === 402 || code === "plan_limit_reached") {
       // D-15: global upgrade nudge — fire once and re-reject; no retry loop.
-      const envelope = error.response?.data as PlanLimitEnvelope;
-      triggerPlanLimitNudge(envelope);
+      // The backend returns the new envelope shape:
+      //   { data: null, meta: null, error: { code, message, details: { limit_name, … } } }
+      // The interceptor does NOT unwrap error responses, so error.response.data
+      // is the full envelope.  Build the flat PlanLimitEnvelope the nudge
+      // consumers (Layout.tsx etc.) expect by spreading details up to the top.
+      if (envelopeError) {
+        triggerPlanLimitNudge({
+          error: "plan_limit_reached",
+          ...(envelopeError.details as Record<string, unknown>),
+        } as unknown as PlanLimitEnvelope);
+      }
       return Promise.reject(error);
     }
 
