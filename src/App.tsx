@@ -19,7 +19,11 @@ import SubscriptionReturn from "src/pages/Subscription/SubscriptionReturn";
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      {/* h-dvh: fills dynamic viewport height — no address-bar gap on mobile
+          overflow-hidden: prevents inner wide components leaking horizontal scroll to root
+          safe-pt/safe-pb/safe-pl/safe-pr applied via utility classes defined in index.css */}
+      <div className="h-dvh overflow-hidden safe-pt safe-pb safe-pl safe-pr">
+        <Routes>
         {/* Public landing page without sidebar */}
         <Route path="/" element={<Index />} />
         <Route path="/pricing" element={<Pricing />} />
@@ -53,7 +57,8 @@ function App() {
             </SubscriptionProvider>
           }
         />
-      </Routes>
+        </Routes>
+      </div>
     </BrowserRouter>
   );
 }
