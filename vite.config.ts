@@ -16,6 +16,13 @@ export default defineConfig({
     ],
     server: {
         port: 5175,
-        allowedHosts: ["port5175.kokhan.me"]
+        allowedHosts: ["port5175.kokhan.me"],
+        // Polling is required for HMR when the source is bind-mounted from the
+        // Windows filesystem into the Linux container — inotify events don't
+        // cross that boundary, so file watching falls back to polling.
+        watch: {
+            usePolling: true,
+            interval: 100,
+        },
     },
 })
