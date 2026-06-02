@@ -354,65 +354,59 @@ function PlanCards({ status }: PlanCardsProps) {
 
   const modalConfig = getModalConfig();
 
+  // ── Per-plan CTA, rendered INSIDE each PlanComparison card (D-07 fix) ──────
+  function renderCta(plan: Plan): React.ReactNode {
+    const cta = getCta(plan);
+    const isCurrent = cta === "current";
+
+    return (
+      <>
+        {/* Pending downgrade note — D-04: read-only, NO revert button */}
+        {status?.scheduled_plan && plan.name === currentPlanName && (
+          <p className="text-darkgray mb-3 text-sm">
+            {t("pendingDowngrade.note", {
+              plan: t(`plan.${status.scheduled_plan}`),
+              date: status.period_end
+                ? new Date(status.period_end).toLocaleDateString(undefined, {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })
+                : "",
+            })}
+          </p>
+        )}
+
+        {isCurrent ? (
+          <span
+            role="status"
+            className="text-primary border-primary block rounded-lg border px-4 py-2 text-center text-sm font-medium"
+          >
+            {t("planCard.current")}
+          </span>
+        ) : cta === "none" ? null : (
+          <Button
+            variant={cta === "cancel" ? "danger" : "primary"}
+            className="w-full"
+            onClick={() => openConfirm(cta as ConfirmAction, plan)}
+          >
+            {t("planCard.switchTo", { plan: t(`plan.${plan.name}`) })}
+          </Button>
+        )}
+      </>
+    );
+  }
+
   if (loadingPlans) {
     return <div className="py-8 text-center text-sm text-darkgray">{t("loadingPlans")}</div>;
   }
 
   return (
     <>
-      {/* Read-only plan comparison — grid-cols-1 md:grid-cols-4, so it stacks into
-          single-column plan cards (name + price + features) on mobile. This is the
-          only surface that carries plan details, so it must render on every viewport. */}
-      <PlanComparison plans={plans} />
-
-      {/* CTA row — one action per plan column, aligned below the comparison grid */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4 mt-4">
-        {plans.map((plan) => {
-          const cta = getCta(plan);
-          const isCurrent = cta === "current";
-
-          return (
-            <div key={plan.id} className="flex flex-col">
-              {/* Pending downgrade note — D-04: read-only, NO revert button */}
-              {status?.scheduled_plan && plan.name === currentPlanName && (
-                <p className="text-sm text-darkgray mb-3">
-                  {t("pendingDowngrade.note", {
-                    plan: t(`plan.${status.scheduled_plan}`),
-                    date: status.period_end
-                      ? new Date(status.period_end).toLocaleDateString(undefined, {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })
-                      : "",
-                  })}
-                </p>
-              )}
-
-              {/* CTA — current plan shows a label; every other card shows a single
-                  "Switch to {plan}" button. The underlying action (cta) still drives the
-                  correct confirm modal + backend call: upgrade→checkout, downgrade→schedule,
-                  switch-to-Free→cancel. "danger" styling only for the switch-to-Free case. */}
-              {isCurrent ? (
-                <span
-                  role="status"
-                  className="inline-block text-center text-sm font-medium text-primary border border-primary rounded-lg px-4 py-2"
-                >
-                  {t("planCard.current")}
-                </span>
-              ) : cta === "none" ? null : (
-                <Button
-                  variant={cta === "cancel" ? "danger" : "primary"}
-                  className="w-full"
-                  onClick={() => openConfirm(cta as ConfirmAction, plan)}
-                >
-                  {t("planCard.switchTo", { plan: t(`plan.${plan.name}`) })}
-                </Button>
-              )}
-            </div>
-          );
-        })}
-      </div>
+      {/* Plan comparison — grid-cols-1 md:grid-cols-4. Each card carries the plan
+          name + price + features AND its CTA (via renderCta), so the button stays
+          inside its own card on every viewport. The grid stacks on mobile. */}
+      <PlanComparison plans={plans} renderCta={renderCta} />
 
       {/* Confirm modal (D-03) */}
       {confirm && modalConfig && (

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "src/components/ui";
 import { formatPrice } from "src/utils/formatPrice";
@@ -16,6 +17,10 @@ interface PlanComparisonProps {
   highlightPlan?: string;
   highlightFeature?: GateKey;
   className?: string;
+  /** Optional per-plan call-to-action rendered at the bottom of each plan card.
+   *  When provided, the button lives INSIDE its plan card (so on mobile each
+   *  stacked card is self-contained). Omitted for read-only uses (UpgradeModal). */
+  renderCta?: (plan: Plan) => ReactNode;
 }
 
 // ── Static feature row data (per-plan values) ─────────────────────────────────
@@ -72,6 +77,7 @@ function PlanComparison({
   highlightPlan,
   highlightFeature,
   className = "",
+  renderCta,
 }: PlanComparisonProps) {
   const { t } = useTranslation("subscription");
 
@@ -141,6 +147,10 @@ function PlanComparison({
                 );
               })}
             </div>
+
+            {/* Per-plan CTA — inside the card, pinned to the bottom so columns
+                align on desktop and each stacked card is self-contained on mobile. */}
+            {renderCta && <div className="mt-auto pt-4">{renderCta(plan)}</div>}
           </Card>
         );
       })}
