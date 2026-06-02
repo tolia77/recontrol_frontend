@@ -43,6 +43,16 @@ export interface UseCableConsumerReturn {
  *
  * This is the ONE place that reaches into ActionCable internals (wrapping the
  * connection-level close handler), kept isolated here on purpose.
+ *
+ * `createConsumerFn` is a test-injection escape hatch. It MUST be a stable
+ * reference (the default `createConsumer` is a module-level constant). Passing a
+ * fresh function each render would re-run the effect, tearing down and rebuilding
+ * the consumer — silently dropping every subscription — so callers other than
+ * tests should not pass it.
+ *
+ * If `refreshAccessTokenOnce` rejects (refresh token expired, network down) the
+ * consumer is left disconnected with no retry; the caller is expected to detect
+ * the dead session and redirect to login.
  */
 export function useCableConsumer(
   wsUrl: string,
@@ -64,8 +74,10 @@ export function useCableConsumer(
     // close wrapper does not mutate Connection.prototype (shared across
     // consumers). installEventHandlers() runs on the first open() — which
     // happens when the first child subscription is created — and reads
-    // `this.events`, so this must be set before any subscription. It is: this
-    // parent effect runs and calls setConsumer before child hooks mount.
+    // `this.events`, so this must be set before any subscription. It is: children
+    // only receive the consumer on the re-render triggered by setConsumer below,
+    // so no child can call subscriptions.create() (which triggers open()) until
+    // after this effect has already installed the shadow.
     const originalClose = c.connection.events.close;
     c.connection.events = {
       ...c.connection.events,
