@@ -7,7 +7,7 @@ import { getErrorMessage } from "src/utils/getErrorMessage";
 import { useTranslation } from "react-i18next";
 import { useToast } from "src/components/ui/Toast";
 import Button from "src/components/ui/Button";
-import { LoadingState } from "src/components/ui";
+import { LoadingState, PageHeader } from "src/components/ui";
 
 function UserSettings() {
   const { t } = useTranslation("userSettings");
@@ -97,7 +97,7 @@ function UserSettings() {
 
   return (
     <div className="mx-auto w-full max-w-xl p-4 md:p-6">
-      <h1 className="mb-4 text-2xl font-semibold">{t("title")}</h1>
+      <PageHeader title={t("title")} />
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>

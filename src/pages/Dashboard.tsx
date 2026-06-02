@@ -5,7 +5,7 @@ import { devicesService } from "src/services/backend/devicesService";
 import Card from "src/components/ui/Card";
 import CardHeader from "src/components/ui/CardHeader";
 import Button from "src/components/ui/Button";
-import { LoadingState, EmptyState } from "src/components/ui";
+import { LoadingState, EmptyState, PageHeader } from "src/components/ui";
 import type { Device } from "src/types";
 import { useGate } from "src/hooks/useGate";
 import UpgradeModal from "src/components/ui/UpgradeModal";
@@ -52,19 +52,18 @@ function Dashboard() {
   };
 
   return (
-    <div className="mt-6 mb-10 px-5 lg:px-10">
-      {/* Header */}
-      <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="mb-1 text-3xl font-bold">{t("dashboard.title")}</h1>
-          <p className="text-sm text-gray-600">{t("dashboard.subtitle")}</p>
-        </div>
-        {lastUpdated && (
-          <p className="text-xs text-gray-500">
-            {t("dashboard.lastUpdated", { time: lastUpdated })}
-          </p>
-        )}
-      </div>
+    <div className="p-4 md:p-6">
+      <PageHeader
+        title={t("dashboard.title")}
+        subtitle={t("dashboard.subtitle")}
+        actions={
+          lastUpdated ? (
+            <p className="text-xs text-gray-500">
+              {t("dashboard.lastUpdated", { time: lastUpdated })}
+            </p>
+          ) : undefined
+        }
+      />
 
       {/* Dashboard grid */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">

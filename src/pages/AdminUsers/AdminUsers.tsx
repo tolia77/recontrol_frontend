@@ -5,6 +5,7 @@ import {
   Input,
   Card,
   ConfirmModal,
+  PageHeader,
 } from "src/components/ui";
 import { useAdminUsers } from "./useAdminUsers";
 import AdminUsersTable from "./AdminUsersTable";
@@ -42,21 +43,21 @@ const AdminUsers = () => {
   }
 
   return (
-    <div className="mt-6 mb-10 px-5 lg:px-10">
-      <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="mb-1 text-3xl font-bold">{t("title")}</h1>
-          <p className="text-sm text-gray-600">{t("subtitle")}</p>
-        </div>
-        <Button
-          variant="secondary"
-          size="sm"
-          aria-label={t("refreshLabel")}
-          onClick={() => loadUsers()}
-        >
-          ↻
-        </Button>
-      </div>
+    <div className="p-4 md:p-6">
+      <PageHeader
+        title={t("title")}
+        subtitle={t("subtitle")}
+        actions={
+          <Button
+            variant="secondary"
+            size="sm"
+            aria-label={t("refreshLabel")}
+            onClick={() => loadUsers()}
+          >
+            ↻
+          </Button>
+        }
+      />
 
       {/* Create user form */}
       <Card className="mb-6 max-w-xl">

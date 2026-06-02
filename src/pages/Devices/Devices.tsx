@@ -7,7 +7,7 @@ import {
 } from "src/services/backend/devicesService";
 import { useTranslation } from "react-i18next";
 import Button from "src/components/ui/Button";
-import { LoadingState } from "src/components/ui";
+import { LoadingState, PageHeader } from "src/components/ui";
 import { useMobileDetect } from "src/hooks/useMobileDetect";
 import DeviceCard from "src/pages/Devices/DeviceCard";
 import Modal from "src/components/ui/Modal";
@@ -150,8 +150,8 @@ function Devices() {
   );
 
   return (
-    <div className="mt-6 mr-5 ml-5 lg:mr-10 lg:ml-20">
-      <h1 className="mb-4">{t("title")}</h1>
+    <div className="p-4 md:p-6">
+      <PageHeader title={t("title")} />
 
       {/* Filters */}
       <div className="border-lightgray mb-6 flex flex-col gap-4 rounded-xl border bg-white p-4">

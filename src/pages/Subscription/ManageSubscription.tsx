@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { LoadingState, ErrorState } from "src/components/ui";
+import { LoadingState, ErrorState, PageHeader } from "src/components/ui";
 import { useSubscription } from "src/contexts/SubscriptionContext";
 import StatusHeader from "./components/StatusHeader";
 import UsageCard from "./components/UsageCard";
@@ -19,8 +19,8 @@ function ManageSubscription() {
     );
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <h2 className="text-2xl font-semibold mb-6">{t("pageTitle")}</h2>
+    <div className="mx-auto w-full max-w-6xl p-4 md:p-6">
+      <PageHeader title={t("pageTitle")} />
       <StatusHeader status={status} />
       <UsageCard />
       <section className="mt-8">
