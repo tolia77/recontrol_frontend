@@ -1,9 +1,10 @@
 import { renderHook, act } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { makeMockConsumer, type MockConsumer } from "./__tests__/mockConsumer";
+import type { CableConsumerLike } from "./useCableConsumer";
 
 // Token helpers are module singletons; mock them so the hook is deterministic.
-const getAccessToken = vi.fn<[], string | null>(() => "tok-current");
+const getAccessToken = vi.fn<() => string | null>(() => "tok-current");
 const refreshAccessTokenOnce = vi.fn(async () => "tok-refreshed");
 vi.mock("src/utils/auth", () => ({ getAccessToken: () => getAccessToken() }));
 vi.mock("src/services/backend/config", () => ({
@@ -15,9 +16,9 @@ import { useCableConsumer } from "./useCableConsumer";
 describe("useCableConsumer", () => {
   let mock: MockConsumer;
   let urlFn: () => string;
-  const createConsumerFn = vi.fn((fn: () => string) => {
+  const createConsumerFn = vi.fn((fn: () => string): CableConsumerLike => {
     urlFn = fn;
-    return mock as unknown as ReturnType<typeof createConsumerFn>;
+    return mock as unknown as CableConsumerLike;
   });
 
   beforeEach(() => {
