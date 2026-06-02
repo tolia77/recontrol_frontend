@@ -169,6 +169,14 @@ export function useDeviceSocket(
 
   const registerPendingCommand = useCallback((id: string, type: string) => {
     pendingCommandsRef.current.set(id, type);
+    // Bound the map so a long session issuing commands that never get a
+    // response cannot grow it without limit (parity with the original hook).
+    if (pendingCommandsRef.current.size > 200) {
+      const firstKey = pendingCommandsRef.current.keys().next().value as
+        | string
+        | undefined;
+      if (firstKey) pendingCommandsRef.current.delete(firstKey);
+    }
   }, []);
 
   return useMemo(
