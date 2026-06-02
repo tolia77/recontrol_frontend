@@ -25,14 +25,19 @@ function Sidebar({ isOpen = false, onClose, isMobile = false }: SidebarProps) {
 
   const TopContent = (
     <>
-      <Link to="/dashboard">
+      <Link to="/dashboard" onClick={onClose}>
         <img
           src={logo}
           alt="Logo"
           className="ml-[10px] h-[70px] object-cover pt-[10px]"
         />
       </Link>
-      <nav className="mt-[30px] space-y-[5px] pl-[10px] text-white">
+      {/* Click delegation: any nav link closes the mobile drawer. onClose is
+          undefined on desktop, so this is a harmless no-op there. */}
+      <nav
+        onClick={onClose}
+        className="mt-[30px] space-y-[5px] pl-[10px] text-white"
+      >
         <Link
           to="/dashboard"
           className="flex h-[45px] items-center gap-1 transition-opacity hover:opacity-80"
@@ -134,26 +139,28 @@ function Sidebar({ isOpen = false, onClose, isMobile = false }: SidebarProps) {
         </aside>
       )}
 
-      {/* Mobile drawer */}
-      {isMobile && isOpen && (
-        <div className="fixed inset-0 z-50">
+      {/* Mobile drawer — stays mounted so it can slide in/out smoothly; visibility
+          and interactivity are driven by isOpen, not mount/unmount. */}
+      {isMobile && (
+        <div
+          className={`fixed inset-0 z-50 ${isOpen ? "" : "pointer-events-none"}`}
+          aria-hidden={!isOpen}
+        >
+          {/* Backdrop — fades in/out */}
           <div
-            className="absolute inset-0 bg-black/40"
+            className={`absolute inset-0 bg-black/40 transition-opacity duration-300 ${
+              isOpen ? "opacity-100" : "opacity-0"
+            }`}
             onClick={onClose}
             aria-label="Close menu backdrop"
           />
-          <aside className="bg-primary relative flex h-dvh w-[220px] flex-col shadow-xl">
-            <div className="flex items-center justify-end p-2">
-              <button
-                type="button"
-                aria-label="Close menu"
-                onClick={onClose}
-                className="rounded p-2 text-white transition-colors hover:bg-white/10"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="overflow-y-auto px-0">{TopContent}</div>
+          {/* Drawer panel — slides from the left */}
+          <aside
+            className={`bg-primary relative flex h-dvh w-[220px] flex-col shadow-xl transition-transform duration-300 ease-in-out ${
+              isOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
+          >
+            <div className="overflow-y-auto px-0 pt-2">{TopContent}</div>
             <div className="mt-auto px-[10px] pb-6">{LanguageSwitch}</div>
           </aside>
         </div>
