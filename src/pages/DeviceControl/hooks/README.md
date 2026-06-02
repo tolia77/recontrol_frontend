@@ -15,15 +15,16 @@ hooks/
 ├── README.md             ← this file
 │
 ├── realtime/             ← transport + channel + WebRTC hooks
-│   ├── useDeviceSocket.ts          full WS lifecycle + onmessage dispatcher (D-04/D-06/D-07)
+│   ├── useCableConsumer.ts         single shared @rails/actioncable consumer + reactive token refresh
+│   ├── useDeviceSocket.ts          CommandChannel subscription + onmessage router + heartbeat
 │   ├── useWebRtc.ts                peer connection composer — returns flat UseWebRtcReturn (D-08)
 │   ├── usePeerConnection.ts        peer lifecycle sub-unit (D-09)
 │   ├── useWebRtcSignaling.ts       signaling sub-unit (D-09)
 │   ├── useDataChannels.ts          files + clipboard data-channel sub-unit (D-09)
 │   ├── useClipboardSync.ts         clipboard RTCDataChannel sync; options-object signature
 │   ├── useFilesChannel.ts          derived files-channel status; documented exception (D-13)
-│   ├── useAssistantChannel.ts      raw-ws subscriber; options-object signature (D-11)
-│   ├── useScenarioRunChannel.ts    raw-ws subscriber; options-object signature (D-11)
+│   ├── useAssistantChannel.ts      AssistantChannel consumer subscription; options-object signature
+│   ├── useScenarioRunChannel.ts    ScenarioRunChannel consumer subscription; options-object signature
 │   ├── useOrderedBroadcast.ts      shared seq-ordered reorder buffer base hook (D-12)
 │   └── useStreamStats.ts           RTCPeerConnection frame-rate / encoder stats
 │
@@ -54,11 +55,12 @@ hooks/
 ## Grouping Rules
 
 ### `realtime/`
-Hooks that connect to a live transport (WebSocket or WebRTC data channel) or derive
-state from one. Includes:
-- The WebSocket lifecycle hook (`useDeviceSocket`)
+Hooks that connect to a live transport (ActionCable consumer or WebRTC data channel) or
+derive state from one. Includes:
+- The shared ActionCable consumer (`useCableConsumer`) — owns connection lifecycle and token refresh
+- The CommandChannel subscription hook (`useDeviceSocket`) — message router + heartbeat over the consumer
 - The WebRTC peer-connection and data-channel hooks (`useWebRtc` and its internal units)
-- Raw WebSocket subscriber hooks (`useAssistantChannel`, `useScenarioRunChannel`)
+- ActionCable channel subscriber hooks (`useAssistantChannel`, `useScenarioRunChannel`)
 - Hooks that react to WebRTC channel state (`useClipboardSync`, `useFilesChannel`)
 - The shared ordered-broadcast base (`useOrderedBroadcast`)
 
@@ -103,14 +105,18 @@ returns, passing relevant callbacks to `useDeviceSocket` as injected callbacks.
 
 ## Channel Hook Pattern (D-11)
 
-Raw WebSocket subscriber hooks in `realtime/` follow an options-object signature:
+ActionCable channel subscriber hooks in `realtime/` follow an options-object signature:
 
 ```typescript
-export function useAssistantChannel({ socket, onBroadcast }: UseAssistantChannelOptions) { ... }
+export function useAssistantChannel({ consumer, onBroadcast }: UseAssistantChannelOptions) { ... }
 ```
 
+The `consumer` is the `CableConsumerLike` instance provided by `useCableConsumer`. Passing
+`null` while the connection is establishing is safe — the effect guard returns early and
+re-runs once the consumer is ready.
+
 Documented exceptions (D-13):
-- `useWebRtc` — peer-connection driven, takes `{ sendMessage }` (not a raw subscriber)
+- `useWebRtc` — peer-connection driven, takes `{ sendMessage }` (not a channel subscriber)
 - `useFilesChannel` — derived-status hook, takes positional args from `UseWebRtcReturn`
 
 ---
