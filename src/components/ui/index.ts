@@ -17,6 +17,7 @@ export type {
 } from "./SegmentedControl";
 export { default as Modal } from "./Modal";
 export { default as ConfirmModal } from "./ConfirmModal";
+export { default as PageHeader } from "./PageHeader";
 export { default as LoadingState } from "./LoadingState";
 export { default as ErrorState } from "./ErrorState";
 export { default as EmptyState } from "./EmptyState";
