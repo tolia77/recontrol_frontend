@@ -12,6 +12,7 @@ export const common = {
     settings: "Settings",
     subscription: "Subscription",
     users: "Users",
+    back: "Back",
   },
   dashboard: {
     title: "Dashboard",

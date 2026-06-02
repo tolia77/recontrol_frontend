@@ -12,6 +12,7 @@ export const common = {
     settings: "Налаштування",
     subscription: "Підписка",
     users: "Користувачі",
+    back: "Назад",
   },
   dashboard: {
     title: "Панель",
