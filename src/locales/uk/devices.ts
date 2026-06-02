@@ -29,6 +29,7 @@ export const devices = {
     lastFrom: "Остання активність від",
     lastTo: "Остання активність до",
     clear: "Скинути фільтри",
+    filtersButton: "Фільтри",
     loading: "Завантаження пристроїв...",
   },
 };

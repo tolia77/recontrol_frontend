@@ -29,6 +29,7 @@ export const devices = {
     lastFrom: "Last seen from",
     lastTo: "Last seen to",
     clear: "Clear filters",
+    filtersButton: "Filters",
     loading: "Loading devices...",
   },
 };
