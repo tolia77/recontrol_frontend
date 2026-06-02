@@ -55,6 +55,8 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
   const {
     showStats,
     setShowStats,
+    scalingMode,
+    setScalingMode,
     currentFps,
     setCurrentFps,
     currentResolution,
@@ -522,6 +524,8 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
         connectionState={connectionState}
         showStats={showStats}
         onToggleStats={() => setShowStats(!showStats)}
+        scalingMode={scalingMode}
+        onToggleScaling={() => setScalingMode(scalingMode === "fit" ? "1:1" : "fit")}
         currentFps={currentFps}
         onFpsChange={handleFpsChange}
         currentResolution={currentResolution}
@@ -588,6 +592,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
           retryWebRtc={retryWebRtc}
           streamStats={streamStats}
           showStats={showStats}
+          scalingMode={scalingMode}
           panelOpen={fmState.rightPaneActive === "files"}
           fileManagerNode={fileManagerNode}
           assistantPanelNode={assistantPanelNode}

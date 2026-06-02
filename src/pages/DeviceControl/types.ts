@@ -76,6 +76,7 @@ export interface MainContentProps {
   retryWebRtc: () => void;
   streamStats?: StreamStats | null;
   showStats?: boolean;
+  scalingMode?: ScalingMode;
   // file manager panel (Phase 10)
   panelOpen?: boolean;
   fileManagerNode?: React.ReactNode;

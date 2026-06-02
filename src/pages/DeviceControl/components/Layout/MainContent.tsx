@@ -1,6 +1,6 @@
-import { useRef, useCallback, useState, useEffect } from "react";
+import { useRef, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import type { MainContentProps, ScalingMode } from "src/pages/DeviceControl/types";
+import type { MainContentProps } from "src/pages/DeviceControl/types";
 import { computeRealImageCoords } from "src/pages/DeviceControl/utils/coords";
 import {
   buttonName,
@@ -35,6 +35,7 @@ const MainContent: React.FC<
   retryWebRtc,
   streamStats,
   showStats,
+  scalingMode = "fit",
   fileManagerNode,
   assistantPanelNode,
   scenariosPanelNode,
@@ -52,9 +53,6 @@ const MainContent: React.FC<
   // frame (~60Hz) so fast mouse motion stays smooth without flooding the wire.
   const pendingMoveRef = useRef<{ x: number; y: number } | null>(null);
   const moveRafRef = useRef<number | null>(null);
-
-  // Scaling mode state (setter reserved for future UI toggle)
-  const [scalingMode, _setScalingMode] = useState<ScalingMode>("fit");
 
   const getRealCoordsFromClient = useCallback(
     (clientX: number, clientY: number) => {

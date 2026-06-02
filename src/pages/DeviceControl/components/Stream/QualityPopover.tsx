@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDownIcon } from "src/pages/DeviceControl/components/icons/icons";
+import type { ScalingMode } from "src/pages/DeviceControl/types";
 import ResolutionControl from "./ResolutionControl";
 import FpsControls from "./FpsControls";
 
@@ -11,13 +12,16 @@ interface QualityPopoverProps {
   onFpsChange: (fps: number) => void;
   showStats: boolean;
   onToggleStats: () => void;
+  scalingMode: ScalingMode;
+  onToggleScaling: () => void;
   disabled?: boolean;
 }
 
 /**
  * Quality summary chip (`1080p · 24fps ▾`) that opens a dropdown bundling the
- * existing ResolutionControl + FpsControls + stats toggle. Replaces the three
- * separate stream controls that used to live stacked in the sidebar.
+ * existing ResolutionControl + FpsControls + a fit/1:1 scaling toggle + stats
+ * toggle. Replaces the separate stream controls that used to live stacked in
+ * the sidebar.
  *
  * The reused ResolutionControl / FpsControls are styled for a dark surface
  * (gray-400 labels, bg-white/10 inputs), so they sit in a dark "control well"
@@ -30,6 +34,8 @@ function QualityPopover({
   onFpsChange,
   showStats,
   onToggleStats,
+  scalingMode,
+  onToggleScaling,
   disabled,
 }: QualityPopoverProps) {
   const { t } = useTranslation("deviceControl");
@@ -91,6 +97,25 @@ function QualityPopover({
                 onFpsChange={onFpsChange}
                 disabled={disabled}
               />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-gray-400">
+                {t("topbar.quality.scaling")}
+              </span>
+              <button
+                type="button"
+                onClick={onToggleScaling}
+                aria-pressed={scalingMode === "1:1"}
+                className={`rounded px-2 py-0.5 text-xs font-medium transition-colors ${
+                  scalingMode === "1:1"
+                    ? "bg-indigo-500 text-white"
+                    : "bg-white/10 text-gray-300 hover:bg-white/20"
+                }`}
+              >
+                {scalingMode === "1:1"
+                  ? t("topbar.quality.scaleActual")
+                  : t("topbar.quality.scaleFit")}
+              </button>
             </div>
             <div className="flex items-center justify-between">
               <button

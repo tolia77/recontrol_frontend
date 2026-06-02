@@ -1,8 +1,11 @@
 import { useMemo, useState } from "react";
+import type { ScalingMode } from "src/pages/DeviceControl/types";
 
 export interface UseStreamControlsReturn {
   showStats: boolean;
   setShowStats: (v: boolean) => void;
+  scalingMode: ScalingMode;
+  setScalingMode: (v: ScalingMode) => void;
   currentFps: number;
   setCurrentFps: (v: number) => void;
   currentResolution: number;
@@ -10,7 +13,8 @@ export interface UseStreamControlsReturn {
 }
 
 /**
- * Owns stream display controls: stats overlay visibility, FPS, and resolution.
+ * Owns stream display controls: stats overlay visibility, video scaling mode
+ * (fit / 1:1), FPS, and resolution.
  *
  * Per D-01: feature sub-hook extracted from DeviceControl's inline state.
  * Per D-02: plain useState (transitions are independent).
@@ -20,6 +24,7 @@ export interface UseStreamControlsReturn {
  */
 export function useStreamControls(): UseStreamControlsReturn {
   const [showStats, setShowStats] = useState(false);
+  const [scalingMode, setScalingMode] = useState<ScalingMode>("fit");
   const [currentFps, setCurrentFps] = useState(24);
   const [currentResolution, setCurrentResolution] = useState(1080);
 
@@ -27,11 +32,13 @@ export function useStreamControls(): UseStreamControlsReturn {
     () => ({
       showStats,
       setShowStats,
+      scalingMode,
+      setScalingMode,
       currentFps,
       setCurrentFps,
       currentResolution,
       setCurrentResolution,
     }),
-    [showStats, currentFps, currentResolution],
+    [showStats, scalingMode, currentFps, currentResolution],
   );
 }

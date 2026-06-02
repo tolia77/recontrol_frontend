@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
-import type { SidebarProps, CommandAction } from "src/pages/DeviceControl/types";
+import type { SidebarProps, CommandAction, ScalingMode } from "src/pages/DeviceControl/types";
 import type { WebRtcConnectionState } from "src/pages/DeviceControl/hooks/realtime/useWebRtc";
 import { ChevronLeftIcon, ScenariosIcon, StopIcon } from "src/pages/DeviceControl/components/icons/icons";
 import { FilesToggleIcon } from "src/pages/DeviceControl/components/FileManager/icons";
@@ -23,6 +23,8 @@ export interface TopBarProps extends SidebarProps {
   connectionState?: WebRtcConnectionState;
   showStats?: boolean;
   onToggleStats?: () => void;
+  scalingMode?: ScalingMode;
+  onToggleScaling?: () => void;
   currentFps?: number;
   onFpsChange?: (fps: number) => void;
   currentResolution?: number;
@@ -87,6 +89,8 @@ function TopBar({
   connectionState,
   showStats,
   onToggleStats,
+  scalingMode,
+  onToggleScaling,
   currentFps,
   onFpsChange,
   currentResolution,
@@ -236,6 +240,8 @@ function TopBar({
               onFpsChange={onFpsChange}
               showStats={!!showStats}
               onToggleStats={onToggleStats}
+              scalingMode={scalingMode ?? "fit"}
+              onToggleScaling={onToggleScaling ?? (() => {})}
               disabled={disabled}
             />
           )}

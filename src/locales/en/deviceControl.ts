@@ -116,6 +116,9 @@ export const deviceControl = {
     deviceLabel: "Device",
     quality: {
       title: "Stream quality",
+      scaling: "Scaling",
+      scaleFit: "Fit",
+      scaleActual: "1:1",
     },
     power: {
       title: "Power",

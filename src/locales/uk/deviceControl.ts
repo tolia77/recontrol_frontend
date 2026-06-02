@@ -115,6 +115,9 @@ export const deviceControl = {
     deviceLabel: "Пристрій",
     quality: {
       title: "Якість трансляції",
+      scaling: "Масштаб",
+      scaleFit: "За розміром",
+      scaleActual: "1:1",
     },
     power: {
       title: "Живлення",
