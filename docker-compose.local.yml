@@ -1,0 +1,23 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5175:5175"
+
+    # VITE_BACKEND_URL / VITE_WEBSOCKETS_URL are read from the host .env file.
+    env_file: .env
+
+    volumes:
+      # Bind-mount the source for hot-module reload...
+      - .:/app
+      # ...but keep node_modules inside the container. This named volume is
+      # seeded from the image's `npm ci` and overlays the bind mount, so the
+      # host's node_modules (or its absence) never overwrites the container's.
+      - node_modules:/app/node_modules
+
+    command: npm run dev -- --host 0.0.0.0
+
+volumes:
+  node_modules:

@@ -1,0 +1,33 @@
+# See https://docs.docker.com/engine/reference/builder/#dockerignore-file
+
+# Git
+/.git/
+/.gitignore
+
+# Dependencies are installed inside the image via `npm ci`, never copied in.
+node_modules
+
+# Build output
+dist
+dist-ssr
+
+# Logs
+*.log
+
+# Environment files (passed at runtime via compose env_file).
+.env
+
+# Editor / IDE
+.idea
+.vscode
+
+# Planning and local design docs
+.planning
+docs
+
+# CI
+/.github
+
+# Docker
+Dockerfile*
+.dockerignore
