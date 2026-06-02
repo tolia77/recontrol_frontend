@@ -170,7 +170,7 @@ p {
 .command-websocket {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100dvh;
   background: var(--color-background);
   color: var(--color-text);
 }

@@ -509,7 +509,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
     ) : null;
 
   return (
-    <div className="command-websocket flex h-screen w-full flex-col bg-[#F3F4F6] font-sans antialiased">
+    <div className="command-websocket flex h-dvh w-full flex-col bg-[#F3F4F6] font-sans antialiased">
       <TopBar
         activeMode={activeMode}
         setActiveMode={setActiveMode}

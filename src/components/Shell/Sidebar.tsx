@@ -124,7 +124,7 @@ function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="bg-primary fixed top-0 left-0 z-40 hidden h-screen w-[220px] md:flex">
+      <aside className="bg-primary fixed top-0 left-0 z-40 hidden h-dvh w-[220px] md:flex">
         <div className="flex h-full flex-col">
           <div className="overflow-y-auto">{TopContent}</div>
           <div className="mt-auto pb-6">{LanguageSwitch}</div>

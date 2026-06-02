@@ -13,7 +13,7 @@ import ScenariosPanel from "src/pages/DeviceControl/components/Scenarios/Scenari
  */
 function Scenarios() {
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] flex-col md:h-screen">
+    <div className="flex h-[calc(100dvh-3.5rem)] flex-col md:h-dvh">
       <ScenariosPanel deviceId="" consumer={null} connected={false} deviceName="" runEnabled={false} />
     </div>
   );
