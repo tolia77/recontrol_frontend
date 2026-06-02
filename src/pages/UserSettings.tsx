@@ -96,7 +96,7 @@ function UserSettings() {
   }
 
   return (
-    <div className="max-w-xl p-6">
+    <div className="mx-auto w-full max-w-xl p-4 md:p-6">
       <h1 className="mb-4 text-2xl font-semibold">{t("title")}</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">

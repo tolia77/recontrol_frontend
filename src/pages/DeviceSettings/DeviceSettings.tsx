@@ -51,7 +51,7 @@ const DeviceSettings = () => {
     );
 
   return (
-    <div className="mx-auto max-w-4xl p-6">
+    <div className="mx-auto w-full max-w-4xl p-4 md:p-6">
       <div className="mb-6">
         <h1 className="text-text text-2xl font-bold">{t("title")}</h1>
         <p className="text-gray-600">{t("subtitle")}</p>
