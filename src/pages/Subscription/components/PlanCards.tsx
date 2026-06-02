@@ -11,6 +11,7 @@ import {
 } from "src/services/backend/subscriptionService";
 import { getErrorMessage } from "src/utils/getErrorMessage";
 import { formatPrice } from "src/utils/formatPrice";
+import { useMobileDetect } from "src/hooks/useMobileDetect";
 import PlanComparison from "./PlanComparison";
 
 // ── Free-tier limits for cancel-impact diff (D-16) ───────────────────────────
@@ -71,6 +72,7 @@ function PlanCards({ status }: PlanCardsProps) {
   const { t } = useTranslation("subscription");
   const { plans, loading: loadingPlans, refresh } = useSubscription();
   const { error: toastError } = useToast();
+  const isMobile = useMobileDetect();
 
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
   const [busy, setBusy] = useState(false);
@@ -360,8 +362,8 @@ function PlanCards({ status }: PlanCardsProps) {
 
   return (
     <>
-      {/* Read-only plan comparison grid — extracted to PlanComparison */}
-      <PlanComparison plans={plans} />
+      {/* Read-only plan comparison grid — hidden on mobile (D-07); stacked plan cards carry plan info */}
+      {!isMobile && <PlanComparison plans={plans} />}
 
       {/* CTA row — one action per plan column, aligned below the comparison grid */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4 mt-4">

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import Modal from "src/components/ui/Modal";
 import Button from "src/components/ui/Button";
 import { useSubscription } from "src/contexts/SubscriptionContext";
+import { useMobileDetect } from "src/hooks/useMobileDetect";
 import PlanComparison from "src/pages/Subscription/components/PlanComparison";
 import type { GateKey } from "src/hooks/useGate";
 
@@ -34,6 +35,7 @@ function UpgradeModal({
   const { t } = useTranslation("subscription");
   const navigate = useNavigate();
   const { plans } = useSubscription();
+  const isMobile = useMobileDetect();
 
   // Initial focus on the primary CTA ("View plans") per accessibility contract.
   const viewPlansRef = useRef<HTMLButtonElement>(null);
@@ -56,11 +58,19 @@ function UpgradeModal({
       </Modal.Header>
 
       <Modal.Body>
-        <PlanComparison
-          plans={plans}
-          highlightPlan={requiredPlan}
-          highlightFeature={feature}
-        />
+        {isMobile ? (
+          // On mobile: skip the 4-column grid (would overflow inside bottom sheet).
+          // The "View plans" button in the footer lets the user reach the full comparison.
+          <p className="text-sm text-darkgray">
+            {t(`gate.${feature}.header`, { current, limit })}
+          </p>
+        ) : (
+          <PlanComparison
+            plans={plans}
+            highlightPlan={requiredPlan}
+            highlightFeature={feature}
+          />
+        )}
       </Modal.Body>
 
       <Modal.Footer>
