@@ -7,6 +7,7 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
+import { useMobileDetect } from "src/hooks/useMobileDetect";
 
 const ModalHeadingContext = createContext<string>("");
 
@@ -31,7 +32,7 @@ const sizeCardClasses: Record<"sm" | "md" | "lg" | "full", string> = {
   sm: "bg-background border border-lightgray rounded-lg shadow-xl max-w-sm w-[90%] p-6",
   md: "bg-background border border-lightgray rounded-lg shadow-xl max-w-md w-[90%] p-6",
   lg: "bg-background border border-lightgray rounded-lg shadow-xl max-w-lg w-[90%] p-6",
-  full: "bg-background border border-lightgray rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto",
+  full: "bg-background border border-lightgray rounded-lg shadow-xl w-full max-w-5xl max-h-[90dvh] overflow-y-auto",
 };
 
 const wrapperClasses: Record<"sm" | "md" | "lg" | "full", string> = {
@@ -52,9 +53,18 @@ function Modal({
   ariaLabel,
   children,
 }: ModalProps) {
+  const isMobile = useMobileDetect();
   const headingId = useId();
   const cardRef = useRef<HTMLDivElement>(null);
   const prevFocusRef = useRef<Element | null>(null);
+
+  // Mobile bottom-sheet class overrides (D-08)
+  const mobileWrapperClasses = "flex items-end justify-center";
+  const mobileCardClasses =
+    "bg-background border-t border-lightgray rounded-t-2xl shadow-xl w-full max-h-[90dvh] overflow-y-auto pb-safe-pb animate-slide-up";
+
+  const effectiveWrapperClass = isMobile ? mobileWrapperClasses : wrapperClasses[size];
+  const effectiveCardClass = isMobile ? mobileCardClasses : sizeCardClasses[size];
 
   // Scroll lock
   useEffect(() => {
@@ -104,13 +114,13 @@ function Modal({
   return (
     <ModalHeadingContext.Provider value={headingId}>
       <div
-        className={`fixed inset-0 z-50 bg-black/40 ${wrapperClasses[size]}`}
+        className={`fixed inset-0 z-50 bg-black/40 ${effectiveWrapperClass}`}
         onClick={handleOverlayClick}
         role="presentation"
       >
         <div
           ref={cardRef}
-          className={`${sizeCardClasses[size]} ${className}`}
+          className={`${effectiveCardClass} ${className}`}
           onClick={(e) => e.stopPropagation()}
           role="dialog"
           aria-modal="true"
