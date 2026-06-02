@@ -12,9 +12,10 @@ import { getUserRole } from "src/utils/auth";
 interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
+  isMobile?: boolean;
 }
 
-function Sidebar({ isOpen = false, onClose }: SidebarProps) {
+function Sidebar({ isOpen = false, onClose, isMobile = false }: SidebarProps) {
   const { i18n, t } = useTranslation(["common"]);
   const role = getUserRole();
 
@@ -123,23 +124,25 @@ function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
   return (
     <>
-      {/* Desktop sidebar */}
-      <aside className="bg-primary fixed top-0 left-0 z-40 hidden h-dvh w-[220px] md:flex">
-        <div className="flex h-full flex-col">
-          <div className="overflow-y-auto">{TopContent}</div>
-          <div className="mt-auto pb-6">{LanguageSwitch}</div>
-        </div>
-      </aside>
+      {/* Desktop sidebar — always rendered on non-mobile; hidden by JSX on mobile */}
+      {!isMobile && (
+        <aside className="bg-primary fixed top-0 left-0 z-40 flex h-dvh w-[220px]">
+          <div className="flex h-full flex-col">
+            <div className="overflow-y-auto">{TopContent}</div>
+            <div className="mt-auto pb-6">{LanguageSwitch}</div>
+          </div>
+        </aside>
+      )}
 
       {/* Mobile drawer */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
+      {isMobile && isOpen && (
+        <div className="fixed inset-0 z-50">
           <div
             className="absolute inset-0 bg-black/40"
             onClick={onClose}
             aria-label="Close menu backdrop"
           />
-          <aside className="bg-primary relative flex h-full w-[220px] flex-col shadow-xl">
+          <aside className="bg-primary relative flex h-dvh w-[220px] flex-col shadow-xl">
             <div className="flex items-center justify-end p-2">
               <button
                 type="button"
