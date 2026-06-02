@@ -413,7 +413,6 @@ export function useDeviceSettings(
   );
 
   const handleDeleteDevice = useCallback(async () => {
-    if (!confirm(t("info.deleteConfirm"))) return;
     try {
       await devicesService.remove(deviceId!);
       toast.success(t("info.deleted"));

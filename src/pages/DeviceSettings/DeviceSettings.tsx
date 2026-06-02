@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
-import { LoadingState, EmptyState } from "src/components/ui";
+import { LoadingState, EmptyState, ConfirmModal, PageHeader } from "src/components/ui";
 import DeviceInfoForm from "./DeviceInfoForm";
 import InviteShareForm from "./InviteShareForm";
 import SharesList from "./SharesList";
@@ -16,6 +16,8 @@ const DeviceSettings = () => {
   const navigate = useNavigate();
   const gate = useGate("device_sharing");
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const {
     device,
@@ -52,10 +54,7 @@ const DeviceSettings = () => {
 
   return (
     <div className="mx-auto w-full max-w-4xl p-4 md:p-6">
-      <div className="mb-6">
-        <h1 className="text-text text-2xl font-bold">{t("title")}</h1>
-        <p className="text-gray-600">{t("subtitle")}</p>
-      </div>
+      <PageHeader title={t("title")} subtitle={t("subtitle")} />
 
       <DeviceInfoForm
         t={t}
@@ -127,12 +126,33 @@ const DeviceSettings = () => {
         </div>
 
         <button
-          onClick={handleDeleteDevice}
+          onClick={() => setShowDeleteConfirm(true)}
           className="bg-error rounded-lg px-4 py-2 text-white transition-opacity hover:opacity-90"
         >
           {t("info.deleteDevice")}
         </button>
       </div>
+
+      {showDeleteConfirm && (
+        <ConfirmModal
+          open={true}
+          title={t("info.deleteDevice")}
+          body={t("info.deleteConfirm")}
+          confirmLabel={t("info.deleteDevice")}
+          dangerous={true}
+          isBusy={deleting}
+          onConfirm={async () => {
+            setDeleting(true);
+            try {
+              await handleDeleteDevice();
+            } finally {
+              setDeleting(false);
+              setShowDeleteConfirm(false);
+            }
+          }}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
+      )}
     </div>
   );
 };
