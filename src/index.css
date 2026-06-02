@@ -73,12 +73,47 @@ input::placeholder {
   --color-amber: #ffb200;
 }
 
+/* ── Safe-area inset utilities (requires viewport-fit=cover in index.html) ── */
+@utility safe-pt {
+  padding-top: env(safe-area-inset-top);
+}
+
+@utility safe-pb {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@utility safe-pl {
+  padding-left: env(safe-area-inset-left);
+}
+
+@utility safe-pr {
+  padding-right: env(safe-area-inset-right);
+}
+
+/* ── Touch-screen custom variant (pointer:coarse + max-width — same query as useMobileDetect) ── */
+@custom-variant touch-screen (@media (pointer: coarse) and (max-width: 767px));
+
+/* ── Bottom-sheet slide-up animation (for Modal on mobile) ── */
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
+}
+
 html {
   font-family: var(--font-sans);
 }
 
 body {
   color: var(--color-text);
+}
+
+html,
+body {
+  overscroll-behavior: none; /* kill pull-to-refresh (Chrome: body; Safari: html) */
 }
 
 html,
