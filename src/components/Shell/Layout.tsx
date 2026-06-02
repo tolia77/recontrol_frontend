@@ -42,7 +42,16 @@ function LayoutInner() {
     <div className="flex h-full">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} isMobile={isMobile} />
 
-      <main className="flex h-full w-full min-w-0 flex-1 flex-col md:ml-[220px]">
+      {/* Sidebar offset is driven by useMobileDetect (D-02/D-03), NOT the `md:`
+          width breakpoint. A landscape phone is wider than 768px yet still on
+          the mobile path (no fixed sidebar rendered), so a width-based
+          `md:ml-[220px]` would reserve a phantom 220px gap. */}
+      <main
+        className={`flex h-full w-full min-w-0 flex-1 flex-col ${
+          isMobile ? "" : "ml-[220px]"
+        }`}
+      >
+
         {/* Mobile top bar — fixed height; back button on nested pages, hamburger otherwise */}
         {isMobile && (
           <div className="bg-primary flex h-14 shrink-0 items-center px-3 text-white">
