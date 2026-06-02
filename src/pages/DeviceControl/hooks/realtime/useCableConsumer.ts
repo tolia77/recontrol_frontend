@@ -65,6 +65,13 @@ export function useCableConsumer(
   useEffect(() => {
     if (!deviceId) return;
 
+    // Effect-scoped flag distinguishing an intentional teardown (unmount /
+    // deviceId change / StrictMode remount) from a server-driven close. Both
+    // stop the monitor, so `monitor.isRunning()` alone cannot tell them apart;
+    // without this flag, unmounting an open session would spuriously refresh the
+    // token and reopen a zombie socket React has already abandoned.
+    let intentionalClose = false;
+
     const c = createConsumerFn(() => {
       const token = getAccessToken() ?? "";
       return `${wsUrl}?access_token=${encodeURIComponent(token)}&device_id=${encodeURIComponent(deviceId)}`;
@@ -85,6 +92,9 @@ export function useCableConsumer(
         // Preserve ActionCable's own close handling (fires `disconnected` on
         // every subscription).
         originalClose?.call(this, event);
+        // Intentional teardown also stops the monitor; never refresh/reopen for
+        // it (would resurrect a socket the cleanup just abandoned).
+        if (intentionalClose) return;
         // willAttemptReconnect === monitor.isRunning(). False => terminal
         // (auth) => refresh + reopen.
         if (!c.connection.monitor.isRunning() && !handlingAuthRef.current) {
@@ -104,6 +114,7 @@ export function useCableConsumer(
 
     setConsumer(c);
     return () => {
+      intentionalClose = true;
       c.disconnect();
       setConsumer(null);
     };

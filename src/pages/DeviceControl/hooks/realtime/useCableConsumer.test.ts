@@ -71,4 +71,20 @@ describe("useCableConsumer", () => {
     unmount();
     expect(mock.disconnect).toHaveBeenCalledOnce();
   });
+
+  it("does NOT refresh on the close that follows an intentional unmount disconnect", async () => {
+    const { unmount } = renderHook(() =>
+      useCableConsumer("ws://x/cable", "dev-1", createConsumerFn),
+    );
+    unmount();
+    // The browser fires the WebSocket close asynchronously, after cleanup ran
+    // disconnect() (which stops the monitor). The wrapper must treat this as an
+    // intentional teardown and NOT refresh/reopen a zombie connection.
+    await act(async () => {
+      mock.emitConnectionClose(false);
+      await Promise.resolve();
+    });
+    expect(refreshAccessTokenOnce).not.toHaveBeenCalled();
+    expect(mock.connect).not.toHaveBeenCalled();
+  });
 });
