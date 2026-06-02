@@ -61,7 +61,7 @@ function Modal({
   // Mobile bottom-sheet class overrides (D-08)
   const mobileWrapperClasses = "flex items-end justify-center";
   const mobileCardClasses =
-    "bg-background border-t border-lightgray rounded-t-2xl shadow-xl w-full max-h-[90dvh] overflow-y-auto pb-safe-pb animate-slide-up";
+    "bg-background border-t border-lightgray rounded-t-2xl shadow-xl w-full max-h-[90dvh] overflow-y-auto px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)_+_1rem)] animate-slide-up";
 
   const effectiveWrapperClass = isMobile ? mobileWrapperClasses : wrapperClasses[size];
   const effectiveCardClass = isMobile ? mobileCardClasses : sizeCardClasses[size];
