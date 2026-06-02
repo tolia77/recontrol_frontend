@@ -13,6 +13,7 @@ import DraftReviewModal from "./DraftReviewModal";
 import type { DraftResponse } from "src/services/backend/scenariosService";
 import type { ScenariosSegment } from "./scenariosReducer";
 import { useScenariosPanelActions } from "src/pages/DeviceControl/hooks/state/useScenariosPanelActions";
+import type { CableConsumerLike } from "src/pages/DeviceControl/hooks/realtime/useCableConsumer";
 
 // -----------------------------------------------------------------------------
 // PanelMode discriminated union — Plan 23-09 extends the P22 shape with a
@@ -69,7 +70,8 @@ function writeSegmentToStorage(value: ScenariosSegment): void {
 
 export interface ScenariosPanelProps {
   deviceId: string;
-  ws: WebSocket | null;
+  consumer: CableConsumerLike | null;
+  connected: boolean;
   deviceName: string;
   // When false, the library renders with [▶ Run] disabled (no live device
   // socket to dispatch a run over). Used by the standalone /scenarios page,
@@ -79,7 +81,8 @@ export interface ScenariosPanelProps {
 
 export default function ScenariosPanel({
   deviceId,
-  ws,
+  consumer,
+  connected,
   deviceName,
   runEnabled = true,
 }: ScenariosPanelProps) {
@@ -137,7 +140,7 @@ export default function ScenariosPanel({
     handleEditDraft,
     handleRegenerateDraft,
     handleDiscardDraft,
-  } = useScenariosPanelActions({ deviceId, ws, deviceName, segment, setMode, setSegment });
+  } = useScenariosPanelActions({ deviceId, consumer, connected, deviceName, segment, setMode, setSegment });
 
   const showSegmentedControl =
     mode.kind === "library" || mode.kind === "history" || mode.kind === "ai";

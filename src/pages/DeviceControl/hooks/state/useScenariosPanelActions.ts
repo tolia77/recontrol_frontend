@@ -16,6 +16,7 @@ import {
   type Scenario,
 } from "src/services/backend/scenariosService";
 import { useScenarioRunChannel } from "src/pages/DeviceControl/hooks/realtime/useScenarioRunChannel";
+import type { CableConsumerLike } from "src/pages/DeviceControl/hooks/realtime/useCableConsumer";
 import type {
   ScenarioRunBroadcast,
   ScenarioRunDispatchAction,
@@ -97,7 +98,8 @@ function backTargetForRun(segment: ScenariosSegment): "library" | "history" {
 
 export interface UseScenariosPanelActionsArgs {
   deviceId: string;
-  ws: WebSocket | null;
+  consumer: CableConsumerLike | null;
+  connected: boolean;
   deviceName: string;
   /** Current segment value from the component — read by handleBack, handleApprove. */
   segment: ScenariosSegment;
@@ -152,7 +154,7 @@ export interface UseScenariosPanelActionsReturn {
 export function useScenariosPanelActions(
   args: UseScenariosPanelActionsArgs,
 ): UseScenariosPanelActionsReturn {
-  const { deviceId, ws, deviceName, segment, setMode, setSegment } = args;
+  const { deviceId, consumer, deviceName, segment, setMode, setSegment } = args;
 
   const { t } = useTranslation("scenarios");
   const toast = useToast();
@@ -212,7 +214,7 @@ export function useScenariosPanelActions(
   // Mount the ScenarioRunChannel subscription. The hook owns the channel
   // and exposes dispatchChannel — it does NOT receive dispatchChannel as a prop.
   const { dispatch: dispatchChannel } = useScenarioRunChannel({
-    socket: ws,
+    consumer,
     onBroadcast,
   });
 

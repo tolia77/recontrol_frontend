@@ -84,11 +84,12 @@ vi.mock("src/services/backend/scenarioRunsService.ts", async () => {
 });
 
 vi.mock("../../../hooks/realtime/useScenarioRunChannel", () => ({
-  useScenarioRunChannel: (
-    ws: WebSocket | null,
-    onBroadcast: (msg: ScenarioRunBroadcast) => void,
-  ) => {
-    void ws;
+  useScenarioRunChannel: ({
+    onBroadcast,
+  }: {
+    consumer: unknown;
+    onBroadcast: (msg: ScenarioRunBroadcast) => void;
+  }) => {
     void onBroadcast;
     return { dispatch: vi.fn() };
   },
@@ -180,10 +181,9 @@ function makeDraftResponse(totalTokens: number): DraftResponse {
 }
 
 function renderPanel(): ReturnType<typeof render> {
-  const fakeWs = { readyState: 1 } as unknown as WebSocket;
   return render(
     <ToastProvider>
-      <ScenariosPanel deviceId="dev-1" ws={fakeWs} deviceName="dev-1" />
+      <ScenariosPanel deviceId="dev-1" consumer={null} connected={true} deviceName="dev-1" />
     </ToastProvider>,
   );
 }
@@ -197,7 +197,8 @@ function triggerSuccess(
     <ToastProvider>
       <ScenariosPanel
         deviceId="dev-1"
-        ws={{ readyState: 1 } as unknown as WebSocket}
+        consumer={null}
+        connected={true}
         deviceName="dev-1"
       />
     </ToastProvider>,

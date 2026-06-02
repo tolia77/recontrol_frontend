@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useToast } from "src/components/ui";
 import { useAssistantChannel } from "src/pages/DeviceControl/hooks/realtime/useAssistantChannel";
 import type { AssistantBroadcast } from "src/pages/DeviceControl/hooks/realtime/useAssistantChannel";
+import type { CableConsumerLike } from "src/pages/DeviceControl/hooks/realtime/useCableConsumer";
 import { initialTranscriptState, transcriptReducer } from "./transcriptReducer";
 import Transcript from "./Transcript";
 import AssistantHeader from "./AssistantHeader";
@@ -12,7 +13,8 @@ import { copyAsMarkdown } from "./copyAsMarkdown";
 
 export interface AssistantPanelProps {
   deviceId: string;
-  ws: WebSocket | null;
+  consumer: CableConsumerLike | null;
+  connected: boolean;
   deviceName: string;
 }
 
@@ -62,7 +64,8 @@ function generateSessionToken(): string {
  */
 function AssistantPanel({
   deviceId,
-  ws,
+  consumer,
+  connected: _connected,
   deviceName,
 }: AssistantPanelProps): JSX.Element {
   const { t } = useTranslation("assistant");
@@ -77,7 +80,7 @@ function AssistantPanel({
     dispatchTranscript({ type: "broadcast", broadcast: msg });
   }, []);
 
-  const { dispatch } = useAssistantChannel({ socket: ws, onBroadcast });
+  const { dispatch } = useAssistantChannel({ consumer, onBroadcast });
 
   // 80% quota Toast — fires once when the reducer flips the flag (which
   // happens at most once per run; the reducer resets the flag on

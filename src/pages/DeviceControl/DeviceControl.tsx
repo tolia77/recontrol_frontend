@@ -11,6 +11,7 @@ import { devicesService } from "src/services/backend/devicesService";
 import { usePermissions } from "./hooks/state/usePermissions";
 import { useTerminalSession } from "./hooks/state/useTerminalSession";
 import { useStreamControls } from "./hooks/state/useStreamControls";
+import { useCableConsumer } from "./hooks/realtime/useCableConsumer";
 import { useDeviceSocket } from "./hooks/realtime/useDeviceSocket";
 import { useWebRtc } from "./hooks/realtime/useWebRtc";
 import { useStreamStats } from "./hooks/realtime/useStreamStats";
@@ -85,8 +86,8 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
   >(null);
 
   // Wave C: socket hook — the lynchpin extraction (D-04/D-05/D-06/D-07)
-  const deviceSocket = useDeviceSocket({
-    wsUrl,
+  const { consumer } = useCableConsumer(wsUrl, deviceId);
+  const deviceSocket = useDeviceSocket(consumer, {
     onSignaling: useCallback(
       (command: string, payload: Record<string, unknown>) => {
         handleSignalingRef.current?.(command, payload);
@@ -110,7 +111,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
       [appendTerminalResult],
     ),
     onProcessList: useCallback(
-      (procs, id) => {
+      (procs: import("./hooks/state/useTerminalSession").ProcessInfo[], id: string) => {
         setProcesses(procs);
         setProcessesLoading(false);
         void id; // id is used by the dispatcher to delete from pendingCommandsRef
@@ -119,7 +120,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
     ),
   });
 
-  const { connected, activeSocket } = deviceSocket;
+  const { connected } = deviceSocket;
 
   // Stable sendMessage wrapper for useWebRtc (Landmine 4 — sendMessage from
   // useDeviceSocket is already stable/memoized; wrap in useCallback so the
@@ -326,8 +327,6 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
         setIsOwner(false);
         await fetchPermissions(paramDeviceId, false);
       }
-      // Connect after permissions resolved
-      void deviceSocket.connect(paramDeviceId);
     };
     void init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -490,7 +489,8 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
     fmState.rightPaneActive === "assistant" ? (
       <AssistantPanel
         deviceId={deviceId}
-        ws={activeSocket}
+        consumer={consumer}
+        connected={connected}
         deviceName={deviceName || deviceId}
       />
     ) : null;
@@ -502,7 +502,8 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
     fmState.rightPaneActive === "scenarios" ? (
       <ScenariosPanel
         deviceId={deviceId}
-        ws={activeSocket}
+        consumer={consumer}
+        connected={connected}
         deviceName={deviceName || deviceId}
       />
     ) : null;

@@ -20,6 +20,7 @@ import { initReactI18next } from "react-i18next";
 import { scenarios as scenariosEn } from "src/locales/en/scenarios";
 import { ToastProvider } from "src/components/ui";
 import type { ScenarioRunBroadcast } from "src/pages/DeviceControl/hooks/realtime/useScenarioRunChannel";
+import { makeMockConsumer } from "../../../hooks/realtime/__tests__/mockConsumer";
 import type { Scenario } from "src/services/backend/scenariosService";
 import type {
   ScenarioRun,
@@ -71,7 +72,7 @@ vi.mock("src/pages/DeviceControl/hooks/realtime/useScenarioRunChannel", () => ({
   useScenarioRunChannel: ({
     onBroadcast,
   }: {
-    socket: WebSocket | null;
+    consumer: unknown;
     onBroadcast: (msg: ScenarioRunBroadcast) => void;
   }) => {
     capturedOnBroadcast = onBroadcast;
@@ -165,12 +166,12 @@ function makePolicyPreview(scenarioId: string = "scen-1") {
 }
 
 function renderPanel(deviceId: string = "dev-1") {
-  // Provide a fake ws shape that satisfies the prop type (we mock the hook so
-  // the panel never touches the socket directly).
-  const fakeWs = { readyState: 1 } as unknown as WebSocket;
+  // Provide a mock consumer (we mock the hook so the panel never touches the
+  // consumer directly). connected=true enables run buttons.
+  const mockConsumer = makeMockConsumer() as unknown as import("src/pages/DeviceControl/hooks/realtime/useCableConsumer").CableConsumerLike;
   return render(
     <ToastProvider>
-      <ScenariosPanel deviceId={deviceId} ws={fakeWs} deviceName="dev-1" />
+      <ScenariosPanel deviceId={deviceId} consumer={mockConsumer} connected={true} deviceName="dev-1" />
     </ToastProvider>,
   );
 }
@@ -484,7 +485,7 @@ describe("ScenariosPanel — runEnabled={false} (device-less /scenarios page)", 
   it("removes row [▶ Run] and shows the run-disabled hint", async () => {
     render(
       <ToastProvider>
-        <ScenariosPanel deviceId="" ws={null} deviceName="" runEnabled={false} />
+        <ScenariosPanel deviceId="" consumer={null} connected={false} deviceName="" runEnabled={false} />
       </ToastProvider>,
     );
     await waitFor(() => {

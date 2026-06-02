@@ -89,12 +89,12 @@ vi.mock("src/services/backend/scenarioRunsService.ts", async () => {
 });
 
 vi.mock("../../../hooks/realtime/useScenarioRunChannel", () => ({
-  useScenarioRunChannel: (
-    ws: WebSocket | null,
-    onBroadcast: (msg: ScenarioRunBroadcast) => void,
-  ) => {
-    // touch params to satisfy no-unused-vars without renaming the mock signature
-    void ws;
+  useScenarioRunChannel: ({
+    onBroadcast,
+  }: {
+    consumer: unknown;
+    onBroadcast: (msg: ScenarioRunBroadcast) => void;
+  }) => {
     void onBroadcast;
     return { dispatch: vi.fn() };
   },
@@ -203,10 +203,9 @@ function makeDraftResponse(): DraftResponse {
 }
 
 function renderPanel(deviceId: string = "dev-1") {
-  const fakeWs = { readyState: 1 } as unknown as WebSocket;
   return render(
     <ToastProvider>
-      <ScenariosPanel deviceId={deviceId} ws={fakeWs} deviceName="dev-1" />
+      <ScenariosPanel deviceId={deviceId} consumer={null} connected={true} deviceName="dev-1" />
     </ToastProvider>,
   );
 }
@@ -348,7 +347,8 @@ describe("ScenariosPanel — DraftReviewModal flow", () => {
       <ToastProvider>
         <ScenariosPanel
           deviceId="dev-1"
-          ws={{ readyState: 1 } as unknown as WebSocket}
+          consumer={null}
+          connected={true}
           deviceName="dev-1"
         />
       </ToastProvider>,
