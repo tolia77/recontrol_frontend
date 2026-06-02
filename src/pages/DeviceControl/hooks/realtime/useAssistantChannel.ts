@@ -155,11 +155,19 @@ export function useAssistantChannel(
       {
         received: (raw: unknown) => {
           const b = raw as AssistantBroadcast;
-          if ((b as { type?: string }).type === "accepted") reset();
+          // `accepted` is a seqless control frame (resets the per-run buffer); it
+          // is not part of the broadcast stream the reducer consumes, so reset
+          // and return rather than forwarding it down the seqless path.
+          if ((b as { type?: string }).type === "accepted") {
+            reset();
+            return;
+          }
           if (typeof (b as { seq?: unknown }).seq === "number") {
             bufferRef.current.set((b as { seq: number }).seq, b);
             flushInOrder();
           } else {
+            // No seq → bypass reorder buffer. Production envelopes always carry
+            // seq; this branch only fires for malformed traffic.
             try {
               onBroadcastRef.current(b);
             } catch (err) {
@@ -181,6 +189,14 @@ export function useAssistantChannel(
           });
         },
         rejected: () => {
+          // No further broadcasts will arrive; clear any armed gap-close timer
+          // and suppress it (mirrors disconnected) so it cannot fire a spurious
+          // stream_out_of_order after the rejection error.
+          closedRef.current = true;
+          if (gapTimerRef.current !== null) {
+            window.clearTimeout(gapTimerRef.current);
+            gapTimerRef.current = null;
+          }
           onBroadcastRef.current({
             type: "error",
             seq: expectedSeqRef.current,

@@ -114,6 +114,21 @@ describe("useAssistantChannel — VERIFY-04 stream-drop (consumer)", () => {
     );
     const tokens = result.current.broadcasts.filter((b) => b.type === "token");
     expect(tokens).toHaveLength(2);
+    // `accepted` is a control frame and must not be forwarded to the consumer.
+    const accepted = result.current.broadcasts.filter(
+      (b) => (b as { type?: string }).type === "accepted",
+    );
+    expect(accepted).toHaveLength(0);
+  });
+
+  it("emits subscription_rejected on rejection", () => {
+    const c = makeMockConsumer();
+    const { result } = renderHook(() => useChannelWithReducer(c));
+    act(() => c.emitRejected("AssistantChannel"));
+    const rejected = result.current.broadcasts.filter(
+      (b) => b.type === "error" && b.source === "subscription_rejected",
+    );
+    expect(rejected).toHaveLength(1);
   });
 
   it("dispatch forwards actions via subscription.perform", () => {
