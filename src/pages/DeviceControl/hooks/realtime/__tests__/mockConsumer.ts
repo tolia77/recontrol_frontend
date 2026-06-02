@@ -67,7 +67,9 @@ export function makeMockConsumer(): MockConsumer {
     emitConnected: (channel, reconnected = false) =>
       forEachSub(channel, (cb) => cb.connected?.({ reconnected })),
     emitDisconnected: (channel, willAttemptReconnect) => {
-      if (!willAttemptReconnect) monitorRunning = false;
+      // Keep the monitor signal in sync with willAttemptReconnect so a reconnect
+      // path exercised after an explicit disconnect() does not read stale state.
+      monitorRunning = willAttemptReconnect;
       forEachSub(channel, (cb) => cb.disconnected?.({ willAttemptReconnect }));
     },
     emitRejected: (channel) => forEachSub(channel, (cb) => cb.rejected?.()),
