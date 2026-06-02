@@ -51,12 +51,12 @@ function Signup() {
   }
 
   return (
-    <main className="from-tertiary/30 to-background flex min-h-screen items-center justify-center bg-gradient-to-b">
+    <main className="from-tertiary/30 to-background flex min-h-dvh items-center justify-center bg-gradient-to-b px-4">
       <div className="flex flex-col items-center space-y-8 p-8">
         <img src={logoFull} alt="logo" className="h-16" />
         <h1 className="text-primary text-3xl font-bold">{t("signup.title")}</h1>
 
-        <form onSubmit={handleSubmit} className="min-w-[350px] space-y-4">
+        <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
           {errors.length > 0 && (
             <div className="bg-error/10 border-error/20 space-y-1 rounded-lg border p-3">
               {errors.map((err) => (
