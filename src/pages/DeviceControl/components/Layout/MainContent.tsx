@@ -507,17 +507,20 @@ const MainContent: React.FC<
       <div className="relative h-full w-full bg-[#0a0d18]">
         {/* Stream content — the single <video> lives here via renderStreamContent */}
         {renderStreamContent()}
-        {/* Gesture overlay: absolute inset-0 touch-action:none z-10 (36-UI-SPEC §D) */}
-        <div
-          className="overlay absolute inset-0 z-10 bg-transparent outline-none"
-          style={{ touchAction: "none" }}
-          onPointerDown={disabled ? undefined : mobilePtrDown}
-          onPointerMove={disabled ? undefined : mobilePtrMove}
-          onPointerUp={disabled ? undefined : touchHandlers.onPointerUp}
-          onPointerCancel={disabled ? undefined : touchHandlers.onPointerCancel}
-          onContextMenu={(e) => e.preventDefault()}
-          tabIndex={-1}
-        />
+        {/* Gesture overlay: only active when stream is live; idle/failed states must
+            remain tappable so "Start stream" and "Retry" CTAs are reachable (36-UI-SPEC §D) */}
+        {connectionState === "connected" && (
+          <div
+            className="overlay absolute inset-0 z-10 bg-transparent outline-none"
+            style={{ touchAction: "none" }}
+            onPointerDown={disabled ? undefined : mobilePtrDown}
+            onPointerMove={disabled ? undefined : mobilePtrMove}
+            onPointerUp={disabled ? undefined : touchHandlers.onPointerUp}
+            onPointerCancel={disabled ? undefined : touchHandlers.onPointerCancel}
+            onContextMenu={(e) => e.preventDefault()}
+            tabIndex={-1}
+          />
+        )}
         {/* Virtual cursor overlay — z-20 sibling, positioned by direct DOM mutation */}
         <VirtualCursorOverlay cursorRef={cursorRef} />
       </div>
