@@ -90,4 +90,7 @@ export interface MainContentProps {
    * Passed from DeviceControl (single useMobileDetect call at orchestrator level);
    * MainContent MUST NOT call useMobileDetect itself. */
   isMobile?: boolean;
+  /** Called when the user taps "Start stream" on mobile idle stage (36-UI-SPEC §Microcopy).
+   * On desktop the idle stage is non-interactive — start lives in TopBar. */
+  onStartStream?: () => void;
 }

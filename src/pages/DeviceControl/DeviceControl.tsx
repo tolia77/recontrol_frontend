@@ -591,6 +591,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
             splitRatio={fmState.splitRatio}
             setSplitRatio={fmSetSplitRatio}
             isMobile={true}
+            onStartStream={startWebRtc}
           />
         </main>
         {/* FAB cluster — overlays the stream, bottom-right, z-40 (36-UI-SPEC §B) */}

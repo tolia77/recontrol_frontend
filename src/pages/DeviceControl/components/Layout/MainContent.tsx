@@ -45,6 +45,7 @@ const MainContent: React.FC<
   splitRatio,
   setSplitRatio,
   isMobile = false,
+  onStartStream,
 }) => {
   const { t } = useTranslation("deviceControl");
 
@@ -398,7 +399,16 @@ const MainContent: React.FC<
                 d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25A2.25 2.25 0 0 1 5.25 3h13.5A2.25 2.25 0 0 1 21 5.25Z"
               />
             </svg>
-            <span className="text-lg font-medium">{t("stream.idle")}</span>
+            {isMobile ? (
+              <button
+                onClick={onStartStream}
+                className="bg-secondary rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90"
+              >
+                {t("manual.quick.startStream")}
+              </button>
+            ) : (
+              <span className="text-lg font-medium">{t("stream.idle")}</span>
+            )}
           </div>,
         ),
       );
