@@ -16,9 +16,16 @@ function clamp(v: number, min: number, max: number): number {
  * position, and new pointer client coordinates, compute the next accumulated
  * position (clamped to [0,nW]×[0,nH]) and the new prev value.
  *
- * The delta in CSS pixels is scaled to intrinsic remote pixels by reusing the
- * same factor that computeRealImageCoords uses:
+ * The object-contain scale factor (displayed-px per remote-px) is:
  *   scale = Math.min(rect.width / nW, rect.height / nH)
+ *
+ * A finger delta measured in displayed CSS px must be DIVIDED by scale to
+ * produce the equivalent remote-px delta. This means dragging the finger
+ * across the full displayed video width/height moves the cursor by exactly
+ * the full remote dimension — an absolute-touchpad feel.
+ *
+ * If scale is zero or negative (container not yet laid out), the position is
+ * returned unchanged to avoid NaN/Infinity emission.
  *
  * Exported so it can be unit-tested independently of the React hook.
  */
@@ -32,14 +39,18 @@ export function accumulate(
   nH: number,
 ): { nextPos: { x: number; y: number }; nextPrev: { x: number; y: number } } {
   const scale = Math.min(rect.width / nW, rect.height / nH);
+  const nextPrev = { x: clientX, y: clientY };
+  if (scale <= 0) {
+    return { nextPos: pos, nextPrev };
+  }
   const dx = clientX - prev.x;
   const dy = clientY - prev.y;
   return {
     nextPos: {
-      x: clamp(pos.x + dx * scale, 0, nW),
-      y: clamp(pos.y + dy * scale, 0, nH),
+      x: clamp(pos.x + dx / scale, 0, nW),
+      y: clamp(pos.y + dy / scale, 0, nH),
     },
-    nextPrev: { x: clientX, y: clientY },
+    nextPrev,
   };
 }
 
@@ -51,9 +62,10 @@ export function accumulate(
  * addAction (which enforces the canSend permission gate).
  *
  * The cursor starts at the remote screen center ({nW/2, nH/2}) and accumulates
- * finger deltas scaled by Math.min(rect.width/nW, rect.height/nH) — the same
- * factor used by computeRealImageCoords — so 1 CSS px of finger travel maps
- * exactly to 1 intrinsic remote pixel.
+ * finger deltas. Each delta in displayed CSS px is divided by the object-contain
+ * scale factor (Math.min(rect.width/nW, rect.height/nH)), so dragging across the
+ * full displayed video width/height moves the cursor by the full remote dimension
+ * (absolute-touchpad feel).
  *
  * Usage:
  *   const cursor = useVirtualCursor({ addAction, disabled });

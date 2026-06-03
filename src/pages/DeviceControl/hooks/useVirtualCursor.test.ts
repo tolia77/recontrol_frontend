@@ -27,7 +27,7 @@ describe("accumulate (useVirtualCursor pure helper)", () => {
     expect(initPos.y).toBe(540);
   });
 
-  it("delta accumulates position by delta * scale", () => {
+  it("delta accumulates position by delta / scale", () => {
     const pos = { x: nW / 2, y: nH / 2 }; // {960, 540}
     const prev = { x: 100, y: 100 };
     // move by +10 CSS px in x, +5 CSS px in y
@@ -35,8 +35,8 @@ describe("accumulate (useVirtualCursor pure helper)", () => {
     const clientY = 105;
     const { nextPos } = accumulate(pos, prev, clientX, clientY, r, nW, nH);
     const scale = Math.min(r.width / nW, r.height / nH);
-    expect(nextPos.x).toBeCloseTo(960 + 10 * scale, 5);
-    expect(nextPos.y).toBeCloseTo(540 + 5 * scale, 5);
+    expect(nextPos.x).toBeCloseTo(960 + 10 / scale, 5);
+    expect(nextPos.y).toBeCloseTo(540 + 5 / scale, 5);
   });
 
   it("sequential moves accumulate", () => {
@@ -53,8 +53,8 @@ describe("accumulate (useVirtualCursor pure helper)", () => {
     const res2 = accumulate(pos, prev, 230, 225, r, nW, nH);
     const finalPos = res2.nextPos;
 
-    expect(finalPos.x).toBeCloseTo(960 + 30 * scale, 5);
-    expect(finalPos.y).toBeCloseTo(540 + 25 * scale, 5);
+    expect(finalPos.x).toBeCloseTo(960 + 30 / scale, 5);
+    expect(finalPos.y).toBeCloseTo(540 + 25 / scale, 5);
   });
 
   it("clamps low: negative delta clamps x and y to 0", () => {
@@ -73,5 +73,51 @@ describe("accumulate (useVirtualCursor pure helper)", () => {
     const { nextPos } = accumulate(pos, prev, 1000, 1000, r, nW, nH);
     expect(nextPos.x).toBe(nW);
     expect(nextPos.y).toBe(nH);
+  });
+
+  it("dragging the full displayed-video width traverses the full remote width", () => {
+    // Start at left edge; drag exactly r.width CSS px to the right.
+    // scale = Math.min(r.width/nW, r.height/nH); dragging r.width px → r.width/scale remote px.
+    // For a 16:9 container matched to a 16:9 remote, scale = r.width/nW, so result = nW exactly.
+    const scale = Math.min(r.width / nW, r.height / nH);
+    const pos = { x: 0, y: 0 };
+    const prev = { x: 0, y: 0 };
+    const { nextPos } = accumulate(pos, prev, r.width, 0, r, nW, nH);
+    // r.width / scale ≥ nW (because scale = min(r.width/nW, r.height/nH) ≤ r.width/nW)
+    // so the result clamps to nW.
+    expect(nextPos.x).toBeCloseTo(Math.min(r.width / scale, nW), 5);
+  });
+
+  it("dragging the full displayed-video height traverses the full remote height", () => {
+    // scale = Math.min(r.width/nW, r.height/nH); dragging r.height px → r.height/scale remote px ≥ nH.
+    const scale = Math.min(r.width / nW, r.height / nH);
+    const pos = { x: 0, y: 0 };
+    const prev = { x: 0, y: 0 };
+    const { nextPos } = accumulate(pos, prev, 0, r.height, r, nW, nH);
+    expect(nextPos.y).toBeCloseTo(Math.min(r.height / scale, nH), 5);
+  });
+
+  it("scale <= 0 guard: returns position unchanged when rect has no size", () => {
+    const zeroRect = rect(0, 0);
+    const pos = { x: 100, y: 200 };
+    const prev = { x: 50, y: 50 };
+    const { nextPos, nextPrev } = accumulate(pos, prev, 60, 60, zeroRect, nW, nH);
+    // Position must be unchanged (no NaN/Infinity)
+    expect(nextPos.x).toBe(100);
+    expect(nextPos.y).toBe(200);
+    // nextPrev always advances to the new client point
+    expect(nextPrev.x).toBe(60);
+    expect(nextPrev.y).toBe(60);
+  });
+
+  it("scale <= 0 guard: returns position unchanged when rect is zero in one axis", () => {
+    const narrowRect = rect(0, 219);
+    const pos = { x: 500, y: 300 };
+    const prev = { x: 10, y: 10 };
+    const { nextPos, nextPrev } = accumulate(pos, prev, 20, 20, narrowRect, nW, nH);
+    expect(nextPos.x).toBe(500);
+    expect(nextPos.y).toBe(300);
+    expect(nextPrev.x).toBe(20);
+    expect(nextPrev.y).toBe(20);
   });
 });
