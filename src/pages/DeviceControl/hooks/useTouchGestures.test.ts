@@ -94,7 +94,7 @@ function makeIntrinsic(nW = 1920, nH = 1080) {
 // ---------------------------------------------------------------------------
 
 function renderGestureHook(disabled = false) {
-  const addAction = vi.fn<[CommandAction], void>();
+  const addAction = vi.fn<(action: CommandAction) => void>();
   const rect = makeRect(390, 844);
   const intrinsic = makeIntrinsic();
 
