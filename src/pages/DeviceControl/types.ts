@@ -86,4 +86,8 @@ export interface MainContentProps {
   scenariosPanelNode?: React.ReactNode;
   splitRatio?: number;
   setSplitRatio?: (r: number) => void;
+  /** When true, render the mobile branch (full-width stream + gesture overlay).
+   * Passed from DeviceControl (single useMobileDetect call at orchestrator level);
+   * MainContent MUST NOT call useMobileDetect itself. */
+  isMobile?: boolean;
 }

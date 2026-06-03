@@ -12,6 +12,9 @@ import { mapToVirtualKey } from "src/pages/DeviceControl/utils/keyboard";
 import ManualControls from "src/pages/DeviceControl/components/Manual/ManualControls";
 import StreamStatsOverlay from "src/pages/DeviceControl/components/Stream/StreamStatsOverlay";
 import Splitter from "src/pages/DeviceControl/components/FileManager/Splitter";
+import { useTouchGestures } from "src/pages/DeviceControl/hooks/useTouchGestures";
+import { useVirtualCursor } from "src/pages/DeviceControl/hooks/useVirtualCursor";
+import VirtualCursorOverlay from "src/pages/DeviceControl/components/GestureEngine/VirtualCursorOverlay";
 
 /**
  * Main Content Area with WebRTC video stream
@@ -41,12 +44,78 @@ const MainContent: React.FC<
   scenariosPanelNode,
   splitRatio,
   setSplitRatio,
+  isMobile = false,
 }) => {
   const { t } = useTranslation("deviceControl");
 
   // overlay & container refs
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const videoContainerRef = useRef<HTMLDivElement | null>(null);
+
+  // --- Mobile gesture engine (Plans 01/02) ---
+  // cursorRef: threaded to both useVirtualCursor (to mutate style.transform) and
+  // VirtualCursorOverlay (to attach the DOM ref). No React state — direct DOM writes.
+  const cursorRef = useRef<HTMLDivElement | null>(null);
+
+  const cursor = useVirtualCursor({ addAction, disabled });
+
+  // Coordinate accessors for the gesture hook (S2: same wiring as getRealCoordsFromClient)
+  const getRect = useCallback(
+    () => videoContainerRef.current?.getBoundingClientRect() ?? null,
+    [],
+  );
+  const getIntrinsic = useCallback(() => {
+    const v = videoRef?.current;
+    return v && v.videoWidth ? { nW: v.videoWidth, nH: v.videoHeight } : null;
+  }, [videoRef]);
+
+  const touchHandlers = useTouchGestures({
+    addAction,
+    disabled,
+    getRect,
+    getIntrinsic,
+    cursor,
+  });
+
+  // Wrapped pointer handlers: on top of touchHandlers, synchronously update
+  // the cursor DOM element (D-08 direct DOM mutation, no re-render latency).
+  // On first touch reveal the cursor (opacity 0 → 1); on each move update transform.
+  const mobilePtrDown = useCallback(
+    (e: React.PointerEvent<Element>) => {
+      touchHandlers.onPointerDown(e);
+      // Reveal cursor on first touch
+      if (cursorRef.current) {
+        cursorRef.current.style.opacity = "1";
+      }
+    },
+    [touchHandlers],
+  );
+
+  const mobilePtrMove = useCallback(
+    (e: React.PointerEvent<Element>) => {
+      touchHandlers.onPointerMove(e);
+      // After the hook has accumulated the new position, update the DOM cursor.
+      // cursor.getPos() returns the post-accumulate position.
+      if (cursorRef.current) {
+        const rect = getRect();
+        const intrinsic = getIntrinsic();
+        if (rect && intrinsic) {
+          const pos = cursor.getPos();
+          // Convert from intrinsic remote px back to CSS px for the overlay.
+          const scale = Math.min(rect.width / intrinsic.nW, rect.height / intrinsic.nH);
+          // The video is centered inside videoContainerRef (object-contain).
+          const displayW = intrinsic.nW * scale;
+          const displayH = intrinsic.nH * scale;
+          const offsetX = (rect.width - displayW) / 2;
+          const offsetY = (rect.height - displayH) / 2;
+          const cssX = offsetX + pos.x * scale;
+          const cssY = offsetY + pos.y * scale;
+          cursorRef.current.style.transform = `translate(${cssX}px, ${cssY}px) translate(-50%, -50%)`;
+        }
+      }
+    },
+    [touchHandlers, cursor, getRect, getIntrinsic],
+  );
 
   const lastCoordsRef = useRef<{ x: number; y: number } | null>(null);
   // Latest pointer position awaiting send, coalesced to one send per animation
@@ -416,6 +485,34 @@ const MainContent: React.FC<
   // upstream by rightPaneActive in useFileManagerState). Pick whichever is
   // present so the Splitter's right slot renders the active panel.
   const rightNode = fileManagerNode ?? assistantPanelNode ?? scenariosPanelNode;
+
+  // Mobile branch (DCTL-01, RESEARCH Pattern 1A):
+  // Render the SAME renderStreamContent() output (which contains the ONE <video>
+  // node via renderVideoStream) at a stable tree position. The gesture overlay
+  // and VirtualCursorOverlay are siblings in the wrapper; the <video> is NEVER
+  // duplicated into a second ternary branch.
+  // Desktop stats overlay is NOT surfaced on mobile (D-04).
+  if (isMobile) {
+    return (
+      <div className="relative h-full w-full bg-[#0a0d18]">
+        {/* Stream content — the single <video> lives here via renderStreamContent */}
+        {renderStreamContent()}
+        {/* Gesture overlay: absolute inset-0 touch-action:none z-10 (36-UI-SPEC §D) */}
+        <div
+          className="overlay absolute inset-0 z-10 bg-transparent outline-none"
+          style={{ touchAction: "none" }}
+          onPointerDown={disabled ? undefined : mobilePtrDown}
+          onPointerMove={disabled ? undefined : mobilePtrMove}
+          onPointerUp={disabled ? undefined : touchHandlers.onPointerUp}
+          onPointerCancel={disabled ? undefined : touchHandlers.onPointerCancel}
+          onContextMenu={(e) => e.preventDefault()}
+          tabIndex={-1}
+        />
+        {/* Virtual cursor overlay — z-20 sibling, positioned by direct DOM mutation */}
+        <VirtualCursorOverlay cursorRef={cursorRef} />
+      </div>
+    );
+  }
 
   // Manual mode never shows the video stream — render its controls and bail.
   if (activeMode === "manual") {
