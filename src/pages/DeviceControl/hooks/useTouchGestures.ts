@@ -312,7 +312,7 @@ export function useTouchGestures({
 
       try {
         (e.target as Element).setPointerCapture(e.pointerId);
-      } catch (_) {
+      } catch {
         // capture may fail in test env — not fatal
       }
       e.preventDefault?.();
@@ -432,7 +432,7 @@ export function useTouchGestures({
     (e: React.PointerEvent<Element>) => {
       try {
         (e.target as Element).releasePointerCapture(e.pointerId);
-      } catch (_) {
+      } catch {
         // not fatal
       }
 
