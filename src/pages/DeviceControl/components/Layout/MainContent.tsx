@@ -428,7 +428,7 @@ const MainContent: React.FC<
     }
 
     if (connectionState === "connected") {
-      return streamFrame(renderVideoStream(true));
+      return streamFrame(renderVideoStream(!isMobile));
     }
 
     if (connectionState === "reconnecting") {
@@ -504,7 +504,7 @@ const MainContent: React.FC<
   // Desktop stats overlay is NOT surfaced on mobile (D-04).
   if (isMobile) {
     return (
-      <div className="relative h-full w-full bg-[#0a0d18]">
+      <div className="relative flex h-full w-full flex-col bg-[#0a0d18]">
         {/* Stream content — the single <video> lives here via renderStreamContent */}
         {renderStreamContent()}
         {/* Gesture overlay: only active when stream is live; idle/failed states must
