@@ -1,7 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router";
 import { generateUUID } from "src/utils/uuid";
 import TopBar from "./components/Layout/TopBar";
 import MainContent from "./components/Layout/MainContent";
+import GestureToolbar from "./components/GestureToolbar/GestureToolbar";
+import DeviceControlBottomSheet from "./components/BottomSheet/DeviceControlBottomSheet";
+import { useMobileDetect } from "src/hooks/useMobileDetect";
 import { useGate } from "src/hooks/useGate";
 import UpgradeModal from "src/components/ui/UpgradeModal";
 import { getUserId } from "src/utils/auth";
@@ -35,6 +39,9 @@ interface CommandWebSocketProps {
 }
 
 function DeviceControl({ wsUrl }: CommandWebSocketProps) {
+  const isMobile = useMobileDetect();
+  const navigate = useNavigate();
+
   // Orchestrator-level identity state (3 remaining useState after Wave C)
   const [deviceId, setDeviceId] = useState("");
   const [deviceName, setDeviceName] = useState<string>("");
@@ -393,6 +400,38 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
 
   const overallDisabled = !connected || permissionsLoading || !permissions;
 
+  // --- Mobile-specific helpers ---
+
+  /**
+   * openPanel: sets rightPaneActive (mutex; one-at-a-time enforced by useFileManagerState).
+   * The sheet opens automatically because rightPaneActive !== null → open={true}.
+   */
+  const openPanel = (p: "files" | "assistant" | "scenarios") => {
+    fmSetRightPaneActive(p);
+  };
+
+  /**
+   * handleDisconnect: mirrors the desktop TopBar disconnect/back behavior.
+   * Stops the WebRTC stream then navigates away.
+   */
+  const handleDisconnect = useCallback(() => {
+    stopWebRtc();
+    navigate("/devices");
+  }, [stopWebRtc, navigate]);
+
+  /**
+   * sheetTitle: derived from the currently active panel name.
+   * Literals are intentional placeholders; i18n wiring is Phase 37 (I18N-01).
+   */
+  const sheetTitle =
+    fmState.rightPaneActive === "files"
+      ? "Files"
+      : fmState.rightPaneActive === "assistant"
+        ? "Assistant"
+        : fmState.rightPaneActive === "scenarios"
+          ? "Scenarios"
+          : "";
+
   // Ctrl+Shift+F toggles the file manager panel; Ctrl+Shift+A toggles the
   // AssistantPanel (Phase 20-06, mirrors the F hotkey). Both share the same
   // focus-guard: bail if focus is inside the interactive overlay (which owns
@@ -510,6 +549,74 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
       />
     ) : null;
 
+  // UpgradeModal is shared — always rendered regardless of mobile/desktop path (z-50)
+  const upgradeModal = showAiUpgradeModal ? (
+    <UpgradeModal
+      feature="ai_access"
+      requiredPlan={aiGate.requiredPlan}
+      onClose={() => setShowAiUpgradeModal(false)}
+    />
+  ) : null;
+
+  // Mobile render path (DCTL-01): full-width stream + GestureToolbar FAB + BottomSheet.
+  // CRITICAL: <video> lives only inside MainContent's single stream path; no <video>
+  // is added here. Branch strictly on isMobile; no md:/lg:/touch-screen: utilities (S5).
+  if (isMobile) {
+    return (
+      <div className="command-websocket flex h-dvh w-full flex-col bg-[#0a0d18] font-sans antialiased">
+        {upgradeModal}
+        <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <MainContent
+            disabled={overallDisabled}
+            addAction={sendSingleAction}
+            activeMode="interactive"
+            terminalResults={terminalResults}
+            processes={processes}
+            processesLoading={processesLoading}
+            requestListProcesses={requestListProcesses}
+            killProcess={killProcess}
+            permissions={permissions || undefined}
+            videoRef={videoRef}
+            setVideoNode={setVideoNode}
+            connectionState={connectionState}
+            hasReceivedFrame={hasReceivedFrame}
+            retryWebRtc={retryWebRtc}
+            streamStats={streamStats}
+            showStats={false}
+            scalingMode="fit"
+            panelOpen={false}
+            fileManagerNode={fileManagerNode}
+            assistantPanelNode={assistantPanelNode}
+            scenariosPanelNode={scenariosPanelNode}
+            splitRatio={fmState.splitRatio}
+            setSplitRatio={fmSetSplitRatio}
+            isMobile={true}
+          />
+        </main>
+        {/* FAB cluster — overlays the stream, bottom-right, z-40 (36-UI-SPEC §B) */}
+        <GestureToolbar
+          addAction={sendSingleAction}
+          disabled={overallDisabled}
+          rightPaneActive={fmState.rightPaneActive}
+          onSelectPanel={openPanel}
+          aiAllowed={aiGate.allowed}
+          onAiBlocked={() => setShowAiUpgradeModal(true)}
+          onDisconnect={handleDisconnect}
+          deviceName={deviceName}
+        />
+        {/* Always-mounted sheet — never unmounts (DCTL-02, T-36-08) */}
+        <DeviceControlBottomSheet
+          open={fmState.rightPaneActive !== null}
+          onClose={() => fmSetRightPaneActive(null)}
+          title={sheetTitle}
+        >
+          {fileManagerNode ?? assistantPanelNode ?? scenariosPanelNode}
+        </DeviceControlBottomSheet>
+      </div>
+    );
+  }
+
+  // Desktop render path — byte-for-byte the prior layout (TopBar + main + MainContent).
   return (
     <div className="command-websocket flex h-dvh w-full flex-col bg-[#F3F4F6] font-sans antialiased">
       <TopBar
@@ -565,13 +672,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
           browserCaps: clipboardCaps,
         }}
       />
-      {showAiUpgradeModal && (
-        <UpgradeModal
-          feature="ai_access"
-          requiredPlan={aiGate.requiredPlan}
-          onClose={() => setShowAiUpgradeModal(false)}
-        />
-      )}
+      {upgradeModal}
       <main
         className={`flex min-h-0 flex-1 flex-col ${activeMode === "interactive" ? "overflow-hidden" : ""}`}
       >
