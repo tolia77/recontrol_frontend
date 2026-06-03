@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import DeviceControlBottomSheet from "./DeviceControlBottomSheet";
 
 // Override matchMedia to simulate portrait (default) or landscape
@@ -24,6 +24,8 @@ beforeEach(() => {
 afterEach(() => {
   // Restore body overflow after each test
   document.body.style.overflow = "";
+  // Manual cleanup since globals:false means RTL can't auto-register afterEach
+  cleanup();
 });
 
 describe("DeviceControlBottomSheet", () => {
@@ -36,8 +38,8 @@ describe("DeviceControlBottomSheet", () => {
     );
 
     // Children must be present in the DOM when closed (not unmounted)
-    expect(screen.getByTestId("sheet-content")).toBeInTheDocument();
-    expect(screen.getByText("Files")).toBeInTheDocument();
+    expect(screen.getByTestId("sheet-content")).toBeTruthy();
+    expect(screen.getByText("Files")).toBeTruthy();
   });
 
   it("applies closed CSS classes (translate-y-full, invisible) when open=false", () => {
@@ -64,7 +66,7 @@ describe("DeviceControlBottomSheet", () => {
     );
 
     // Backdrop should not be present when closed
-    expect(screen.queryByTestId("sheet-backdrop")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("sheet-backdrop")).toBeNull();
   });
 
   it("renders the backdrop when open", () => {
@@ -75,7 +77,7 @@ describe("DeviceControlBottomSheet", () => {
       </DeviceControlBottomSheet>
     );
 
-    expect(screen.getByTestId("sheet-backdrop")).toBeInTheDocument();
+    expect(screen.getByTestId("sheet-backdrop")).toBeTruthy();
   });
 
   it("applies open CSS classes (translate-y-0) when open=true", () => {
@@ -129,7 +131,7 @@ describe("DeviceControlBottomSheet", () => {
     const dragHandle = container.querySelector("[data-testid='drag-handle-zone']");
     expect(dragHandle).toBeTruthy();
 
-    // Simulate pointerdown then pointermove 90px down then pointerup
+    // Simulate pointerdown then pointermove 95px down then pointerup
     fireEvent.pointerDown(dragHandle as Element, { clientY: 100, pointerId: 1 });
     fireEvent.pointerMove(dragHandle as Element, { clientY: 195, pointerId: 1 }); // delta = 95px (≥80)
     fireEvent.pointerUp(dragHandle as Element, { clientY: 195, pointerId: 1 });
@@ -163,7 +165,8 @@ describe("DeviceControlBottomSheet", () => {
       </DeviceControlBottomSheet>
     );
 
-    expect(screen.getByRole("button", { name: "Close panel" })).toBeInTheDocument();
+    const closeButton = screen.getByRole("button", { name: "Close panel" });
+    expect(closeButton).toBeTruthy();
   });
 
   it("renders title in the header", () => {
@@ -174,6 +177,6 @@ describe("DeviceControlBottomSheet", () => {
       </DeviceControlBottomSheet>
     );
 
-    expect(screen.getByText("Scenarios")).toBeInTheDocument();
+    expect(screen.getByText("Scenarios")).toBeTruthy();
   });
 });
