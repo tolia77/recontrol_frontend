@@ -1,4 +1,4 @@
-import { useState, forwardRef, useImperativeHandle, useCallback } from "react";
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle, useCallback } from "react";
 import type { CommandAction } from "src/pages/DeviceControl/types";
 
 // ---------------------------------------------------------------------------
@@ -74,6 +74,49 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
     });
     const [fnPage, setFnPage] = useState(false);
 
+    // Refs for unmount cleanup (so the cleanup closure captures the latest values)
+    const stickyRef = useRef(sticky);
+    useEffect(() => { stickyRef.current = sticky; }, [sticky]);
+
+    const disabledRef = useRef(disabled);
+    useEffect(() => { disabledRef.current = disabled; }, [disabled]);
+
+    // Maps timerId → VK(s) to flush if the timer is still pending on unmount.
+    // CAD stores a special sentinel value (-1) — the cleanup handles it specially.
+    const pendingTimers = useRef<Map<number, number | number[]>>(new Map());
+
+    // Unmount cleanup: flush pending non-sticky keyUp timers and release sticky modifiers.
+    useEffect(() => {
+      return () => {
+        // 1. Flush any pending keyUp timers synchronously.
+        for (const [id, vkOrVks] of pendingTimers.current) {
+          clearTimeout(id);
+          const vks = Array.isArray(vkOrVks) ? vkOrVks : [vkOrVks];
+          for (const vk of vks) {
+            addAction({ id: crypto.randomUUID(), type: "keyboard.keyUp", payload: { Key: vk } });
+          }
+        }
+        pendingTimers.current.clear();
+
+        // 2. Release any sticky modifiers (skip if disabled — keyDowns never went out).
+        if (!disabledRef.current) {
+          const s = stickyRef.current;
+          const order: Array<[StickyKey, number]> = [
+            ["shift", MODIFIER_VK.Shift],
+            ["win", MODIFIER_VK.Win],
+            ["alt", MODIFIER_VK.Alt],
+            ["ctrl", MODIFIER_VK.Ctrl],
+          ];
+          for (const [k, vk] of order) {
+            if (s[k]) {
+              addAction({ id: crypto.randomUUID(), type: "keyboard.keyUp", payload: { Key: vk } });
+            }
+          }
+        }
+      };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     // -----------------------------------------------------------------------
     // Core dispatch — no-ops when disabled (T-37-02 security gate)
     // -----------------------------------------------------------------------
@@ -108,9 +151,11 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
 
     const handleNonStickyTap = (vk: number) => {
       send("keyboard.keyDown", { Key: vk });
-      setTimeout(() => {
+      const id = window.setTimeout(() => {
+        pendingTimers.current.delete(id);
         send("keyboard.keyUp", { Key: vk });
       }, 50);
+      pendingTimers.current.set(id, vk);
     };
 
     // -----------------------------------------------------------------------
@@ -121,11 +166,14 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
       send("keyboard.keyDown", { Key: 17 }); // Ctrl
       send("keyboard.keyDown", { Key: 18 }); // Alt
       send("keyboard.keyDown", { Key: 46 }); // Delete
-      setTimeout(() => {
+      // CAD keyUp order: Delete(46), Alt(18), Ctrl(17)
+      const id = window.setTimeout(() => {
+        pendingTimers.current.delete(id);
         send("keyboard.keyUp", { Key: 46 });
         send("keyboard.keyUp", { Key: 18 });
         send("keyboard.keyUp", { Key: 17 });
       }, 50);
+      pendingTimers.current.set(id, [46, 18, 17]);
     };
 
     // -----------------------------------------------------------------------

@@ -231,3 +231,71 @@ describe("GestureToolbar — ModifierStrip mount condition", () => {
     expect(screen.queryByRole("toolbar")).toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Unmount cleanup: flush pending hidden-input keyUp timers (CR-02)
+// ---------------------------------------------------------------------------
+
+describe("GestureToolbar — unmount cleanup", () => {
+  it("keyDown Enter then unmount before timers advance flushes keyUp(13) synchronously", () => {
+    vi.useFakeTimers();
+    const addAction = vi.fn();
+    const { container, unmount } = renderToolbar(addAction);
+    const input = raiseKeyboard(container);
+
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    // Only keyDown dispatched so far
+    expect(addAction).toHaveBeenCalledOnce();
+    expect(addAction.mock.calls[0][0]).toMatchObject({
+      type: "keyboard.keyDown",
+      payload: { Key: 13 },
+    });
+    addAction.mockClear();
+
+    // Unmount before advancing timers
+    unmount();
+
+    // Cleanup flushes the pending keyUp(13) synchronously
+    expect(addAction).toHaveBeenCalledOnce();
+    expect(addAction.mock.calls[0][0]).toMatchObject({
+      type: "keyboard.keyUp",
+      payload: { Key: 13 },
+    });
+
+    // Advance timers — the original callback must NOT double-fire
+    act(() => { vi.advanceTimersByTime(100); });
+    expect(addAction).toHaveBeenCalledOnce(); // still 1, no double-fire
+
+    vi.useRealTimers();
+  });
+
+  it("keyDown Tab then unmount flushes keyUp(9) once", () => {
+    vi.useFakeTimers();
+    const addAction = vi.fn();
+    const { container, unmount } = renderToolbar(addAction);
+    const input = raiseKeyboard(container);
+
+    fireEvent.keyDown(input, { key: "Tab" });
+    addAction.mockClear();
+
+    unmount();
+
+    expect(addAction).toHaveBeenCalledOnce();
+    expect(addAction.mock.calls[0][0]).toMatchObject({
+      type: "keyboard.keyUp",
+      payload: { Key: 9 },
+    });
+
+    vi.useRealTimers();
+  });
+
+  it("no passthrough key pressed, unmount dispatches zero extra addAction calls", () => {
+    const addAction = vi.fn();
+    const { unmount } = renderToolbar(addAction);
+
+    unmount();
+
+    expect(addAction).not.toHaveBeenCalled();
+  });
+});

@@ -271,6 +271,96 @@ describe("ModifierStrip — CAD (Ctrl+Alt+Del)", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Unmount cleanup: release sticky modifiers and flush pending keyUps (CR-01, CR-02)
+// ---------------------------------------------------------------------------
+
+describe("ModifierStrip — unmount cleanup", () => {
+  it("unmount with Ctrl armed dispatches keyUp(17)", () => {
+    const addAction = vi.fn();
+    const { unmount } = renderStrip(addAction);
+
+    // Arm Ctrl
+    fireEvent.click(screen.getByText("Ctrl"));
+    addAction.mockClear();
+
+    unmount();
+
+    expect(addAction).toHaveBeenCalledOnce();
+    expect(addAction.mock.calls[0][0]).toMatchObject({
+      type: "keyboard.keyUp",
+      payload: { Key: 17 },
+    });
+  });
+
+  it("unmount with Ctrl AND Shift armed dispatches keyUp(Shift=16) then keyUp(Ctrl=17) in reverse order", () => {
+    const addAction = vi.fn();
+    const { unmount } = renderStrip(addAction);
+
+    fireEvent.click(screen.getByText("Ctrl"));
+    fireEvent.click(screen.getByText("Shift"));
+    addAction.mockClear();
+
+    unmount();
+
+    expect(addAction).toHaveBeenCalledTimes(2);
+    expect(addAction.mock.calls[0][0]).toMatchObject({
+      type: "keyboard.keyUp",
+      payload: { Key: 16 }, // Shift released first
+    });
+    expect(addAction.mock.calls[1][0]).toMatchObject({
+      type: "keyboard.keyUp",
+      payload: { Key: 17 }, // Ctrl released second
+    });
+  });
+
+  it("unmount with no modifier armed dispatches zero additional keyUps", () => {
+    const addAction = vi.fn();
+    const { unmount } = renderStrip(addAction);
+
+    unmount();
+
+    expect(addAction).not.toHaveBeenCalled();
+  });
+
+  it("unmount with disabled=true dispatches zero keyUps (arming was suppressed)", () => {
+    const addAction = vi.fn();
+    const { unmount } = renderStrip(addAction, { disabled: true });
+
+    unmount();
+
+    expect(addAction).not.toHaveBeenCalled();
+  });
+
+  it("tapping Tab then unmounting before timers advance flushes keyUp(9) synchronously", () => {
+    vi.useFakeTimers();
+    const addAction = vi.fn();
+    const { unmount } = renderStrip(addAction);
+
+    fireEvent.click(screen.getByText("Tab"));
+
+    // Only keyDown dispatched so far
+    expect(addAction).toHaveBeenCalledOnce();
+    addAction.mockClear();
+
+    // Unmount without advancing timers
+    unmount();
+
+    // Cleanup must flush the pending keyUp(9) synchronously
+    expect(addAction).toHaveBeenCalledOnce();
+    expect(addAction.mock.calls[0][0]).toMatchObject({
+      type: "keyboard.keyUp",
+      payload: { Key: 9 },
+    });
+
+    // Advance timers — original setTimeout callback should NOT double-fire (timer was cleared)
+    act(() => { vi.advanceTimersByTime(100); });
+    expect(addAction).toHaveBeenCalledOnce(); // still only 1, no double-fire
+
+    vi.useRealTimers();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Fn page toggle
 // ---------------------------------------------------------------------------
 

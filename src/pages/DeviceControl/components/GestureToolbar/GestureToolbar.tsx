@@ -108,6 +108,21 @@ function GestureToolbar({
   const hiddenInputRef = useRef<HTMLInputElement>(null);
   const modifierStripRef = React.useRef<ModifierStripHandle>(null);
 
+  // Maps timerId → vk for pending hidden-input keyUp timers (CR-02 fix)
+  const pendingKeyUpTimers = useRef<Map<number, number>>(new Map());
+
+  // Unmount cleanup: flush any pending hidden-input keyUp timers synchronously.
+  useEffect(() => {
+    return () => {
+      for (const [id, vk] of pendingKeyUpTimers.current) {
+        clearTimeout(id);
+        addAction({ id: crypto.randomUUID(), type: "keyboard.keyUp", payload: { Key: vk } });
+      }
+      pendingKeyUpTimers.current.clear();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Track keyboard height from VisualViewport for strip docking (D-05)
   const { keyboardHeight } = useVisualViewport();
 
@@ -230,9 +245,11 @@ function GestureToolbar({
       if (!vk) return;
 
       addAction({ id: crypto.randomUUID(), type: "keyboard.keyDown", payload: { Key: vk } });
-      setTimeout(() => {
+      const timerId = window.setTimeout(() => {
+        pendingKeyUpTimers.current.delete(timerId);
         addAction({ id: crypto.randomUUID(), type: "keyboard.keyUp", payload: { Key: vk } });
       }, 50);
+      pendingKeyUpTimers.current.set(timerId, vk);
     },
     [keyboardRaised, canUseKeyboard, addAction],
   );
