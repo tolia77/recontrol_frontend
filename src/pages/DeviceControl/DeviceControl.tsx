@@ -401,6 +401,12 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
 
   const overallDisabled = !connected || permissionsLoading || !permissions;
 
+  // T-37-WIRE-01: permission gate for mobile typing (access_keyboard → GestureToolbar)
+  const canUseKeyboard = !!permissions?.access_keyboard;
+
+  // Tracks whether the Assistant input is focused on mobile — drives sheet forceFullHeight
+  const [assistantForceFullHeight, setAssistantForceFullHeight] = useState(false);
+
   // --- Mobile-specific helpers ---
 
   /**
@@ -519,6 +525,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
         queue={transferQueue}
         filesByItemIdRef={filesByItemIdRef}
         activeDownloadRef={activeDownloadRef}
+        isMobile={isMobile}
       />
     ) : null;
 
@@ -533,6 +540,8 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
         consumer={consumer}
         connected={connected}
         deviceName={deviceName || deviceId}
+        isMobile={isMobile}
+        onFullHeightChange={setAssistantForceFullHeight}
       />
     ) : null;
 
@@ -604,12 +613,14 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
           onAiBlocked={() => setShowAiUpgradeModal(true)}
           onDisconnect={handleDisconnect}
           deviceName={deviceName}
+          canUseKeyboard={canUseKeyboard}
         />
         {/* Always-mounted sheet — never unmounts (DCTL-02, T-36-08) */}
         <DeviceControlBottomSheet
           open={fmState.rightPaneActive !== null}
-          onClose={() => fmSetRightPaneActive(null)}
+          onClose={() => { fmSetRightPaneActive(null); setAssistantForceFullHeight(false); }}
           title={sheetTitle}
+          forceFullHeight={assistantForceFullHeight}
         >
           {fileManagerNode ?? assistantPanelNode ?? scenariosPanelNode}
         </DeviceControlBottomSheet>
