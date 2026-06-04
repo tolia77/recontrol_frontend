@@ -218,6 +218,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
   } = clipboardSync;
 
   const fireRefusalToast = useRefusalToastThrottle();
+  const { t } = useTranslation("deviceControl");
   const { t: tClipboard } = useTranslation("clipboard");
 
   // PILL-06 / D-13: fire a single info toast on the first successful sync of
@@ -420,16 +421,15 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
   }, [stopWebRtc, navigate]);
 
   /**
-   * sheetTitle: derived from the currently active panel name.
-   * Literals are intentional placeholders; i18n wiring is Phase 37 (I18N-01).
+   * sheetTitle: derived from the currently active panel name (I18N-01).
    */
   const sheetTitle =
     fmState.rightPaneActive === "files"
-      ? "Files"
+      ? t("mobile.sheet.filesTitle")
       : fmState.rightPaneActive === "assistant"
-        ? "Assistant"
+        ? t("mobile.sheet.assistantTitle")
         : fmState.rightPaneActive === "scenarios"
-          ? "Scenarios"
+          ? t("mobile.sheet.scenariosTitle")
           : "";
 
   // Ctrl+Shift+F toggles the file manager panel; Ctrl+Shift+A toggles the
