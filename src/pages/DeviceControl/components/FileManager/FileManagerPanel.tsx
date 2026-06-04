@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import type { MouseEvent, RefObject } from "react";
 import { useTranslation } from "react-i18next";
 import { useToast, ConfirmModal } from "src/components/ui";
@@ -49,6 +50,8 @@ interface FileManagerPanelProps {
   queue: TransferQueue;
   filesByItemIdRef: RefObject<Map<string, File>>;
   activeDownloadRef: RefObject<DownloadTransfer | null>;
+  /** Mobile: when true, suppresses auto-focus and enables kebab-based context menu. */
+  isMobile?: boolean;
 }
 
 /**
@@ -79,6 +82,7 @@ function FileManagerPanel({
   queue,
   filesByItemIdRef,
   activeDownloadRef,
+  isMobile,
 }: FileManagerPanelProps) {
   const { t } = useTranslation("fileManager");
   const rootsResult = useFilesRoots(channel);
@@ -375,6 +379,20 @@ function FileManagerPanel({
     dispatch({ type: "CLOSE_CONTEXT_MENU" });
   }, []);
 
+  // ----- Mobile: kebab → ContextMenu adapter -----
+  // Synthesizes a MouseEvent-like object from the kebab button's DOMRect so the
+  // existing handleRowContextMenu can position the ContextMenu at the button's
+  // bottom-right corner.
+  const handleRowKebabClick = useCallback(
+    (rect: DOMRect, entry: FileEntry) => {
+      handleRowContextMenu(
+        { clientX: rect.right, clientY: rect.bottom } as unknown as MouseEvent<Element>,
+        entry,
+      );
+    },
+    [handleRowContextMenu],
+  );
+
   // ----- Keyboard handler -----
   const keyboard = useKeyboardShortcuts({
     rootRef,
@@ -392,14 +410,16 @@ function FileManagerPanel({
   });
 
   // Auto-focus the panel root on mount so F5 / arrows / Esc work immediately.
+  // On mobile: skip to avoid stealing focus from the GestureToolbar hidden input.
   const initialFocusedRef = useRef(false);
   useEffect(() => {
+    if (isMobile) return;
     if (initialFocusedRef.current) return;
     if (channel.status !== "open") return;
     if (!rootRef.current) return;
     rootRef.current.focus();
     initialFocusedRef.current = true;
-  }, [channel.status]);
+  }, [channel.status, isMobile]);
 
   // ----- Disconnect listener -----
   const prevStatusRef = useRef(channel.status);
@@ -623,10 +643,20 @@ function FileManagerPanel({
           onDismissDisconnect: () =>
             dispatch({ type: "SET_DISCONNECT_BANNER", payload: null }),
         }}
+        isMobile={isMobile}
+        onRowKebabClick={handleRowKebabClick}
       />
 
       {/* 6 dialogs + ContextMenu rendered directly in the container (D-02) */}
-      <ContextMenu state={uiState.contextMenu} onClose={handleContextMenuClose} />
+      {/* On mobile, portal the ContextMenu to document.body so it escapes the
+          bottom sheet's transition-transform stacking context (RESEARCH Pitfall 5). */}
+      {isMobile
+        ? createPortal(
+            <ContextMenu state={uiState.contextMenu} onClose={handleContextMenuClose} />,
+            document.body,
+          )
+        : <ContextMenu state={uiState.contextMenu} onClose={handleContextMenuClose} />
+      }
       <ConfirmModal
         open={uiState.confirm?.kind === "delete"}
         title={t("dialogs.delete.title")}
