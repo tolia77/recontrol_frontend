@@ -374,6 +374,135 @@ describe("useTouchGestures integration", () => {
     expect(clicks).toBeGreaterThan(0);
   });
 
+  // Defect 1 regression: hold-drag active → second finger joins → left button released exactly once
+  it("Defect-1: second finger joining during hold-drag releases the held left button exactly once", () => {
+    const { addAction, handlers } = renderGestureHook();
+
+    // Arm hold-drag: put one finger down and hold for LONG_PRESS_MS
+    const down1 = makePointerEvent({ pointerId: 1, clientX: 100, clientY: 100 });
+    act(() => {
+      handlers.onPointerDown(down1);
+    });
+    act(() => {
+      vi.advanceTimersByTime(LONG_PRESS_MS + 10);
+    });
+
+    // Confirm we are in hold-drag: mouse.down (left) should have been emitted
+    expect(addAction).toHaveBeenCalledWith({
+      type: "mouse.down",
+      payload: { Button: 0 },
+    });
+    const callCountAfterArm = addAction.mock.calls.length;
+
+    // Now a second finger joins — should release the held button exactly once
+    const down2 = makePointerEvent({ pointerId: 2, clientX: 150, clientY: 150 });
+    act(() => {
+      handlers.onPointerDown(down2);
+    });
+
+    // Exactly one additional call — the mouse.up release
+    expect(addAction).toHaveBeenCalledTimes(callCountAfterArm + 1);
+    expect(addAction).toHaveBeenLastCalledWith({
+      type: "mouse.up",
+      payload: { Button: 0 },
+    });
+
+    // Subsequent two-finger lift should go through the two-finger path, not emit more left ups
+    const up1 = makePointerEvent({ pointerId: 1, clientX: 102, clientY: 101, buttons: 0 });
+    const up2 = makePointerEvent({ pointerId: 2, clientX: 152, clientY: 151, buttons: 0 });
+    act(() => {
+      vi.advanceTimersByTime(50);
+      handlers.onPointerUp(up1);
+      handlers.onPointerUp(up2);
+    });
+
+    // No additional left mouse.up should have been emitted (finger lifts were slow, not a right-click tap)
+    const leftUpCalls = addAction.mock.calls.filter(
+      (c) => c[0].type === "mouse.up" && c[0].payload?.Button === 0,
+    );
+    expect(leftUpCalls).toHaveLength(1);
+  });
+
+  // Defect 2 regression: press between TAP_MAX_MS and LONG_PRESS_MS (dead zone) now emits a click
+  it("Defect-2: still press of ~300ms (TAP_MAX_MS < duration < LONG_PRESS_MS) registers as a click", () => {
+    const { addAction, handlers } = renderGestureHook();
+
+    const down = makePointerEvent({ pointerId: 1, clientX: 100, clientY: 100 });
+    act(() => {
+      handlers.onPointerDown(down);
+    });
+
+    // Advance to 300ms — past TAP_MAX_MS (200ms) but before LONG_PRESS_MS (400ms)
+    // Under the old code this was the dead zone (too slow for classifyTap, too fast for long-press).
+    // Under the new movement-only check this should register as a click.
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    // Lift with minimal movement (<8px) — long-press timer has NOT fired (400ms not reached)
+    const up = makePointerEvent({ pointerId: 1, clientX: 103, clientY: 102, buttons: 0 });
+    act(() => {
+      handlers.onPointerUp(up);
+    });
+
+    // Must emit exactly one left down + up pair (dead zone is now closed)
+    expect(addAction).toHaveBeenCalledTimes(2);
+    expect(addAction).toHaveBeenNthCalledWith(1, {
+      type: "mouse.down",
+      payload: { Button: 0 },
+    });
+    expect(addAction).toHaveBeenNthCalledWith(2, {
+      type: "mouse.up",
+      payload: { Button: 0 },
+    });
+  });
+
+  // Defect 3 regression: unmounting during hold-drag emits the left-up release
+  it("Defect-3: unmounting mid-hold-drag emits a left mouse.up release", () => {
+    const addAction = vi.fn<(action: CommandAction) => void>();
+    const rect = makeRect(390, 844);
+    const intrinsic = { nW: 1920, nH: 1080 };
+
+    const { result, unmount } = renderHook(() =>
+      useTouchGestures({
+        addAction,
+        disabled: false,
+        getRect: () => rect,
+        getIntrinsic: () => intrinsic,
+      }),
+    );
+
+    const handlers = result.current;
+
+    // Arm hold-drag
+    const down = makePointerEvent({ pointerId: 1, clientX: 100, clientY: 100 });
+    act(() => {
+      handlers.onPointerDown(down);
+    });
+    act(() => {
+      vi.advanceTimersByTime(LONG_PRESS_MS + 10);
+    });
+
+    // Confirm in hold-drag: mouse.down emitted
+    expect(addAction).toHaveBeenCalledWith({
+      type: "mouse.down",
+      payload: { Button: 0 },
+    });
+    const callCountAfterArm = addAction.mock.calls.length;
+
+    // Unmount without lifting the finger (simulates connection blip / overlay unmount)
+    act(() => {
+      unmount();
+    });
+
+    // Safety net must have fired: exactly one mouse.up
+    expect(addAction).toHaveBeenCalledTimes(callCountAfterArm + 1);
+    expect(addAction).toHaveBeenLastCalledWith({
+      type: "mouse.up",
+      payload: { Button: 0 },
+    });
+  });
+
   // Disabled: no envelopes emitted when disabled=true
   it("disabled=true: no envelope emitted for any gesture", () => {
     const { addAction, handlers } = renderGestureHook(true);

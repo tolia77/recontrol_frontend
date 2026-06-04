@@ -201,7 +201,21 @@ export function useTouchGestures({
     nowT: number;
   } | null>(null);
 
-  // rAF cleanup on unmount (mirrors MainContent 149-154 / S3)
+  // Safety-net refs: always hold the latest addAction and disabled values so that
+  // the unmount cleanup can release a held mouse button even though effects captured
+  // stale closures at mount time (Defect 3 — release safety net).
+  const latestAddActionRef = useRef<typeof addAction>(addAction);
+  const latestDisabledRef = useRef<boolean>(disabled);
+
+  // Keep safety-net refs current every render.
+  useEffect(() => {
+    latestAddActionRef.current = addAction;
+    latestDisabledRef.current = disabled;
+  });
+
+  // rAF cleanup on unmount + hold-drag release safety net (mirrors MainContent 149-154 / S3).
+  // If the overlay unmounts while a hold-drag is active (e.g. connection blip), the held
+  // left button would stay down forever. Emit the release here as a best-effort safety net.
   useEffect(
     () => () => {
       if (scrollRafRef.current != null) {
@@ -210,9 +224,33 @@ export function useTouchGestures({
       if (longPressTimerRef.current != null) {
         clearTimeout(longPressTimerRef.current);
       }
+      // Defect 3 safety net: release held left button if unmounting mid-hold-drag.
+      if (
+        singleModeRef.current === "hold-drag" &&
+        !latestDisabledRef.current &&
+        typeof latestAddActionRef.current === "function"
+      ) {
+        latestAddActionRef.current({
+          type: "mouse.up",
+          payload: { Button: mapButtonToBackend(0) },
+        });
+      }
+      singleModeRef.current = "idle";
     },
     [],
   );
+
+  // Defect 3: if disabled flips true mid-hold-drag, release the held button immediately.
+  useEffect(() => {
+    if (disabled && singleModeRef.current === "hold-drag") {
+      // emit directly through the latest addAction — disabled is now true so we bypass
+      // the emit() helper's guard (which would suppress the call) and call the raw function.
+      if (typeof addAction === "function") {
+        addAction({ type: "mouse.up", payload: { Button: mapButtonToBackend(0) } });
+      }
+      singleModeRef.current = "idle";
+    }
+  }, [disabled, addAction]);
 
   // ---------------------------------------------------------------------------
   // Emission helpers — all go through addAction (S1)
@@ -344,6 +382,14 @@ export function useTouchGestures({
         }
         armLongPress(e.pointerId);
       } else if (count === 2) {
+        // Defect 1 fix: if a hold-drag was active, the left button is already held down.
+        // Transitioning to two-finger mode would orphan that down event — emit the release
+        // exactly once before clearing single-finger state, then clear the cursor state.
+        if (singleModeRef.current === "hold-drag") {
+          emitLeftUp();
+          if (cursor) cursor.end();
+        }
+
         // Cancel single-finger machinery
         singleModeRef.current = "idle";
         if (longPressTimerRef.current != null) {
@@ -361,7 +407,7 @@ export function useTouchGestures({
         pendingScrollDyRef.current = 0;
       }
     },
-    [disabled, cursor, getIntrinsic, armLongPress],
+    [disabled, cursor, getIntrinsic, armLongPress, emitLeftUp],
   );
 
   // ---------------------------------------------------------------------------
@@ -492,7 +538,17 @@ export function useTouchGestures({
         if (mode === "hold-drag") {
           emitLeftUp();
         } else if (mode === "tap-pending") {
-          if (classifyTap(entry, now)) {
+          // Defect 2 fix: duration gate removed from the single-finger tap path.
+          // Rationale: mode still being "tap-pending" at lift proves the long-press
+          // timer (LONG_PRESS_MS = 400ms) has NOT fired, so the press is already
+          // implicitly duration-bounded to < 400ms. The 200ms duration gate in
+          // classifyTap caused a 200–400ms dead zone where real phone taps
+          // (~200–300ms) were silently dropped. Movement is the only needed check.
+          const dx = entry.lastX - entry.startX;
+          const dy = entry.lastY - entry.startY;
+          const isStill = Math.sqrt(dx * dx + dy * dy) < TAP_MAX_MOVE_PX;
+
+          if (isStill) {
             const timeSinceLastTap = now - lastTapTimeRef.current;
 
             // Every tap emits exactly one down/up pair (including each of a double-tap).
