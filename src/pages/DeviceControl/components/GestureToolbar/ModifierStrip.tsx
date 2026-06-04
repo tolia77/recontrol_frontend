@@ -1,0 +1,363 @@
+import { useState, forwardRef, useImperativeHandle, useCallback } from "react";
+import type { CommandAction } from "src/pages/DeviceControl/types";
+
+// ---------------------------------------------------------------------------
+// VK constants (derived from utils/keyboard.ts — raw Windows VK codes)
+// The strip calls addAction directly with VK numbers (bypasses mapToVirtualKey
+// which requires a React.KeyboardEvent — see RESEARCH §Pitfall 8).
+// ---------------------------------------------------------------------------
+
+const MODIFIER_VK = {
+  Ctrl: 17,
+  Alt: 18,
+  Win: 91,
+  Shift: 16,
+  Esc: 27,
+  Tab: 9,
+  ArrowLeft: 37,
+  ArrowUp: 38,
+  ArrowRight: 39,
+  ArrowDown: 40,
+  Delete: 46, // used for Ctrl+Alt+Del
+} as const;
+
+const FN_KEYS = Array.from({ length: 12 }, (_, i) => ({
+  label: `F${i + 1}`,
+  vk: 112 + i,
+}));
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export interface ModifierStripHandle {
+  /** True if at least one modifier key is currently sticky. */
+  hasActiveModifier(): boolean;
+  /**
+   * Route a printable character through the active sticky modifiers.
+   * Sends: keyDown(charVk), keyUp(charVk), then keyUp for each active modifier
+   * in reverse order, then clears all sticky state.
+   */
+  deliverPrintable(char: string): void;
+}
+
+type StickyKey = "ctrl" | "alt" | "win" | "shift";
+
+interface ModifierStripProps {
+  addAction: (a: CommandAction) => void;
+  disabled?: boolean;
+  /** Keyboard height in CSS px (from useVisualViewport); strip docks above this. */
+  keyboardHeightPx: number;
+  /** Translation function — strip is i18n-namespace-agnostic; caller owns useTranslation. */
+  t: (key: string) => string;
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+/**
+ * ModifierStrip — sticky modifier + special-key row, docked above the soft
+ * keyboard using VisualViewport positioning.
+ *
+ * Implements KBD-03: one-shot sticky modifiers (Ctrl/Alt/Win/Shift), non-sticky
+ * special keys (Esc/Tab/arrows), an Fn page with F1–F12 + Ctrl+Alt+Del, and the
+ * `deliverPrintable` imperative API for combo routing in GestureToolbar.
+ */
+const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
+  function ModifierStrip({ addAction, disabled, keyboardHeightPx, t }, ref) {
+    const [sticky, setSticky] = useState<Record<StickyKey, boolean>>({
+      ctrl: false,
+      alt: false,
+      win: false,
+      shift: false,
+    });
+    const [fnPage, setFnPage] = useState(false);
+
+    // -----------------------------------------------------------------------
+    // Core dispatch — no-ops when disabled (T-37-02 security gate)
+    // -----------------------------------------------------------------------
+
+    const send = useCallback(
+      (type: string, payload: Record<string, unknown>) => {
+        if (disabled) return;
+        addAction({ id: crypto.randomUUID(), type, payload });
+      },
+      [addAction, disabled],
+    );
+
+    // -----------------------------------------------------------------------
+    // Modifier tap — toggles sticky state
+    // -----------------------------------------------------------------------
+
+    const handleModifierTap = (key: StickyKey, vk: number) => {
+      setSticky((prev) => {
+        const next = !prev[key];
+        if (next) {
+          send("keyboard.keyDown", { Key: vk });
+        } else {
+          send("keyboard.keyUp", { Key: vk });
+        }
+        return { ...prev, [key]: next };
+      });
+    };
+
+    // -----------------------------------------------------------------------
+    // Non-sticky key tap — keyDown immediately, keyUp after 50ms
+    // -----------------------------------------------------------------------
+
+    const handleNonStickyTap = (vk: number) => {
+      send("keyboard.keyDown", { Key: vk });
+      setTimeout(() => {
+        send("keyboard.keyUp", { Key: vk });
+      }, 50);
+    };
+
+    // -----------------------------------------------------------------------
+    // Ctrl+Alt+Del compound action (D-07 — not sticky, single compound press)
+    // -----------------------------------------------------------------------
+
+    const handleCtrlAltDel = () => {
+      send("keyboard.keyDown", { Key: 17 }); // Ctrl
+      send("keyboard.keyDown", { Key: 18 }); // Alt
+      send("keyboard.keyDown", { Key: 46 }); // Delete
+      setTimeout(() => {
+        send("keyboard.keyUp", { Key: 46 });
+        send("keyboard.keyUp", { Key: 18 });
+        send("keyboard.keyUp", { Key: 17 });
+      }, 50);
+    };
+
+    // -----------------------------------------------------------------------
+    // Imperative handle for GestureToolbar combo routing (D-09)
+    // -----------------------------------------------------------------------
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        hasActiveModifier() {
+          return Object.values(sticky).some(Boolean);
+        },
+        deliverPrintable(char: string) {
+          const charVk = char.toUpperCase().charCodeAt(0);
+
+          // Collect active modifiers in order (matches keyDown order)
+          const allModifiers: Array<{ key: StickyKey; vk: number }> = [
+            { key: "ctrl" as StickyKey, vk: MODIFIER_VK.Ctrl },
+            { key: "alt" as StickyKey, vk: MODIFIER_VK.Alt },
+            { key: "win" as StickyKey, vk: MODIFIER_VK.Win },
+            { key: "shift" as StickyKey, vk: MODIFIER_VK.Shift },
+          ];
+          const activeModifiers = allModifiers.filter((m) => sticky[m.key]);
+
+          // Send char keyDown + keyUp
+          send("keyboard.keyDown", { Key: charVk });
+          send("keyboard.keyUp", { Key: charVk });
+
+          // Release modifiers in reverse order + clear sticky state
+          for (let i = activeModifiers.length - 1; i >= 0; i--) {
+            send("keyboard.keyUp", { Key: activeModifiers[i].vk });
+          }
+
+          // Clear all sticky state
+          setSticky({ ctrl: false, alt: false, win: false, shift: false });
+        },
+      }),
+      [sticky, send],
+    );
+
+    // -----------------------------------------------------------------------
+    // Style helpers
+    // -----------------------------------------------------------------------
+
+    const modifierClass = (isActive: boolean) =>
+      [
+        "flex min-h-[44px] min-w-[44px] items-center justify-center rounded px-2 py-1 text-sm font-medium select-none transition-colors border",
+        isActive
+          ? "bg-accent/15 border-accent text-accent"
+          : "bg-background border-lightgray text-darkgray hover:bg-tertiary",
+        disabled ? "opacity-50 pointer-events-none" : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+    const nonStickyClass = [
+      "flex min-h-[44px] min-w-[44px] items-center justify-center rounded px-2 py-1 text-sm font-medium select-none transition-colors border border-lightgray bg-background text-darkgray hover:bg-tertiary",
+      disabled ? "opacity-50 pointer-events-none" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    // -----------------------------------------------------------------------
+    // Render
+    // -----------------------------------------------------------------------
+
+    return (
+      <div
+        className="fixed left-0 right-0 z-50 flex items-center gap-1 overflow-x-auto border-t border-lightgray bg-background px-2 py-1"
+        style={{ bottom: keyboardHeightPx }}
+        aria-label={t("mobile.modifierStrip.ariaLabel")}
+        role="toolbar"
+      >
+        {fnPage ? (
+          // ---------------------------------------------------------------
+          // Fn page: F1–F12 + CAD + Fn toggle back
+          // ---------------------------------------------------------------
+          <>
+            {FN_KEYS.map(({ label, vk }) => (
+              <button
+                key={label}
+                type="button"
+                className={nonStickyClass}
+                disabled={disabled}
+                onClick={() => handleNonStickyTap(vk)}
+                aria-label={label}
+              >
+                {label}
+              </button>
+            ))}
+
+            {/* CAD — Ctrl+Alt+Del compound button */}
+            <button
+              type="button"
+              className={nonStickyClass}
+              disabled={disabled}
+              onClick={handleCtrlAltDel}
+              aria-label={t("mobile.modifierStrip.ctrlAltDel")}
+            >
+              {t("mobile.modifierStrip.ctrlAltDel")}
+            </button>
+
+            {/* Fn toggle back */}
+            <button
+              type="button"
+              className={modifierClass(fnPage)}
+              onClick={() => setFnPage(false)}
+              aria-pressed={fnPage}
+            >
+              {t("mobile.modifierStrip.fn")}
+            </button>
+          </>
+        ) : (
+          // ---------------------------------------------------------------
+          // Main row: modifiers + special keys + Fn toggle
+          // ---------------------------------------------------------------
+          <>
+            {/* Sticky modifiers */}
+            <button
+              type="button"
+              className={modifierClass(sticky.ctrl)}
+              disabled={disabled}
+              onClick={() => handleModifierTap("ctrl", MODIFIER_VK.Ctrl)}
+              aria-pressed={sticky.ctrl}
+            >
+              {t("mobile.modifierStrip.ctrl")}
+            </button>
+
+            <button
+              type="button"
+              className={modifierClass(sticky.alt)}
+              disabled={disabled}
+              onClick={() => handleModifierTap("alt", MODIFIER_VK.Alt)}
+              aria-pressed={sticky.alt}
+            >
+              {t("mobile.modifierStrip.alt")}
+            </button>
+
+            <button
+              type="button"
+              className={modifierClass(sticky.win)}
+              disabled={disabled}
+              onClick={() => handleModifierTap("win", MODIFIER_VK.Win)}
+              aria-pressed={sticky.win}
+            >
+              {t("mobile.modifierStrip.win")}
+            </button>
+
+            <button
+              type="button"
+              className={modifierClass(sticky.shift)}
+              disabled={disabled}
+              onClick={() => handleModifierTap("shift", MODIFIER_VK.Shift)}
+              aria-pressed={sticky.shift}
+            >
+              {t("mobile.modifierStrip.shift")}
+            </button>
+
+            {/* Non-sticky special keys */}
+            <button
+              type="button"
+              className={nonStickyClass}
+              disabled={disabled}
+              onClick={() => handleNonStickyTap(MODIFIER_VK.Esc)}
+            >
+              {t("mobile.modifierStrip.esc")}
+            </button>
+
+            <button
+              type="button"
+              className={nonStickyClass}
+              disabled={disabled}
+              onClick={() => handleNonStickyTap(MODIFIER_VK.Tab)}
+            >
+              {t("mobile.modifierStrip.tab")}
+            </button>
+
+            {/* Arrow keys */}
+            <button
+              type="button"
+              className={nonStickyClass}
+              disabled={disabled}
+              onClick={() => handleNonStickyTap(MODIFIER_VK.ArrowLeft)}
+              aria-label="Arrow left"
+            >
+              ←
+            </button>
+
+            <button
+              type="button"
+              className={nonStickyClass}
+              disabled={disabled}
+              onClick={() => handleNonStickyTap(MODIFIER_VK.ArrowUp)}
+              aria-label="Arrow up"
+            >
+              ↑
+            </button>
+
+            <button
+              type="button"
+              className={nonStickyClass}
+              disabled={disabled}
+              onClick={() => handleNonStickyTap(MODIFIER_VK.ArrowDown)}
+              aria-label="Arrow down"
+            >
+              ↓
+            </button>
+
+            <button
+              type="button"
+              className={nonStickyClass}
+              disabled={disabled}
+              onClick={() => handleNonStickyTap(MODIFIER_VK.ArrowRight)}
+              aria-label="Arrow right"
+            >
+              →
+            </button>
+
+            {/* Fn page toggle */}
+            <button
+              type="button"
+              className={modifierClass(false)}
+              onClick={() => setFnPage(true)}
+              aria-pressed={false}
+            >
+              {t("mobile.modifierStrip.fn")}
+            </button>
+          </>
+        )}
+      </div>
+    );
+  },
+);
+
+export default ModifierStrip;
