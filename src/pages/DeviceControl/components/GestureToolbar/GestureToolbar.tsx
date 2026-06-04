@@ -8,6 +8,7 @@ import { AssistantToggleIcon } from "src/pages/DeviceControl/components/Assistan
 import type { CommandAction } from "src/pages/DeviceControl/types";
 import { mapToVirtualKey } from "src/pages/DeviceControl/utils/keyboard";
 import { useVisualViewport } from "src/pages/DeviceControl/hooks/useVisualViewport";
+import { generateUUID } from "src/utils/uuid";
 import ModifierStrip, { type ModifierStripHandle } from "./ModifierStrip";
 import React from "react";
 
@@ -116,7 +117,7 @@ function GestureToolbar({
     return () => {
       for (const [id, vk] of pendingKeyUpTimers.current) {
         clearTimeout(id);
-        addAction({ id: crypto.randomUUID(), type: "keyboard.keyUp", payload: { Key: vk } });
+        addAction({ id: generateUUID(), type: "keyboard.keyUp", payload: { Key: vk } });
       }
       pendingKeyUpTimers.current.clear();
     };
@@ -244,10 +245,10 @@ function GestureToolbar({
       const vk = mapToVirtualKey(e);
       if (!vk) return;
 
-      addAction({ id: crypto.randomUUID(), type: "keyboard.keyDown", payload: { Key: vk } });
+      addAction({ id: generateUUID(), type: "keyboard.keyDown", payload: { Key: vk } });
       const timerId = window.setTimeout(() => {
         pendingKeyUpTimers.current.delete(timerId);
-        addAction({ id: crypto.randomUUID(), type: "keyboard.keyUp", payload: { Key: vk } });
+        addAction({ id: generateUUID(), type: "keyboard.keyUp", payload: { Key: vk } });
       }, 50);
       pendingKeyUpTimers.current.set(timerId, vk);
     },

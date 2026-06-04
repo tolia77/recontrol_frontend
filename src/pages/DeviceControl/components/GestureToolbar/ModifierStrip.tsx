@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle, useCallback } from "react";
 import type { CommandAction } from "src/pages/DeviceControl/types";
+import { generateUUID } from "src/utils/uuid";
 
 // ---------------------------------------------------------------------------
 // VK constants (derived from utils/keyboard.ts — raw Windows VK codes)
@@ -93,7 +94,7 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
           clearTimeout(id);
           const vks = Array.isArray(vkOrVks) ? vkOrVks : [vkOrVks];
           for (const vk of vks) {
-            addAction({ id: crypto.randomUUID(), type: "keyboard.keyUp", payload: { Key: vk } });
+            addAction({ id: generateUUID(), type: "keyboard.keyUp", payload: { Key: vk } });
           }
         }
         pendingTimers.current.clear();
@@ -109,7 +110,7 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
           ];
           for (const [k, vk] of order) {
             if (s[k]) {
-              addAction({ id: crypto.randomUUID(), type: "keyboard.keyUp", payload: { Key: vk } });
+              addAction({ id: generateUUID(), type: "keyboard.keyUp", payload: { Key: vk } });
             }
           }
         }
@@ -124,7 +125,7 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
     const send = useCallback(
       (type: string, payload: Record<string, unknown>) => {
         if (disabled) return;
-        addAction({ id: crypto.randomUUID(), type, payload });
+        addAction({ id: generateUUID(), type, payload });
       },
       [addAction, disabled],
     );
