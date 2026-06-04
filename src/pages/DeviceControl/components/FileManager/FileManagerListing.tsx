@@ -426,6 +426,7 @@ function FileManagerListing({
                     }
                     onRenameCancel={onRenameCancel}
                     isMobile={isMobile}
+                    moreActionsLabel={t("listing.moreActions")}
                     onKebabClick={
                       onRowKebabClick
                         ? (rect) => onRowKebabClick(rect, entry)

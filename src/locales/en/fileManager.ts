@@ -27,6 +27,7 @@ export const fileManager = {
     loading: "Loading...",
     emptyFolder: "This folder is empty.",
     defaultNewFolderName: "New folder",
+    moreActions: "More actions",
   },
   statusBar: {
     itemsSelected_one: "{{count}} item selected — {{size}}",

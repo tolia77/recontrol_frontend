@@ -26,6 +26,8 @@ interface FileManagerRowProps {
   isMobile?: boolean;
   /** Mobile: called with the kebab button's DOMRect; parent positions ContextMenu. */
   onKebabClick?: (rect: DOMRect) => void;
+  /** Translated aria-label for the mobile kebab button (threaded from listing). */
+  moreActionsLabel?: string;
 }
 
 /**
@@ -56,6 +58,7 @@ function FileManagerRowImpl({
   onRenameCancel,
   isMobile,
   onKebabClick,
+  moreActionsLabel,
 }: FileManagerRowProps) {
   // Visual hierarchy:
   //   Selected + Focused -> bg-accent/30 ring-1 ring-accent
@@ -163,7 +166,7 @@ function FileManagerRowImpl({
             type="button"
             onClick={handleKebabClick}
             className="text-darkgray hover:text-text flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center bg-transparent"
-            aria-label="More actions"
+            aria-label={moreActionsLabel ?? "More actions"}
           >
             ⋯
           </button>

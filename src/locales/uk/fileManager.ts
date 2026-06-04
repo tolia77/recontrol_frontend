@@ -27,6 +27,7 @@ export const fileManager = {
     loading: "Завантаження...",
     emptyFolder: "Ця папка порожня.",
     defaultNewFolderName: "Нова папка",
+    moreActions: "Більше дій",
   },
   statusBar: {
     itemsSelected_one: "{{count}} елемент обрано — {{size}}",
