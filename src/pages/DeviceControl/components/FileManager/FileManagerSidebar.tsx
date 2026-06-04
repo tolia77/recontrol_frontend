@@ -10,6 +10,8 @@ interface FileManagerSidebarProps {
   error: string | null;
   currentPath: string | null;
   onSelectRoot: (path: string) => void;
+  /** Defensive guard: when true the sidebar returns null (parent already suppresses it). */
+  isMobile?: boolean;
 }
 
 /**
@@ -24,8 +26,14 @@ function FileManagerSidebar({
   error,
   currentPath,
   onSelectRoot,
+  isMobile,
 }: FileManagerSidebarProps) {
   const { t } = useTranslation("fileManager");
+
+  // Defensive guard: the parent (FileManagerView) already suppresses this on
+  // mobile, but return null here too so this component is safe if used elsewhere.
+  if (isMobile) return null;
+
   return (
     <aside className="border-lightgray bg-background w-60 flex-shrink-0 overflow-y-auto border-r">
       <div className="border-lightgray border-b px-3 py-2">

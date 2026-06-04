@@ -38,6 +38,8 @@ interface FileManagerToolbarProps {
    * Upload button triggers the OS file picker.
    */
   onUploadFiles: (files: File[]) => void;
+  /** Mobile: when true, the upload trigger button gets min-h-[44px] min-w-[44px]. */
+  isMobile?: boolean;
 }
 
 /**
@@ -56,6 +58,7 @@ function FileManagerToolbar({
   onMoveTo,
   onCopyTo,
   onUploadFiles,
+  isMobile,
 }: FileManagerToolbarProps) {
   const { t } = useTranslation("fileManager");
   const renameEnabled = !disabled && selectionCount === 1;
@@ -114,7 +117,12 @@ function FileManagerToolbar({
         disabled={!uploadEnabled}
         title={t("toolbar.uploadFiles")}
         aria-label={t("toolbar.uploadFiles")}
-        className="hover:bg-tertiary text-text rounded p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+        className={[
+          "hover:bg-tertiary text-text rounded p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+          isMobile ? "min-h-[44px] min-w-[44px]" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
       >
         <UploadIcon className="h-4 w-4" />
       </button>

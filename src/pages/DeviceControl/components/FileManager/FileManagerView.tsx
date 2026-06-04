@@ -76,6 +76,10 @@ interface FileManagerViewProps {
   editing: EditingProps;
   menu: MenuProps;
   transfer: TransferViewProps;
+  /** Mobile: when true, sidebar and drag-drop are suppressed; rows use touch sizing. */
+  isMobile?: boolean;
+  /** Mobile: called when a row's kebab button is tapped. */
+  onRowKebabClick?: (rect: DOMRect, entry: FileEntry) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -111,18 +115,23 @@ function FileManagerView({
   editing,
   menu,
   transfer,
+  isMobile,
+  onRowKebabClick,
 }: FileManagerViewProps) {
   const { t } = useTranslation("fileManager");
 
   return (
     <>
-      <FileManagerSidebar
-        roots={roots.roots}
-        isLoading={roots.isLoading}
-        error={roots.error ? t("sidebar.couldNotLoadSharedFolders") : null}
-        currentPath={browse.currentPath}
-        onSelectRoot={onSelectRoot}
-      />
+      {/* D-13: sidebar suppressed on mobile */}
+      {!isMobile && (
+        <FileManagerSidebar
+          roots={roots.roots}
+          isLoading={roots.isLoading}
+          error={roots.error ? t("sidebar.couldNotLoadSharedFolders") : null}
+          currentPath={browse.currentPath}
+          onSelectRoot={onSelectRoot}
+        />
+      )}
       <div
         ref={rightColumnRef}
         className="relative flex min-h-0 min-w-0 flex-1 flex-col"
@@ -139,6 +148,7 @@ function FileManagerView({
           onMoveTo={onMoveTo}
           onCopyTo={onCopyTo}
           onUploadFiles={onUploadFiles}
+          isMobile={isMobile}
         />
         <FileManagerBreadcrumb
           currentPath={browse.currentPath}
@@ -164,6 +174,8 @@ function FileManagerView({
           onRowContextMenu={menu.onRowContextMenu}
           onEmptyContextMenu={menu.onEmptyContextMenu}
           onRenameArm={editing.onRenameArm}
+          isMobile={isMobile}
+          onRowKebabClick={onRowKebabClick}
         />
         <FileManagerStatusBar
           totalCount={visibleEntries.length}
@@ -175,7 +187,8 @@ function FileManagerView({
           disconnectMessage={transfer.disconnectMessage}
           onDismissDisconnect={transfer.onDismissDisconnect}
         />
-        {dragActive && <DropZoneOverlay />}
+        {/* D-14: drag-drop overlay suppressed on mobile */}
+        {dragActive && !isMobile && <DropZoneOverlay />}
       </div>
     </>
   );
