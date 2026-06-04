@@ -309,7 +309,7 @@ function GestureToolbar({
           {/* 1. Touch mode indicator — read-only pill (D-04: Interactive-only on mobile) */}
           <div
             className="flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-lg border border-lightgray bg-background px-3 py-2 shadow-md"
-            aria-label="Touch mode"
+            aria-label={t("mobile.toolbar.trackpadMode")}
           >
             <span className="h-2 w-2 shrink-0 rounded-full bg-accent" aria-hidden="true" />
             <span className="text-sm text-text">{t("mobile.toolbar.trackpadMode")}</span>
