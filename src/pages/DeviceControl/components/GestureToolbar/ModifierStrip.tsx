@@ -365,7 +365,7 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
               className={nonStickyClass}
               disabled={disabled}
               onClick={() => handleNonStickyTap(MODIFIER_VK.ArrowLeft)}
-              aria-label="Arrow left"
+              aria-label={t("mobile.modifierStrip.arrowLeft")}
             >
               ←
             </button>
@@ -375,7 +375,7 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
               className={nonStickyClass}
               disabled={disabled}
               onClick={() => handleNonStickyTap(MODIFIER_VK.ArrowUp)}
-              aria-label="Arrow up"
+              aria-label={t("mobile.modifierStrip.arrowUp")}
             >
               ↑
             </button>
@@ -385,7 +385,7 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
               className={nonStickyClass}
               disabled={disabled}
               onClick={() => handleNonStickyTap(MODIFIER_VK.ArrowDown)}
-              aria-label="Arrow down"
+              aria-label={t("mobile.modifierStrip.arrowDown")}
             >
               ↓
             </button>
@@ -395,7 +395,7 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
               className={nonStickyClass}
               disabled={disabled}
               onClick={() => handleNonStickyTap(MODIFIER_VK.ArrowRight)}
-              aria-label="Arrow right"
+              aria-label={t("mobile.modifierStrip.arrowRight")}
             >
               →
             </button>

@@ -159,6 +159,10 @@ export const deviceControl = {
       fn: "Fn",
       ctrlAltDel: "CAD",
       ariaLabel: "Спеціальні клавіші",
+      arrowLeft: "Стрілка вліво",
+      arrowUp: "Стрілка вгору",
+      arrowDown: "Стрілка вниз",
+      arrowRight: "Стрілка вправо",
     },
   },
 };

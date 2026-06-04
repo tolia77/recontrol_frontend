@@ -160,6 +160,10 @@ export const deviceControl = {
       fn: "Fn",
       ctrlAltDel: "CAD",
       ariaLabel: "Special keys",
+      arrowLeft: "Arrow left",
+      arrowUp: "Arrow up",
+      arrowDown: "Arrow down",
+      arrowRight: "Arrow right",
     },
   },
 };
