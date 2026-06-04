@@ -21,9 +21,16 @@ export function useVisualViewport(): { keyboardHeight: number } {
     const update = () => {
       setKeyboardHeight(Math.max(0, window.innerHeight - (vv.offsetTop + vv.height)));
     };
+    // iOS Safari changes offsetTop on `scroll` under a pinned keyboard, and
+    // some Android browsers fire only `scroll` (not `resize`) on keyboard
+    // show/hide — subscribe to both so the strip/input stay aligned.
     vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
     update(); // seed initial value
-    return () => vv.removeEventListener("resize", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
   }, []);
 
   return { keyboardHeight };
