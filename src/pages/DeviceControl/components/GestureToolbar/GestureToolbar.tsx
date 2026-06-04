@@ -1,10 +1,15 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
 import PowerPopover from "src/pages/DeviceControl/components/Power/PowerPopover";
 import { PowerIcon, CloseIcon, ScenariosIcon } from "src/pages/DeviceControl/components/icons/icons";
 import { FilesToggleIcon } from "src/pages/DeviceControl/components/FileManager/icons";
 import { AssistantToggleIcon } from "src/pages/DeviceControl/components/Assistant/icons";
 import type { CommandAction } from "src/pages/DeviceControl/types";
+import { mapToVirtualKey } from "src/pages/DeviceControl/utils/keyboard";
+import { useVisualViewport } from "src/pages/DeviceControl/hooks/useVisualViewport";
+import ModifierStrip, { type ModifierStripHandle } from "./ModifierStrip";
+import React from "react";
 
 export interface Props {
   addAction: (a: CommandAction) => void;
@@ -17,6 +22,12 @@ export interface Props {
   onAiBlocked: () => void;
   onDisconnect: () => void;
   deviceName?: string;
+  /**
+   * Whether the user has `access_keyboard` permission (T-37-01 security gate).
+   * All keyboard.* dispatches are gated behind this flag.
+   * Threaded from DeviceControl.tsx which reads it from usePermissions.
+   */
+  canUseKeyboard?: boolean;
 }
 
 // Inline SVG: three horizontal dots (hamburger/more)
@@ -72,6 +83,11 @@ function KeyboardIcon({ className = "w-5 h-5" }: { className?: string }) {
  * Power (re-hosts PowerPopover), Disconnect.
  *
  * iOS gotcha: keyboard focus() MUST be synchronous inside the tap handler.
+ *
+ * Phase 37 additions (KBD-02/KBD-03):
+ * - onInput/onKeyDown handlers on the hidden input forward chars + control keys
+ * - ModifierStrip mounted when keyboardRaised && rightPaneActive === null
+ * - canUseKeyboard prop gates all keyboard.* dispatches (T-37-01)
  */
 function GestureToolbar({
   addAction,
@@ -81,13 +97,19 @@ function GestureToolbar({
   aiAllowed,
   onAiBlocked,
   onDisconnect,
+  canUseKeyboard = false,
 }: Props) {
   const navigate = useNavigate();
+  const { t } = useTranslation("deviceControl");
   const [open, setOpen] = useState(false);
   const [keyboardRaised, setKeyboardRaised] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const hiddenInputRef = useRef<HTMLInputElement>(null);
+  const modifierStripRef = React.useRef<ModifierStripHandle>(null);
+
+  // Track keyboard height from VisualViewport for strip docking (D-05)
+  const { keyboardHeight } = useVisualViewport();
 
   // Outside-click + Escape to collapse (mirrors PowerPopover lines 50-65)
   useEffect(() => {
@@ -129,6 +151,8 @@ function GestureToolbar({
 
   const handleSelectPanel = (panel: "files" | "assistant" | "scenarios") => {
     setOpen(false);
+    // Sheet-wins: blur hidden input so the strip unmounts (rightPaneActive !== null)
+    hiddenInputRef.current?.blur();
     onSelectPanel(panel);
   };
 
@@ -145,6 +169,77 @@ function GestureToolbar({
     navigate("/devices");
   };
 
+  // ---------------------------------------------------------------------------
+  // KBD-02: Hidden input typing pipeline
+  // ---------------------------------------------------------------------------
+
+  /**
+   * handleHiddenInput — processes characters typed on the soft keyboard.
+   *
+   * - Bail if keyboard not raised, disabled, or canUseKeyboard is false (T-37-01)
+   * - If a modifier is sticky, route char through deliverPrintable (D-09)
+   * - Otherwise dispatch keyboard.typeText (D-01 hybrid)
+   * - Clear input value after every send (D-03 no local echo)
+   */
+  const handleHiddenInput = useCallback(
+    (e: React.FormEvent<HTMLInputElement>) => {
+      if (!keyboardRaised || disabled || !canUseKeyboard) return;
+      const text = e.currentTarget.value;
+      if (!text) return;
+
+      if (modifierStripRef.current?.hasActiveModifier()) {
+        // D-09: combo routing — route through sticky modifiers
+        modifierStripRef.current.deliverPrintable(text);
+      } else {
+        // D-01: printable char — typeText envelope
+        addAction({ id: crypto.randomUUID(), type: "keyboard.typeText", payload: { Text: text } });
+      }
+      // D-03: clear after send (RustDesk pattern, also fixes Pitfall 3)
+      e.currentTarget.value = "";
+    },
+    [keyboardRaised, disabled, canUseKeyboard, addAction],
+  );
+
+  /**
+   * handleHiddenKeyDown — processes control key presses.
+   *
+   * Passthrough keys (Enter, Backspace, Delete, Escape, Tab, arrows) are sent
+   * as keyDown/keyUp pairs. Printable keys fall through to onInput.
+   * All dispatches gated on canUseKeyboard (T-37-01).
+   */
+  const handleHiddenKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (!keyboardRaised || !canUseKeyboard) return;
+
+      const PASSTHROUGH = new Set([
+        "Enter",
+        "Backspace",
+        "Delete",
+        "Escape",
+        "Tab",
+        "ArrowLeft",
+        "ArrowRight",
+        "ArrowUp",
+        "ArrowDown",
+      ]);
+
+      if (!PASSTHROUGH.has(e.key)) return; // printable → handled by onInput
+
+      e.preventDefault();
+      const vk = mapToVirtualKey(e);
+      if (!vk) return;
+
+      addAction({ id: crypto.randomUUID(), type: "keyboard.keyDown", payload: { Key: vk } });
+      setTimeout(() => {
+        addAction({ id: crypto.randomUUID(), type: "keyboard.keyUp", payload: { Key: vk } });
+      }, 50);
+    },
+    [keyboardRaised, canUseKeyboard, addAction],
+  );
+
+  // Strip is mounted only when keyboard is raised AND no panel is open (sheet wins)
+  const showStrip = keyboardRaised && rightPaneActive === null;
+
   return (
     <div
       ref={containerRef}
@@ -156,7 +251,7 @@ function GestureToolbar({
     >
       {/* Hidden off-screen input for native soft keyboard raise (D-10, KBD-01).
           Must NOT be display:none or visibility:hidden — must remain focusable.
-          No onKeyDown/onKeyUp this phase (forwarding is Phase 37). */}
+          Phase 37: onInput/onKeyDown handlers attached + D-02 autocorrect suppression. */}
       <input
         ref={hiddenInputRef}
         type="text"
@@ -164,8 +259,25 @@ function GestureToolbar({
         className="absolute -left-[9999px] opacity-0"
         onFocus={handleInputFocus}
         onBlur={handleInputBlur}
+        onInput={handleHiddenInput}
+        onKeyDown={handleHiddenKeyDown}
         readOnly={false}
+        autoCapitalize="off"
+        autoCorrect="off"
+        spellCheck={false}
+        autoComplete="off"
       />
+
+      {/* Modifier strip — docked above the soft keyboard, rendered when strip is active */}
+      {showStrip && (
+        <ModifierStrip
+          ref={modifierStripRef}
+          addAction={addAction}
+          disabled={!canUseKeyboard}
+          keyboardHeightPx={keyboardHeight}
+          t={t}
+        />
+      )}
 
       {/* Expanded action stack — appears above the FAB, transition via opacity/transform */}
       {open && (
@@ -176,7 +288,7 @@ function GestureToolbar({
             aria-label="Touch mode"
           >
             <span className="h-2 w-2 shrink-0 rounded-full bg-accent" aria-hidden="true" />
-            <span className="text-sm text-text">Trackpad mode</span>
+            <span className="text-sm text-text">{t("mobile.toolbar.trackpadMode")}</span>
           </div>
 
           {/* 2. Files launcher */}
@@ -190,7 +302,7 @@ function GestureToolbar({
             }`}
           >
             <FilesToggleIcon className="h-5 w-5" />
-            <span className="text-sm">Files</span>
+            <span className="text-sm">{t("mobile.toolbar.files")}</span>
           </button>
 
           {/* 3. Assistant launcher (AI-gated) */}
@@ -204,7 +316,7 @@ function GestureToolbar({
             }`}
           >
             <AssistantToggleIcon className="h-5 w-5" />
-            <span className="text-sm">Assistant</span>
+            <span className="text-sm">{t("mobile.toolbar.assistant")}</span>
           </button>
 
           {/* 4. Scenarios launcher */}
@@ -218,7 +330,7 @@ function GestureToolbar({
             }`}
           >
             <ScenariosIcon className="h-5 w-5" />
-            <span className="text-sm">Scenarios</span>
+            <span className="text-sm">{t("mobile.toolbar.scenarios")}</span>
           </button>
 
           {/* 5. Keyboard toggle (D-10) */}
@@ -233,13 +345,17 @@ function GestureToolbar({
             aria-pressed={keyboardRaised}
           >
             <KeyboardIcon className="h-5 w-5" />
-            <span className="text-sm">{keyboardRaised ? "Keyboard on" : "Keyboard"}</span>
+            <span className="text-sm">
+              {keyboardRaised
+                ? t("mobile.toolbar.keyboardOn")
+                : t("mobile.toolbar.keyboard")}
+            </span>
           </button>
 
           {/* 6. Power — re-hosts the existing PowerPopover (T-36-06 gate) */}
           <div className="flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-lg border border-lightgray bg-background px-3 py-2 shadow-md text-error">
             <PowerIcon className="h-5 w-5" />
-            <span className="text-sm">Power</span>
+            <span className="text-sm">{t("mobile.toolbar.power")}</span>
             <div className="ml-auto">
               <PowerPopover addAction={addAction} disabled={disabled} />
             </div>
@@ -252,7 +368,7 @@ function GestureToolbar({
             className="flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-lg border border-lightgray bg-background px-3 py-2 shadow-md text-error transition-colors hover:bg-tertiary"
           >
             <CloseIcon className="h-5 w-5" />
-            <span className="text-sm">Disconnect</span>
+            <span className="text-sm">{t("mobile.toolbar.disconnect")}</span>
           </button>
 
           {/* Back to devices (alternative to disconnect) */}
@@ -261,7 +377,7 @@ function GestureToolbar({
             onClick={handleNavigateBack}
             className="flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-lg border border-lightgray bg-background px-3 py-2 shadow-md text-darkgray transition-colors hover:text-text hover:bg-tertiary"
           >
-            <span className="text-sm">Back</span>
+            <span className="text-sm">{t("mobile.toolbar.back")}</span>
           </button>
         </div>
       )}
@@ -270,7 +386,7 @@ function GestureToolbar({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        aria-label="Open controls"
+        aria-label={t("mobile.toolbar.openControls") as string}
         aria-expanded={open}
         className="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-primary text-white shadow-lg transition-opacity hover:opacity-90 active:opacity-80"
       >
