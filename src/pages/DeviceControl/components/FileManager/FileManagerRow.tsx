@@ -5,6 +5,7 @@ import { IconForEntry } from "./icons";
 import { formatBytes, formatDate, formatType } from "./utils/formatters";
 
 export const ROW_HEIGHT_PX = 36;
+export const MOBILE_ROW_HEIGHT_PX = 44;
 
 interface FileManagerRowProps {
   entry: FileEntry;
@@ -21,6 +22,10 @@ interface FileManagerRowProps {
   onRenameCommit: (newName: string) => void;
   /** Plan 10-04: invoked on Esc / blur to cancel the rename. */
   onRenameCancel: () => void;
+  /** Mobile: when true, row uses 44px touch height and shows a kebab button. */
+  isMobile?: boolean;
+  /** Mobile: called with the kebab button's DOMRect; parent positions ContextMenu. */
+  onKebabClick?: (rect: DOMRect) => void;
 }
 
 /**
@@ -49,6 +54,8 @@ function FileManagerRowImpl({
   onContextMenu,
   onRenameCommit,
   onRenameCancel,
+  isMobile,
+  onKebabClick,
 }: FileManagerRowProps) {
   // Visual hierarchy:
   //   Selected + Focused -> bg-accent/30 ring-1 ring-accent
@@ -106,6 +113,11 @@ function FileManagerRowImpl({
     onContextMenu(e);
   };
 
+  const handleKebabClick = (e: MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    onKebabClick?.(e.currentTarget.getBoundingClientRect());
+  };
+
   return (
     <div
       role="row"
@@ -116,10 +128,13 @@ function FileManagerRowImpl({
         isRenaming ? (e) => e.stopPropagation() : handleRowContextMenu
       }
       className={[
-        "border-lightgray/50 grid cursor-default grid-cols-[1fr_120px_180px_140px] items-center border-b px-3 text-sm select-none",
+        "border-lightgray/50 grid cursor-default items-center border-b px-3 text-sm select-none",
+        isMobile
+          ? "grid-cols-[1fr_auto] min-h-[44px]"
+          : "grid-cols-[1fr_120px_180px_140px]",
         stateClass,
       ].join(" ")}
-      style={{ height: `${ROW_HEIGHT_PX}px` }}
+      style={isMobile ? undefined : { height: `${ROW_HEIGHT_PX}px` }}
     >
       <div className="flex min-w-0 items-center">
         <IconForEntry entry={entry} className="mr-2 h-4 w-4 flex-shrink-0" />
@@ -141,13 +156,29 @@ function FileManagerRowImpl({
           </span>
         )}
       </div>
-      <div className="text-darkgray pr-4 text-right tabular-nums">
-        {entry.isDirectory ? "" : formatBytes(entry.sizeBytes)}
-      </div>
-      <div className="text-darkgray">{formatDate(entry.modifiedUtc)}</div>
-      <div className="text-darkgray truncate">
-        {formatType(entry.name, entry.isDirectory)}
-      </div>
+      {isMobile ? (
+        /* Mobile: kebab button replaces the desktop size/date/type columns */
+        isMobile && onKebabClick ? (
+          <button
+            type="button"
+            onClick={handleKebabClick}
+            className="text-darkgray hover:text-text flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center bg-transparent"
+            aria-label="More actions"
+          >
+            ⋯
+          </button>
+        ) : null
+      ) : (
+        <>
+          <div className="text-darkgray pr-4 text-right tabular-nums">
+            {entry.isDirectory ? "" : formatBytes(entry.sizeBytes)}
+          </div>
+          <div className="text-darkgray">{formatDate(entry.modifiedUtc)}</div>
+          <div className="text-darkgray truncate">
+            {formatType(entry.name, entry.isDirectory)}
+          </div>
+        </>
+      )}
     </div>
   );
 }

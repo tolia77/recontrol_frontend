@@ -9,7 +9,7 @@ import { useToast } from "src/components/ui";
 import type { UseFilesChannel } from "src/pages/DeviceControl/hooks/realtime/useFilesChannel";
 import type { useFileManagerSelection } from "src/pages/DeviceControl/hooks/state/useFileManagerSelection";
 import type { SortColumn, SortState } from "./types";
-import FileManagerRow, { ROW_HEIGHT_PX } from "./FileManagerRow";
+import FileManagerRow, { ROW_HEIGHT_PX, MOBILE_ROW_HEIGHT_PX } from "./FileManagerRow";
 import { FolderIcon } from "./icons";
 import { compareEntries } from "./utils/sort";
 
@@ -62,6 +62,10 @@ interface FileManagerListingProps {
   onEmptyContextMenu: (e: MouseEvent) => void;
   /** Called by row click handler when the second-click-to-rename heuristic fires. */
   onRenameArm: (path: string) => void;
+  /** Mobile: when true, rows use 44px touch height and show a kebab button. */
+  isMobile?: boolean;
+  /** Mobile: called when the kebab button is tapped; provides the button rect and entry. */
+  onRowKebabClick?: (rect: DOMRect, entry: FileEntry) => void;
 }
 
 type ListingState =
@@ -128,6 +132,8 @@ function FileManagerListing({
   onRowContextMenu,
   onEmptyContextMenu,
   onRenameArm,
+  isMobile,
+  onRowKebabClick,
 }: FileManagerListingProps) {
   const { t } = useTranslation("fileManager");
   const [state, setState] = useState<ListingState>({ kind: "idle" });
@@ -193,11 +199,13 @@ function FileManagerListing({
     onVisibleEntriesChange(visibleEntries);
   }, [visibleEntries, onVisibleEntriesChange]);
 
+  const rowHeightPx = isMobile ? MOBILE_ROW_HEIGHT_PX : ROW_HEIGHT_PX;
+
   const parentRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
     count: visibleEntries.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => ROW_HEIGHT_PX,
+    estimateSize: () => rowHeightPx,
     overscan: 10,
   });
 
@@ -401,7 +409,7 @@ function FileManagerListing({
                     left: 0,
                     width: "100%",
                     transform: `translateY(${virtualRow.start}px)`,
-                    height: `${ROW_HEIGHT_PX}px`,
+                    height: `${rowHeightPx}px`,
                   }}
                 >
                   <FileManagerRow
@@ -417,6 +425,12 @@ function FileManagerListing({
                       onRenameCommit(entry.path, newName)
                     }
                     onRenameCancel={onRenameCancel}
+                    isMobile={isMobile}
+                    onKebabClick={
+                      onRowKebabClick
+                        ? (rect) => onRowKebabClick(rect, entry)
+                        : undefined
+                    }
                   />
                 </div>
               );
