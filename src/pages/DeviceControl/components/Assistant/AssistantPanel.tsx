@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef } from "react";
+import { useVisualViewport } from "src/pages/DeviceControl/hooks/useVisualViewport";
 import type { JSX } from "react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "src/components/ui";
@@ -16,6 +17,14 @@ export interface AssistantPanelProps {
   consumer: CableConsumerLike | null;
   connected: boolean;
   deviceName: string;
+  /** When true, mobile adaptations are applied (DCTL-04) */
+  isMobile?: boolean;
+  /**
+   * Called when the full-height state changes — the parent threads this signal
+   * to DeviceControlBottomSheet's forceFullHeight prop (DCTL-04 D-10).
+   * 37-04 will wire this callback at the DeviceControl.tsx call site.
+   */
+  onFullHeightChange?: (full: boolean) => void;
 }
 
 /**
@@ -67,6 +76,8 @@ function AssistantPanel({
   consumer,
   connected: _connected,
   deviceName,
+  isMobile,
+  onFullHeightChange,
 }: AssistantPanelProps): JSX.Element {
   const { t } = useTranslation("assistant");
   const toast = useToast();
@@ -75,6 +86,17 @@ function AssistantPanel({
     initialTranscriptState,
   );
   const quotaWarningShownRef = useRef(false);
+
+  // Mobile: track keyboard height to pin InputBox above soft keyboard (DCTL-04 D-10).
+  // The hook is always called (Rules of Hooks), but only has effect on mobile where
+  // the VisualViewport API is available. On desktop, keyboardHeight stays 0.
+  const { keyboardHeight } = useVisualViewport();
+
+  // Signal forceFullHeight to the sheet when the keyboard raises/lowers.
+  const inputFocusedFull = isMobile === true && keyboardHeight > 0;
+  useEffect(() => {
+    onFullHeightChange?.(inputFocusedFull);
+  }, [inputFocusedFull, onFullHeightChange]);
 
   const onBroadcast = useCallback((msg: AssistantBroadcast): void => {
     dispatchTranscript({ type: "broadcast", broadcast: msg });
@@ -162,6 +184,7 @@ function AssistantPanel({
         stepCount={state.stepCount}
         onStop={handleStop}
         onCopy={handleCopy}
+        isMobile={isMobile}
       />
 
       {isEmpty ? (
@@ -175,7 +198,12 @@ function AssistantPanel({
         <Transcript rows={state.rows} onConfirm={handleConfirm} />
       )}
 
-      <InputBox status={state.status} onSubmit={handleSubmit} />
+      <InputBox
+        status={state.status}
+        onSubmit={handleSubmit}
+        isMobile={isMobile}
+        keyboardHeightPx={isMobile ? keyboardHeight : 0}
+      />
     </div>
   );
 }

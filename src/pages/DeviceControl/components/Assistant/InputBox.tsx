@@ -51,6 +51,13 @@ function timeToNextUtcMidnight(now: number): {
 export interface InputBoxProps {
   status: PanelStatus;
   onSubmit: (text: string) => void;
+  /** When true, mobile-specific adaptations are applied (DCTL-04) */
+  isMobile?: boolean;
+  /**
+   * When >0 and isMobile, the outer container applies paddingBottom equal to
+   * this value so the input is pinned above the soft keyboard (DCTL-04 D-10).
+   */
+  keyboardHeightPx?: number;
 }
 
 /**
@@ -68,7 +75,7 @@ export interface InputBoxProps {
  *   - Send button is always visible (CONTEXT discretion: discoverability) and
  *     disabled when input is empty or the panel is disabled.
  */
-const InputBox: FC<InputBoxProps> = ({ status, onSubmit }) => {
+const InputBox: FC<InputBoxProps> = ({ status, onSubmit, isMobile, keyboardHeightPx = 0 }) => {
   const { t } = useTranslation("assistant");
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -134,8 +141,16 @@ const InputBox: FC<InputBoxProps> = ({ status, onSubmit }) => {
     });
   }
 
+  // When on mobile with the keyboard open, pad the outer container so the
+  // input rides above the soft keyboard (DCTL-04 D-10). The transcript above
+  // (overflow-y-auto) keeps scrolling normally; only this container shifts.
+  const outerStyle =
+    isMobile && keyboardHeightPx > 0
+      ? { paddingBottom: keyboardHeightPx }
+      : undefined;
+
   return (
-    <div className="border-lightgray bg-background border-t">
+    <div className="border-lightgray bg-background border-t" style={outerStyle}>
       {resetMsg && (
         <div
           className="text-error bg-error/5 border-error/20 border-b px-3 py-2 text-xs"
@@ -172,6 +187,7 @@ const InputBox: FC<InputBoxProps> = ({ status, onSubmit }) => {
           onClick={submit}
           aria-label={t("input.send", { defaultValue: "Send" })}
           data-testid="assistant-send-button"
+          className={isMobile ? "min-h-[44px] min-w-[44px]" : undefined}
         >
           {t("input.send", { defaultValue: "Send" })}
         </Button>

@@ -10,6 +10,8 @@ export interface AssistantHeaderProps {
   stepCount: number;
   onStop: () => void;
   onCopy: () => void;
+  /** When true, Stop and Copy buttons receive min-h-[44px] min-w-[44px] touch targets (DCTL-04 D-11) */
+  isMobile?: boolean;
 }
 
 /**
@@ -41,14 +43,17 @@ const AssistantHeader: FC<AssistantHeaderProps> = ({
   stepCount,
   onStop,
   onCopy,
+  isMobile,
 }) => {
   const { t } = useTranslation("assistant");
   const loopActive =
     status === "streaming" || status === "awaiting_confirmation";
   const stopDisabled = !loopActive;
 
+  const touchTargetClass = isMobile ? "min-h-[44px] min-w-[44px]" : undefined;
+
   return (
-    <div className="flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-2">
+    <div className="flex items-center gap-3 border-b border-lightgray bg-background px-4 py-2">
       {stepCount > 0 && (
         <span
           className="text-darkgray font-mono text-xs"
@@ -70,6 +75,7 @@ const AssistantHeader: FC<AssistantHeaderProps> = ({
           onClick={onCopy}
           aria-label={t("header.copy", { defaultValue: "Copy as Markdown" })}
           title={t("header.copy", { defaultValue: "Copy as Markdown" })}
+          className={touchTargetClass}
         >
           {t("header.copy", { defaultValue: "Copy as Markdown" })}
         </Button>
@@ -81,6 +87,7 @@ const AssistantHeader: FC<AssistantHeaderProps> = ({
           aria-label={t("header.stop", { defaultValue: "Stop" })}
           title={t("header.stop", { defaultValue: "Stop" })}
           data-testid="assistant-stop-button"
+          className={touchTargetClass}
         >
           {t("header.stop", { defaultValue: "Stop" })}
         </Button>

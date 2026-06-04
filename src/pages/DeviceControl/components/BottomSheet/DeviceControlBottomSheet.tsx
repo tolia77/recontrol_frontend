@@ -8,6 +8,12 @@ export interface Props {
   title: string;
   /** Single active panel node (Files/Assistant/Scenarios) — one tool at a time (D-07) */
   children: ReactNode;
+  /**
+   * When true and portrait orientation, expands the sheet to h-dvh so the
+   * active panel (e.g. Assistant) is fully visible above the soft keyboard
+   * (DCTL-04 D-10). Landscape is always h-dvh so this has no effect there.
+   */
+  forceFullHeight?: boolean;
 }
 
 /**
@@ -25,7 +31,7 @@ export interface Props {
  * Landscape: h-dvh      (full-screen; landscape viewport too short for half)
  * (D-05; driven off useOrientation hook, NEVER md:/lg: — S5 landmine)
  */
-function DeviceControlBottomSheet({ open, onClose, title, children }: Props) {
+function DeviceControlBottomSheet({ open, onClose, title, children, forceFullHeight }: Props) {
   const { isLandscape } = useOrientation();
 
   // Drag state for swipe-down dismiss
@@ -95,7 +101,9 @@ function DeviceControlBottomSheet({ open, onClose, title, children }: Props) {
 
   const orientationClasses = isLandscape
     ? "inset-0 h-dvh rounded-none"
-    : "h-[50dvh] rounded-t-2xl";
+    : forceFullHeight
+      ? "h-dvh rounded-t-2xl"
+      : "h-[50dvh] rounded-t-2xl";
 
   const visibilityClasses = open
     ? "translate-y-0"
