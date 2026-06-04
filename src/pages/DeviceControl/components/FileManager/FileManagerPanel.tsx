@@ -517,7 +517,10 @@ function FileManagerPanel({
       }
     }, 1_000);
     return () => window.clearInterval(id);
-  }, [queue, activeDownloadRef]);
+    // The interval is intentionally always-on while mounted; it reads
+    // activeDownloadRef imperatively, so the stable ref is not a dependency
+    // (mutating its .current never needs to re-run this effect).
+  }, [queue]);
 
   // ----- Upload-side STALLED event subscription -----
   useEffect(() => {
