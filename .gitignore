@@ -27,3 +27,4 @@ dist-ssr
 
 # Local design/spec docs — never committed
 docs/
+.planning
