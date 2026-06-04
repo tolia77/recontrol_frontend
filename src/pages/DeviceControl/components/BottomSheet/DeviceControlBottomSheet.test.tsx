@@ -1,6 +1,25 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+import i18next from "i18next";
+import { initReactI18next } from "react-i18next";
+import { deviceControl as deviceControlEn } from "src/locales/en/deviceControl";
 import DeviceControlBottomSheet from "./DeviceControlBottomSheet";
+
+beforeAll(async () => {
+  if (!i18next.isInitialized) {
+    await i18next.use(initReactI18next).init({
+      lng: "en",
+      fallbackLng: "en",
+      ns: ["deviceControl"],
+      defaultNS: "deviceControl",
+      resources: { en: { deviceControl: deviceControlEn } },
+      interpolation: { escapeValue: false },
+      react: { useSuspense: false },
+    });
+  } else {
+    await i18next.changeLanguage("en");
+  }
+});
 
 // Override matchMedia to simulate portrait (default) or landscape
 function mockMatchMedia(isLandscape: boolean) {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { CloseIcon } from "src/pages/DeviceControl/components/icons/icons";
 import { useOrientation } from "src/pages/DeviceControl/hooks/useOrientation";
 
@@ -32,6 +33,7 @@ export interface Props {
  * (D-05; driven off useOrientation hook, NEVER md:/lg: — S5 landmine)
  */
 function DeviceControlBottomSheet({ open, onClose, title, children, forceFullHeight }: Props) {
+  const { t } = useTranslation("deviceControl");
   const { isLandscape } = useOrientation();
 
   // Drag state for swipe-down dismiss
@@ -150,7 +152,7 @@ function DeviceControlBottomSheet({ open, onClose, title, children, forceFullHei
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close panel"
+            aria-label={t("mobile.sheet.closePanel")}
             className="flex h-[44px] w-[44px] items-center justify-center rounded-lg bg-transparent text-darkgray transition-colors hover:text-text"
           >
             <CloseIcon className="h-5 w-5" />

@@ -96,6 +96,7 @@ function AssistantPanel({
   const inputFocusedFull = isMobile === true && keyboardHeight > 0;
   useEffect(() => {
     onFullHeightChange?.(inputFocusedFull);
+    return () => onFullHeightChange?.(false);
   }, [inputFocusedFull, onFullHeightChange]);
 
   const onBroadcast = useCallback((msg: AssistantBroadcast): void => {
