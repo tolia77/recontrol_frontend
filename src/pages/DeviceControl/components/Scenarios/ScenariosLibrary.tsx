@@ -10,6 +10,7 @@ import {
   LoadingState,
   ErrorState,
   EmptyState,
+  useToast,
 } from "src/components/ui";
 import ScenariosRow from "./ScenariosRow";
 import { useGate } from "src/hooks/useGate";
@@ -40,6 +41,7 @@ export default function ScenariosLibrary({
   runEnabled = true,
 }: ScenariosLibraryProps) {
   const { t } = useTranslation("scenarios");
+  const toast = useToast();
   const gate = useGate("scenario_limit");
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
@@ -87,7 +89,7 @@ export default function ScenariosLibrary({
         if (!cancelled) setScenarios(data);
       })
       .catch(() => {
-        if (!cancelled) setError(t("library.empty"));
+        if (!cancelled) setError(t("library.loadError"));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -107,7 +109,7 @@ export default function ScenariosLibrary({
       });
       setScenarios(data);
     } catch {
-      setError(t("library.empty"));
+      setError(t("library.loadError"));
     } finally {
       setLoading(false);
     }
@@ -121,7 +123,9 @@ export default function ScenariosLibrary({
       await scenariosService.destroy(target.id);
       await reload();
     } catch {
-      setError(t("library.empty"));
+      // A delete failure is an action error — surface it via toast so it does
+      // not masquerade as an empty library in the list-level error banner.
+      toast.error(t("library.deleteError"));
     } finally {
       setDeleting(false);
       setDeleteTarget(null);
@@ -140,7 +144,9 @@ export default function ScenariosLibrary({
       await reload();
       onEdit(result.scenario.id);
     } catch {
-      setError(t("library.empty"));
+      // Duplicate failure was previously silent — surface it via toast so the
+      // user is not left believing a copy was created.
+      toast.error(t("library.duplicateError"));
     }
   };
 
