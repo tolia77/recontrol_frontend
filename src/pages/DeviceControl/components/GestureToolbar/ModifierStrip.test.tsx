@@ -198,6 +198,34 @@ describe("ModifierStrip — deliverPrintable (combo routing)", () => {
     expect(ctrlBtn.getAttribute("aria-pressed")).toBe("false");
   });
 
+  it("with Ctrl sticky, deliverPrintable('ab') types every char then releases the modifier once", () => {
+    const addAction = vi.fn();
+    const stripRef = React.createRef<ModifierStripHandle>();
+
+    renderStrip(addAction, { stripRef });
+
+    // Arm Ctrl
+    fireEvent.click(screen.getByText("Ctrl"));
+    addAction.mockClear();
+
+    // Deliver a multi-char commit through the strip
+    act(() => {
+      stripRef.current!.deliverPrintable("ab");
+    });
+
+    // keyDown(A=65), keyUp(65), keyDown(B=66), keyUp(66), then keyUp(Ctrl=17)
+    expect(addAction).toHaveBeenCalledTimes(5);
+    expect(addAction.mock.calls[0][0]).toMatchObject({ type: "keyboard.keyDown", payload: { Key: 65 } });
+    expect(addAction.mock.calls[1][0]).toMatchObject({ type: "keyboard.keyUp", payload: { Key: 65 } });
+    expect(addAction.mock.calls[2][0]).toMatchObject({ type: "keyboard.keyDown", payload: { Key: 66 } });
+    expect(addAction.mock.calls[3][0]).toMatchObject({ type: "keyboard.keyUp", payload: { Key: 66 } });
+    expect(addAction.mock.calls[4][0]).toMatchObject({ type: "keyboard.keyUp", payload: { Key: 17 } });
+
+    // Sticky cleared after full delivery
+    const ctrlBtn = screen.getByText("Ctrl").closest("button")!;
+    expect(ctrlBtn.getAttribute("aria-pressed")).toBe("false");
+  });
+
   it("hasActiveModifier returns false when no modifier is sticky", () => {
     const addAction = vi.fn();
     const stripRef = React.createRef<ModifierStripHandle>();

@@ -35,11 +35,14 @@ export interface ModifierStripHandle {
   /** True if at least one modifier key is currently sticky. */
   hasActiveModifier(): boolean;
   /**
-   * Route a printable character through the active sticky modifiers.
-   * Sends: keyDown(charVk), keyUp(charVk), then keyUp for each active modifier
-   * in reverse order, then clears all sticky state.
+   * Route printable text through the active sticky modifiers.
+   * For each character: keyDown(charVk), keyUp(charVk). After the full string
+   * is delivered, sends keyUp for each active modifier in reverse order, then
+   * clears all sticky state. Callers should only pass single Latin characters
+   * (charCodeAt cannot map non-ASCII to a meaningful VK); the GestureToolbar
+   * routes non-Latin / multi-char commits through typeText instead.
    */
-  deliverPrintable(char: string): void;
+  deliverPrintable(text: string): void;
 }
 
 type StickyKey = "ctrl" | "alt" | "win" | "shift";
@@ -187,9 +190,7 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
         hasActiveModifier() {
           return Object.values(sticky).some(Boolean);
         },
-        deliverPrintable(char: string) {
-          const charVk = char.toUpperCase().charCodeAt(0);
-
+        deliverPrintable(text: string) {
           // Collect active modifiers in order (matches keyDown order)
           const allModifiers: Array<{ key: StickyKey; vk: number }> = [
             { key: "ctrl" as StickyKey, vk: MODIFIER_VK.Ctrl },
@@ -199,11 +200,17 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
           ];
           const activeModifiers = allModifiers.filter((m) => sticky[m.key]);
 
-          // Send char keyDown + keyUp
-          send("keyboard.keyDown", { Key: charVk });
-          send("keyboard.keyUp", { Key: charVk });
+          // Send each character keyDown + keyUp so a batched commit (e.g. a
+          // word-suggestion or swipe-to-type) is not silently truncated to its
+          // first character while a modifier is armed.
+          for (const ch of text) {
+            const charVk = ch.toUpperCase().charCodeAt(0);
+            send("keyboard.keyDown", { Key: charVk });
+            send("keyboard.keyUp", { Key: charVk });
+          }
 
-          // Release modifiers in reverse order + clear sticky state
+          // Release modifiers in reverse order ONLY after the full string is
+          // delivered, so every character sees the modifier held down.
           for (let i = activeModifiers.length - 1; i >= 0; i--) {
             send("keyboard.keyUp", { Key: activeModifiers[i].vk });
           }

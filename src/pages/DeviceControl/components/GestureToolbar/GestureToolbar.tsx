@@ -203,12 +203,18 @@ function GestureToolbar({
       const text = e.currentTarget.value;
       if (!text) return;
 
-      if (modifierStripRef.current?.hasActiveModifier()) {
+      // Combo routing only handles a single printable ASCII character — VK
+      // mapping via charCodeAt cannot represent non-Latin input (Cyrillic) or
+      // multi-char commits (word suggestions, swipe-to-type, paste). Anything
+      // else falls through to typeText so it is delivered verbatim instead of
+      // being truncated or corrupted.
+      const isSingleLatinChar = text.length === 1 && /[\x20-\x7e]/.test(text);
+      if (isSingleLatinChar && modifierStripRef.current?.hasActiveModifier()) {
         // D-09: combo routing — route through sticky modifiers
         modifierStripRef.current.deliverPrintable(text);
       } else {
         // D-01: printable char — typeText envelope
-        addAction({ id: crypto.randomUUID(), type: "keyboard.typeText", payload: { Text: text } });
+        addAction({ id: generateUUID(), type: "keyboard.typeText", payload: { Text: text } });
       }
       // D-03: clear after send (RustDesk pattern, also fixes Pitfall 3)
       e.currentTarget.value = "";
