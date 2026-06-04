@@ -147,7 +147,7 @@ export default function ScenariosLibrary({
   const empty = !loading && scenarios.length === 0;
 
   return (
-    <div className="flex flex-col gap-2 p-3">
+    <div className="flex max-w-full flex-col gap-2 overflow-x-hidden p-3">
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"

@@ -163,14 +163,14 @@ export default function ScenariosPanel({
 
   return (
     <div
-      className="flex h-full w-full flex-col bg-white"
+      className="flex h-full w-full flex-col bg-background"
       data-testid="scenarios-panel"
     >
       <header className="border-lightgray text-primary border-b px-4 py-2 text-sm font-semibold">
         {headerTitle}
       </header>
       {showSegmentedControl && (
-        <div className="px-4 py-2">
+        <div className="overflow-x-auto px-4 py-2">
           <SegmentedControl<ScenariosSegment>
             value={segment}
             options={[
@@ -184,7 +184,7 @@ export default function ScenariosPanel({
           />
         </div>
       )}
-      <div className="min-h-0 flex-1 overflow-auto">
+      <div className="min-h-0 flex-1 overflow-auto overflow-x-hidden">
         {mode.kind === "library" && (
           <ScenariosLibrary
             deviceId={deviceId}

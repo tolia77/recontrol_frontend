@@ -81,7 +81,7 @@ export default function StepRow({
       className={`rounded border p-2 ${
         verdict?.decision === "deny"
           ? "border-error bg-error/5"
-          : "border-lightgray bg-white"
+          : "border-lightgray bg-background"
       }`}
       data-testid={`step-row-${index}`}
     >

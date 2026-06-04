@@ -209,7 +209,7 @@ function ScenariosRunMode({
 
       {/* Body */}
       <div
-        className="flex-1 space-y-2 overflow-y-auto px-4 py-3"
+        className="flex-1 space-y-2 overflow-y-auto overflow-x-auto px-4 py-3"
         data-testid="scenarios-run-body"
       >
         {toolRows.map((row) => (
