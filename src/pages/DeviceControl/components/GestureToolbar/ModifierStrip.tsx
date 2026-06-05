@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle, useCallback } from "react";
+import type { SyntheticEvent } from "react";
 import type { CommandAction } from "src/pages/DeviceControl/types";
 import { generateUUID } from "src/utils/uuid";
 
@@ -134,19 +135,28 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
     );
 
     // -----------------------------------------------------------------------
+    // Focus-steal guard — the strip only exists while the hidden input is
+    // focused (GestureToolbar unmounts it on blur). Without this, tapping any
+    // strip button blurs the input → keyboard collapses → the strip unmounts
+    // between pointerdown and click, so onClick NEVER fires and no key is sent.
+    // Canceling pointerdown suppresses the focus change but click still fires
+    // (Pointer Events spec); mousedown preventDefault covers non-PE browsers.
+    // -----------------------------------------------------------------------
+
+    const preventFocusSteal = (e: SyntheticEvent) => {
+      e.preventDefault();
+    };
+
+    // -----------------------------------------------------------------------
     // Modifier tap — toggles sticky state
     // -----------------------------------------------------------------------
 
     const handleModifierTap = (key: StickyKey, vk: number) => {
-      setSticky((prev) => {
-        const next = !prev[key];
-        if (next) {
-          send("keyboard.keyDown", { Key: vk });
-        } else {
-          send("keyboard.keyUp", { Key: vk });
-        }
-        return { ...prev, [key]: next };
-      });
+      // Dispatch outside the setSticky updater: updaters must be pure, and
+      // StrictMode double-invokes them in dev (would double-send keyDown).
+      const next = !sticky[key];
+      send(next ? "keyboard.keyDown" : "keyboard.keyUp", { Key: vk });
+      setSticky((prev) => ({ ...prev, [key]: next }));
     };
 
     // -----------------------------------------------------------------------
@@ -254,6 +264,8 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
         style={{ bottom: keyboardHeightPx }}
         aria-label={t("mobile.modifierStrip.ariaLabel")}
         role="toolbar"
+        onPointerDown={preventFocusSteal}
+        onMouseDown={preventFocusSteal}
       >
         {fnPage ? (
           // ---------------------------------------------------------------

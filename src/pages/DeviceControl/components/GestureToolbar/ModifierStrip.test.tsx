@@ -389,6 +389,33 @@ describe("ModifierStrip — unmount cleanup", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Focus-steal guard: strip taps must not blur the hidden input
+// (blur unmounts the strip before click fires → no key ever dispatched)
+// ---------------------------------------------------------------------------
+
+describe("ModifierStrip — focus-steal guard", () => {
+  it("pointerdown on a strip button is default-prevented (hidden input keeps focus)", () => {
+    const addAction = vi.fn();
+    renderStrip(addAction);
+
+    const altBtn = screen.getByText("Alt").closest("button")!;
+    const prevented = !fireEvent.pointerDown(altBtn); // fireEvent returns false when defaultPrevented
+
+    expect(prevented).toBe(true);
+  });
+
+  it("mousedown on a strip button is default-prevented (non-pointer-event fallback)", () => {
+    const addAction = vi.fn();
+    renderStrip(addAction);
+
+    const tabBtn = screen.getByText("Tab").closest("button")!;
+    const prevented = !fireEvent.mouseDown(tabBtn);
+
+    expect(prevented).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Fn page toggle
 // ---------------------------------------------------------------------------
 
