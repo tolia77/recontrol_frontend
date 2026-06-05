@@ -446,6 +446,18 @@ describe("transcriptReducer", () => {
     expect(s.status).toBe("error");
   });
 
+  it("reset returns the initial state (New chat)", () => {
+    let s = transcriptReducer(initialTranscriptState, submit("q1", "s1"));
+    s = transcriptReducer(
+      s,
+      broadcast({ type: "token", seq: 1, session_token: "s1", content: "hi" }),
+    );
+    expect(s.rows.length).toBeGreaterThan(0);
+
+    const next = transcriptReducer(s, { type: "reset" });
+    expect(next).toEqual(initialTranscriptState);
+  });
+
   it("forward-compat: unknown broadcast types are ignored silently (STREAM-03)", () => {
     let s = transcriptReducer(initialTranscriptState, submit("q", "s"));
     const ref = s;

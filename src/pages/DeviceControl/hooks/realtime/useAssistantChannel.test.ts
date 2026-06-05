@@ -141,6 +141,16 @@ describe("useAssistantChannel — VERIFY-04 stream-drop (consumer)", () => {
     expect(assistantSub.perform).toHaveBeenCalledWith("run_prompt", { prompt: "hi" });
   });
 
+  it("dispatch forwards reset_conversation via subscription.perform", () => {
+    const c = makeMockConsumer();
+    const { result } = renderHook(() =>
+      useAssistantChannel({ consumer: c as never, onBroadcast: () => {} }),
+    );
+    act(() => result.current.dispatch("reset_conversation", {}));
+    const assistantSub = c.records.find((r) => r.channel === "AssistantChannel")!.sub;
+    expect(assistantSub.perform).toHaveBeenCalledWith("reset_conversation", {});
+  });
+
   it("unsubscribes on unmount", () => {
     const c = makeMockConsumer();
     const { unmount } = renderHook(() => useChannelWithReducer(c));

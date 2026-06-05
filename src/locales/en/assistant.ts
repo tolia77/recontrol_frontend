@@ -25,6 +25,7 @@ export const assistant = {
     copy: "Copy as Markdown",
     copySuccess: "Transcript copied to clipboard",
     copyError: "Could not copy to clipboard",
+    newChat: "New chat",
   },
   idle: {
     greeting: "What can I help with on {{deviceName}}?",

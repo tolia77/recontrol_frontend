@@ -1,4 +1,12 @@
-import { vi } from 'vitest';
+import { afterEach, vi } from 'vitest';
+import { cleanup } from '@testing-library/react';
+
+// Auto-cleanup after each test so DOM doesn't accumulate across tests.
+// @testing-library/react only registers this automatically when `afterEach`
+// is a global (globals:true). With globals:false we wire it manually here.
+afterEach(() => {
+  cleanup();
+});
 
 // jsdom does not implement window.matchMedia. The useMobileDetect hook
 // (Phase 35 mobile foundation) reads it during render, so every component

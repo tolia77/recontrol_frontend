@@ -71,7 +71,8 @@ export type AssistantBroadcast =
 export type AssistantDispatchAction =
   | "run_prompt"
   | "stop_loop"
-  | "confirm_tool_call";
+  | "confirm_tool_call"
+  | "reset_conversation";
 
 export interface UseAssistantChannelReturn {
   dispatch: (action: AssistantDispatchAction, data?: object) => void;

@@ -5,8 +5,10 @@ import type { AssistantBroadcast } from "src/pages/DeviceControl/hooks/realtime/
  *
  * Pure state machine that consumes the six wire broadcast types delivered by
  * `useAssistantChannel` (plus the synthetic `connection_lost` /
- * `stream_out_of_order` error events the hook fabricates) and one synthetic
- * `submit_prompt` action dispatched by the InputBox in Plan 20-09.
+ * `stream_out_of_order` error events the hook fabricates) and two synthetic
+ * actions: `submit_prompt` dispatched by the InputBox in Plan 20-09, and
+ * `reset` dispatched by the New chat button (clears the transcript; backend
+ * history is cleared separately via the reset_conversation channel action).
  *
  * Invariants (cross-reference 20-CONTEXT / 20-RESEARCH):
  *   - Pure function: no side effects, no setTimeout, no Date.now() in
@@ -109,7 +111,8 @@ export const initialTranscriptState: TranscriptState = {
 
 export type TranscriptAction =
   | { type: "submit_prompt"; text: string; sessionToken: string }
-  | { type: "broadcast"; broadcast: AssistantBroadcast };
+  | { type: "broadcast"; broadcast: AssistantBroadcast }
+  | { type: "reset" };
 
 // Tiny id generator for client-side row keys. uuid is overkill for ephemeral
 // React keys that never leave the browser. Monotonic-enough for our purposes.
@@ -137,6 +140,13 @@ export function transcriptReducer(
   action: TranscriptAction,
 ): TranscriptState {
   switch (action.type) {
+    case "reset": {
+      // New chat: wipe the transcript and return to the pristine panel.
+      // Backend history is cleared separately via the reset_conversation
+      // channel action (AssistantPanel dispatches both).
+      return initialTranscriptState;
+    }
+
     case "submit_prompt": {
       const operatorRow: OperatorRow = {
         kind: "operator",

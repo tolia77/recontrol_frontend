@@ -146,6 +146,11 @@ function AssistantPanel({
     dispatch("stop_loop", {});
   }, [dispatch]);
 
+  const handleNewChat = useCallback(() => {
+    dispatch("reset_conversation", {});
+    dispatchTranscript({ type: "reset" });
+  }, [dispatch]);
+
   const handleCopy = useCallback(() => {
     const md = copyAsMarkdown(state.rows);
     if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
@@ -185,6 +190,7 @@ function AssistantPanel({
         stepCount={state.stepCount}
         onStop={handleStop}
         onCopy={handleCopy}
+        onNewChat={handleNewChat}
         isMobile={isMobile}
       />
 

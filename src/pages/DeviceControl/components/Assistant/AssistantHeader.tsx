@@ -10,6 +10,8 @@ export interface AssistantHeaderProps {
   stepCount: number;
   onStop: () => void;
   onCopy: () => void;
+  /** New chat: clears UI transcript + backend conversation history. Disabled while a loop is active. */
+  onNewChat: () => void;
   /** When true, Stop and Copy buttons receive min-h-[44px] min-w-[44px] touch targets (DCTL-04 D-11) */
   isMobile?: boolean;
 }
@@ -43,6 +45,7 @@ const AssistantHeader: FC<AssistantHeaderProps> = ({
   stepCount,
   onStop,
   onCopy,
+  onNewChat,
   isMobile,
 }) => {
   const { t } = useTranslation("assistant");
@@ -69,6 +72,18 @@ const AssistantHeader: FC<AssistantHeaderProps> = ({
       )}
 
       <div className="ml-auto flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onNewChat}
+          disabled={loopActive}
+          aria-label={t("header.newChat", { defaultValue: "New chat" })}
+          title={t("header.newChat", { defaultValue: "New chat" })}
+          data-testid="assistant-new-chat-button"
+          className={touchTargetClass}
+        >
+          {t("header.newChat", { defaultValue: "New chat" })}
+        </Button>
         <Button
           variant="ghost"
           size="sm"

@@ -25,6 +25,7 @@ export const assistant = {
     copy: "Скопіювати як Markdown",
     copySuccess: "Стенограму скопійовано до буфера обміну",
     copyError: "Не вдалося скопіювати до буфера обміну",
+    newChat: "Нова розмова",
   },
   idle: {
     greeting: "Чим я можу допомогти на пристрої {{deviceName}}?",
