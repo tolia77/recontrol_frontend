@@ -66,7 +66,7 @@ function QualityPopover({
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className="text-text border-lightgray bg-background hover:bg-tertiary flex items-center gap-1 rounded-lg border px-2.5 py-1 font-mono text-xs transition-colors"
+        className="text-foreground border-border bg-surface hover:bg-primary/8 flex items-center gap-1 rounded-md border px-2.5 py-1 font-mono text-caption transition-colors duration-150"
       >
         <span>{`${currentResolution}p · ${currentFps}fps`}</span>
         <ChevronDownIcon
@@ -78,12 +78,12 @@ function QualityPopover({
         <div
           role="dialog"
           aria-label={t("topbar.quality.title")}
-          className="border-lightgray bg-background absolute top-full right-0 z-50 mt-2 w-64 rounded-xl border p-3 shadow-lg"
+          className="border-border bg-surface absolute top-full right-0 z-50 mt-2 w-64 rounded-lg border p-3 shadow-overlay"
         >
-          <h3 className="text-darkgray mb-2 text-xs font-semibold tracking-wide uppercase">
+          <h3 className="text-muted-foreground mb-2 text-caption font-semibold tracking-wide uppercase">
             {t("topbar.quality.title")}
           </h3>
-          <div className="space-y-3 rounded-lg bg-gray-800 p-3">
+          <div className="space-y-3 rounded-md bg-[#1f2937] p-3">
             <div className="flex items-center justify-between">
               <ResolutionControl
                 currentResolution={currentResolution}
@@ -99,7 +99,7 @@ function QualityPopover({
               />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-gray-400">
+              <span className="text-caption font-medium text-[#9ca3af]">
                 {t("topbar.quality.scaling")}
               </span>
               <button
@@ -108,8 +108,8 @@ function QualityPopover({
                 aria-pressed={scalingMode === "1:1"}
                 className={`rounded px-2 py-0.5 text-xs font-medium transition-colors ${
                   scalingMode === "1:1"
-                    ? "bg-indigo-500 text-white"
-                    : "bg-white/10 text-gray-300 hover:bg-white/20"
+                    ? "bg-primary text-white"
+                    : "bg-white/10 text-[#d1d5db] hover:bg-white/20"
                 }`}
               >
                 {scalingMode === "1:1"
@@ -124,8 +124,8 @@ function QualityPopover({
                 aria-pressed={showStats}
                 className={`rounded px-2 py-0.5 text-xs font-medium transition-colors ${
                   showStats
-                    ? "bg-indigo-500 text-white"
-                    : "bg-white/10 text-gray-300 hover:bg-white/20"
+                    ? "bg-primary text-white"
+                    : "bg-white/10 text-[#d1d5db] hover:bg-white/20"
                 }`}
               >
                 {showStats ? t("sidebar.hideStats") : t("sidebar.showStats")}

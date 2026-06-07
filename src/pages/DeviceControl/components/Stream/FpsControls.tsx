@@ -13,7 +13,7 @@ function FpsControls({
 }: FpsControlsProps) {
   return (
     <div className="flex items-center gap-1">
-      <span className="mr-1 text-xs font-medium text-gray-400">FPS</span>
+      <span className="mr-1 text-caption font-medium text-[#9ca3af]">FPS</span>
       {FPS_OPTIONS.map((fps) => (
         <button
           key={fps}
@@ -21,8 +21,8 @@ function FpsControls({
           disabled={disabled}
           className={`rounded px-2 py-0.5 text-xs font-medium transition-colors ${
             currentFps === fps
-              ? "bg-indigo-500 text-white"
-              : "bg-white/10 text-gray-300 hover:bg-white/20"
+              ? "bg-primary text-white"
+              : "bg-white/10 text-[#d1d5db] hover:bg-white/20"
           } disabled:cursor-not-allowed disabled:opacity-50`}
         >
           {fps}

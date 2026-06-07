@@ -17,12 +17,12 @@ function ResolutionControl({
 }: ResolutionControlProps) {
   return (
     <div className="flex items-center gap-1">
-      <span className="mr-1 text-xs font-medium text-gray-400">Res</span>
+      <span className="mr-1 text-caption font-medium text-[#9ca3af]">Res</span>
       <select
         value={currentResolution}
         onChange={(e) => onResolutionChange(Number(e.target.value))}
         disabled={disabled}
-        className="cursor-pointer rounded border-none bg-white/10 px-2 py-0.5 text-xs font-medium text-gray-300 outline-none disabled:cursor-not-allowed disabled:opacity-50"
+        className="cursor-pointer rounded border-none bg-white/10 px-2 py-0.5 text-xs font-medium text-[#d1d5db] outline-none disabled:cursor-not-allowed disabled:opacity-50"
       >
         {RESOLUTION_OPTIONS.map((opt) => (
           <option key={opt.value} value={opt.value}>

@@ -402,7 +402,7 @@ const MainContent: React.FC<
             {isMobile ? (
               <button
                 onClick={onStartStream}
-                className="bg-secondary rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90"
+                className="bg-primary rounded-md px-4 py-2 text-body font-medium text-white transition-colors duration-150 hover:bg-primary-hover"
               >
                 {t("manual.quick.startStream")}
               </button>
@@ -418,7 +418,7 @@ const MainContent: React.FC<
       return streamFrame(
         renderStage(
           <div className="relative z-[3] text-center text-[#D1D5DB]">
-            <div className="border-darkgray border-t-secondary mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2" />
+            <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-[#9ca3af] border-t-primary" />
             <span className="text-lg font-medium">
               {t("stream.connecting")}
             </span>
@@ -438,7 +438,7 @@ const MainContent: React.FC<
             {renderVideoStream(false)}
             <div className="absolute inset-0 z-20 flex items-center justify-center rounded-[inherit] bg-black/60">
               <div className="text-center text-[#D1D5DB]">
-                <div className="border-darkgray border-t-secondary mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2" />
+                <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-[#9ca3af] border-t-primary" />
                 <span className="text-lg font-medium">
                   {t("stream.reconnecting")}
                 </span>
@@ -448,7 +448,7 @@ const MainContent: React.FC<
         ) : (
           renderStage(
             <div className="relative z-[3] text-center text-[#D1D5DB]">
-              <div className="border-darkgray border-t-secondary mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2" />
+              <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-[#9ca3af] border-t-primary" />
               <span className="text-lg font-medium">Reconnecting...</span>
             </div>,
           )
@@ -461,7 +461,7 @@ const MainContent: React.FC<
         renderStage(
           <div className="relative z-[3] text-center text-[#D1D5DB]">
             <svg
-              className="mx-auto mb-3 h-12 w-12 text-red-400"
+              className="mx-auto mb-3 h-12 w-12 text-[#f87171]"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -478,7 +478,7 @@ const MainContent: React.FC<
             </span>
             <button
               onClick={retryWebRtc}
-              className="bg-secondary rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90"
+              className="bg-primary rounded-md px-4 py-2 text-body font-medium text-white transition-colors duration-150 hover:bg-primary-hover"
             >
               {t("stream.retryConnection")}
             </button>
@@ -530,7 +530,7 @@ const MainContent: React.FC<
   // Manual mode never shows the video stream — render its controls and bail.
   if (activeMode === "manual") {
     return (
-      <div className="flex min-h-0 flex-1 flex-col items-center overflow-auto bg-[#F3F4F6] p-2">
+      <div className="flex min-h-0 flex-1 flex-col items-center overflow-auto bg-surface-muted p-2">
         <ManualControls
           disabled={disabled}
           addAction={addAction}
@@ -554,7 +554,7 @@ const MainContent: React.FC<
   const showPanel = !!rightNode;
 
   return (
-    <div className="bg-background flex min-h-0 flex-1 flex-col">
+    <div className="bg-surface flex min-h-0 flex-1 flex-col">
       <Splitter
         initialRatio={splitRatio ?? 0.5}
         onRatioChange={setSplitRatio ?? (() => {})}

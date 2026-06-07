@@ -680,7 +680,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
 
   // Desktop render path — byte-for-byte the prior layout (TopBar + main + MainContent).
   return (
-    <div className="command-websocket flex h-dvh w-full flex-col bg-[#F3F4F6] font-sans antialiased">
+    <div className="command-websocket flex h-dvh w-full flex-col bg-surface-muted font-sans antialiased">
       <TopBar
         activeMode={activeMode}
         setActiveMode={setActiveMode}
