@@ -160,7 +160,7 @@ function AssistantPanel({
     <div
       data-testid="assistant-panel"
       data-device-id={deviceId}
-      className="bg-background text-text flex h-full w-full flex-col outline-none"
+      className="bg-surface text-foreground flex h-full w-full flex-col outline-none"
     >
       <AssistantHeader
         status={state.status}
@@ -172,7 +172,7 @@ function AssistantPanel({
       />
 
       {isEmpty ? (
-        <div className="text-darkgray flex flex-1 items-center justify-center px-4 text-center text-sm">
+        <div className="text-muted-foreground flex flex-1 items-center justify-center px-4 text-center text-body">
           {t("idle.greeting", {
             deviceName,
             defaultValue: `What can I help with on ${deviceName}?`,

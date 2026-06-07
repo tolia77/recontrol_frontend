@@ -12,7 +12,7 @@ export interface OperatorBubbleProps {
 
 const OperatorBubble: FC<OperatorBubbleProps> = ({ text }) => (
   <div className="flex justify-start">
-    <div className="bg-tertiary text-text max-w-[80%] rounded-lg px-3 py-2 text-sm break-words whitespace-pre-wrap">
+    <div className="bg-primary/8 text-foreground max-w-[80%] rounded-md px-3 py-2 text-body break-words whitespace-pre-wrap">
       {text}
     </div>
   </div>

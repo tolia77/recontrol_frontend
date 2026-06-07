@@ -37,12 +37,12 @@ interface StatusBadgeProps {
 }
 
 const stateClass: Record<ToolRowState, string> = {
-  awaiting_confirmation: "bg-amber text-white",
-  pending: "bg-gray-200 text-darkgray",
-  running: "bg-secondary text-white",
-  done: "bg-accent text-white",
-  error: "bg-error text-white",
-  denied: "bg-lightgray text-darkgray",
+  awaiting_confirmation: "bg-warning text-white",
+  pending: "bg-border text-muted-foreground",
+  running: "bg-primary/8 text-primary",
+  done: "bg-success/10 text-success",
+  error: "bg-destructive/10 text-destructive",
+  denied: "bg-border text-muted-foreground",
 };
 
 const StatusBadge: FC<StatusBadgeProps> = ({ state }) => {
@@ -103,17 +103,17 @@ const ToolCallCard: FC<ToolCallCardProps> = ({ row }) => {
   return (
     <Card
       padding="sm"
-      className="border-secondary border-l-4"
+      className="border-primary border-l-4"
       data-testid={`tool-call-card-${row.toolCallId}`}
     >
       <div className="flex flex-wrap items-center gap-2">
         <StatusBadge state={row.state} />
-        <span className="min-w-0 flex-1 font-mono text-sm break-all">
+        <span className="min-w-0 flex-1 font-mono text-body break-all">
           $ {row.command}
           {argsText && ` ${argsText}`}
         </span>
         {elapsed !== null && (
-          <span className="text-darkgray text-xs">
+          <span className="text-muted-foreground text-caption">
             {t("toolCall.elapsed", {
               seconds: elapsed,
               defaultValue: `ran in ${elapsed}s`,
@@ -123,24 +123,24 @@ const ToolCallCard: FC<ToolCallCardProps> = ({ row }) => {
       </div>
 
       {row.result?.error && row.state === "error" && (
-        <div className="text-error mt-2 font-mono text-xs break-all">
+        <div className="text-destructive mt-2 font-mono text-caption break-all">
           {row.result.error}
         </div>
       )}
 
       {combinedRaw.length > 0 && (
         <details className="mt-2">
-          <summary className="text-darkgray cursor-pointer text-xs select-none">
+          <summary className="text-muted-foreground cursor-pointer text-caption select-none">
             {t("toolCall.showOutput", { defaultValue: "show output" })}
           </summary>
-          <pre className="bg-background mt-1 max-h-80 overflow-auto rounded p-2 text-xs break-all whitespace-pre-wrap">
+          <pre className="bg-surface-muted mt-1 max-h-80 overflow-auto rounded-sm p-2 text-caption break-all whitespace-pre-wrap">
             {clipped}
           </pre>
           {truncated && !showAll && (
             <button
               type="button"
               onClick={() => setShowAll(true)}
-              className="text-secondary mt-1 text-xs hover:underline"
+              className="text-primary mt-1 text-caption hover:underline"
             >
               {t("toolCall.showAll", { defaultValue: "show all" })}
             </button>

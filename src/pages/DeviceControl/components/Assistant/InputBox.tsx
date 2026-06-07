@@ -150,10 +150,10 @@ const InputBox: FC<InputBoxProps> = ({ status, onSubmit, isMobile, keyboardHeigh
       : undefined;
 
   return (
-    <div className="border-lightgray bg-background border-t" style={outerStyle}>
+    <div className="border-border bg-surface border-t" style={outerStyle}>
       {resetMsg && (
         <div
-          className="text-error bg-error/5 border-error/20 border-b px-3 py-2 text-xs"
+          className="text-destructive bg-destructive/5 border-destructive/20 border-b px-3 py-2 text-caption"
           role="status"
           aria-live="polite"
           data-testid="assistant-halted-quota-message"
@@ -176,7 +176,7 @@ const InputBox: FC<InputBoxProps> = ({ status, onSubmit, isMobile, keyboardHeigh
           aria-label={t("input.placeholder", {
             defaultValue: "Ask the assistant to act on this device…",
           })}
-          className="border-lightgray focus:ring-primary/20 disabled:text-darkgray disabled:bg-background flex-1 resize-none rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:outline-none disabled:cursor-not-allowed"
+          className="border-border focus-visible:ring-primary/30 disabled:text-muted-foreground disabled:bg-surface-muted flex-1 resize-none rounded-sm border px-3 py-2 text-body focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed"
           style={{ maxHeight: `${MAX_TEXTAREA_PX}px` }}
           data-testid="assistant-input-textarea"
         />

@@ -56,10 +56,10 @@ const AssistantHeader: FC<AssistantHeaderProps> = ({
   const touchTargetClass = isMobile ? "min-h-[44px] min-w-[44px]" : undefined;
 
   return (
-    <div className="flex items-center gap-3 border-b border-lightgray bg-background px-4 py-2">
+    <div className="flex items-center gap-3 border-b border-border bg-surface px-4 py-2">
       {stepCount > 0 && (
         <span
-          className="text-darkgray font-mono text-xs"
+          className="text-muted-foreground font-mono text-caption"
           aria-live="polite"
           data-testid="assistant-step-counter"
         >

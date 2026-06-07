@@ -28,7 +28,7 @@ const AssistantMessage: FC<AssistantMessageProps> = ({
     <Streamdown>{markdown}</Streamdown>
     {isStreaming && (
       <span
-        className="bg-darkgray ml-1 inline-block h-4 w-2 animate-pulse align-middle"
+        className="bg-muted-foreground ml-1 inline-block h-4 w-2 animate-pulse align-middle"
         aria-hidden="true"
       />
     )}

@@ -41,13 +41,13 @@ import { WarningTriangleIcon } from "./icons";
  */
 
 const ZONE_ACCENT: Record<NonNullable<ToolRow["zone"]>, string> = {
-  outside_list: "border-l-4 border-amber bg-amber/5",
-  deny_list: "border-l-4 border-error bg-error/5",
+  outside_list: "border-l-4 border-warning bg-warning/5",
+  deny_list: "border-l-4 border-destructive bg-destructive/5",
 };
 
 const ZONE_BADGE: Record<NonNullable<ToolRow["zone"]>, string> = {
-  outside_list: "bg-amber/15 text-amber",
-  deny_list: "bg-error/15 text-error",
+  outside_list: "bg-warning/15 text-warning",
+  deny_list: "bg-destructive/15 text-destructive",
 };
 
 interface ConfirmationCardProps {
@@ -63,7 +63,7 @@ const ConfirmationCard: FC<ConfirmationCardProps> = ({
   const zone = row.zone ?? "outside_list";
   const accentClass = ZONE_ACCENT[zone];
   const badgeClass = ZONE_BADGE[zone];
-  const iconColor = zone === "deny_list" ? "text-error" : "text-amber";
+  const iconColor = zone === "deny_list" ? "text-destructive" : "text-warning";
 
   // Localized reason; falls back to a sensible default if the locale key is
   // missing (`row.reason` is server-provided and may be a forward-compat
@@ -100,8 +100,8 @@ const ConfirmationCard: FC<ConfirmationCardProps> = ({
           >
             {zoneLabel}
           </span>
-          <p className="mt-1 text-sm">{reasonText}</p>
-          <pre className="mt-1 rounded bg-white/50 p-1.5 font-mono text-xs break-all whitespace-pre-wrap">
+          <p className="mt-1 text-body">{reasonText}</p>
+          <pre className="mt-1 rounded-sm bg-surface-muted p-1.5 font-mono text-caption break-all whitespace-pre-wrap">
             $ {row.command}
             {argsText && ` ${argsText}`}
           </pre>
