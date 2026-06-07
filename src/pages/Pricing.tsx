@@ -15,24 +15,24 @@ function Pricing() {
   const { t } = useTranslation("pricing");
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-surface-muted min-h-screen">
       <SiteHeader />
 
       <main>
         {/* Hero */}
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 -z-10">
-            <div className="from-tertiary/60 via-background to-background h-full w-full bg-gradient-to-b" />
-            <div className="bg-secondary/20 absolute -top-24 -left-24 h-72 w-72 rounded-full blur-3xl" />
+            <div className="from-primary/10 via-surface to-surface-muted h-full w-full bg-gradient-to-b" />
+            <div className="bg-primary/20 absolute -top-24 -left-24 h-72 w-72 rounded-full blur-3xl" />
           </div>
           <div className="container mx-auto px-6 pt-16 pb-10 text-center">
-            <span className="text-secondary text-caption-small font-semibold tracking-widest uppercase">
+            <span className="text-primary text-caption font-semibold tracking-widest uppercase">
               {t("hero.eyebrow")}
             </span>
-            <h1 className="text-primary mt-3 mb-4 text-4xl font-extrabold tracking-tight md:text-5xl">
+            <h1 className="text-primary mt-3 mb-4 text-display font-extrabold tracking-tight md:text-5xl">
               {t("hero.headline")}
             </h1>
-            <p className="text-darkgray mx-auto max-w-2xl md:text-lg">
+            <p className="text-muted-foreground mx-auto max-w-2xl md:text-body-lg">
               {t("hero.sub")}
             </p>
           </div>
@@ -50,7 +50,7 @@ function Pricing() {
             ))}
           </div>
 
-          <p className="text-darkgray text-caption-small mx-auto mt-8 max-w-2xl text-center">
+          <p className="text-muted-foreground text-caption mx-auto mt-8 max-w-2xl text-center">
             {t("billingNote")}
           </p>
         </section>
@@ -78,21 +78,21 @@ function PlanCard({ planKey, highlighted }: PlanCardProps) {
 
   return (
     <div
-      className={`relative flex flex-col rounded-2xl border bg-white p-6 transition-shadow ${
+      className={`relative flex flex-col rounded-lg border bg-surface p-6 transition-shadow ${
         highlighted
-          ? "border-secondary shadow-lg ring-1 ring-secondary/30"
-          : "border-lightgray shadow-sm hover:shadow-md"
+          ? "border-primary shadow-overlay ring-1 ring-primary/30"
+          : "border-border hover:shadow-sm"
       }`}
     >
       {highlighted && (
-        <span className="bg-secondary absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-xs font-semibold text-white shadow-sm">
+        <span className="bg-primary absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-caption font-semibold text-white">
           {t("popular")}
         </span>
       )}
 
       <div className="mb-5">
-        <h2 className="text-primary text-lg font-bold">{name}</h2>
-        <p className="text-darkgray text-caption-small mt-1">
+        <h2 className="text-primary text-heading font-bold">{name}</h2>
+        <p className="text-muted-foreground text-caption mt-1">
           {t(`plans.${planKey}.tagline`)}
         </p>
       </div>
@@ -101,16 +101,16 @@ function PlanCard({ planKey, highlighted }: PlanCardProps) {
         <span className="text-primary text-4xl font-extrabold tracking-tight">
           {t(`plans.${planKey}.price`)}
         </span>
-        <span className="text-darkgray text-sm">
+        <span className="text-muted-foreground text-body">
           {t(`plans.${planKey}.period`)}
         </span>
       </div>
 
       <ul className="mb-8 flex flex-col gap-3">
         {features.map((feature, i) => (
-          <li key={i} className="flex items-start gap-2.5 text-sm">
+          <li key={i} className="flex items-start gap-2.5 text-body">
             {feature.included ? <CheckIcon /> : <ExcludedIcon />}
-            <span className={feature.included ? "text-text" : "text-darkgray"}>
+            <span className={feature.included ? "text-foreground" : "text-muted-foreground"}>
               {feature.text}
             </span>
           </li>
@@ -137,7 +137,7 @@ function PlanCard({ planKey, highlighted }: PlanCardProps) {
 function CheckIcon() {
   return (
     <svg
-      className="text-accent mt-0.5 h-4 w-4 flex-shrink-0"
+      className="text-success mt-0.5 h-4 w-4 flex-shrink-0"
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
@@ -152,7 +152,7 @@ function CheckIcon() {
 function ExcludedIcon() {
   return (
     <svg
-      className="text-lightgray mt-0.5 h-4 w-4 flex-shrink-0"
+      className="text-border mt-0.5 h-4 w-4 flex-shrink-0"
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"

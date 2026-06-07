@@ -11,22 +11,22 @@ function Index() {
   const { t } = useTranslation("index");
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-surface-muted min-h-screen">
       <SiteHeader />
 
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10">
-          <div className="from-tertiary/60 via-background to-background h-full w-full bg-gradient-to-b" />
-          <div className="bg-secondary/20 absolute -top-24 -left-24 h-72 w-72 rounded-full blur-3xl" />
-          <div className="bg-accent/20 absolute -right-24 -bottom-24 h-72 w-72 rounded-full blur-3xl" />
+          <div className="from-primary/10 via-surface to-surface-muted h-full w-full bg-gradient-to-b" />
+          <div className="bg-primary/20 absolute -top-24 -left-24 h-72 w-72 rounded-full blur-3xl" />
+          <div className="bg-success/20 absolute -right-24 -bottom-24 h-72 w-72 rounded-full blur-3xl" />
         </div>
         <div className="container mx-auto flex items-center justify-center px-6 py-20">
           <div className="max-w-3xl text-center">
-            <h1 className="text-primary mb-4 text-4xl font-extrabold tracking-tight md:text-6xl">
+            <h1 className="text-primary mb-4 text-display font-extrabold tracking-tight md:text-6xl">
               {t("hero.headline")}
             </h1>
-            <p className="text-body text-darkgray mb-8 md:text-lg">
+            <p className="text-body text-muted-foreground mb-8 md:text-body-lg">
               {t("hero.sub")}
             </p>
             <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -71,7 +71,7 @@ function Index() {
 
       {/* How it works */}
       <section className="container mx-auto px-6 py-12">
-        <h2 className="text-primary mb-6 text-center text-2xl font-semibold">
+        <h2 className="text-primary mb-6 text-center text-title font-semibold">
           {t("how.title")}
         </h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -104,18 +104,18 @@ function Index() {
             <Link to="/login">
               <Button
                 variant="secondary"
-                className="text-primary bg-white hover:bg-gray-100"
+                className="text-primary bg-surface hover:bg-surface-muted"
               >
                 {t("cta.login")}
               </Button>
             </Link>
             <Link to="/signup">
-              <Button className="bg-secondary hover:opacity-90">
+              <Button className="hover:bg-primary-hover">
                 {t("cta.signup")}
               </Button>
             </Link>
           </div>
-          <div className="text-caption-small mt-6 text-white/80">
+          <div className="text-caption mt-6 text-white/80">
             <Trans
               ns="index"
               i18nKey="cta.help"
@@ -138,14 +138,14 @@ interface FeatureCardProps {
 
 function FeatureCard({ icon, title, text }: FeatureCardProps) {
   return (
-    <div className="border-lightgray rounded-xl border bg-white/90 p-5 shadow-sm backdrop-blur-sm transition-shadow hover:shadow-md">
+    <div className="border-border rounded-lg border bg-surface p-5 transition-shadow hover:shadow-sm backdrop-blur-sm">
       <div className="mb-3 flex items-center gap-3">
-        <span className="bg-tertiary inline-flex h-9 w-9 items-center justify-center rounded-lg">
+        <span className="bg-primary/10 inline-flex h-9 w-9 items-center justify-center rounded-md">
           <img src={icon} alt="" className="h-5 w-5" />
         </span>
         <h3 className="font-semibold">{title}</h3>
       </div>
-      <p className="text-caption-small text-darkgray">{text}</p>
+      <p className="text-caption text-muted-foreground">{text}</p>
     </div>
   );
 }
@@ -158,14 +158,14 @@ interface StepProps {
 
 function Step({ number, title, text }: StepProps) {
   return (
-    <div className="border-lightgray rounded-xl border bg-white p-5 transition-shadow hover:shadow-sm">
+    <div className="border-border rounded-lg border bg-surface p-5 transition-shadow hover:shadow-sm">
       <div className="mb-2 flex items-center gap-3">
-        <span className="bg-secondary inline-flex h-8 w-8 items-center justify-center rounded-full font-semibold text-white">
+        <span className="bg-primary inline-flex h-8 w-8 items-center justify-center rounded-full font-semibold text-white">
           {number}
         </span>
         <h4 className="font-semibold">{title}</h4>
       </div>
-      <p className="text-caption-small text-darkgray">{text}</p>
+      <p className="text-caption text-muted-foreground">{text}</p>
     </div>
   );
 }
