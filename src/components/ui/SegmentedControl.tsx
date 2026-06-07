@@ -25,11 +25,11 @@ export interface SegmentedControlProps<T extends string> {
   ariaLabel?: string;
 }
 
-const CONTAINER_CLASS = "flex bg-gray-100 rounded-lg p-1 gap-1";
+const CONTAINER_CLASS = "flex bg-surface-muted rounded-md p-1 gap-1";
 const PILL_BASE_CLASS =
-  "px-3 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20";
-const PILL_ACTIVE_CLASS = "bg-accent text-white";
-const PILL_INACTIVE_CLASS = "bg-transparent text-primary hover:bg-gray-100";
+  "px-3 py-2 text-body font-medium rounded-sm transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30";
+const PILL_ACTIVE_CLASS = "bg-success text-white";
+const PILL_INACTIVE_CLASS = "bg-transparent text-primary hover:bg-surface-muted";
 
 function SegmentedControl<T extends string>({
   value,

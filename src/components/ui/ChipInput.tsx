@@ -106,19 +106,19 @@ export default function ChipInput({
 
   return (
     <div
-      className="border-lightgray focus-within:border-primary flex flex-wrap items-center gap-1 rounded border px-2 py-1"
+      className="border-border focus-within:border-primary flex flex-wrap items-center gap-1 rounded-sm border px-2 py-1"
       data-testid={aria["data-testid"]}
       onClick={() => inputRef.current?.focus()}
     >
       {value.map((chip, i) => (
         <span
           key={`${chip}-${i}`}
-          className="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-0.5 text-sm"
+          className="inline-flex items-center gap-1 rounded-sm bg-surface-muted px-2 py-0.5 text-body"
         >
           <span className="break-all">{chip}</span>
           <button
             type="button"
-            className="text-gray-500 hover:text-gray-800"
+            className="text-muted-foreground hover:text-foreground"
             onClick={(e) => {
               e.stopPropagation();
               removeChip(i);

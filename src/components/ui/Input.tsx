@@ -13,24 +13,24 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="flex flex-col gap-1">
         {label && (
-          <label htmlFor={inputId} className="text-text text-sm font-medium">
+          <label htmlFor={inputId} className="text-foreground text-body font-medium">
             {label}
           </label>
         )}
         <input
           ref={ref}
           id={inputId}
-          className={`w-full rounded-lg border px-3 py-2 text-sm transition-colors ${
+          className={`w-full rounded-sm border px-3 py-2 text-body transition-colors ${
             error
-              ? "border-error focus:border-error focus:ring-error/20 focus:ring-2"
-              : "border-lightgray focus:border-primary focus:ring-primary/20 focus:ring-2"
-          } outline-none disabled:cursor-not-allowed disabled:bg-gray-50 ${className}`}
+              ? "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/20 focus-visible:ring-2"
+              : "border-border focus-visible:border-primary focus-visible:ring-primary/30 focus-visible:ring-2"
+          } outline-none disabled:cursor-not-allowed disabled:bg-surface-muted ${className}`}
           {...props}
         />
         {hint && !error && (
-          <span className="text-xs text-gray-500">{hint}</span>
+          <span className="text-caption text-muted-foreground">{hint}</span>
         )}
-        {error && <span className="text-error text-xs">{error}</span>}
+        {error && <span className="text-destructive text-caption">{error}</span>}
       </div>
     );
   },
