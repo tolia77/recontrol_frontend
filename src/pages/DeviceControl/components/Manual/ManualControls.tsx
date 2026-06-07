@@ -44,53 +44,53 @@ const ManualControls: React.FC<{
 
   const SectionNotice: React.FC<{ allowed: boolean }> = ({ allowed }) =>
     !allowed ? (
-      <div className="mb-4 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+      <div className="mb-4 rounded-sm border border-warning/20 bg-warning/10 px-3 py-2 text-body text-warning">
         {t("manual.noPermission")}
       </div>
     ) : null;
 
   return (
-    <div className="flex flex-1 flex-col items-center bg-[#F3F4F6] p-8">
-      <div className="bg-background border-lightgray w-4xl rounded-lg border shadow-sm">
+    <div className="flex flex-1 flex-col items-center bg-surface-muted p-8">
+      <div className="bg-surface border-border w-4xl rounded-md border">
         {/* Section Tabs */}
-        <div className="border-lightgray border-b">
+        <div className="border-border border-b">
           <div className="flex">
             <button
               onClick={() => setActiveSection("mouse")}
-              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors duration-200 ${
+              className={`flex-1 px-4 py-3 text-body font-medium transition-colors duration-150 ${
                 activeSection === "mouse"
-                  ? "border-b-2 border-[#1E3A8A] bg-[#D7E6FF]/30 text-[#1E3A8A]"
-                  : "text-darkgray hover:text-text hover:bg-tertiary"
+                  ? "border-b-2 border-primary bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-primary/8"
               }`}
             >
               {t("manual.tabs.mouse")}
             </button>
             <button
               onClick={() => setActiveSection("keyboard")}
-              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors duration-200 ${
+              className={`flex-1 px-4 py-3 text-body font-medium transition-colors duration-150 ${
                 activeSection === "keyboard"
-                  ? "border-b-2 border-[#1E3A8A] bg-[#D7E6FF]/30 text-[#1E3A8A]"
-                  : "text-darkgray hover:text-text hover:bg-tertiary"
+                  ? "border-b-2 border-primary bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-primary/8"
               }`}
             >
               {t("manual.tabs.keyboard")}
             </button>
             <button
               onClick={() => setActiveSection("power")}
-              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors duration-200 ${
+              className={`flex-1 px-4 py-3 text-body font-medium transition-colors duration-150 ${
                 activeSection === "power"
-                  ? "border-b-2 border-[#1E3A8A] bg-[#D7E6FF]/30 text-[#1E3A8A]"
-                  : "text-darkgray hover:text-text hover:bg-tertiary"
+                  ? "border-b-2 border-primary bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-primary/8"
               }`}
             >
               {t("manual.tabs.power")}
             </button>
             <button
               onClick={() => setActiveSection("terminal")}
-              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors duration-200 ${
+              className={`flex-1 px-4 py-3 text-body font-medium transition-colors duration-150 ${
                 activeSection === "terminal"
-                  ? "border-b-2 border-[#1E3A8A] bg-[#D7E6FF]/30 text-[#1E3A8A]"
-                  : "text-darkgray hover:text-text hover:bg-tertiary"
+                  ? "border-b-2 border-primary bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-primary/8"
               }`}
             >
               {t("manual.tabs.terminal")}

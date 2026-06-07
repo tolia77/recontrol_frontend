@@ -73,25 +73,25 @@ const ManualPowerControls: React.FC<{
 
   const getButtonClass = (variant: "danger" | "warning" | "info") => {
     const base =
-      "w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed";
+      "w-full py-3 px-4 rounded-md font-medium transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed";
     switch (variant) {
       case "danger":
-        return `${base} bg-red-500 hover:bg-red-600 text-white shadow-sm hover:shadow-md`;
+        return `${base} bg-destructive hover:bg-destructive-hover active:bg-destructive-active text-white`;
       case "warning":
-        return `${base} bg-amber-500 hover:bg-amber-600 text-white shadow-sm hover:shadow-md`;
+        return `${base} bg-warning hover:bg-warning/80 active:bg-warning/90 text-white`;
       case "info":
-        return `${base} bg-blue-500 hover:bg-blue-600 text-white shadow-sm hover:shadow-md`;
+        return `${base} bg-primary hover:bg-primary-hover active:bg-primary-active text-white`;
     }
   };
 
   return (
     <div className="space-y-6">
-      <h3 className="text-text mb-4 text-lg font-semibold">
+      <h3 className="text-foreground mb-4 text-heading font-semibold">
         {t("manual.power.title")}
       </h3>
 
-      <div className="border-lightgray bg-background rounded-lg border p-4">
-        <p className="text-darkgray mb-4 text-sm">
+      <div className="border-border bg-surface rounded-md border p-4">
+        <p className="text-muted-foreground mb-4 text-body">
           ⚠️ {t("manual.power.warning")}
         </p>
 
@@ -105,7 +105,7 @@ const ManualPowerControls: React.FC<{
               >
                 {label}
               </button>
-              <span className="text-darkgray mt-1 text-center text-xs">
+              <span className="text-muted-foreground mt-1 text-center text-caption">
                 {description}
               </span>
             </div>

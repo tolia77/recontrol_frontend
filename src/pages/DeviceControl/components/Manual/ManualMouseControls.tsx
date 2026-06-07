@@ -53,18 +53,18 @@ const ManualMouseControls: React.FC<{
 
   return (
     <div className="space-y-6">
-      <h3 className="text-text mb-4 text-lg font-semibold">
+      <h3 className="text-foreground mb-4 text-heading font-semibold">
         {t("manual.mouse.title")}
       </h3>
 
       {/* Position Section */}
-      <div className="border-lightgray bg-tertiary rounded-lg border p-4">
-        <h4 className="text-text mb-3 text-sm font-medium">
+      <div className="border-border bg-surface-muted rounded-md border p-4">
+        <h4 className="text-foreground mb-3 text-body font-medium">
           {t("manual.mouse.position")}
         </h4>
         <div className="mb-3 grid grid-cols-2 gap-3">
-          <label className="flex flex-col text-sm">
-            <span className="text-darkgray mb-1">X</span>
+          <label className="flex flex-col text-body">
+            <span className="text-muted-foreground mb-1">X</span>
             <Input
               type="number"
               className="px-2 py-1 text-xs"
@@ -73,8 +73,8 @@ const ManualMouseControls: React.FC<{
               disabled={disabled}
             />
           </label>
-          <label className="flex flex-col text-sm">
-            <span className="text-darkgray mb-1">Y</span>
+          <label className="flex flex-col text-body">
+            <span className="text-muted-foreground mb-1">Y</span>
             <Input
               type="number"
               className="px-2 py-1 text-xs"
@@ -98,14 +98,14 @@ const ManualMouseControls: React.FC<{
       </div>
 
       {/* Click Actions Section */}
-      <div className="border-lightgray bg-tertiary rounded-lg border p-4">
-        <h4 className="text-text mb-3 text-sm font-medium">
+      <div className="border-border bg-surface-muted rounded-md border p-4">
+        <h4 className="text-foreground mb-3 text-body font-medium">
           {t("manual.mouse.buttons")}
         </h4>
         <div className="space-y-3">
           {/* Left Button */}
           <div>
-            <p className="text-darkgray mb-2 text-xs">
+            <p className="text-muted-foreground mb-2 text-caption">
               {t("manual.mouse.left")}
             </p>
             <div className="flex flex-wrap gap-2">
@@ -150,7 +150,7 @@ const ManualMouseControls: React.FC<{
 
           {/* Right Button */}
           <div>
-            <p className="text-darkgray mb-2 text-xs">
+            <p className="text-muted-foreground mb-2 text-caption">
               {t("manual.mouse.right")}
             </p>
             <div className="flex flex-wrap gap-2">
@@ -185,7 +185,7 @@ const ManualMouseControls: React.FC<{
 
           {/* Middle Button */}
           <div>
-            <p className="text-darkgray mb-2 text-xs">
+            <p className="text-muted-foreground mb-2 text-caption">
               {t("manual.mouse.middle")}
             </p>
             <div className="flex flex-wrap gap-2">
@@ -221,13 +221,13 @@ const ManualMouseControls: React.FC<{
       </div>
 
       {/* Scroll Section */}
-      <div className="border-lightgray bg-tertiary rounded-lg border p-4">
-        <h4 className="text-text mb-3 text-sm font-medium">
+      <div className="border-border bg-surface-muted rounded-md border p-4">
+        <h4 className="text-foreground mb-3 text-body font-medium">
           {t("manual.mouse.scroll")}
         </h4>
         <div className="flex items-end gap-3">
-          <label className="flex flex-1 flex-col text-sm">
-            <span className="text-darkgray mb-1">
+          <label className="flex flex-1 flex-col text-body">
+            <span className="text-muted-foreground mb-1">
               {t("manual.mouse.scrollClicks")}
             </span>
             <Input

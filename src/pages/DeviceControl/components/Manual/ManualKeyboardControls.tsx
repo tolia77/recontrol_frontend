@@ -58,18 +58,18 @@ const ManualKeyboardControls: React.FC<{
 
   return (
     <div className="space-y-6">
-      <h3 className="text-text mb-4 text-lg font-semibold">
+      <h3 className="text-foreground mb-4 text-heading font-semibold">
         {t("manual.keyboard.title")}
       </h3>
 
       {/* Single Key Section */}
-      <div className="border-lightgray bg-tertiary rounded-lg border p-4">
-        <h4 className="text-text mb-3 text-sm font-medium">
+      <div className="border-border bg-surface-muted rounded-md border p-4">
+        <h4 className="text-foreground mb-3 text-body font-medium">
           {t("manual.keyboard.singleKey")}
         </h4>
         <div className="space-y-3">
-          <label className="flex flex-col text-sm">
-            <span className="text-darkgray mb-1">
+          <label className="flex flex-col text-body">
+            <span className="text-muted-foreground mb-1">
               {t("manual.keyboard.keyLabel")}
             </span>
             <Input
@@ -113,13 +113,13 @@ const ManualKeyboardControls: React.FC<{
       </div>
 
       {/* Type Text Section */}
-      <div className="border-lightgray bg-tertiary rounded-lg border p-4">
-        <h4 className="text-text mb-3 text-sm font-medium">
+      <div className="border-border bg-surface-muted rounded-md border p-4">
+        <h4 className="text-foreground mb-3 text-body font-medium">
           {t("manual.keyboard.typeText")}
         </h4>
         <div className="space-y-3">
-          <label className="flex flex-col text-sm">
-            <span className="text-darkgray mb-1">
+          <label className="flex flex-col text-body">
+            <span className="text-muted-foreground mb-1">
               {t("manual.keyboard.textToType")}
             </span>
             <Input

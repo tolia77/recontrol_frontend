@@ -148,7 +148,7 @@ const ManualTerminalControls: React.FC<{
 
   return (
     <div className="space-y-6">
-      <h3 className="text-text mb-2 text-lg font-semibold">
+      <h3 className="text-foreground mb-2 text-heading font-semibold">
         {t("manual.terminal.title")}
       </h3>
 
@@ -156,15 +156,15 @@ const ManualTerminalControls: React.FC<{
         {/* Left: All controls */}
         <div className="space-y-6">
           {/* Command Execution Section */}
-          <div className="border-lightgray bg-tertiary rounded-lg border p-4">
-            <h4 className="text-text mb-3 text-sm font-medium">
+          <div className="border-border bg-surface-muted rounded-md border p-4">
+            <h4 className="text-foreground mb-3 text-body font-medium">
               {t("manual.terminal.commandExec")}
             </h4>
 
             {/* CMD Execute */}
-            <div className="border-lightgray mb-4 space-y-3 border-b pb-4">
-              <label className="flex flex-col text-sm">
-                <span className="text-darkgray mb-1">
+            <div className="border-border mb-4 space-y-3 border-b pb-4">
+              <label className="flex flex-col text-body">
+                <span className="text-muted-foreground mb-1">
                   {t("manual.terminal.cmdCommand")}
                 </span>
                 <Input
@@ -178,8 +178,8 @@ const ManualTerminalControls: React.FC<{
                 />
               </label>
               <div className="flex items-end gap-3">
-                <label className="flex flex-1 flex-col text-sm">
-                  <span className="text-darkgray mb-1">
+                <label className="flex flex-1 flex-col text-body">
+                  <span className="text-muted-foreground mb-1">
                     {t("manual.terminal.timeoutMs")}
                   </span>
                   <Input
@@ -204,8 +204,8 @@ const ManualTerminalControls: React.FC<{
 
             {/* PowerShell Execute */}
             <div className="space-y-3">
-              <label className="flex flex-col text-sm">
-                <span className="text-darkgray mb-1">
+              <label className="flex flex-col text-body">
+                <span className="text-muted-foreground mb-1">
                   {t("manual.terminal.psCommand")}
                 </span>
                 <Input
@@ -219,8 +219,8 @@ const ManualTerminalControls: React.FC<{
                 />
               </label>
               <div className="flex items-end gap-3">
-                <label className="flex flex-1 flex-col text-sm">
-                  <span className="text-darkgray mb-1">
+                <label className="flex flex-1 flex-col text-body">
+                  <span className="text-muted-foreground mb-1">
                     {t("manual.terminal.timeoutMs")}
                   </span>
                   <Input
@@ -256,12 +256,12 @@ const ManualTerminalControls: React.FC<{
           </div>
 
           {/* Process Management Section */}
-          <div className="border-lightgray bg-tertiary rounded-lg border p-4">
-            <h4 className="text-text mb-3 text-sm font-medium">
+          <div className="border-border bg-surface-muted rounded-md border p-4">
+            <h4 className="text-foreground mb-3 text-body font-medium">
               {t("manual.terminal.processMgmt")}
             </h4>
 
-            <div className="border-lightgray mb-4 space-y-3 border-b pb-4">
+            <div className="border-border mb-4 space-y-3 border-b pb-4">
               <Button
                 variant="primary"
                 size="sm"
@@ -273,9 +273,9 @@ const ManualTerminalControls: React.FC<{
               </Button>
             </div>
 
-            <div className="border-lightgray mb-4 space-y-3 border-b pb-4">
-              <label className="flex flex-col text-sm">
-                <span className="text-darkgray mb-1">
+            <div className="border-border mb-4 space-y-3 border-b pb-4">
+              <label className="flex flex-col text-body">
+                <span className="text-muted-foreground mb-1">
                   {t("manual.terminal.killPid")}
                 </span>
                 <div className="flex gap-2">
@@ -300,8 +300,8 @@ const ManualTerminalControls: React.FC<{
             </div>
 
             <div className="space-y-3">
-              <label className="flex flex-col text-sm">
-                <span className="text-darkgray mb-1">
+              <label className="flex flex-col text-body">
+                <span className="text-muted-foreground mb-1">
                   {t("manual.terminal.startProcess")}
                 </span>
                 <Input
@@ -313,8 +313,8 @@ const ManualTerminalControls: React.FC<{
                   placeholder={t("manual.terminal.startProcessPlaceholder")}
                 />
               </label>
-              <label className="flex flex-col text-sm">
-                <span className="text-darkgray mb-1">
+              <label className="flex flex-col text-body">
+                <span className="text-muted-foreground mb-1">
                   {t("manual.terminal.argsOptional")}
                 </span>
                 <Input
@@ -339,12 +339,12 @@ const ManualTerminalControls: React.FC<{
           </div>
 
           {/* Directory & System Info Section */}
-          <div className="border-lightgray bg-tertiary rounded-lg border p-4">
-            <h4 className="text-text mb-3 text-sm font-medium">
+          <div className="border-border bg-surface-muted rounded-md border p-4">
+            <h4 className="text-foreground mb-3 text-body font-medium">
               {t("manual.terminal.directoryInfo")}
             </h4>
 
-            <div className="border-lightgray mb-4 space-y-3 pb-4">
+            <div className="border-border mb-4 space-y-3 pb-4">
               <div className="flex gap-2">
                 <Button
                   variant="secondary"
@@ -356,8 +356,8 @@ const ManualTerminalControls: React.FC<{
                   {t("manual.terminal.getCwd")}
                 </Button>
               </div>
-              <label className="flex flex-col text-sm">
-                <span className="text-darkgray mb-1">
+              <label className="flex flex-col text-body">
+                <span className="text-muted-foreground mb-1">
                   {t("manual.terminal.setCwdLabel")}
                 </span>
                 <div className="flex gap-2">
@@ -405,20 +405,20 @@ const ManualTerminalControls: React.FC<{
         </div>
 
         {/* Right: Output panel */}
-        <div className="border-lightgray bg-background min-h-[320px] rounded-lg border p-3">
+        <div className="border-border bg-surface min-h-[320px] rounded-md border p-3">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-darkgray text-sm">
+            <span className="text-muted-foreground text-body">
               {t("manual.terminal.output")}
             </span>
             {latest && (
               <span
-                className={`rounded px-2 py-0.5 text-xs ${latest.status === "success" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+                className={`rounded-sm px-2 py-0.5 text-caption ${latest.status === "success" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}
               >
                 {latest.status}
               </span>
             )}
           </div>
-          <pre className="bg-tertiary h-[520px] max-h-[520px] overflow-auto rounded p-2 text-xs leading-5 break-words whitespace-pre-wrap">
+          <pre className="bg-surface-muted h-[520px] max-h-[520px] overflow-auto rounded-sm p-2 text-caption leading-5 break-words whitespace-pre-wrap">
             {latest ? latest.result : t("manual.terminal.outputEmpty")}
           </pre>
         </div>
