@@ -47,9 +47,9 @@ function UsageCard() {
         />
 
         {/* Device sharing state line (boolean, no bar) */}
-        <div className="flex justify-between text-sm">
+        <div className="flex justify-between text-body">
           <span>{t("usage.deviceSharing")}</span>
-          <span className={usage?.device_sharing ? "text-accent" : "text-darkgray"}>
+          <span className={usage?.device_sharing ? "text-success" : "text-muted-foreground"}>
             {usage?.device_sharing
               ? t("usage.sharingEnabled")
               : t("usage.sharingDisabled")}

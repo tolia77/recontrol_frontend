@@ -11,7 +11,7 @@ function PastDueBanner() {
 
   return (
     <Banner
-      variant="error"
+      variant="warning"
       action={
         <Link to="/subscription" className="font-medium underline">
           {t("pastDue.cta")}

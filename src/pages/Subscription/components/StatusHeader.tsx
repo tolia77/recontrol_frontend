@@ -5,12 +5,12 @@ import type { SubscriptionStatus } from "src/services/backend/subscriptionServic
 // ── State badge color map ──────────────────────────────────────────────────────
 
 const stateBadgeClasses: Record<string, string> = {
-  active: "text-accent bg-accent/10",
-  upgrading: "text-secondary bg-secondary/10",
-  pending: "text-secondary bg-secondary/10",
-  past_due: "text-error bg-error/10",
-  cancelled: "text-darkgray bg-lightgray",
-  expired: "text-darkgray bg-lightgray",
+  active: "text-success bg-success/10",
+  upgrading: "text-primary bg-primary/8",
+  pending: "text-primary bg-primary/8",
+  past_due: "text-warning bg-warning/10",
+  cancelled: "text-muted-foreground bg-surface-muted",
+  expired: "text-muted-foreground bg-surface-muted",
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -24,7 +24,7 @@ function StatusHeader({ status }: StatusHeaderProps) {
 
   const planLabel = status?.plan_name ?? "free";
   const stateLabel = status?.state ?? "active";
-  const badgeClass = stateBadgeClasses[stateLabel] ?? "text-darkgray bg-lightgray";
+  const badgeClass = stateBadgeClasses[stateLabel] ?? "text-muted-foreground bg-surface-muted";
 
   const periodEndDate = status?.period_end
     ? new Date(status.period_end).toLocaleDateString(i18n.language, {
@@ -46,15 +46,15 @@ function StatusHeader({ status }: StatusHeaderProps) {
     <Card padding="md" className="mb-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-2xl font-semibold capitalize">
+          <p className="text-title font-semibold capitalize">
             {t(`plan.${planLabel}`)}
           </p>
           {dateLine && (
-            <p className="text-sm text-darkgray mt-1">{dateLine}</p>
+            <p className="text-body text-muted-foreground mt-1">{dateLine}</p>
           )}
         </div>
         <span
-          className={`rounded-full px-3 py-1 text-sm font-medium ${badgeClass}`}
+          className={`rounded-full px-3 py-1 text-body font-medium ${badgeClass}`}
         >
           {t(`statusHeader.state.${stateLabel}`)}
         </span>

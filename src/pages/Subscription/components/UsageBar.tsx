@@ -7,20 +7,20 @@ function formatCount(n: number): string {
   return String(n);
 }
 
-type BarColor = "secondary" | "amber" | "error" | "none";
+type BarColor = "success" | "warning" | "destructive" | "none";
 
 function getBarColor(used: number, limit: number | null): BarColor {
-  if (limit === null) return "none";       // unlimited — never color
-  if (limit === 0) return "none";          // feature not included in plan — no color, no nudge
-  if (used >= limit) return "error";       // 100% — red
-  if (used >= limit * 0.9) return "amber"; // ≥90% — amber
-  return "secondary";                      // normal — blue
+  if (limit === null) return "none";           // unlimited — never color
+  if (limit === 0) return "none";              // feature not included in plan — no color, no nudge
+  if (used >= limit) return "destructive";     // 100% — red
+  if (used >= limit * 0.9) return "warning";  // ≥90% — amber
+  return "success";                            // normal — green
 }
 
 const barFillClasses: Record<BarColor, string> = {
-  secondary: "bg-secondary",
-  amber: "bg-amber",
-  error: "bg-error",
+  success: "bg-success",
+  warning: "bg-warning",
+  destructive: "bg-destructive",
   none: "",
 };
 
@@ -48,9 +48,9 @@ function UsageBar({
 
   return (
     <div className={`flex flex-col gap-1 ${className}`}>
-      <div className="flex justify-between text-sm">
+      <div className="flex justify-between text-body">
         <span>{label}</span>
-        <span className="text-darkgray">
+        <span className="text-muted-foreground">
           {limit === null
             ? t("usage.unlimitedLabel", { used: formatCount(used) })
             : `${formatCount(used)} / ${formatCount(limit)}`}
@@ -63,7 +63,7 @@ function UsageBar({
           aria-valuenow={used}
           aria-valuemin={0}
           aria-valuemax={limit}
-          className="bg-lightgray h-2 w-full rounded-full overflow-hidden"
+          className="bg-border h-2 w-full rounded-full overflow-hidden"
         >
           <div
             className={`h-full rounded-full transition-all ${barFillClasses[color]}`}
@@ -72,11 +72,11 @@ function UsageBar({
         </div>
       )}
 
-      {color === "error" && onUpgradeClick && (
+      {color === "destructive" && onUpgradeClick && (
         <button
           type="button"
           onClick={onUpgradeClick}
-          className="text-primary text-sm text-left hover:underline"
+          className="text-primary text-body text-left hover:underline"
         >
           {t("usage.upgradeLink")} →
         </button>
