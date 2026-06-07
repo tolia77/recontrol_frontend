@@ -89,7 +89,7 @@ describe("ConfirmModal", () => {
     expect(onChange).toHaveBeenCalledTimes(1);
   });
 
-  it("dangerous=true: confirm button uses danger variant (bg-error)", () => {
+  it("dangerous=true: confirm button uses danger variant (bg-destructive)", () => {
     render(
       <ConfirmModal
         {...defaultProps({ dangerous: true, confirmLabel: "Delete" })}

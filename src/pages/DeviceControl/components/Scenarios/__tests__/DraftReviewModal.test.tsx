@@ -96,7 +96,7 @@ describe("DraftReviewModal", () => {
     expect(screen.getByText(/cwd: \/var\/log/)).toBeDefined();
   });
 
-  it("renders an amber dry_intent badge with bg-amber-50 + text-amber-700 + title attribute", () => {
+  it("renders an amber dry_intent badge with bg-warning/10 + text-warning + title attribute", () => {
     const draft = makeDraft({
       command_steps: [
         {

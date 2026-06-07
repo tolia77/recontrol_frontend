@@ -273,7 +273,7 @@ describe("PolicyPreviewModal", () => {
     expect(drift.textContent).toContain("Policy has tightened");
   });
 
-  it("flags irreversible-intent steps with border-l-4 border-error and amber Irreversible badge", () => {
+  it("flags irreversible-intent steps with border-l-4 border-destructive and warning Irreversible badge", () => {
     const response = makeResponse([makeStep(0, "allow")]);
     const commandSteps = [makeCommandStep("step-0", "rm", ["-rf", "/tmp/x"])];
     render(

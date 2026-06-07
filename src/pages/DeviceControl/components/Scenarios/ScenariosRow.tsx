@@ -53,9 +53,9 @@ export default function ScenariosRow({
       className="border-border bg-surface flex items-start gap-2 rounded-md border px-3 py-2"
       data-testid={`scenarios-row-${scenario.id}`}
     >
-      {/* D-22-08: primary [▶ Run] action on left edge in accent token. The
-        Button primitive's variant="primary" sets bg-primary; the !bg-accent
-        override forces the accent token per UI-SPEC §[▶ Run] on library row.
+      {/* D-22-08: primary [▶ Run] action on left edge in success token. The
+        Button primitive's variant="primary" sets bg-primary; the !bg-success
+        override forces the success token per UI-SPEC §[▶ Run] on library row.
         Hidden entirely on the device-less /scenarios page (showRun=false). */}
       {showRun && (
         <Button

@@ -10,6 +10,9 @@ HEX_MATCHES=$(grep -rn --include="*.tsx" --include="*.ts" \
   | grep -v "src/pages/DeviceControl/components/Stream/" \
   | grep -v "src/pages/DeviceControl/components/Layout/MainContent.tsx" \
   | grep -v "src/pages/DeviceControl/DeviceControl.tsx" \
+  | grep -vE '^\S+:[0-9]+:[[:space:]]*//' \
+  | grep -vE '^\S+:[0-9]+:[[:space:]]*\*' \
+  | grep -vE '&#[0-9]+;' \
   | wc -l | tr -d ' ')
 
 # DSGN-04: No stock palette classes in src/**/*.tsx
