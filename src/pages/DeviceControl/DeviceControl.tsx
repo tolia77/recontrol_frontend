@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useReducer } from "react";
 import { useNavigate } from "react-router";
 import { generateUUID } from "src/utils/uuid";
 import TopBar from "./components/Layout/TopBar";
@@ -20,6 +20,12 @@ import { useDeviceSocket } from "./hooks/realtime/useDeviceSocket";
 import { useWebRtc } from "./hooks/realtime/useWebRtc";
 import { useStreamStats } from "./hooks/realtime/useStreamStats";
 import { useFilesChannel } from "./hooks/realtime/useFilesChannel";
+import { useAssistantChannel } from "./hooks/realtime/useAssistantChannel";
+import type { AssistantBroadcast } from "./hooks/realtime/useAssistantChannel";
+import {
+  initialTranscriptState,
+  transcriptReducer,
+} from "./components/Assistant/transcriptReducer";
 import { useClipboardSync } from "./hooks/realtime/useClipboardSync";
 import { useClipboardCapability } from "./hooks/useClipboardCapability";
 import { useRefusalToastThrottle } from "./hooks/useRefusalToastThrottle";
@@ -131,6 +137,28 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
 
   const { connected } = deviceSocket;
 
+  // Assistant conversation lives at page level, NOT inside AssistantPanel.
+  // The panel unmounts on every right-pane switch (D-01 mutex); if the
+  // transcript reducer and the AssistantChannel subscription lived there, a
+  // pane switch would wipe the visible chat AND tear down the server-side
+  // channel instance that owns the conversation history (2026-06-05 design:
+  // context lives for the subscription lifetime). Lifting both here scopes
+  // the conversation to the device-control session — it clears on leaving
+  // the page (CHAT-11), not on opening the file manager.
+  const [assistantState, dispatchAssistantTranscript] = useReducer(
+    transcriptReducer,
+    initialTranscriptState,
+  );
+  const onAssistantBroadcast = useCallback((msg: AssistantBroadcast): void => {
+    dispatchAssistantTranscript({ type: "broadcast", broadcast: msg });
+  }, []);
+  // Gate on ai_access: a null consumer skips the subscription entirely, so
+  // AI-less tiers never trigger the guaranteed subscribe→reject round trip.
+  const { dispatch: assistantDispatch } = useAssistantChannel({
+    consumer: aiGate.allowed ? consumer : null,
+    onBroadcast: onAssistantBroadcast,
+  });
+
   // Stable sendMessage wrapper for useWebRtc (Landmine 4 — sendMessage from
   // useDeviceSocket is already stable/memoized; wrap in useCallback so the
   // webRtcSend identity also stays stable across renders).
@@ -220,6 +248,26 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
   const fireRefusalToast = useRefusalToastThrottle();
   const { t } = useTranslation("deviceControl");
   const { t: tClipboard } = useTranslation("clipboard");
+  const { t: tAssistant } = useTranslation("assistant");
+
+  // 80% AI-quota Toast — fires once when the reducer flips the flag (at most
+  // once per run; the reducer resets it on submit_prompt). Lives here, not in
+  // AssistantPanel: the panel remounts on pane switches, and a panel-local
+  // mount ref would re-fire the toast on every reopen while the lifted flag
+  // is still true. We only fire on the false→true transition.
+  const quotaWarningShownRef = useRef(false);
+  useEffect(() => {
+    if (assistantState.quotaWarningShown && !quotaWarningShownRef.current) {
+      quotaWarningShownRef.current = true;
+      toast.warning(
+        tAssistant("quota.warningToast", {
+          defaultValue: "You've used 80% of today's AI quota.",
+        }),
+      );
+    } else if (!assistantState.quotaWarningShown && quotaWarningShownRef.current) {
+      quotaWarningShownRef.current = false;
+    }
+  }, [assistantState.quotaWarningShown, toast, tAssistant]);
 
   // PILL-06 / D-13: fire a single info toast on the first successful sync of
   // each browser session per device. sessionStorage namespace mirrors Phase
@@ -529,16 +577,18 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
       />
     ) : null;
 
-  // Phase 20-06: AssistantPanel scaffold rendered when rightPaneActive='assistant'.
-  // Reuses the existing raw WebSocket (CommandChannel) for the AssistantChannel
-  // subscription per RESEARCH §Pattern 4. deviceName falls back to deviceId
-  // when the device record has not loaded yet.
+  // Phase 20-06: AssistantPanel rendered when rightPaneActive='assistant'.
+  // The panel is presentational — transcript state and the AssistantChannel
+  // subscription are lifted to this component (see assistantState above) so
+  // the conversation survives the panel unmounting on pane switches.
+  // deviceName falls back to deviceId when the device record has not loaded.
   const assistantPanelNode =
     fmState.rightPaneActive === "assistant" ? (
       <AssistantPanel
         deviceId={deviceId}
-        consumer={consumer}
-        connected={connected}
+        state={assistantState}
+        dispatchTranscript={dispatchAssistantTranscript}
+        dispatch={assistantDispatch}
         deviceName={deviceName || deviceId}
         isMobile={isMobile}
         onFullHeightChange={setAssistantForceFullHeight}

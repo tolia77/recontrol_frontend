@@ -1,12 +1,10 @@
-import { useCallback, useEffect, useReducer, useRef } from "react";
+import { useCallback, useEffect } from "react";
 import { useVisualViewport } from "src/pages/DeviceControl/hooks/useVisualViewport";
-import type { JSX } from "react";
+import type { Dispatch, JSX } from "react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "src/components/ui";
-import { useAssistantChannel } from "src/pages/DeviceControl/hooks/realtime/useAssistantChannel";
-import type { AssistantBroadcast } from "src/pages/DeviceControl/hooks/realtime/useAssistantChannel";
-import type { CableConsumerLike } from "src/pages/DeviceControl/hooks/realtime/useCableConsumer";
-import { initialTranscriptState, transcriptReducer } from "./transcriptReducer";
+import type { AssistantDispatchAction } from "src/pages/DeviceControl/hooks/realtime/useAssistantChannel";
+import type { TranscriptAction, TranscriptState } from "./transcriptReducer";
 import Transcript from "./Transcript";
 import AssistantHeader from "./AssistantHeader";
 import InputBox from "./InputBox";
@@ -14,8 +12,15 @@ import { copyAsMarkdown } from "./copyAsMarkdown";
 
 export interface AssistantPanelProps {
   deviceId: string;
-  consumer: CableConsumerLike | null;
-  connected: boolean;
+  /**
+   * Lifted transcript state + dispatchers. The reducer and the
+   * AssistantChannel subscription live in DeviceControl (page lifetime) so
+   * the conversation — UI rows AND the backend channel-instance history —
+   * survives right-pane switches that unmount this panel.
+   */
+  state: TranscriptState;
+  dispatchTranscript: Dispatch<TranscriptAction>;
+  dispatch: (action: AssistantDispatchAction, data?: object) => void;
   deviceName: string;
   /** When true, mobile adaptations are applied (DCTL-04) */
   isMobile?: boolean;
@@ -64,28 +69,24 @@ function generateSessionToken(): string {
  *   - Stop: dispatch `stop_loop` over AssistantChannel; the reducer transitions
  *     to idle on the eventual `done(:user_stopped)` broadcast.
  *   - Copy as Markdown: serialize state.rows and write to navigator.clipboard.
- *   - 80% quota_warning: fire a single Toast per run via useEffect watching
- *     the reducer's `quotaWarningShown` flag; the flag resets on submit_prompt
- *     so the next run can warn again (the backend also dedupes once-per-run).
  *
- * Conversation state lives in `useReducer` state — nothing in localStorage,
- * nothing in the backend (CHAT-11). Closing the tab clears the panel.
+ * Conversation state lives in DeviceControl's `useReducer` (lifted so it
+ * survives pane switches) — nothing in localStorage, nothing persisted in the
+ * backend (CHAT-11). Leaving the page / closing the tab clears the panel. The
+ * 80% quota Toast also lives in DeviceControl (a panel-local mount ref would
+ * re-fire it on every remount).
  */
 function AssistantPanel({
   deviceId,
-  consumer,
-  connected: _connected,
+  state,
+  dispatchTranscript,
+  dispatch,
   deviceName,
   isMobile,
   onFullHeightChange,
 }: AssistantPanelProps): JSX.Element {
   const { t } = useTranslation("assistant");
   const toast = useToast();
-  const [state, dispatchTranscript] = useReducer(
-    transcriptReducer,
-    initialTranscriptState,
-  );
-  const quotaWarningShownRef = useRef(false);
 
   // Mobile: track keyboard height to pin InputBox above soft keyboard (DCTL-04 D-10).
   // The hook is always called (Rules of Hooks), but only has effect on mobile where
@@ -98,30 +99,6 @@ function AssistantPanel({
     onFullHeightChange?.(inputFocusedFull);
     return () => onFullHeightChange?.(false);
   }, [inputFocusedFull, onFullHeightChange]);
-
-  const onBroadcast = useCallback((msg: AssistantBroadcast): void => {
-    dispatchTranscript({ type: "broadcast", broadcast: msg });
-  }, []);
-
-  const { dispatch } = useAssistantChannel({ consumer, onBroadcast });
-
-  // 80% quota Toast — fires once when the reducer flips the flag (which
-  // happens at most once per run; the reducer resets the flag on
-  // submit_prompt). The local ref guards against the unlikely case where
-  // React replays the effect with the flag still true (StrictMode double
-  // invoke); we only fire when the flag transitions false→true.
-  useEffect(() => {
-    if (state.quotaWarningShown && !quotaWarningShownRef.current) {
-      quotaWarningShownRef.current = true;
-      toast.warning(
-        t("quota.warningToast", {
-          defaultValue: "You've used 80% of today's AI quota.",
-        }),
-      );
-    } else if (!state.quotaWarningShown && quotaWarningShownRef.current) {
-      quotaWarningShownRef.current = false;
-    }
-  }, [state.quotaWarningShown, toast, t]);
 
   const handleConfirm = useCallback(
     (confirmationId: string, decision: "allow" | "deny") => {
@@ -139,7 +116,7 @@ function AssistantPanel({
       dispatchTranscript({ type: "submit_prompt", text, sessionToken });
       dispatch("run_prompt", { prompt: text, session_token: sessionToken });
     },
-    [dispatch],
+    [dispatch, dispatchTranscript],
   );
 
   const handleStop = useCallback(() => {
@@ -149,7 +126,7 @@ function AssistantPanel({
   const handleNewChat = useCallback(() => {
     dispatch("reset_conversation", {});
     dispatchTranscript({ type: "reset" });
-  }, [dispatch]);
+  }, [dispatch, dispatchTranscript]);
 
   const handleCopy = useCallback(() => {
     const md = copyAsMarkdown(state.rows);
