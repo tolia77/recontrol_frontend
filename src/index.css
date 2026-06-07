@@ -31,13 +31,13 @@
 input[type="text"],
 input[type="email"],
 input[type="password"] {
-  border-color: var(--color-lightgray);
+  border-color: var(--color-border);
   border-width: 1px;
   border-style: solid;
   border-radius: 8px;
   padding: 6px 12px;
   font-size: 16px;
-  background-color: #fff;
+  background-color: var(--color-surface);
   color: inherit;
   outline: none;
   transition:
@@ -49,11 +49,11 @@ input[type="text"]:focus,
 input[type="email"]:focus,
 input[type="password"]:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.08); /* subtle focus ring using primary color */
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 8%, transparent);
 }
 
 input::placeholder {
-  color: var(--color-darkgray);
+  color: var(--color-muted-foreground);
   opacity: 1;
 }
 
@@ -61,16 +61,53 @@ input::placeholder {
   --font-sans:
     "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+
+  /* Revoke old utility-generating names (D-02) */
+  --color-secondary: initial;
+  --color-tertiary: initial;
+  --color-accent: initial;
+  --color-background: initial;
+  --color-text: initial;
+  --color-error: initial;
+  --color-lightgray: initial;
+  --color-darkgray: initial;
+  --color-amber: initial;
+
+  /* ── Neutrals (D-04) ── */
+  --color-surface: #ffffff;
+  --color-surface-muted: #f3f4f6;
+  --color-foreground: #111827;
+  --color-muted-foreground: #6b7280;
+  --color-border: #e5e7eb;
+
+  /* ── Primary (D-01, D-03) ── */
   --color-primary: #1e3a8a;
-  --color-secondary: #3b82f6;
-  --color-tertiary: #d7e6ff;
-  --color-accent: #10b981;
-  --color-background: #f3f4f6;
-  --color-text: #111827;
-  --color-error: #ef4444;
-  --color-lightgray: #d1d5db;
-  --color-darkgray: #8f8f8f;
-  --color-amber: #ffb200;
+  --color-primary-hover: #1e40af;
+  --color-primary-active: #1d3070;
+
+  /* ── Status (D-03) ── */
+  --color-destructive: #ef4444;
+  --color-destructive-hover: #dc2626;
+  --color-destructive-active: #b91c1c;
+  --color-warning: #f59e0b;
+  --color-success: #10b981;
+
+  /* ── Shadows (D-09) ── */
+  --shadow-overlay: 0 4px 12px 0 rgb(0 0 0 / 0.12);
+  --shadow-modal: 0 8px 32px 0 rgb(0 0 0 / 0.16);
+
+  /* ── Radius (D-10) ── */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* ── Typography ladder (D-05) ── */
+  --text-caption: 0.75rem;
+  --text-body: 0.875rem;
+  --text-body-lg: 1rem;
+  --text-heading: 1.125rem;
+  --text-title: 1.5rem;
+  --text-display: 2rem;
 }
 
 /* ── Safe-area inset utilities (requires viewport-fit=cover in index.html) ── */
@@ -108,7 +145,7 @@ html {
 }
 
 body {
-  color: var(--color-text);
+  color: var(--color-foreground);
 }
 
 html,
@@ -125,21 +162,21 @@ body,
 }
 
 h1 {
-  font-size: 36px;
-  line-height: 40px;
+  font-size: var(--text-display);
+  line-height: 2.5rem;
   font-weight: 700;
 }
 
 h2 {
-  font-size: 24px;
-  line-height: 32px;
-  font-weight: 600;
+  font-size: var(--text-title);
+  line-height: 2rem;
+  font-weight: 700;
 }
 
 h3 {
-  font-size: 20px;
-  line-height: 28px;
-  font-weight: 500;
+  font-size: var(--text-heading);
+  line-height: 1.75rem;
+  font-weight: 600;
 }
 
 p {
@@ -148,31 +185,13 @@ p {
   font-weight: 400;
 }
 
-.text-body {
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-}
-
-.text-body-small {
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 400;
-}
-
-.text-caption-small {
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 400;
-}
-
 /* Layout */
 .command-websocket {
   display: flex;
   flex-direction: column;
   height: 100dvh;
-  background: var(--color-background);
-  color: var(--color-text);
+  background: var(--color-surface-muted);
+  color: var(--color-foreground);
 }
 
 .toolbar {
@@ -180,13 +199,13 @@ p {
   gap: 0.5rem;
   margin-bottom: 1rem;
   padding: 0.5rem;
-  background: var(--color-tertiary);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
   border-radius: 4px;
 }
 
 .quick-actions {
   padding: 1rem;
-  background: var(--color-tertiary);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
   border-radius: 4px;
 }
 
