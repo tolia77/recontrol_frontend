@@ -58,7 +58,7 @@ function Dashboard() {
         subtitle={t("dashboard.subtitle")}
         actions={
           lastUpdated ? (
-            <p className="text-xs text-gray-500">
+            <p className="text-caption text-muted-foreground">
               {t("dashboard.lastUpdated", { time: lastUpdated })}
             </p>
           ) : undefined
@@ -78,7 +78,7 @@ function Dashboard() {
               <p className="mb-2 text-4xl font-bold">
                 {t("dashboard.devicesCount", { count: devices.length })}
               </p>
-              <ul className="mb-4 max-h-40 overflow-auto pr-1 text-sm">
+              <ul className="mb-4 max-h-40 overflow-auto pr-1 text-body">
                 {devices.slice(0, 6).map((d) => (
                   <li
                     key={d.id}
@@ -89,14 +89,14 @@ function Dashboard() {
                     </span>
                     <Link
                       to={`/devices/${d.id}/settings`}
-                      className="text-primary text-xs hover:underline"
+                      className="text-primary text-caption hover:underline"
                     >
                       {t("nav.settings")}
                     </Link>
                   </li>
                 ))}
                 {devices.length > 6 && (
-                  <li className="mt-1 text-xs text-gray-500">
+                  <li className="mt-1 text-caption text-muted-foreground">
                     + {devices.length - 6} more...
                   </li>
                 )}
@@ -183,12 +183,12 @@ function Dashboard() {
         <Card className="flex flex-col">
           <CardHeader title={t("dashboard.recentActivity")} />
           {activity.length === 0 ? (
-            <p className="text-sm text-gray-600">—</p>
+            <p className="text-body text-muted-foreground">—</p>
           ) : (
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-2 text-body">
               {activity.map((item) => (
                 <li key={item.id} className="flex items-start gap-2">
-                  <span className="min-w-[70px] text-xs text-gray-500">
+                  <span className="min-w-[70px] text-caption text-muted-foreground">
                     {new Date(item.at).toLocaleTimeString()}
                   </span>
                   <p className="flex-1 truncate" title={item.description}>

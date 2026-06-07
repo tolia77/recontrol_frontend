@@ -32,16 +32,16 @@ export default function AdminUsersTable({
 
   return (
     <Card>
-      <h2 className="mb-4 text-lg font-semibold">{t("title")}</h2>
+      <h2 className="mb-4 text-heading font-semibold">{t("title")}</h2>
       {loading ? (
         <LoadingState message={t("messages.loading")} />
       ) : users.length === 0 ? (
         <EmptyState title={t("messages.empty")} />
       ) : (
         <div className="overflow-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-background sticky top-0 shadow-sm">
-              <tr className="text-text border-b text-left">
+          <table className="min-w-full text-body">
+            <thead className="bg-surface sticky top-0">
+              <tr className="text-foreground border-b text-left">
                 <th className="px-2 py-2">{t("table.username")}</th>
                 <th className="px-2 py-2">{t("table.email")}</th>
                 <th className="px-2 py-2">{t("table.role")}</th>
@@ -58,7 +58,7 @@ export default function AdminUsersTable({
                 return (
                   <tr
                     key={u.id}
-                    className="hover:bg-tertiary border-b align-top last:border-b-0"
+                    className="hover:bg-surface-muted border-b align-top last:border-b-0"
                   >
                     <td className="px-2 py-2">
                       {isEditing ? (
@@ -90,7 +90,7 @@ export default function AdminUsersTable({
                     <td className="px-2 py-2">
                       {isEditing ? (
                         <select
-                          className="border-lightgray w-full rounded-lg border px-3 py-2 text-sm"
+                          className="border-border w-full rounded-md border px-3 py-2 text-body"
                           value={edit.role}
                           onChange={(e) =>
                             changeEditField(u.id, "role", e.target.value)
@@ -109,12 +109,12 @@ export default function AdminUsersTable({
                         </span>
                       )}
                     </td>
-                    <td className="text-darkgray px-2 py-2 text-xs">
+                    <td className="text-muted-foreground px-2 py-2 text-caption">
                       {u.created_at
                         ? new Date(u.created_at).toLocaleDateString()
                         : "-"}
                     </td>
-                    <td className="text-darkgray px-2 py-2 text-xs">
+                    <td className="text-muted-foreground px-2 py-2 text-caption">
                       {u.updated_at
                         ? new Date(u.updated_at).toLocaleDateString()
                         : "-"}
