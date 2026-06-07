@@ -163,10 +163,10 @@ export default function ScenariosPanel({
 
   return (
     <div
-      className="flex h-full w-full flex-col bg-background"
+      className="flex h-full w-full flex-col bg-surface"
       data-testid="scenarios-panel"
     >
-      <header className="border-lightgray text-primary border-b px-4 py-2 text-sm font-semibold">
+      <header className="border-border text-primary border-b px-4 py-2 text-body font-semibold">
         {headerTitle}
       </header>
       {showSegmentedControl && (

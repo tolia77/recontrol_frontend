@@ -80,7 +80,7 @@ export default function MassDeleteConfirmModal({
             {t("history.deleteAllConfirm.title")}
           </h2>
           <p
-            className="mt-2 text-sm text-gray-700"
+            className="mt-2 text-body text-foreground"
             data-testid="mass-delete-body"
           >
             {t("history.deleteAllConfirm.body", { count })}

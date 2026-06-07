@@ -82,10 +82,10 @@ export default function ScenarioEditor({
   return (
     <div className="flex h-full flex-col" data-testid="scenario-editor">
       {/* D-01: header with [← Back to library] */}
-      <div className="border-lightgray flex items-center gap-2 border-b px-4 py-2">
+      <div className="border-border flex items-center gap-2 border-b px-4 py-2">
         <button
           type="button"
-          className="hover:bg-tertiary rounded px-2 py-1 text-sm"
+          className="hover:bg-primary/8 rounded-sm px-2 py-1 text-body"
           onClick={requestClose}
           data-testid="editor-back"
         >
@@ -96,7 +96,7 @@ export default function ScenarioEditor({
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto p-3">
-        <label className="text-darkgray block text-xs">
+        <label className="text-muted-foreground block text-caption">
           {t("editor.nameLabel")}
         </label>
         <input
@@ -105,20 +105,20 @@ export default function ScenarioEditor({
           maxLength={80}
           onChange={(e) => setName(e.target.value)}
           placeholder={t("editor.namePlaceholder")}
-          className="border-lightgray w-full rounded border px-2 py-1 text-sm"
+          className="border-border w-full rounded-sm border px-2 py-1 text-body"
           data-testid="editor-name"
           disabled={loading || saving}
         />
         {nameError && (
           <div
-            className="text-error mt-1 text-xs"
+            className="text-destructive mt-1 text-caption"
             data-testid="editor-name-error"
           >
             {nameError}
           </div>
         )}
 
-        <label className="text-darkgray mt-2 block text-xs">
+        <label className="text-muted-foreground mt-2 block text-caption">
           {t("editor.descriptionLabel")}
         </label>
         <textarea
@@ -127,13 +127,13 @@ export default function ScenarioEditor({
           onChange={(e) => setDescription(e.target.value)}
           placeholder={t("editor.descriptionPlaceholder")}
           rows={2}
-          className="border-lightgray w-full rounded border px-2 py-1 text-sm"
+          className="border-border w-full rounded-sm border px-2 py-1 text-body"
           data-testid="editor-description"
           disabled={loading || saving}
         />
 
         <div className="mt-2 flex items-center gap-2">
-          <label className="text-darkgray text-xs">
+          <label className="text-muted-foreground text-caption">
             {t("editor.pinDeviceLabel")}
           </label>
           <input
@@ -141,11 +141,11 @@ export default function ScenarioEditor({
             value={pinnedDeviceId ?? ""}
             onChange={(e) => setPinnedDeviceId(e.target.value || null)}
             placeholder={t("editor.pinDevicePlaceholder")}
-            className="border-lightgray rounded border px-2 py-1 text-sm"
+            className="border-border rounded-sm border px-2 py-1 text-body"
             data-testid="editor-pin-device"
             disabled={loading || saving}
           />
-          <label className="text-darkgray ml-auto inline-flex items-center gap-1 text-xs">
+          <label className="text-muted-foreground ml-auto inline-flex items-center gap-1 text-caption">
             <input
               type="checkbox"
               checked={isShared}
@@ -157,14 +157,14 @@ export default function ScenarioEditor({
           </label>
         </div>
         {isShared && !pinnedDeviceId && (
-          <div className="text-amber text-xs" data-testid="editor-share-hint">
+          <div className="text-warning text-caption" data-testid="editor-share-hint">
             {t("editor.sharePinRequired")}
           </div>
         )}
 
         {topError && (
           <div
-            className="bg-error/10 text-error mt-2 rounded px-2 py-1 text-sm"
+            className="bg-destructive/10 text-destructive mt-2 rounded-sm px-2 py-1 text-body"
             data-testid="editor-top-error"
           >
             {topError}
@@ -200,7 +200,7 @@ export default function ScenarioEditor({
           </DndContext>
           <button
             type="button"
-            className="border-lightgray hover:bg-tertiary mt-2 rounded border border-dashed px-2 py-1 text-sm disabled:opacity-50"
+            className="border-border hover:bg-primary/8 mt-2 rounded-sm border border-dashed px-2 py-1 text-body disabled:opacity-50"
             onClick={addStep}
             disabled={saving || loading}
             data-testid="editor-add-step"
@@ -211,10 +211,10 @@ export default function ScenarioEditor({
       </div>
 
       {/* D-02: sticky bottom bar */}
-      <div className="border-lightgray bg-background sticky bottom-0 flex items-center justify-end gap-2 border-t px-4 py-2">
+      <div className="border-border bg-surface sticky bottom-0 flex items-center justify-end gap-2 border-t px-4 py-2">
         <button
           type="button"
-          className="hover:bg-tertiary rounded px-3 py-1 text-sm disabled:opacity-50"
+          className="hover:bg-primary/8 rounded-sm px-3 py-1 text-body disabled:opacity-50"
           onClick={requestClose}
           data-testid="editor-cancel"
           disabled={saving}
@@ -223,7 +223,7 @@ export default function ScenarioEditor({
         </button>
         <button
           type="button"
-          className="bg-primary rounded px-3 py-1 text-sm text-white hover:opacity-90 disabled:opacity-50"
+          className="bg-primary rounded-md px-3 py-1 text-body text-white hover:bg-primary-hover active:bg-primary-active transition-colors duration-150 disabled:opacity-50"
           onClick={handleSave}
           disabled={saving || loading}
           data-testid="editor-save"

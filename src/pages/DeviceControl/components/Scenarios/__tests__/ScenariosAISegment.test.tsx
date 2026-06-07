@@ -270,7 +270,7 @@ describe("ScenariosAISegment", () => {
     expect(quotaCard.textContent).toContain("28 / 30");
     expect(quotaCard.textContent).toContain("100 / 10000");
     // Amber class applied to the inner wrapper.
-    expect(quotaCard.innerHTML).toContain("text-amber");
+    expect(quotaCard.innerHTML).toContain("text-warning");
   });
 
   it("10b. quota indicator stays muted (not amber) under 90% usage", () => {
@@ -282,8 +282,8 @@ describe("ScenariosAISegment", () => {
     };
     render(<ScenariosAISegment {...defaultProps({ initialQuota: okQuota })} />);
     const quotaCard = screen.getByTestId("ai-quota-card");
-    expect(quotaCard.innerHTML).not.toContain("text-amber");
-    expect(quotaCard.innerHTML).toContain("text-darkgray");
+    expect(quotaCard.innerHTML).not.toContain("text-warning");
+    expect(quotaCard.innerHTML).toContain("text-muted-foreground");
   });
 
   it("11. last-prompt display appears after generate; NO sessionStorage/localStorage setItem calls", () => {

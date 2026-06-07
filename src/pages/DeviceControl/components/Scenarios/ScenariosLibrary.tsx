@@ -157,7 +157,7 @@ export default function ScenariosLibrary({
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          className="bg-primary rounded px-3 py-1.5 text-sm font-medium text-white hover:opacity-90"
+          className="bg-primary rounded-md px-3 py-1.5 text-body font-medium text-white hover:bg-primary-hover active:bg-primary-active transition-colors duration-150"
           onClick={handleNew}
           data-testid="scenarios-new-button"
         >
@@ -168,13 +168,13 @@ export default function ScenariosLibrary({
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder={t("library.searchPlaceholder")}
-          className="border-lightgray focus:ring-primary/20 min-w-[12ch] flex-1 rounded border px-2 py-1.5 text-sm focus:ring-2 focus:outline-none"
+          className="border-border focus-visible:ring-primary/30 min-w-[12ch] flex-1 rounded-sm border px-2 py-1.5 text-body focus-visible:ring-2 focus-visible:outline-none"
           data-testid="scenarios-search-input"
         />
         <select
           value={pinnedFilter}
           onChange={(e) => setPinnedFilter(e.target.value)}
-          className="border-lightgray focus:ring-primary/20 rounded border px-2 py-1.5 text-sm focus:ring-2 focus:outline-none"
+          className="border-border focus-visible:ring-primary/30 rounded-sm border px-2 py-1.5 text-body focus-visible:ring-2 focus-visible:outline-none"
           data-testid="scenarios-pinned-filter"
         >
           <option value="">{t("library.pinnedDeviceFilter")}</option>
@@ -187,7 +187,7 @@ export default function ScenariosLibrary({
       </div>
       {!runEnabled && (
         <div
-          className="border-tertiary bg-tertiary/40 text-darkgray rounded border px-3 py-2 text-xs"
+          className="border-primary/20 bg-primary/8 text-muted-foreground rounded-sm border px-3 py-2 text-caption"
           data-testid="scenarios-run-disabled-hint"
         >
           {t("library.runDisabledHint")}

@@ -36,7 +36,7 @@ const RunOutput: FC<RunOutputProps> = ({ row, skippedReason }) => {
       data-testid={`run-output-skipped-${row.toolCallId}`}
     >
       <ToolCallCard row={row} />
-      <span className="text-darkgray mt-1 inline-block text-xs">
+      <span className="text-muted-foreground mt-1 inline-block text-caption">
         ⊘ {t("history.stepStatus.skipped")}
       </span>
     </div>

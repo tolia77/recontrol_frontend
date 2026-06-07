@@ -28,22 +28,22 @@ function VerdictBadge({ verdict }: { verdict?: VerdictAtSave }) {
     { className: string; label: string }
   > = {
     allow: {
-      className: "bg-accent/15 text-accent",
+      className: "bg-success/15 text-success",
       label: t("editor.verdictBadges.allow"),
     },
     needs_confirm: {
-      className: "bg-amber/20 text-amber",
+      className: "bg-warning/20 text-warning",
       label: t("editor.verdictBadges.needsConfirm"),
     },
     deny: {
-      className: "bg-error/15 text-error",
+      className: "bg-destructive/15 text-destructive",
       label: t("editor.verdictBadges.deny"),
     },
   };
   const m = map[verdict.decision];
   return (
     <span
-      className={`rounded px-1.5 py-0.5 text-xs ${m.className}`}
+      className={`rounded-sm px-1.5 py-0.5 text-caption ${m.className}`}
       data-testid={`verdict-${verdict.decision}`}
       title={verdict.reason}
     >
@@ -80,15 +80,15 @@ export default function StepRow({
       style={style}
       className={`rounded border p-2 ${
         verdict?.decision === "deny"
-          ? "border-error bg-error/5"
-          : "border-lightgray bg-background"
+          ? "border-destructive bg-destructive/5"
+          : "border-border bg-surface"
       }`}
       data-testid={`step-row-${index}`}
     >
       <div className="flex items-start gap-2">
         <button
           type="button"
-          className="text-darkgray hover:text-primary cursor-grab"
+          className="text-muted-foreground hover:text-primary cursor-grab"
           aria-label={t("editor.steps.dragHandle")}
           {...attributes}
           {...listeners}
@@ -96,14 +96,14 @@ export default function StepRow({
         >
           ≡
         </button>
-        <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
+        <span className="rounded-sm bg-surface-muted px-1.5 py-0.5 text-caption">
           {t("editor.steps.stepNumber", { n: index + 1 })}
         </span>
         <VerdictBadge verdict={verdict} />
         <div className="flex-1" />
         <button
           type="button"
-          className="rounded px-2 py-0.5 text-xs hover:bg-gray-100 disabled:opacity-50"
+          className="rounded-sm px-2 py-0.5 text-caption hover:bg-surface-muted disabled:opacity-50"
           onClick={onDuplicate}
           disabled={disabled}
           data-testid={`step-duplicate-${index}`}
@@ -112,7 +112,7 @@ export default function StepRow({
         </button>
         <button
           type="button"
-          className="text-error hover:bg-error/10 rounded px-2 py-0.5 text-xs disabled:opacity-50"
+          className="text-destructive hover:bg-destructive/10 rounded-sm px-2 py-0.5 text-caption disabled:opacity-50"
           onClick={onRemove}
           disabled={disabled}
           aria-label={t("editor.steps.remove")}
@@ -123,7 +123,7 @@ export default function StepRow({
       </div>
       <div className="mt-2 grid grid-cols-[40%_60%] gap-2">
         <div>
-          <label className="text-darkgray block text-xs">
+          <label className="text-muted-foreground block text-caption">
             {t("editor.steps.binaryLabel")}
           </label>
           <input
@@ -132,13 +132,13 @@ export default function StepRow({
             maxLength={128}
             onChange={(e) => onChange({ ...step, binary: e.target.value })}
             placeholder={t("editor.steps.binaryPlaceholder")}
-            className="border-lightgray w-full rounded border px-2 py-1 text-sm"
+            className="border-border w-full rounded border px-2 py-1 text-body"
             disabled={disabled}
             data-testid={`step-binary-${index}`}
           />
         </div>
         <div>
-          <label className="text-darkgray block text-xs">
+          <label className="text-muted-foreground block text-caption">
             {t("editor.steps.cwdLabel")}
           </label>
           <input
@@ -147,14 +147,14 @@ export default function StepRow({
             maxLength={512}
             onChange={(e) => onChange({ ...step, cwd: e.target.value })}
             placeholder={t("editor.steps.cwdPlaceholder")}
-            className="border-lightgray w-full rounded border px-2 py-1 text-sm"
+            className="border-border w-full rounded border px-2 py-1 text-body"
             disabled={disabled}
             data-testid={`step-cwd-${index}`}
           />
         </div>
       </div>
       <div className="mt-2">
-        <label className="text-darkgray block text-xs">
+        <label className="text-muted-foreground block text-caption">
           {t("editor.steps.argsLabel")}
         </label>
         <ChipInput
@@ -168,7 +168,7 @@ export default function StepRow({
         />
       </div>
       <details className="mt-2" open={Boolean(step.description)}>
-        <summary className="text-darkgray cursor-pointer text-xs">
+        <summary className="text-muted-foreground cursor-pointer text-caption">
           {t("editor.steps.descriptionLabel")}
         </summary>
         <textarea
@@ -176,7 +176,7 @@ export default function StepRow({
           maxLength={200}
           onChange={(e) => onChange({ ...step, description: e.target.value })}
           placeholder={t("editor.steps.descriptionPlaceholder")}
-          className="border-lightgray mt-1 w-full rounded border px-2 py-1 text-sm"
+          className="border-border mt-1 w-full rounded border px-2 py-1 text-body"
           rows={2}
           disabled={disabled}
           data-testid={`step-description-${index}`}

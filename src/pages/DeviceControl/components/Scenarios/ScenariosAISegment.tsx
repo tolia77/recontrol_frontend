@@ -284,7 +284,7 @@ function ScenariosAISegment({
         <div className="flex flex-col gap-3">
           <label
             htmlFor="scenarios-ai-prompt"
-            className="text-body-small text-text font-medium"
+            className="text-body text-foreground font-medium"
           >
             {t("ai.promptLabel")}
           </label>
@@ -296,15 +296,15 @@ function ScenariosAISegment({
             placeholder={t("ai.promptPlaceholder")}
             maxLength={PROMPT_MAX_LENGTH}
             disabled={isGenerating}
-            className="border-lightgray text-body text-text placeholder:text-darkgray focus:border-primary focus:ring-primary/20 min-h-[80px] w-full resize-y rounded-lg border px-4 py-3 focus:ring-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+            className="border-border text-body text-foreground placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-primary/30 min-h-[80px] w-full resize-y rounded-md border px-4 py-3 focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
           />
           <div className="flex items-center justify-between gap-3">
             {isGenerating ? (
-              <span className="text-caption-small text-darkgray">
+              <span className="text-caption text-muted-foreground">
                 ⏳ {t("ai.generatingCounter", { count: elapsedSec })}
               </span>
             ) : showEmptyState ? (
-              <span className="text-body-small text-darkgray">
+              <span className="text-body text-muted-foreground">
                 {t("ai.emptyStateBody")}
               </span>
             ) : (
@@ -337,8 +337,8 @@ function ScenariosAISegment({
       {quota !== null && (
         <Card padding="sm" data-testid="ai-quota-card">
           <div
-            className={`text-caption-small flex flex-col gap-1 ${
-              quotaIsAmber ? "text-amber" : "text-darkgray"
+            className={`text-caption flex flex-col gap-1 ${
+              quotaIsAmber ? "text-warning" : "text-muted-foreground"
             }`}
           >
             <span>
@@ -359,7 +359,7 @@ function ScenariosAISegment({
 
       {lastPrompt !== null && (
         <div
-          className="text-caption-small text-darkgray"
+          className="text-caption text-muted-foreground"
           data-testid="ai-last-prompt"
         >
           {t("ai.lastPrompt", {
@@ -372,12 +372,12 @@ function ScenariosAISegment({
       {showError && errorBodyKey && (
         <Card
           padding="sm"
-          className="border-error border-l-4"
+          className="border-destructive border-l-4"
           role="alert"
           data-testid="ai-error-card"
         >
           <div className="flex items-start justify-between gap-3">
-            <p className="text-body-small text-text">
+            <p className="text-body text-foreground">
               {t(errorBodyKey, errorInterpolation)}
             </p>
             <Button

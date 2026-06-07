@@ -30,7 +30,7 @@ export default function DirtyGuardModal({
       <Modal.Footer>
         <button
           type="button"
-          className="rounded px-3 py-1 text-sm hover:bg-gray-100"
+          className="rounded-sm px-3 py-1 text-body hover:bg-surface-muted"
           onClick={onKeepEditing}
           data-testid="dirty-guard-keep"
         >

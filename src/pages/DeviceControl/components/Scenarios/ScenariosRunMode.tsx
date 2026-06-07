@@ -141,10 +141,10 @@ function ScenariosRunMode({
   return (
     <div
       data-testid="scenarios-run-mode"
-      className="bg-background flex h-full flex-col"
+      className="bg-surface flex h-full flex-col"
     >
       {/* Header */}
-      <header className="border-lightgray flex items-center justify-between border-b px-4 py-2">
+      <header className="border-border flex items-center justify-between border-b px-4 py-2">
         <div className="flex min-w-0 items-center gap-2">
           <span
             className="text-primary max-w-[180px] truncate text-sm font-medium"
@@ -154,13 +154,13 @@ function ScenariosRunMode({
             {activeRun.scenarioName}
           </span>
           <span
-            className="ml-2 rounded bg-gray-100 px-2 py-1 text-xs"
+            className="ml-2 rounded-sm bg-surface-muted px-2 py-1 text-caption"
             data-testid="scenarios-run-device-chip"
           >
             {deviceName}
           </span>
           <span
-            className="text-darkgray ml-2 text-xs"
+            className="text-muted-foreground ml-2 text-caption"
             data-testid="scenarios-run-step-counter"
           >
             {t("run.stepCounter", {
