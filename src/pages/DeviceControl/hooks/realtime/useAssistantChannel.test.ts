@@ -131,24 +131,64 @@ describe("useAssistantChannel — VERIFY-04 stream-drop (consumer)", () => {
     expect(rejected).toHaveLength(1);
   });
 
-  it("dispatch forwards actions via subscription.perform", () => {
+  it("dispatch forwards actions via subscription.perform once confirmed", () => {
     const c = makeMockConsumer();
     const { result } = renderHook(() =>
       useAssistantChannel({ consumer: c as never, onBroadcast: () => {} }),
     );
+    act(() => c.emitConnected("AssistantChannel"));
     act(() => result.current.dispatch("run_prompt", { prompt: "hi" }));
     const assistantSub = c.records.find((r) => r.channel === "AssistantChannel")!.sub;
     expect(assistantSub.perform).toHaveBeenCalledWith("run_prompt", { prompt: "hi" });
   });
 
-  it("dispatch forwards reset_conversation via subscription.perform", () => {
+  it("dispatch forwards reset_conversation via subscription.perform once confirmed", () => {
     const c = makeMockConsumer();
     const { result } = renderHook(() =>
       useAssistantChannel({ consumer: c as never, onBroadcast: () => {} }),
     );
+    act(() => c.emitConnected("AssistantChannel"));
     act(() => result.current.dispatch("reset_conversation", {}));
     const assistantSub = c.records.find((r) => r.channel === "AssistantChannel")!.sub;
     expect(assistantSub.perform).toHaveBeenCalledWith("reset_conversation", {});
+  });
+
+  it("queues dispatches until the subscription confirms, then flushes in order", () => {
+    const c = makeMockConsumer();
+    const { result } = renderHook(() =>
+      useAssistantChannel({ consumer: c as never, onBroadcast: () => {} }),
+    );
+    const sub = c.records.find((r) => r.channel === "AssistantChannel")!.sub;
+    act(() => result.current.dispatch("run_prompt", { prompt: "hi" }));
+    act(() => result.current.dispatch("stop_loop", {}));
+    expect(sub.perform).not.toHaveBeenCalled();
+    act(() => c.emitConnected("AssistantChannel"));
+    expect(sub.perform).toHaveBeenNthCalledWith(1, "run_prompt", { prompt: "hi" });
+    expect(sub.perform).toHaveBeenNthCalledWith(2, "stop_loop", {});
+  });
+
+  it("drops queued dispatches on rejection", () => {
+    const c = makeMockConsumer();
+    const { result } = renderHook(() =>
+      useAssistantChannel({ consumer: c as never, onBroadcast: () => {} }),
+    );
+    const sub = c.records.find((r) => r.channel === "AssistantChannel")!.sub;
+    act(() => result.current.dispatch("run_prompt", { prompt: "hi" }));
+    act(() => c.emitRejected("AssistantChannel"));
+    act(() => c.emitConnected("AssistantChannel"));
+    expect(sub.perform).not.toHaveBeenCalled();
+  });
+
+  it("uses a unique subscription identifier per mount (nonce)", () => {
+    const c = makeMockConsumer();
+    const first = renderHook(() => useChannelWithReducer(c));
+    first.unmount();
+    renderHook(() => useChannelWithReducer(c));
+    const nonces = c.records
+      .filter((r) => r.channel === "AssistantChannel")
+      .map((r) => r.params.nonce);
+    expect(nonces.length).toBeGreaterThanOrEqual(2);
+    expect(new Set(nonces).size).toBe(nonces.length);
   });
 
   it("unsubscribes on unmount", () => {

@@ -97,6 +97,17 @@ interface ScenarioRunSubscription {
   unsubscribe: () => void;
 }
 
+// ActionCable keys server-side subscriptions by the identifier JSON. With a
+// bare `{channel: "ScenarioRunChannel"}` identifier every mount shares one
+// identifier, so a previous mount's late `unsubscribe` can destroy the next
+// mount's live server-side subscription (Rails 7.1+ treats the duplicate
+// `subscribe` as a confirmation replay without re-creating it) — `perform`
+// then raises "Unable to find subscription" server-side and the action is
+// silently dropped. A per-mount nonce makes every identifier unique so the
+// commands of different mounts can never cross. The backend reads nothing
+// from params, so the extra key is inert server-side.
+let subscriptionNonce = 0;
+
 /**
  * Subscribe to the Rails ScenarioRunChannel via the shared ActionCable consumer.
  *
@@ -123,6 +134,13 @@ interface ScenarioRunSubscription {
  *    the consumer can transition to the error state without waiting for the
  *    backend's ensure-block terminator. (beforeunload tab-close handling is
  *    the consuming component's responsibility — Pitfall 6.)
+ *  - The subscription identifier carries a per-mount `nonce` so remounts never
+ *    reuse an identifier (a late unsubscribe from a previous mount would
+ *    otherwise destroy the live subscription server-side).
+ *  - `dispatch` queues actions until the subscription confirmation arrives
+ *    (`connected` callback) and flushes them in order; performing before
+ *    confirmation would raise "Unable to find subscription" server-side and
+ *    drop the action. A rejection drops the queue (never deliverable).
  */
 export function useScenarioRunChannel(
   { consumer, onBroadcast }: UseScenarioRunChannelOptions,
@@ -162,6 +180,11 @@ export function useScenarioRunChannel(
   }, [onBroadcast]);
 
   const subRef = useRef<ScenarioRunSubscription | null>(null);
+  // True once the server transmits the subscription confirmation; reset on
+  // disconnect (ActionCable re-confirms after its automatic resubscribe).
+  const confirmedRef = useRef(false);
+  // Actions dispatched before confirmation, flushed in order on `connected`.
+  const pendingRef = useRef<Array<[ScenarioRunDispatchAction, object]>>([]);
 
   useEffect(() => {
     if (!consumer) return;
@@ -169,8 +192,14 @@ export function useScenarioRunChannel(
     reset();
 
     const sub = consumer.subscriptions.create(
-      { channel: "ScenarioRunChannel" },
+      { channel: "ScenarioRunChannel", nonce: ++subscriptionNonce },
       {
+        connected: () => {
+          confirmedRef.current = true;
+          const pending = pendingRef.current;
+          pendingRef.current = [];
+          for (const [action, data] of pending) sub.perform(action, data);
+        },
         received: (raw: unknown) => {
           const b = raw as ScenarioRunBroadcast;
           if ((b as { type?: string }).type === "run_started") reset();
@@ -201,6 +230,7 @@ export function useScenarioRunChannel(
           }
         },
         disconnected: () => {
+          confirmedRef.current = false;
           closedRef.current = true;
           if (gapTimerRef.current !== null) {
             window.clearTimeout(gapTimerRef.current);
@@ -217,7 +247,10 @@ export function useScenarioRunChannel(
         rejected: () => {
           // No further broadcasts will arrive; clear any armed gap-close timer
           // and suppress it (mirrors disconnected) so it cannot fire a spurious
-          // stream_out_of_order after the rejection error.
+          // stream_out_of_order after the rejection error. Queued dispatches
+          // are dropped — they can never be delivered on a rejected channel.
+          confirmedRef.current = false;
+          pendingRef.current = [];
           closedRef.current = true;
           if (gapTimerRef.current !== null) {
             window.clearTimeout(gapTimerRef.current);
@@ -237,6 +270,11 @@ export function useScenarioRunChannel(
 
     return () => {
       sub.unsubscribe();
+      // Drop the handle so a dispatch landing after teardown cannot perform on
+      // a dead subscription (the server has already removed it).
+      if (subRef.current === sub) subRef.current = null;
+      confirmedRef.current = false;
+      pendingRef.current = [];
       if (gapTimerRef.current !== null) {
         window.clearTimeout(gapTimerRef.current);
         gapTimerRef.current = null;
@@ -245,7 +283,13 @@ export function useScenarioRunChannel(
   }, [consumer, flushInOrder, reset, bufferRef, closedRef, expectedSeqRef, gapTimerRef]);
 
   const dispatch = useCallback((action: ScenarioRunDispatchAction, data: object = {}) => {
-    subRef.current?.perform(action, data);
+    if (confirmedRef.current && subRef.current) {
+      subRef.current.perform(action, data);
+    } else {
+      // Subscribe still in flight (or reconnecting): queue instead of
+      // performing into a subscription the server does not have yet.
+      pendingRef.current.push([action, data]);
+    }
   }, []);
 
   return { dispatch };

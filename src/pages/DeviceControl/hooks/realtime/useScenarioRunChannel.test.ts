@@ -86,12 +86,35 @@ describe("useScenarioRunChannel (consumer)", () => {
     expect(rejected).toMatchObject({ source: "subscription_rejected" });
   });
 
-  it("dispatch forwards via subscription.perform", () => {
+  it("dispatch forwards via subscription.perform once confirmed", () => {
     const c = makeMockConsumer();
     const { result } = renderHook(() => useRecorder(c));
+    act(() => c.emitConnected("ScenarioRunChannel"));
     act(() => result.current.dispatch("start_run", { scenario_id: "sc1" }));
     const sub = c.records.find((r) => r.channel === "ScenarioRunChannel")!.sub;
     expect(sub.perform).toHaveBeenCalledWith("start_run", { scenario_id: "sc1" });
+  });
+
+  it("queues dispatches until the subscription confirms, then flushes", () => {
+    const c = makeMockConsumer();
+    const { result } = renderHook(() => useRecorder(c));
+    const sub = c.records.find((r) => r.channel === "ScenarioRunChannel")!.sub;
+    act(() => result.current.dispatch("start_run", { scenario_id: "sc1" }));
+    expect(sub.perform).not.toHaveBeenCalled();
+    act(() => c.emitConnected("ScenarioRunChannel"));
+    expect(sub.perform).toHaveBeenCalledWith("start_run", { scenario_id: "sc1" });
+  });
+
+  it("uses a unique subscription identifier per mount (nonce)", () => {
+    const c = makeMockConsumer();
+    const first = renderHook(() => useRecorder(c));
+    first.unmount();
+    renderHook(() => useRecorder(c));
+    const nonces = c.records
+      .filter((r) => r.channel === "ScenarioRunChannel")
+      .map((r) => r.params.nonce);
+    expect(nonces.length).toBeGreaterThanOrEqual(2);
+    expect(new Set(nonces).size).toBe(nonces.length);
   });
 
   it("unsubscribes on unmount", () => {

@@ -15,7 +15,10 @@ export interface MockSubscription {
 
 export interface MockConsumer {
   subscriptions: {
-    create: (params: { channel: string }, callbacks: ChannelCallbacks) => MockSubscription;
+    create: (
+      params: { channel: string } & Record<string, unknown>,
+      callbacks: ChannelCallbacks,
+    ) => MockSubscription;
   };
   connect: ReturnType<typeof vi.fn>;
   disconnect: ReturnType<typeof vi.fn>;
@@ -24,7 +27,12 @@ export interface MockConsumer {
     events: Record<string, ((event?: unknown) => void) | undefined>;
   };
   /** Test-only registry of created subscriptions. */
-  records: Array<{ channel: string; callbacks: ChannelCallbacks; sub: MockSubscription }>;
+  records: Array<{
+    channel: string;
+    params: Record<string, unknown>;
+    callbacks: ChannelCallbacks;
+    sub: MockSubscription;
+  }>;
   emitReceived: (channel: string, payload: unknown) => void;
   emitConnected: (channel: string, reconnected?: boolean) => void;
   emitDisconnected: (channel: string, willAttemptReconnect: boolean) => void;
@@ -48,7 +56,7 @@ export function makeMockConsumer(): MockConsumer {
           send: vi.fn(),
           unsubscribe: vi.fn(),
         };
-        records.push({ channel: params.channel, callbacks, sub });
+        records.push({ channel: params.channel, params, callbacks, sub });
         return sub;
       },
     },
