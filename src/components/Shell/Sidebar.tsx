@@ -40,35 +40,35 @@ function Sidebar({ isOpen = false, onClose, isMobile = false }: SidebarProps) {
       >
         <Link
           to="/dashboard"
-          className="flex h-[45px] items-center gap-1 transition-opacity hover:opacity-80"
+          className="flex h-[45px] items-center gap-1 rounded-md transition-colors hover:bg-primary/8"
         >
           <img src={dashboardIcon} alt={t("nav.dashboard")} />
           <p>{t("nav.dashboard")}</p>
         </Link>
         <Link
           to="/devices"
-          className="flex h-[45px] items-center gap-1 transition-opacity hover:opacity-80"
+          className="flex h-[45px] items-center gap-1 rounded-md transition-colors hover:bg-primary/8"
         >
           <img src={devicesIcon} alt={t("nav.devices")} />
           <p>{t("nav.devices")}</p>
         </Link>
         <Link
           to="/scenarios"
-          className="flex h-[45px] items-center gap-1 transition-opacity hover:opacity-80"
+          className="flex h-[45px] items-center gap-1 rounded-md transition-colors hover:bg-primary/8"
         >
           <img src={scenariosIcon} alt={t("nav.scenarios")} />
           <p>{t("nav.scenarios")}</p>
         </Link>
         <Link
           to="/settings"
-          className="flex h-[45px] items-center gap-1 transition-opacity hover:opacity-80"
+          className="flex h-[45px] items-center gap-1 rounded-md transition-colors hover:bg-primary/8"
         >
           <img src={settingsIcon} alt={t("nav.settings")} />
           <p>{t("nav.settings")}</p>
         </Link>
         <Link
           to="/subscription"
-          className="flex h-[45px] items-center gap-1 transition-opacity hover:opacity-80"
+          className="flex h-[45px] items-center gap-1 rounded-md transition-colors hover:bg-primary/8"
         >
           <img src={subscriptionIcon} alt={t("nav.subscription")} />
           <p>{t("nav.subscription")}</p>
@@ -76,9 +76,9 @@ function Sidebar({ isOpen = false, onClose, isMobile = false }: SidebarProps) {
         {role === "admin" && (
           <Link
             to="/admin/users"
-            className="flex h-[45px] items-center gap-1 transition-opacity hover:opacity-80"
+            className="flex h-[45px] items-center gap-1 rounded-md transition-colors hover:bg-primary/8"
           >
-            <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-white/20 text-sm text-white">
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-white/20 text-body text-white">
               U
             </span>
             <p>{t("nav.users")}</p>
@@ -86,7 +86,7 @@ function Sidebar({ isOpen = false, onClose, isMobile = false }: SidebarProps) {
         )}
         <Link
           to="/help"
-          className="flex h-[45px] items-center gap-1 opacity-90 transition-opacity hover:opacity-100"
+          className="flex h-[45px] items-center gap-1 rounded-md transition-colors hover:bg-primary/8"
         >
           <img src={helpIcon} alt="Help" />
           <p>{t("nav.help")}</p>

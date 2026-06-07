@@ -41,16 +41,16 @@ function Login() {
   }
 
   return (
-    <main className="from-tertiary/30 to-background flex min-h-dvh items-center justify-center bg-gradient-to-b px-4">
+    <main className="from-primary/10 to-surface-muted flex min-h-dvh items-center justify-center bg-gradient-to-b px-4">
       <div className="flex flex-col items-center space-y-8 p-8">
         <img src={logoFull} alt="logo" className="h-16" />
-        <h1 className="text-primary text-3xl font-bold">{t("login.title")}</h1>
+        <h1 className="text-primary text-display font-bold">{t("login.title")}</h1>
 
         <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
           {errors.length > 0 && (
-            <div className="bg-error/10 border-error/20 rounded-lg border p-3">
+            <div className="bg-destructive/10 border-destructive/20 rounded-md border p-3">
               {errors.map((err) => (
-                <p key={err} className="text-error text-sm">
+                <p key={err} className="text-destructive text-body">
                   {err}
                 </p>
               ))}
@@ -83,14 +83,14 @@ function Login() {
             {t("login.submit")}
           </Button>
 
-          <p className="text-center text-sm">
+          <p className="text-center text-body">
             <Trans
               ns="auth"
               i18nKey="login.noAccount"
               components={{
                 signupLink: (
                   <Link
-                    className="text-secondary hover:underline"
+                    className="text-primary hover:underline"
                     to="/signup"
                   />
                 ),
