@@ -1,5 +1,6 @@
 import React from "react";
 import type { SharesListProps } from "./types";
+import Button from "src/components/ui/Button";
 
 const SharesList: React.FC<SharesListProps> = ({
   t,
@@ -10,20 +11,20 @@ const SharesList: React.FC<SharesListProps> = ({
   return (
     <div className="space-y-3">
       {shares.length === 0 ? (
-        <p className="py-4 text-center text-gray-500">
+        <p className="py-4 text-center text-muted-foreground">
           {t("sharing.noShares")}
         </p>
       ) : (
-        shares.map((share: any) => (
+        shares.map((share) => (
           <div
             key={share.id}
-            className="flex items-center justify-between rounded-lg border border-gray-200 p-3"
+            className="flex items-center justify-between rounded-md border border-border p-3"
           >
             <div>
               <p className="font-medium">
                 {share.user?.username || share.user?.email}
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-body text-muted-foreground">
                 {t("sharing.permissions")}:{" "}
                 {share.permissions_group?.name || t("sharing.defaultGroup")}
                 {share.expires_at &&
@@ -31,18 +32,17 @@ const SharesList: React.FC<SharesListProps> = ({
               </p>
             </div>
             <div className="flex gap-2">
-              <button
-                onClick={() => onEdit(share)}
-                className="rounded-md px-3 py-1 text-blue-600 hover:bg-blue-50"
-              >
+              <Button variant="ghost" size="sm" onClick={() => onEdit(share)}>
                 {t("sharing.edit")}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:bg-destructive/10"
                 onClick={() => onDelete(share.id)}
-                className="rounded-md px-3 py-1 text-red-600 hover:bg-red-50"
               >
                 {t("sharing.remove")}
-              </button>
+              </Button>
             </div>
           </div>
         ))

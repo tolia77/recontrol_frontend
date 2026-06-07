@@ -21,7 +21,7 @@ const InviteShareForm: React.FC<InviteShareFormProps> = ({
   return (
     <form
       onSubmit={onSubmit}
-      className="border-lightgray mb-6 rounded-lg border p-4"
+      className="border-border mb-6 rounded-md border p-4"
     >
       <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>

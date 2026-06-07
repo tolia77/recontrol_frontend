@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
-import { LoadingState, EmptyState, ConfirmModal, PageHeader } from "src/components/ui";
+import { LoadingState, EmptyState, ConfirmModal, PageHeader, Button } from "src/components/ui";
 import DeviceInfoForm from "./DeviceInfoForm";
 import InviteShareForm from "./InviteShareForm";
 import SharesList from "./SharesList";
@@ -65,10 +65,11 @@ const DeviceSettings = () => {
       />
 
       <div className="space-y-6">
-        <div className="bg-background border-lightgray rounded-lg border p-6 shadow">
+        <div className="bg-surface border-border rounded-md border p-6">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold">{t("sharing.section")}</h2>
-            <button
+            <h2 className="text-heading font-semibold">{t("sharing.section")}</h2>
+            <Button
+              variant="primary"
               onClick={() => {
                 if (!gate.allowed) {
                   setShowUpgradeModal(true);
@@ -76,10 +77,9 @@ const DeviceSettings = () => {
                 }
                 setShowShareForm(!showShareForm);
               }}
-              className="bg-primary rounded-md px-4 py-2 text-white transition-opacity hover:opacity-90"
             >
               {showShareForm ? t("sharing.cancelInvite") : t("sharing.invite")}
-            </button>
+            </Button>
             {showUpgradeModal && (
               <UpgradeModal
                 feature="device_sharing"
@@ -125,12 +125,9 @@ const DeviceSettings = () => {
           />
         </div>
 
-        <button
-          onClick={() => setShowDeleteConfirm(true)}
-          className="bg-error rounded-lg px-4 py-2 text-white transition-opacity hover:opacity-90"
-        >
+        <Button variant="danger" onClick={() => setShowDeleteConfirm(true)}>
           {t("info.deleteDevice")}
-        </button>
+        </Button>
       </div>
 
       {showDeleteConfirm && (

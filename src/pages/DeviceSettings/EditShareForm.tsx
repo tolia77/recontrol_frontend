@@ -21,14 +21,14 @@ const EditShareForm: React.FC<EditShareFormProps> = ({
   return (
     <form
       onSubmit={onSubmit}
-      className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4"
+      className="mb-6 rounded-md border border-primary/20 bg-primary/5 p-4"
     >
       <div className="mb-3 flex items-center justify-between">
         <h3 className="font-semibold">{t("sharing.editShare")}</h3>
         <button
           type="button"
           onClick={onCancel}
-          className="text-darkgray text-sm hover:underline"
+          className="text-muted-foreground text-body hover:underline"
         >
           {t("sharing.cancelEdit")}
         </button>

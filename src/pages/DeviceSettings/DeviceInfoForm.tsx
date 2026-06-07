@@ -10,8 +10,8 @@ const DeviceInfoForm: React.FC<DeviceInfoFormProps> = ({
   onCancel,
 }) => {
   return (
-    <div className="bg-background border-lightgray mb-6 rounded-lg border p-6 shadow">
-      <h2 className="mb-4 text-lg font-semibold">{t("info.section")}</h2>
+    <div className="bg-surface border-border mb-6 rounded-md border p-6">
+      <h2 className="mb-4 text-heading font-semibold">{t("info.section")}</h2>
       <form onSubmit={onSubmit}>
         <div className="mb-4 grid grid-cols-1 gap-4">
           <Input

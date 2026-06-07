@@ -1,4 +1,4 @@
-import type { PermissionsGroup, PermissionsGroupAttributes } from "src/types";
+import type { PermissionsGroup, PermissionsGroupAttributes, DeviceShare } from "src/types";
 
 export interface ShareFormState {
   userEmail: string;
@@ -51,8 +51,8 @@ export interface EditShareFormProps {
 }
 
 export interface SharesListProps {
-  t: any;
-  shares: any[]; // Using any to avoid extending global types in this file
+  t: any; // i18next TFunction
+  shares: DeviceShare[];
   onDelete: (id: string) => void;
-  onEdit: (share: any) => void;
+  onEdit: (share: DeviceShare) => void;
 }
