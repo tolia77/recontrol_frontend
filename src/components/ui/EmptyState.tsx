@@ -18,7 +18,7 @@ function EmptyState({
       className={`flex flex-col items-center justify-center gap-3 py-8 text-center ${className}`}
     >
       {icon}
-      <p className="text-darkgray text-sm">{title}</p>
+      <p className="text-muted-foreground text-body">{title}</p>
       {action}
     </div>
   );

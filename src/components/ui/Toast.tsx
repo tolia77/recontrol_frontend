@@ -93,10 +93,10 @@ interface ToastContainerProps {
 }
 
 const typeStyles: Record<ToastType, string> = {
-  success: "bg-accent text-white",
-  error: "bg-error text-white",
-  info: "bg-secondary text-white",
-  warning: "bg-amber text-white",
+  success: "bg-success text-white",
+  error: "bg-destructive text-white",
+  info: "bg-primary text-white",
+  warning: "bg-warning text-white",
 };
 
 const typeIcons: Record<ToastType, string> = {
@@ -114,7 +114,7 @@ function ToastContainer({ toasts, removeToast }: ToastContainerProps) {
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className={`${typeStyles[toast.type]} animate-slide-in flex items-start gap-3 rounded-lg px-4 py-3 shadow-lg`}
+          className={`${typeStyles[toast.type]} animate-slide-in flex items-start gap-3 rounded-md px-4 py-3 shadow-overlay`}
           role="alert"
         >
           <span className="text-lg leading-none">{typeIcons[toast.type]}</span>

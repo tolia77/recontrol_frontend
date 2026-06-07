@@ -11,7 +11,7 @@ function LoadingState({ message, className = "" }: LoadingStateProps) {
       className={`flex flex-col items-center justify-center gap-3 py-12 ${className}`}
     >
       <Spinner size="lg" />
-      {message && <p className="text-darkgray text-sm">{message}</p>}
+      {message && <p className="text-muted-foreground text-body">{message}</p>}
     </div>
   );
 }

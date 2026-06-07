@@ -8,8 +8,8 @@ interface BannerProps {
 }
 
 const variantClasses: Record<BannerProps["variant"], string> = {
-  error: "bg-error/10 border-l-4 border-error text-error",
-  warning: "bg-amber/10 border-l-4 border-amber text-amber",
+  error: "bg-destructive/10 border-l-4 border-destructive text-destructive",
+  warning: "bg-warning/10 border-l-4 border-warning text-warning",
 };
 
 function Banner({ variant, children, action, className = "" }: BannerProps) {

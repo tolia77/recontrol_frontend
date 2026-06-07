@@ -20,7 +20,7 @@ function Card({
 }: CardProps) {
   return (
     <div
-      className={`bg-background border-lightgray rounded-lg border shadow-sm ${paddingClasses[padding]} ${className}`}
+      className={`bg-surface border-border rounded-md border ${paddingClasses[padding]} ${className}`}
       {...props}
     >
       {children}

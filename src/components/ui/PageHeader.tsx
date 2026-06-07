@@ -16,8 +16,8 @@ function PageHeader({ title, subtitle, actions }: PageHeaderProps) {
   return (
     <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
       <div>
-        <h1 className="text-text text-2xl font-bold">{title}</h1>
-        {subtitle && <p className="text-darkgray mt-1 text-sm">{subtitle}</p>}
+        <h1 className="text-foreground text-title font-bold">{title}</h1>
+        {subtitle && <p className="text-muted-foreground mt-1 text-body">{subtitle}</p>}
       </div>
       {actions && <div className="shrink-0">{actions}</div>}
     </div>

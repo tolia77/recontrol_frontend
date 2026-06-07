@@ -98,7 +98,7 @@ describe("ConfirmModal", () => {
     const confirmBtn = screen
       .getByText("Delete")
       .closest("button") as HTMLElement;
-    expect(confirmBtn.className).toContain("bg-error");
+    expect(confirmBtn.className).toContain("bg-destructive");
   });
 
   it("dangerous=false: confirm button uses primary variant (bg-primary)", () => {

@@ -21,16 +21,16 @@ function SiteHeader() {
   ];
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `text-sm font-medium transition-colors hover:text-primary ${
-      isActive ? "text-primary" : "text-darkgray"
+    `text-body font-medium transition-colors hover:text-primary ${
+      isActive ? "text-primary" : "text-muted-foreground"
     }`;
 
   return (
-    <header className="border-lightgray/70 bg-background/80 sticky top-0 z-50 border-b backdrop-blur-md">
+    <header className="border-border/70 bg-surface/80 sticky top-0 z-50 border-b backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between px-6">
         <Link
           to="/"
-          className="rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
           onClick={() => setOpen(false)}
         >
           <img src={logoFull} alt="ReControl" className="h-8 w-auto" />
@@ -72,7 +72,7 @@ function SiteHeader() {
           aria-expanded={open}
           aria-label={open ? t("header.closeMenu") : t("header.openMenu")}
           onClick={() => setOpen((v) => !v)}
-          className="text-primary hover:bg-tertiary inline-flex h-10 w-10 items-center justify-center rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 md:hidden"
+          className="text-primary hover:bg-primary/8 inline-flex h-10 w-10 items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 md:hidden"
         >
           {open ? (
             <svg
@@ -110,7 +110,7 @@ function SiteHeader() {
 
       {/* Mobile panel */}
       {open && (
-        <div className="border-lightgray/70 bg-background/95 border-t backdrop-blur-md md:hidden">
+        <div className="border-border/70 bg-surface/95 border-t backdrop-blur-md md:hidden">
           <div className="container mx-auto flex flex-col gap-1 px-6 py-4">
             {navLinks.map((link) => (
               <NavLink
@@ -118,15 +118,15 @@ function SiteHeader() {
                 to={link.to}
                 onClick={() => setOpen(false)}
                 className={({ isActive }) =>
-                  `rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-tertiary ${
-                    isActive ? "text-primary" : "text-darkgray"
+                  `rounded-md px-3 py-2 text-body font-medium transition-colors hover:bg-primary/8 ${
+                    isActive ? "text-primary" : "text-muted-foreground"
                   }`
                 }
               >
                 {link.label}
               </NavLink>
             ))}
-            <div className="border-lightgray/70 mt-3 flex flex-col gap-2 border-t pt-3">
+            <div className="border-border/70 mt-3 flex flex-col gap-2 border-t pt-3">
               {loggedIn ? (
                 <Link to="/dashboard" onClick={() => setOpen(false)}>
                   <Button variant="secondary" size="md" className="w-full">

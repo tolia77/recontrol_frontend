@@ -49,7 +49,7 @@ function ConfirmModal({
       <Modal.Body>
         {body}
         {checkbox && (
-          <label className="text-text mb-4 flex cursor-pointer items-center gap-2 text-sm select-none">
+          <label className="text-foreground mb-4 flex cursor-pointer items-center gap-2 text-body select-none">
             <input
               type="checkbox"
               checked={checkbox.checked}

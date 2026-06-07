@@ -17,7 +17,7 @@ function ErrorState({
     <div
       className={`flex flex-col items-center justify-center gap-3 py-12 text-center ${className}`}
     >
-      <p className="text-error text-sm">{message}</p>
+      <p className="text-destructive text-body">{message}</p>
       {onRetry && (
         <Button variant="secondary" onClick={onRetry}>
           {retryLabel}

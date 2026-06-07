@@ -29,10 +29,10 @@ interface SubProps {
 }
 
 const sizeCardClasses: Record<"sm" | "md" | "lg" | "full", string> = {
-  sm: "bg-background border border-lightgray rounded-lg shadow-xl max-w-sm w-[90%] p-6",
-  md: "bg-background border border-lightgray rounded-lg shadow-xl max-w-md w-[90%] p-6",
-  lg: "bg-background border border-lightgray rounded-lg shadow-xl max-w-lg w-[90%] p-6",
-  full: "bg-background border border-lightgray rounded-lg shadow-xl w-full max-w-5xl max-h-[90dvh] overflow-y-auto",
+  sm: "bg-surface border border-border rounded-lg shadow-modal max-w-sm w-[90%] p-6",
+  md: "bg-surface border border-border rounded-lg shadow-modal max-w-md w-[90%] p-6",
+  lg: "bg-surface border border-border rounded-lg shadow-modal max-w-lg w-[90%] p-6",
+  full: "bg-surface border border-border rounded-lg shadow-modal w-full max-w-5xl max-h-[90dvh] overflow-y-auto",
 };
 
 const wrapperClasses: Record<"sm" | "md" | "lg" | "full", string> = {
@@ -61,7 +61,7 @@ function Modal({
   // Mobile bottom-sheet class overrides (D-08)
   const mobileWrapperClasses = "flex items-end justify-center";
   const mobileCardClasses =
-    "bg-background border-t border-lightgray rounded-t-2xl shadow-xl w-full max-h-[90dvh] overflow-y-auto px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)_+_1rem)] animate-slide-up";
+    "bg-surface border-t border-border rounded-t-lg shadow-modal w-full max-h-[90dvh] overflow-y-auto px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)_+_1rem)] animate-slide-up";
 
   const effectiveWrapperClass = isMobile ? mobileWrapperClasses : wrapperClasses[size];
   const effectiveCardClass = isMobile ? mobileCardClasses : sizeCardClasses[size];
@@ -142,7 +142,7 @@ function ModalHeader({ children, className = "" }: SubProps) {
   return (
     <h2
       id={headingId}
-      className={`text-text mb-3 text-lg font-semibold ${className}`}
+      className={`text-foreground mb-3 text-heading font-semibold ${className}`}
     >
       {children}
     </h2>
@@ -151,7 +151,7 @@ function ModalHeader({ children, className = "" }: SubProps) {
 
 function ModalBody({ children, className = "" }: SubProps) {
   return (
-    <div className={`text-text/80 mb-4 text-sm ${className}`}>{children}</div>
+    <div className={`text-foreground/80 mb-4 text-body ${className}`}>{children}</div>
   );
 }
 
