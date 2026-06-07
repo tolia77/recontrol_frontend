@@ -63,7 +63,7 @@ function HistoryRow({ run, onSelect }: HistoryRowProps) {
 
   return (
     <li
-      className="border-lightgray hover:bg-tertiary flex cursor-pointer items-start gap-3 border-b px-3 py-2"
+      className="border-border hover:bg-primary/8 flex cursor-pointer items-start gap-3 border-b px-3 py-2"
       onClick={() => onSelect(run.id)}
       role="button"
       aria-label={t(`history.runStatus.${statusKey}`)}
@@ -83,12 +83,12 @@ function HistoryRow({ run, onSelect }: HistoryRowProps) {
         {t(`history.runStatus.${statusKey}`)}
       </span>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <span className="text-primary truncate text-sm font-medium">
+        <span className="text-primary truncate text-body font-medium">
           {run.scenario_name_snapshot}
         </span>
-        <div className="text-darkgray flex items-center gap-2 text-xs">
+        <div className="text-muted-foreground flex items-center gap-2 text-caption">
           {run.device_id && (
-            <span className="bg-background rounded px-2 py-0.5 font-mono">
+            <span className="bg-surface-muted rounded-sm px-2 py-0.5 font-mono">
               {run.device_id.slice(0, 8)}
             </span>
           )}
@@ -103,7 +103,7 @@ function HistoryRow({ run, onSelect }: HistoryRowProps) {
               entry.key === "overflow" ? (
                 <span
                   key={entry.key}
-                  className="text-darkgray bg-background ml-1 rounded px-2 py-1 text-xs"
+                  className="text-muted-foreground bg-surface-muted ml-1 rounded-sm px-2 py-1 text-caption"
                 >
                   {entry.glyph}
                 </span>
@@ -116,7 +116,7 @@ function HistoryRow({ run, onSelect }: HistoryRowProps) {
           </div>
         )}
       </div>
-      <span className="text-darkgray shrink-0 text-xs">
+      <span className="text-muted-foreground shrink-0 text-caption">
         {relativeTimestamp(run.started_at)}
       </span>
     </li>
@@ -191,14 +191,14 @@ export default function ScenariosHistory({
 
   return (
     <div className="flex flex-col" data-testid="scenarios-history">
-      <div className="border-lightgray flex items-center justify-between border-b px-4 py-2">
+      <div className="border-border flex items-center justify-between border-b px-4 py-2">
         <div className="flex items-center gap-3">
-          <span className="text-darkgray text-xs" data-testid="history-showing">
+          <span className="text-muted-foreground text-caption" data-testid="history-showing">
             {t("history.toolbar.showing", { from, to, total })}
           </span>
           <button
             type="button"
-            className="text-primary hover:bg-tertiary rounded px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-50"
+            className="text-primary hover:bg-primary/8 rounded-sm px-2 py-1 text-caption disabled:cursor-not-allowed disabled:opacity-50"
             disabled={prevDisabled}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             data-testid="history-prev"
@@ -207,7 +207,7 @@ export default function ScenariosHistory({
           </button>
           <button
             type="button"
-            className="text-primary hover:bg-tertiary rounded px-2 py-1 text-xs disabled:cursor-not-allowed disabled:opacity-50"
+            className="text-primary hover:bg-primary/8 rounded-sm px-2 py-1 text-caption disabled:cursor-not-allowed disabled:opacity-50"
             disabled={nextDisabled}
             onClick={() => setPage((p) => p + 1)}
             data-testid="history-next"

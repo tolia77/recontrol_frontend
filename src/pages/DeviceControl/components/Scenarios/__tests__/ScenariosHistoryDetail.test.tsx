@@ -297,7 +297,7 @@ describe("ScenariosHistoryDetail", () => {
     const stderr = screen.getByTestId("history-detail-step-0-stderr");
     expect(stderr).toBeDefined();
     expect(stderr.textContent).toContain("connection refused");
-    expect(stderr.className).toMatch(/bg-red-50/);
+    expect(stderr.className).toMatch(/bg-destructive\/10/);
   });
 
   it("omits stderr block when stderr_first_line is null", async () => {

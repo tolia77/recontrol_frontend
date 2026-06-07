@@ -58,9 +58,9 @@ export function formatShellPreview(
 
 // Per UI-SPEC §PolicyPreviewModal "Per-step row" — verdict badge color tokens.
 const verdictBadgeClass: Record<"allow" | "needs_confirm" | "deny", string> = {
-  allow: "bg-green-50 text-green-700",
-  needs_confirm: "bg-amber-50 text-amber-700",
-  deny: "bg-red-50 text-red-700",
+  allow: "bg-success/10 text-success",
+  needs_confirm: "bg-warning/10 text-warning",
+  deny: "bg-destructive/10 text-destructive",
 };
 
 function joinClasses(
@@ -149,17 +149,17 @@ export default function PolicyPreviewModal({
     >
       <div
         data-testid="policy-preview-card"
-        className="bg-background mx-4 flex max-h-[90vh] w-full max-w-2xl flex-col rounded-xl shadow-2xl"
+        className="bg-surface mx-4 flex max-h-[90vh] w-full max-w-2xl flex-col rounded-lg shadow-modal"
         onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <header className="border-lightgray flex items-center justify-between border-b px-6 py-4">
+        <header className="border-border flex items-center justify-between border-b px-6 py-4">
           <div className="flex min-w-0 items-center gap-3">
-            <h2 className="text-primary text-lg font-semibold">
+            <h2 className="text-primary text-heading font-semibold">
               {t("preApprove.title")}
             </h2>
             <span
-              className="bg-tertiary text-text rounded px-2 py-1 text-xs"
+              className="bg-primary/10 text-foreground rounded-sm px-2 py-1 text-caption"
               data-testid="policy-preview-target-device"
             >
               {t("preApprove.targetDevice", { deviceName })}
@@ -190,7 +190,7 @@ export default function PolicyPreviewModal({
 
           {error && (
             <div
-              className="border-error rounded-lg border bg-red-50 px-4 py-3 text-sm text-red-800"
+              className="border-destructive rounded-md border bg-destructive/10 px-4 py-3 text-body text-destructive"
               data-testid="policy-preview-error"
             >
               {error}
@@ -201,7 +201,7 @@ export default function PolicyPreviewModal({
           {hasDeny && (
             <div
               data-testid="policy-preview-deny-banner"
-              className="border-error rounded-lg border bg-red-50 px-4 py-3 text-sm text-red-800"
+              className="border-destructive rounded-md border bg-destructive/10 px-4 py-3 text-body text-destructive"
               role="alert"
             >
               <div className="font-medium">⛔</div>
@@ -218,7 +218,7 @@ export default function PolicyPreviewModal({
               ))}
               {denyOverflow > 0 && (
                 <div
-                  className="mt-1 text-xs text-red-700"
+                  className="mt-1 text-caption text-destructive"
                   data-testid="policy-preview-deny-overflow"
                 >
                   {t("preApprove.denyBannerOverflow", { count: denyOverflow })}
@@ -231,7 +231,7 @@ export default function PolicyPreviewModal({
           {response?.policy_drift && (
             <div
               data-testid="policy-preview-drift-banner"
-              className="border-amber rounded-lg border bg-amber-50 px-4 py-3 text-sm text-amber-900"
+              className="border-warning rounded-md border bg-warning/10 px-4 py-3 text-body text-warning"
               role="alert"
             >
               ⚠ {t("preApprove.driftBanner")}
@@ -254,9 +254,9 @@ export default function PolicyPreviewModal({
               oldDecision &&
               oldDecision !== step.decision;
             const rowClasses = joinClasses(
-              "rounded-lg border border-lightgray px-3 py-2",
-              isStepIrreversible && "border-l-4 border-error",
-              isDeny && "border-l-4 border-error bg-red-50",
+              "rounded-md border border-border px-3 py-2",
+              isStepIrreversible && "border-l-4 border-destructive",
+              isDeny && "border-l-4 border-destructive bg-destructive/10",
             );
             return (
               <div
@@ -265,13 +265,13 @@ export default function PolicyPreviewModal({
                 className={rowClasses}
               >
                 <div className="flex items-start gap-2">
-                  <span className="text-darkgray font-mono text-xs">
+                  <span className="text-muted-foreground font-mono text-caption">
                     {step.step_index + 1}
                   </span>
                   <span
                     data-testid={`policy-preview-verdict-${step.step_index}`}
                     className={joinClasses(
-                      "rounded px-2 py-1 text-xs font-medium",
+                      "rounded-sm px-2 py-1 text-caption font-medium",
                       verdictBadgeClass[step.decision],
                     )}
                   >
@@ -280,7 +280,7 @@ export default function PolicyPreviewModal({
                   {isStepIrreversible && (
                     <span
                       data-testid={`policy-preview-irreversible-${step.step_index}`}
-                      className="rounded bg-amber-50 px-2 py-1 text-xs text-amber-700"
+                      className="rounded-sm bg-warning/10 px-2 py-1 text-caption text-warning"
                     >
                       {t("preApprove.irreversibleWarning")}
                     </span>
@@ -290,31 +290,31 @@ export default function PolicyPreviewModal({
                       type="button"
                       onClick={() => toggleExpand(step.step_index)}
                       aria-label={t("preApprove.expand")}
-                      className="text-darkgray hover:text-primary cursor-pointer text-xs"
+                      className="text-muted-foreground hover:text-primary cursor-pointer text-caption"
                       data-testid={`policy-preview-expand-${step.step_index}`}
                     >
                       ▾
                     </button>
                   </div>
                 </div>
-                <div className="text-primary mt-1 font-mono text-sm">
+                <div className="text-primary mt-1 font-mono text-body">
                   {formatShellPreview(command.binary, command.args)}
                 </div>
-                <div className="text-darkgray text-xs">cwd: {command.cwd}</div>
+                <div className="text-muted-foreground text-caption">cwd: {command.cwd}</div>
                 {command.description && (
-                  <div className="text-darkgray text-xs italic">
+                  <div className="text-muted-foreground text-caption italic">
                     {command.description}
                   </div>
                 )}
                 {showDriftDiff && (
-                  <div className="text-darkgray mt-1 text-xs">
+                  <div className="text-muted-foreground mt-1 text-caption">
                     was: {oldDecision} → now: {step.decision}
                   </div>
                 )}
                 {isExpanded && (
                   <div
                     data-testid={`policy-preview-structured-${step.step_index}`}
-                    className="text-darkgray mt-2 space-y-1 pl-3 font-mono text-xs"
+                    className="text-muted-foreground mt-2 space-y-1 pl-3 font-mono text-caption"
                   >
                     <div>binary: {step.resolved_binary ?? command.binary}</div>
                     {command.args.map((arg, idx) => (
@@ -331,7 +331,7 @@ export default function PolicyPreviewModal({
         </div>
 
         {/* Footer */}
-        <footer className="border-lightgray flex justify-end gap-3 border-t px-6 py-3">
+        <footer className="border-border flex justify-end gap-3 border-t px-6 py-3">
           <Button
             variant="secondary"
             size="md"

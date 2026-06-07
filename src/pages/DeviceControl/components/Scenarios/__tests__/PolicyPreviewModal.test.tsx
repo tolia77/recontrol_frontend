@@ -192,9 +192,9 @@ describe("PolicyPreviewModal", () => {
     const allow = screen.getByTestId("policy-preview-verdict-0");
     const needsConfirm = screen.getByTestId("policy-preview-verdict-1");
     const deny = screen.getByTestId("policy-preview-verdict-2");
-    expect(allow.className).toContain("green");
-    expect(needsConfirm.className).toContain("amber");
-    expect(deny.className).toContain("red");
+    expect(allow.className).toContain("success");
+    expect(needsConfirm.className).toContain("warning");
+    expect(deny.className).toContain("destructive");
   });
 
   it("renders the deny banner with one line per denied step, capped at 3 with overflow", () => {
@@ -285,7 +285,7 @@ describe("PolicyPreviewModal", () => {
     );
     const row = screen.getByTestId("policy-preview-step-0");
     expect(row.className).toContain("border-l-4");
-    expect(row.className).toContain("border-error");
+    expect(row.className).toContain("border-destructive");
     const badge = screen.getByTestId("policy-preview-irreversible-0");
     expect(badge.textContent?.toLowerCase()).toContain("irreversible");
   });

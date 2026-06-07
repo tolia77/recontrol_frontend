@@ -80,7 +80,7 @@ function DryIntentBadge({ warning }: DryIntentBadgeProps) {
   return (
     <span
       data-testid={`draft-review-dry-intent-${warning.pattern}`}
-      className="text-caption-small rounded bg-amber-50 px-2 py-0.5 font-medium text-amber-700"
+      className="text-caption rounded-sm bg-warning/10 px-2 py-0.5 font-medium text-warning"
       title={tooltip}
       aria-label={`Warning: ${tooltip}`}
     >
@@ -127,21 +127,21 @@ export default function DraftReviewModal({
     >
       <div
         data-testid="draft-review-card"
-        className="bg-background mx-4 flex max-h-[70vh] w-full max-w-2xl flex-col rounded-lg shadow-lg"
+        className="bg-surface mx-4 flex max-h-[70vh] w-full max-w-2xl flex-col rounded-lg shadow-modal"
       >
         {/* Header */}
-        <header className="border-lightgray border-b px-6 py-4">
+        <header className="border-border border-b px-6 py-4">
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">
               <h3
-                className="text-text text-lg font-medium"
+                className="text-foreground text-heading font-medium"
                 data-testid="draft-review-name"
               >
                 {draft.name}
               </h3>
               {draft.description && (
                 <p
-                  className="text-body-small text-darkgray mt-1"
+                  className="text-body text-muted-foreground mt-1"
                   data-testid="draft-review-description"
                 >
                   {draft.description}
@@ -149,7 +149,7 @@ export default function DraftReviewModal({
               )}
             </div>
             <span
-              className="text-caption-small bg-tertiary text-primary rounded-full px-2 py-0.5 whitespace-nowrap"
+              className="text-caption bg-primary/10 text-primary rounded-full px-2 py-0.5 whitespace-nowrap"
               data-testid="draft-review-ai-chip"
             >
               {t("ai.draftReviewTitle")}
@@ -165,10 +165,10 @@ export default function DraftReviewModal({
               <div
                 key={idx}
                 data-testid={`draft-review-step-${idx}`}
-                className={`py-3 ${isLast ? "" : "border-lightgray border-b"}`}
+                className={`py-3 ${isLast ? "" : "border-border border-b"}`}
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-body-small text-darkgray font-medium">
+                  <span className="text-body text-muted-foreground font-medium">
                     Step {idx + 1}
                   </span>
                   {step.dry_intent_warning && (
@@ -176,16 +176,16 @@ export default function DraftReviewModal({
                   )}
                 </div>
                 <div
-                  className="text-body-small text-text mt-1 font-mono"
+                  className="text-body text-foreground mt-1 font-mono"
                   data-testid={`draft-review-step-${idx}-cmd`}
                 >
                   {formatBinaryArgs(step)}
                 </div>
-                <div className="text-caption-small text-darkgray">
+                <div className="text-caption text-muted-foreground">
                   cwd: {step.cwd}
                 </div>
                 {step.description && (
-                  <div className="text-caption-small text-darkgray italic">
+                  <div className="text-caption text-muted-foreground italic">
                     {step.description}
                   </div>
                 )}
@@ -195,7 +195,7 @@ export default function DraftReviewModal({
         </div>
 
         {/* Sticky footer */}
-        <div className="border-lightgray bg-background flex items-center justify-between border-t px-6 py-4">
+        <div className="border-border bg-surface flex items-center justify-between border-t px-6 py-4">
           <Button
             variant="secondary"
             size="sm"

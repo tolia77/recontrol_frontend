@@ -91,15 +91,15 @@ describe("GLYPH_CATALOG", () => {
 
 describe("STATUS_BADGE_CLASS", () => {
   const checks: Array<[ScenarioRun["status"], string]> = [
-    ["running", "blue"],
-    ["completed", "green"],
-    ["failed", "red"],
-    ["error", "red"],
-    ["policy_deny", "red"],
-    ["user_stopped", "amber"],
-    ["access_revoked", "amber"],
-    ["tab_closed", "amber"],
-    ["abandoned", "amber"],
+    ["running", "primary"],
+    ["completed", "success"],
+    ["failed", "destructive"],
+    ["error", "destructive"],
+    ["policy_deny", "destructive"],
+    ["user_stopped", "warning"],
+    ["access_revoked", "warning"],
+    ["tab_closed", "warning"],
+    ["abandoned", "warning"],
   ];
 
   for (const [status, colorToken] of checks) {

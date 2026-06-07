@@ -50,7 +50,7 @@ export default function ScenariosRow({
 
   return (
     <li
-      className="border-lightgray bg-background flex items-start gap-2 rounded border px-3 py-2"
+      className="border-border bg-surface flex items-start gap-2 rounded-md border px-3 py-2"
       data-testid={`scenarios-row-${scenario.id}`}
     >
       {/* D-22-08: primary [▶ Run] action on left edge in accent token. The
@@ -61,7 +61,7 @@ export default function ScenariosRow({
         <Button
           variant="primary"
           size="sm"
-          className="!bg-accent hover:opacity-90"
+          className="!bg-success hover:!bg-success/80"
           onClick={onRun}
           disabled={runDisabled}
           data-testid="scenarios-row-run"
@@ -76,14 +76,14 @@ export default function ScenariosRow({
           </span>
           {!isOwner && scenario.owner_email && (
             <span
-              className="rounded bg-blue-50 px-1.5 py-0.5 text-xs text-blue-700"
+              className="rounded-sm bg-primary/8 px-1.5 py-0.5 text-caption text-primary"
               data-testid="shared-by-badge"
             >
               {t("library.sharedByBadge", { owner: scenario.owner_email })}
             </span>
           )}
           {scenario.pinned_device_id && (
-            <span className="bg-tertiary text-text rounded px-1.5 py-0.5 text-xs">
+            <span className="bg-primary/10 text-foreground rounded-sm px-1.5 py-0.5 text-caption">
               {t("library.pinnedDeviceChip", {
                 device: scenario.pinned_device_id.slice(0, 8),
               })}
@@ -91,11 +91,11 @@ export default function ScenariosRow({
           )}
         </div>
         {descriptionPreview && (
-          <div className="text-darkgray truncate text-sm">
+          <div className="text-muted-foreground truncate text-body">
             {descriptionPreview}
           </div>
         )}
-        <div className="text-darkgray flex flex-wrap items-center gap-2 text-xs">
+        <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-caption">
           <span>{t("library.runCount", { count: runCount })}</span>
           <span aria-hidden="true">·</span>
           <span>{t("library.stepCount", { count: stepCount })}</span>
@@ -116,7 +116,7 @@ export default function ScenariosRow({
         <div className="flex shrink-0 items-center gap-1">
           <button
             type="button"
-            className="text-primary hover:bg-tertiary rounded px-2 py-1 text-xs"
+            className="text-primary hover:bg-primary/8 rounded-sm px-2 py-1 text-caption"
             onClick={onEdit}
             data-testid="scenarios-row-edit"
           >
@@ -124,7 +124,7 @@ export default function ScenariosRow({
           </button>
           <button
             type="button"
-            className="text-primary hover:bg-tertiary rounded px-2 py-1 text-xs"
+            className="text-primary hover:bg-primary/8 rounded-sm px-2 py-1 text-caption"
             onClick={onDuplicate}
             data-testid="scenarios-row-duplicate"
           >
@@ -132,7 +132,7 @@ export default function ScenariosRow({
           </button>
           <button
             type="button"
-            className="text-error rounded px-2 py-1 text-xs hover:bg-red-50"
+            className="text-destructive rounded-sm px-2 py-1 text-caption hover:bg-destructive/10"
             onClick={onDelete}
             data-testid="scenarios-row-delete"
           >

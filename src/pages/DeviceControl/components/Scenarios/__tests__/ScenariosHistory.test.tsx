@@ -180,9 +180,9 @@ describe("ScenariosHistory", () => {
     const row3 = within(screen.getByTestId("history-row-r3")).getByTestId(
       "history-row-badge",
     );
-    expect(row1.className).toContain("green");
-    expect(row2.className).toContain("red");
-    expect(row3.className).toContain("amber");
+    expect(row1.className).toContain("success");
+    expect(row2.className).toContain("destructive");
+    expect(row3.className).toContain("warning");
   });
 
   it("renders the exit-code glyph row from buildExitCodeTimeline when steps are provided", async () => {

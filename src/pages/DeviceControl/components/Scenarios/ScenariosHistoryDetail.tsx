@@ -183,7 +183,7 @@ export default function ScenariosHistoryDetail({
   if (error) {
     return (
       <div className="flex flex-col" data-testid="scenarios-history-detail">
-        <header className="border-lightgray flex items-center justify-between border-b px-4 py-2">
+        <header className="border-border flex items-center justify-between border-b px-4 py-2">
           <Button
             variant="ghost"
             size="sm"
@@ -194,7 +194,7 @@ export default function ScenariosHistoryDetail({
           </Button>
         </header>
         <div
-          className="text-error px-4 py-8 text-center text-sm"
+          className="text-destructive px-4 py-8 text-center text-body"
           data-testid="scenarios-history-detail-error"
         >
           {t("library.empty")}
@@ -209,7 +209,7 @@ export default function ScenariosHistoryDetail({
       data-testid="scenarios-history-detail"
     >
       {/* Header */}
-      <header className="border-lightgray flex items-center justify-between border-b px-4 py-2">
+      <header className="border-border flex items-center justify-between border-b px-4 py-2">
         <div className="flex min-w-0 items-center gap-2">
           <Button
             variant="ghost"
@@ -222,13 +222,13 @@ export default function ScenariosHistoryDetail({
           {run && (
             <>
               <span
-                className="text-primary truncate text-sm font-medium"
+                className="text-primary truncate text-body font-medium"
                 title={run.scenario_name_snapshot}
               >
                 {run.scenario_name_snapshot}
               </span>
               <span
-                className={`shrink-0 rounded px-2 py-1 text-xs font-medium ${statusBadgeClass(
+                className={`shrink-0 rounded-sm px-2 py-1 text-caption font-medium ${statusBadgeClass(
                   run.status,
                 )}`}
                 data-testid="history-detail-status-badge"
@@ -236,7 +236,7 @@ export default function ScenariosHistoryDetail({
                 {t(`history.runStatus.${run.status}`)}
               </span>
               <span
-                className="rounded bg-gray-100 px-2 py-1 font-mono text-xs"
+                className="rounded-sm bg-surface-muted px-2 py-1 font-mono text-caption"
                 data-testid="history-detail-run-id-chip"
               >
                 {run.id.slice(0, RUN_ID_CHIP_LEN)}
@@ -271,7 +271,7 @@ export default function ScenariosHistoryDetail({
       <div className="flex-1 overflow-y-auto px-4 py-3">
         {loading && (
           <div
-            className="text-darkgray px-4 py-6 text-center text-sm"
+            className="text-muted-foreground px-4 py-6 text-center text-body"
             data-testid="scenarios-history-detail-loading"
           >
             …
@@ -295,7 +295,7 @@ export default function ScenariosHistoryDetail({
             {/* Past-session banner (not current session) */}
             {!isLive && (
               <div
-                className="border-lightgray text-darkgray mb-4 flex items-center gap-2 rounded border bg-gray-50 px-3 py-2 text-sm"
+                className="border-border text-muted-foreground mb-4 flex items-center gap-2 rounded-md border bg-surface-muted px-3 py-2 text-body"
                 data-testid="history-detail-past-session-banner"
               >
                 <span aria-hidden="true">ⓘ</span>
@@ -311,10 +311,10 @@ export default function ScenariosHistoryDetail({
                   <div
                     key={step.id}
                     data-testid={`history-detail-step-${step.step_index}`}
-                    className="border-lightgray space-y-1 rounded border px-3 py-2"
+                    className="border-border space-y-1 rounded border px-3 py-2"
                   >
                     <div className="flex items-center gap-2 text-sm">
-                      <span className="text-darkgray font-mono text-xs">
+                      <span className="text-muted-foreground font-mono text-xs">
                         {step.step_index + 1}
                       </span>
                       <span className={`${g.colorClass} font-mono`}>
@@ -326,18 +326,18 @@ export default function ScenariosHistoryDetail({
                       >
                         {step.binary}
                       </span>
-                      <span className="text-darkgray ml-auto text-xs">
+                      <span className="text-muted-foreground ml-auto text-xs">
                         {formatDurationSeconds(step.duration_ms)}
                       </span>
                     </div>
-                    <div className="text-darkgray font-mono text-xs">
+                    <div className="text-muted-foreground font-mono text-xs">
                       started_at: {step.started_at ?? "—"} · ended_at:{" "}
                       {step.ended_at ?? "—"} · exit: {step.exit_code ?? "—"}
                     </div>
                     {step.stderr_first_line && (
                       <div
                         data-testid={`history-detail-step-${step.step_index}-stderr`}
-                        className="mt-1 rounded bg-red-50 px-2 py-1 font-mono text-xs break-all text-red-800"
+                        className="mt-1 rounded-sm bg-destructive/10 px-2 py-1 font-mono text-caption break-all text-destructive"
                       >
                         {step.stderr_first_line}
                       </div>

@@ -22,14 +22,14 @@ interface GlyphEntry {
 }
 
 export const GLYPH_CATALOG: Readonly<Record<GlyphCatalogKey, GlyphEntry>> = {
-  success: { glyph: "✓", colorClass: "text-green-600" },
-  failed: { glyph: "✗", colorClass: "text-error" },
-  skipped: { glyph: "⊘", colorClass: "text-darkgray" },
-  policy_denied: { glyph: "⛔", colorClass: "text-error" },
-  timeout: { glyph: "⏱", colorClass: "text-amber-600" },
-  running: { glyph: "⋯", colorClass: "text-secondary" },
-  user_stopped: { glyph: "⏸", colorClass: "text-amber-600" },
-  access_revoked: { glyph: "⚠", colorClass: "text-amber-600" },
+  success: { glyph: "✓", colorClass: "text-success" },
+  failed: { glyph: "✗", colorClass: "text-destructive" },
+  skipped: { glyph: "⊘", colorClass: "text-muted-foreground" },
+  policy_denied: { glyph: "⛔", colorClass: "text-destructive" },
+  timeout: { glyph: "⏱", colorClass: "text-warning" },
+  running: { glyph: "⋯", colorClass: "text-primary" },
+  user_stopped: { glyph: "⏸", colorClass: "text-warning" },
+  access_revoked: { glyph: "⚠", colorClass: "text-warning" },
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -38,15 +38,15 @@ export const GLYPH_CATALOG: Readonly<Record<GlyphCatalogKey, GlyphEntry>> = {
 // ---------------------------------------------------------------------------
 
 export const STATUS_BADGE_CLASS: Readonly<Record<ScenarioRunStatus, string>> = {
-  running: "bg-blue-50 text-blue-700",
-  completed: "bg-green-50 text-green-700",
-  failed: "bg-red-50 text-red-700",
-  error: "bg-red-50 text-red-700",
-  policy_deny: "bg-red-50 text-red-700",
-  user_stopped: "bg-amber-50 text-amber-700",
-  access_revoked: "bg-amber-50 text-amber-700",
-  tab_closed: "bg-amber-50 text-amber-700",
-  abandoned: "bg-amber-50 text-amber-700",
+  running: "bg-primary/8 text-primary",
+  completed: "bg-success/10 text-success",
+  failed: "bg-destructive/10 text-destructive",
+  error: "bg-destructive/10 text-destructive",
+  policy_deny: "bg-destructive/10 text-destructive",
+  user_stopped: "bg-warning/10 text-warning",
+  access_revoked: "bg-warning/10 text-warning",
+  tab_closed: "bg-warning/10 text-warning",
+  abandoned: "bg-warning/10 text-warning",
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -96,7 +96,7 @@ export function buildExitCodeTimeline(
     const head = mapped.slice(0, visible);
     head.push({
       glyph: `+${overflowCount}`,
-      colorClass: "text-darkgray",
+      colorClass: "text-muted-foreground",
       key: "overflow",
     });
     result = head;

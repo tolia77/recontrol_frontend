@@ -115,8 +115,8 @@ describe("DraftReviewModal", () => {
     const badge = screen.getByTestId("draft-review-dry-intent-find_delete");
     expect(badge).toBeDefined();
     // Visual classes
-    expect(badge.className).toContain("bg-amber-50");
-    expect(badge.className).toContain("text-amber-700");
+    expect(badge.className).toContain("bg-warning/10");
+    expect(badge.className).toContain("text-warning");
     // ⚠ glyph + display name
     expect(badge.textContent).toContain("⚠");
     expect(badge.textContent).toContain("find -delete");
