@@ -35,9 +35,9 @@ function FileManagerSidebar({
   if (isMobile) return null;
 
   return (
-    <aside className="border-lightgray bg-background w-60 flex-shrink-0 overflow-y-auto border-r">
-      <div className="border-lightgray border-b px-3 py-2">
-        <span className="text-darkgray text-xs font-bold tracking-wide uppercase">
+    <aside className="border-border bg-surface w-60 flex-shrink-0 overflow-y-auto border-r">
+      <div className="border-border border-b px-3 py-2">
+        <span className="text-muted-foreground text-caption font-bold tracking-wide uppercase">
           {t("sidebar.sharedFolders")}
         </span>
       </div>
@@ -47,7 +47,7 @@ function FileManagerSidebar({
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="bg-lightgray/60 h-8 animate-pulse rounded"
+              className="bg-border/60 h-8 animate-pulse rounded"
               aria-hidden="true"
             />
           ))}
@@ -71,8 +71,8 @@ function FileManagerSidebar({
                   className={[
                     "flex w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-left text-sm transition-colors",
                     active
-                      ? "bg-tertiary text-primary font-medium"
-                      : "text-text hover:bg-tertiary/60",
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "text-foreground hover:bg-surface-muted",
                   ].join(" ")}
                 >
                   <FolderIcon className="text-primary h-4 w-4 flex-shrink-0" />
@@ -82,7 +82,7 @@ function FileManagerSidebar({
                     aria-label={t("sidebar.sharedByDesktopUser")}
                     className="flex-shrink-0"
                   >
-                    <LockIcon className="text-darkgray h-3 w-3 flex-shrink-0" />
+                    <LockIcon className="text-muted-foreground h-3 w-3 flex-shrink-0" />
                   </span>
                 </button>
               </li>

@@ -18,7 +18,7 @@ function FileManagerStatusBar({
   return (
     <footer
       role="status"
-      className="border-lightgray text-darkgray bg-background flex-shrink-0 border-t px-3 py-1.5 text-sm"
+      className="border-border text-muted-foreground bg-surface flex-shrink-0 border-t px-3 py-1.5 text-body"
     >
       {hasSelection ? (
         <span>

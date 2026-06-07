@@ -70,7 +70,7 @@ export interface SelectionState {
  * - `separator: true` renders as a divider; the `label` and `onSelect` fields
  *   are ignored for that row but still required for shape uniformity.
  * - `disabled: true` makes the row click a no-op and renders dimmed.
- * - `danger: true` paints the label in `text-error` (used on Delete).
+ * - `danger: true` paints the label in `text-destructive` (used on Delete).
  */
 export interface ContextMenuItem {
   label: string;

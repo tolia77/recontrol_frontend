@@ -87,19 +87,19 @@ function FileManagerToolbar({
   };
 
   return (
-    <div className="border-lightgray bg-background flex flex-shrink-0 items-center gap-2 border-b p-2">
+    <div className="border-border bg-surface flex flex-shrink-0 items-center gap-2 border-b p-2">
       <button
         type="button"
         onClick={onRefresh}
         disabled={disabled}
         title={t("toolbar.refresh")}
         aria-label={t("toolbar.refresh")}
-        className="hover:bg-tertiary text-text rounded p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+        className="hover:bg-surface-muted text-foreground rounded p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
       >
         <RefreshIcon className="h-4 w-4" />
       </button>
 
-      <div className="bg-lightgray h-5 w-px" aria-hidden="true" />
+      <div className="bg-border h-5 w-px" aria-hidden="true" />
 
       <button
         type="button"
@@ -107,7 +107,7 @@ function FileManagerToolbar({
         disabled={!newFolderEnabled}
         title={t("toolbar.newFolder")}
         aria-label={t("toolbar.newFolder")}
-        className="hover:bg-tertiary text-text rounded p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+        className="hover:bg-surface-muted text-foreground rounded p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
       >
         <FolderPlusIcon className="h-4 w-4" />
       </button>
@@ -118,7 +118,7 @@ function FileManagerToolbar({
         title={t("toolbar.uploadFiles")}
         aria-label={t("toolbar.uploadFiles")}
         className={[
-          "hover:bg-tertiary text-text rounded p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+          "hover:bg-surface-muted text-foreground rounded p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50",
           isMobile ? "min-h-[44px] min-w-[44px]" : "",
         ]
           .filter(Boolean)
@@ -139,7 +139,7 @@ function FileManagerToolbar({
         disabled={!renameEnabled}
         title={t("toolbar.rename")}
         aria-label={t("toolbar.rename")}
-        className="hover:bg-tertiary text-text rounded p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+        className="hover:bg-surface-muted text-foreground rounded p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
       >
         <PencilIcon className="h-4 w-4" />
       </button>
@@ -149,7 +149,7 @@ function FileManagerToolbar({
         disabled={!deleteEnabled}
         title={t("toolbar.delete")}
         aria-label={t("toolbar.delete")}
-        className="hover:bg-tertiary text-error rounded p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+        className="hover:bg-surface-muted text-destructive rounded p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
       >
         <TrashIcon className="h-4 w-4" />
       </button>
@@ -159,7 +159,7 @@ function FileManagerToolbar({
         disabled={!moveEnabled}
         title={t("toolbar.moveTo")}
         aria-label={t("toolbar.moveTo")}
-        className="hover:bg-tertiary text-text rounded p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+        className="hover:bg-surface-muted text-foreground rounded p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
       >
         <MoveIcon className="h-4 w-4" />
       </button>
@@ -169,12 +169,12 @@ function FileManagerToolbar({
         disabled={!copyEnabled}
         title={t("toolbar.copyTo")}
         aria-label={t("toolbar.copyTo")}
-        className="hover:bg-tertiary text-text rounded p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+        className="hover:bg-surface-muted text-foreground rounded p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
       >
         <CopyIcon className="h-4 w-4" />
       </button>
 
-      <label className="text-text ml-auto flex cursor-pointer items-center gap-2 text-sm select-none">
+      <label className="text-foreground ml-auto flex cursor-pointer items-center gap-2 text-body select-none">
         <input
           type="checkbox"
           checked={showHidden}

@@ -303,7 +303,7 @@ function FileManagerListing({
       type="button"
       onClick={() => onToggleSort(col)}
       className={[
-        "hover:bg-tertiary/60 flex h-full cursor-pointer items-center gap-1 px-3 transition-colors select-none",
+        "hover:bg-surface-muted flex h-full cursor-pointer items-center gap-1 px-3 transition-colors select-none",
         align === "right" ? "justify-end" : "justify-start",
       ].join(" ")}
     >
@@ -327,7 +327,7 @@ function FileManagerListing({
       {/* Sticky 4-column header */}
       <div
         role="row"
-        className="bg-background border-lightgray text-text grid flex-shrink-0 grid-cols-[1fr_120px_180px_140px] border-b text-sm font-semibold"
+        className="bg-surface border-border text-foreground grid flex-shrink-0 grid-cols-[1fr_120px_180px_140px] border-b text-body font-semibold"
         style={{ height: `${ROW_HEIGHT_PX}px` }}
       >
         {renderHeaderButton(t("listing.columnName"), "name", "left")}
@@ -341,7 +341,7 @@ function FileManagerListing({
       {newFolderPending && (
         <div
           role="row"
-          className="border-lightgray/50 bg-tertiary/30 grid flex-shrink-0 grid-cols-[1fr_120px_180px_140px] items-center border-b px-3 text-sm"
+          className="border-border/50 bg-primary/5 grid flex-shrink-0 grid-cols-[1fr_120px_180px_140px] items-center border-b px-3 text-body"
           style={{ height: `${ROW_HEIGHT_PX}px` }}
           onContextMenu={(e) => e.stopPropagation()}
         >
@@ -355,7 +355,7 @@ function FileManagerListing({
               onBlur={onNewFolderCancel}
               onClick={(e) => e.stopPropagation()}
               onDoubleClick={(e) => e.stopPropagation()}
-              className="bg-background text-text border-accent min-w-0 flex-1 rounded border px-1 py-0.5 text-sm outline-none"
+              className="bg-surface text-foreground border-primary min-w-0 flex-1 rounded border px-1 py-0.5 text-body outline-none"
             />
           </div>
           <div />
@@ -370,22 +370,22 @@ function FileManagerListing({
         onContextMenu={handleScrollContainerContextMenu}
       >
         {state.kind === "idle" && !path && (
-          <div className="text-darkgray p-4 text-sm">
+          <div className="text-muted-foreground p-4 text-body">
             {t("listing.selectFolderPrompt")}
           </div>
         )}
         {state.kind === "loading" && (
-          <div className="text-darkgray p-4 text-sm">
+          <div className="text-muted-foreground p-4 text-body">
             {t("listing.loading")}
           </div>
         )}
         {state.kind === "error" && (
-          <div className="text-error p-4 text-sm">{state.message}</div>
+          <div className="text-destructive p-4 text-body">{state.message}</div>
         )}
         {state.kind === "ready" &&
           visibleEntries.length === 0 &&
           !newFolderPending && (
-            <div className="text-darkgray p-4 text-sm">
+            <div className="text-muted-foreground p-4 text-body">
               {t("listing.emptyFolder")}
             </div>
           )}

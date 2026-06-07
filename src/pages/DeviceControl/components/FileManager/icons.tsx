@@ -23,7 +23,7 @@ export const FolderIcon: React.FC<IconProps> = ({
 );
 
 export const FileImageIcon: React.FC<IconProps> = ({
-  className = "w-4 h-4 text-accent",
+  className = "w-4 h-4 text-success",
 }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -43,7 +43,7 @@ export const FileImageIcon: React.FC<IconProps> = ({
 );
 
 export const FileVideoIcon: React.FC<IconProps> = ({
-  className = "w-4 h-4 text-secondary",
+  className = "w-4 h-4 text-primary",
 }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -62,7 +62,7 @@ export const FileVideoIcon: React.FC<IconProps> = ({
 );
 
 export const FileCodeIcon: React.FC<IconProps> = ({
-  className = "w-4 h-4 text-amber",
+  className = "w-4 h-4 text-warning",
 }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -105,7 +105,7 @@ export const FileDocIcon: React.FC<IconProps> = ({
 );
 
 export const FileTextIcon: React.FC<IconProps> = ({
-  className = "w-4 h-4 text-darkgray",
+  className = "w-4 h-4 text-muted-foreground",
 }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -127,7 +127,7 @@ export const FileTextIcon: React.FC<IconProps> = ({
 );
 
 export const FileGenericIcon: React.FC<IconProps> = ({
-  className = "w-4 h-4 text-lightgray",
+  className = "w-4 h-4 text-border",
 }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -255,7 +255,7 @@ export const XIcon: React.FC<IconProps> = ({ className = "w-4 h-4" }) => (
 );
 
 export const LockIcon: React.FC<IconProps> = ({
-  className = "w-4 h-4 text-darkgray",
+  className = "w-4 h-4 text-muted-foreground",
 }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -404,21 +404,21 @@ export const IconForEntry: React.FC<IconForEntryProps> = ({
   const kind = classify(entry.name);
   switch (kind) {
     case "image":
-      return <FileImageIcon className={className ?? "text-accent h-4 w-4"} />;
+      return <FileImageIcon className={className ?? "text-success h-4 w-4"} />;
     case "video":
       return (
-        <FileVideoIcon className={className ?? "text-secondary h-4 w-4"} />
+        <FileVideoIcon className={className ?? "text-primary h-4 w-4"} />
       );
     case "code":
-      return <FileCodeIcon className={className ?? "text-amber h-4 w-4"} />;
+      return <FileCodeIcon className={className ?? "text-warning h-4 w-4"} />;
     case "doc":
       return <FileDocIcon className={className ?? "text-primary h-4 w-4"} />;
     case "text":
-      return <FileTextIcon className={className ?? "text-darkgray h-4 w-4"} />;
+      return <FileTextIcon className={className ?? "text-muted-foreground h-4 w-4"} />;
     case "other":
     default:
       return (
-        <FileGenericIcon className={className ?? "text-darkgray h-4 w-4"} />
+        <FileGenericIcon className={className ?? "text-muted-foreground h-4 w-4"} />
       );
   }
 };

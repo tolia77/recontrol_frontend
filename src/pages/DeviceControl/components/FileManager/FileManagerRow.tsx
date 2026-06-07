@@ -61,18 +61,18 @@ function FileManagerRowImpl({
   moreActionsLabel,
 }: FileManagerRowProps) {
   // Visual hierarchy:
-  //   Selected + Focused -> bg-accent/30 ring-1 ring-accent
-  //   Selected           -> bg-accent/20 text-text
-  //   Focused only       -> bg-tertiary
-  //   None               -> hover:bg-tertiary
+  //   Selected + Focused -> bg-primary/12 ring-1 ring-primary/30
+  //   Selected           -> bg-primary/8 text-foreground
+  //   Focused only       -> bg-surface-muted
+  //   None               -> hover:bg-surface-muted
   const stateClass =
     isSelected && isFocused
-      ? "bg-accent/30 ring-1 ring-accent"
+      ? "bg-primary/12 ring-1 ring-primary/30"
       : isSelected
-        ? "bg-accent/20 text-text"
+        ? "bg-primary/8 text-foreground"
         : isFocused
-          ? "bg-tertiary"
-          : "hover:bg-tertiary/60";
+          ? "bg-surface-muted"
+          : "hover:bg-surface-muted";
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -131,7 +131,7 @@ function FileManagerRowImpl({
         isRenaming ? (e) => e.stopPropagation() : handleRowContextMenu
       }
       className={[
-        "border-lightgray/50 grid cursor-default items-center border-b px-3 text-sm select-none",
+        "border-border/50 grid cursor-default items-center border-b px-3 text-body select-none",
         isMobile
           ? "grid-cols-[1fr_auto] min-h-[44px]"
           : "grid-cols-[1fr_120px_180px_140px]",
@@ -151,10 +151,10 @@ function FileManagerRowImpl({
             onClick={(e) => e.stopPropagation()}
             onDoubleClick={(e) => e.stopPropagation()}
             onContextMenu={(e) => e.stopPropagation()}
-            className="bg-background text-text border-accent min-w-0 flex-1 rounded border px-1 py-0.5 text-sm outline-none"
+            className="bg-surface text-foreground border-primary min-w-0 flex-1 rounded border px-1 py-0.5 text-body outline-none"
           />
         ) : (
-          <span className="text-text truncate" title={entry.name}>
+          <span className="text-foreground truncate" title={entry.name}>
             {entry.name}
           </span>
         )}
@@ -165,7 +165,7 @@ function FileManagerRowImpl({
           <button
             type="button"
             onClick={handleKebabClick}
-            className="text-darkgray hover:text-text flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center bg-transparent"
+            className="text-muted-foreground hover:text-foreground flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center bg-transparent"
             aria-label={moreActionsLabel ?? "More actions"}
           >
             ⋯
@@ -173,11 +173,11 @@ function FileManagerRowImpl({
         ) : null
       ) : (
         <>
-          <div className="text-darkgray pr-4 text-right tabular-nums">
+          <div className="text-muted-foreground pr-4 text-right tabular-nums">
             {entry.isDirectory ? "" : formatBytes(entry.sizeBytes)}
           </div>
-          <div className="text-darkgray">{formatDate(entry.modifiedUtc)}</div>
-          <div className="text-darkgray truncate">
+          <div className="text-muted-foreground">{formatDate(entry.modifiedUtc)}</div>
+          <div className="text-muted-foreground truncate">
             {formatType(entry.name, entry.isDirectory)}
           </div>
         </>

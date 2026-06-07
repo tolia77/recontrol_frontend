@@ -103,12 +103,12 @@ function TransferQueuePanel({
   }, [snapshot.items]);
 
   return (
-    <div className="border-lightgray bg-tertiary text-text flex-shrink-0 border-t text-sm">
+    <div className="border-border bg-surface-muted text-foreground flex-shrink-0 border-t text-body">
       <div className="flex items-center justify-between px-3 py-1.5">
         <button
           type="button"
           onClick={() => setCollapsed((c) => !c)}
-          className="flex items-center gap-2 hover:opacity-80"
+          className="flex items-center gap-2 hover:bg-surface-muted rounded transition-colors"
           aria-expanded={expanded}
         >
           {expanded ? (
@@ -118,7 +118,7 @@ function TransferQueuePanel({
           )}
           <span className="font-medium">{t("transfer.title")}</span>
           {snapshot.items.length > 0 && (
-            <span className="text-darkgray text-xs">
+            <span className="text-muted-foreground text-caption">
               {t("transfer.activeTotal", {
                 active: inFlightCount,
                 total: snapshot.items.length,
@@ -132,7 +132,7 @@ function TransferQueuePanel({
             onClick={() => queue.clearCompleted()}
             title={t("transfer.clearCompleted")}
             aria-label={t("transfer.clearCompleted")}
-            className="hover:bg-background rounded p-1"
+            className="hover:bg-surface rounded p-1 transition-colors"
           >
             <TrashIcon className="h-3.5 w-3.5" />
           </button>
@@ -145,21 +145,21 @@ function TransferQueuePanel({
               a transfer is active. CONTEXT-locked verbatim copy comes from
               the panel; this component is purely presentational. */}
           {disconnectMessage && (
-            <div className="bg-error/10 border-error text-error flex items-center justify-between gap-2 rounded border px-3 py-2 text-sm">
+            <div className="bg-destructive/10 border-destructive text-destructive flex items-center justify-between gap-2 rounded border px-3 py-2 text-body">
               <span>{disconnectMessage}</span>
               <button
                 type="button"
                 onClick={onDismissDisconnect}
                 title={t("transfer.dismiss")}
                 aria-label={t("transfer.dismiss")}
-                className="hover:bg-background rounded p-0.5"
+                className="hover:bg-surface rounded p-0.5 transition-colors"
               >
                 <XIcon className="h-3.5 w-3.5" />
               </button>
             </div>
           )}
           {snapshot.items.length === 0 && (
-            <p className="text-darkgray px-2 py-1 text-xs">
+            <p className="text-muted-foreground px-2 py-1 text-caption">
               {t("transfer.noTransfersYet")}
             </p>
           )}
@@ -217,39 +217,39 @@ function TransferRow({ item, onCancel, speedEstimate, t }: TransferRowProps) {
   const showStallButtons = isStalled && !waitDismissed;
 
   // State-coloured progress fill (CONTEXT-locked):
-  //   queued    -> grey   (bg-darkgray)
-  //   active    -> blue   (bg-secondary, the project's blue accent)
-  //   stalled   -> amber  (bg-amber)
-  //   completed -> green  (bg-accent, the project's green)
-  //   failed / cancelled / disconnected -> red (bg-error)
-  //   cancelling -> blue (still in flight; treated like active for the bar)
+  //   queued    -> muted   (bg-muted-foreground)
+  //   active    -> primary (bg-primary)
+  //   stalled   -> warning (bg-warning)
+  //   completed -> success (bg-success)
+  //   failed / cancelled / disconnected -> destructive (bg-destructive)
+  //   cancelling -> primary (still in flight; treated like active for the bar)
   let barClass: string;
   if (item.state === "completed") {
-    barClass = "h-full bg-accent transition-all";
+    barClass = "h-full bg-success transition-all";
   } else if (
     item.state === "failed" ||
     item.state === "cancelled" ||
     item.state === "disconnected"
   ) {
-    barClass = "h-full bg-error";
+    barClass = "h-full bg-destructive";
   } else if (item.state === "stalled") {
-    barClass = "h-full bg-amber transition-all";
+    barClass = "h-full bg-warning transition-all";
   } else if (isActive || item.state === "cancelling") {
-    barClass = "h-full bg-secondary transition-all";
+    barClass = "h-full bg-primary transition-all";
   } else {
     // 'queued'
-    barClass = "h-full bg-darkgray";
+    barClass = "h-full bg-muted-foreground";
   }
 
   return (
-    <div className="border-lightgray bg-background rounded border px-2 py-1.5">
+    <div className="border-border bg-surface rounded border px-2 py-1.5">
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <Icon className="h-3.5 w-3.5 flex-shrink-0" />
           <span className="truncate" title={item.name}>
             {item.name}
           </span>
-          <span className="text-darkgray text-xs whitespace-nowrap">
+          <span className="text-muted-foreground text-caption whitespace-nowrap">
             {stateLabel(item.state, t)}
           </span>
         </div>
@@ -263,7 +263,7 @@ function TransferRow({ item, onCancel, speedEstimate, t }: TransferRowProps) {
               type="button"
               onClick={() => setWaitDismissed(true)}
               aria-label={t("transfer.keepWaitingFor", { name: item.name })}
-              className="border-lightgray hover:bg-tertiary rounded border px-2 py-0.5 text-xs"
+              className="border-border hover:bg-surface-muted rounded border px-2 py-0.5 text-caption transition-colors"
             >
               {t("transfer.wait")}
             </button>
@@ -271,7 +271,7 @@ function TransferRow({ item, onCancel, speedEstimate, t }: TransferRowProps) {
               type="button"
               onClick={onCancel}
               aria-label={t("transfer.cancelItem", { name: item.name })}
-              className="border-error text-error hover:bg-error/10 rounded border px-2 py-0.5 text-xs"
+              className="border-destructive text-destructive hover:bg-destructive/10 rounded border px-2 py-0.5 text-caption transition-colors"
             >
               {t("transfer.cancel")}
             </button>
@@ -283,15 +283,15 @@ function TransferRow({ item, onCancel, speedEstimate, t }: TransferRowProps) {
               onClick={onCancel}
               title={t("transfer.cancelTransfer")}
               aria-label={t("transfer.cancelItem", { name: item.name })}
-              className="hover:bg-tertiary rounded p-0.5"
+              className="hover:bg-surface-muted rounded p-0.5 transition-colors"
             >
               <XIcon className="h-3.5 w-3.5" />
             </button>
           )
         )}
       </div>
-      <div className="text-darkgray mt-1 flex items-center gap-2 text-xs">
-        <div className="bg-lightgray h-1.5 flex-1 overflow-hidden rounded">
+      <div className="text-muted-foreground mt-1 flex items-center gap-2 text-caption">
+        <div className="bg-border h-1.5 flex-1 overflow-hidden rounded">
           <div className={barClass} style={{ width: `${pct}%` }} />
         </div>
         <span className="whitespace-nowrap tabular-nums">
@@ -299,7 +299,7 @@ function TransferRow({ item, onCancel, speedEstimate, t }: TransferRowProps) {
         </span>
       </div>
       {showSpeedEta && (
-        <p className="text-darkgray mt-1 text-xs tabular-nums">
+        <p className="text-muted-foreground mt-1 text-caption tabular-nums">
           {(speedEstimate?.bytesPerSecond ?? null) !== null
             ? `${formatBytes(speedEstimate?.bytesPerSecond ?? 0)}/s`
             : t("transfer.speedUnknown")}{" "}
@@ -312,7 +312,7 @@ function TransferRow({ item, onCancel, speedEstimate, t }: TransferRowProps) {
       )}
       {item.error && (
         <p
-          className="text-error mt-1 truncate text-xs"
+          className="text-destructive mt-1 truncate text-caption"
           title={item.error.message}
         >
           {item.error.message}

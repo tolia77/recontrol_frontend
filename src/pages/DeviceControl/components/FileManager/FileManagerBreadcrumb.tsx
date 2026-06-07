@@ -32,7 +32,7 @@ function FileManagerBreadcrumb({
     return (
       <nav
         aria-label={t("breadcrumb.ariaLabel")}
-        className="border-lightgray text-darkgray bg-background min-h-[36px] flex-shrink-0 border-b px-3 py-2 text-sm"
+        className="border-border text-muted-foreground bg-surface min-h-[36px] flex-shrink-0 border-b px-3 py-2 text-body"
       >
         {t("breadcrumb.selectFolderPrompt")}
       </nav>
@@ -46,7 +46,7 @@ function FileManagerBreadcrumb({
   return (
     <nav
       aria-label={t("breadcrumb.ariaLabel")}
-      className="border-lightgray bg-background flex min-h-[36px] flex-shrink-0 items-center gap-1 overflow-x-auto border-b px-3 py-2 text-sm"
+      className="border-border bg-surface flex min-h-[36px] flex-shrink-0 items-center gap-1 overflow-x-auto border-b px-3 py-2 text-body"
     >
       {segments.map((seg, i) => {
         const isLast = i === segments.length - 1;
@@ -60,10 +60,10 @@ function FileManagerBreadcrumb({
         return (
           <Fragment key={`${fullPrefix}-${i}`}>
             {i > 0 && (
-              <ChevronRightIcon className="text-darkgray h-3 w-3 flex-shrink-0" />
+              <ChevronRightIcon className="text-muted-foreground h-3 w-3 flex-shrink-0" />
             )}
             {isLast ? (
-              <span className="text-text font-medium whitespace-nowrap">
+              <span className="text-foreground font-medium whitespace-nowrap">
                 {seg}
               </span>
             ) : (
