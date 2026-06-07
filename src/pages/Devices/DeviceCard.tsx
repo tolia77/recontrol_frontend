@@ -17,9 +17,9 @@ function DeviceCard({ device }: { device: Device }) {
   };
 
   const getStatusBg = () => {
-    if (status === "active") return "bg-accent";
-    if (status === "used") return "bg-amber";
-    return "bg-gray-300";
+    if (status === "active") return "bg-success";
+    if (status === "used") return "bg-warning";
+    return "bg-muted-foreground";
   };
 
   const statusLabel = getStatusLabel();
@@ -50,13 +50,13 @@ function DeviceCard({ device }: { device: Device }) {
     >
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0 pr-3">
-          <p className="font-semibold text-text truncate">{device.name}</p>
-          <p className="text-sm text-darkgray mt-1">{owner}</p>
-          <p className="text-xs text-darkgray mt-1">{lastSeen}</p>
+          <p className="font-semibold text-foreground truncate">{device.name}</p>
+          <p className="text-body text-muted-foreground mt-1">{owner}</p>
+          <p className="text-caption text-muted-foreground mt-1">{lastSeen}</p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <span
-            className={`inline-flex h-[30px] items-center justify-center rounded-lg px-3 text-xs font-medium text-white ${statusBg}`}
+            className={`inline-flex h-[30px] items-center justify-center rounded-md px-3 text-caption font-medium text-white ${statusBg}`}
           >
             {statusLabel}
           </span>
@@ -65,7 +65,7 @@ function DeviceCard({ device }: { device: Device }) {
               e.stopPropagation();
               handleSettings();
             }}
-            className="p-1 transition-opacity hover:opacity-80"
+            className="rounded p-1 transition-colors duration-150 hover:bg-surface-muted"
             aria-label={t("table.settings")}
           >
             <SettingsIcon

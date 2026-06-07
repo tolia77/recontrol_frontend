@@ -84,7 +84,7 @@ function Devices() {
   const filterControls = (
     <>
       <div className="flex w-full flex-col md:w-1/5">
-        <label className="mb-1 text-sm" htmlFor="device-owner">
+        <label className="mb-1 text-body" htmlFor="device-owner">
           {t("filters.ownerLabel")}
         </label>
         <select
@@ -93,7 +93,7 @@ function Devices() {
           onChange={(e) =>
             setOwner((e.target.value || "") as GetMyDevicesParams["owner"])
           }
-          className="border-lightgray focus:border-primary rounded border px-3 py-2 text-sm outline-none"
+          className="border-border focus-visible:border-primary rounded-sm border px-3 py-2 text-body outline-none"
         >
           <option value="">{t("filters.ownerAny")}</option>
           <option value="me">{t("filters.ownerMe")}</option>
@@ -102,7 +102,7 @@ function Devices() {
       </div>
 
       <div className="flex w-full flex-col md:w-1/5">
-        <label className="mb-1 text-sm" htmlFor="device-status">
+        <label className="mb-1 text-body" htmlFor="device-status">
           {t("filters.statusLabel")}
         </label>
         <select
@@ -113,7 +113,7 @@ function Devices() {
               (e.target.value || "") as GetMyDevicesParams["status"],
             )
           }
-          className="border-lightgray focus:border-primary rounded border px-3 py-2 text-sm outline-none"
+          className="border-border focus-visible:border-primary rounded-sm border px-3 py-2 text-body outline-none"
         >
           <option value="">{t("filters.statusAny")}</option>
           <option value="active">{t("table.statusActive")}</option>
@@ -122,7 +122,7 @@ function Devices() {
       </div>
 
       <div className="flex w-full flex-col md:w-1/5">
-        <label className="mb-1 text-sm" htmlFor="last-from">
+        <label className="mb-1 text-body" htmlFor="last-from">
           {t("filters.lastFrom")}
         </label>
         <input
@@ -130,12 +130,12 @@ function Devices() {
           type="datetime-local"
           value={lastFrom}
           onChange={(e) => setLastFrom(e.target.value)}
-          className="border-lightgray focus:border-primary rounded border px-3 py-2 text-sm outline-none"
+          className="border-border focus-visible:border-primary rounded-sm border px-3 py-2 text-body outline-none"
         />
       </div>
 
       <div className="flex w-full flex-col md:w-1/5">
-        <label className="mb-1 text-sm" htmlFor="last-to">
+        <label className="mb-1 text-body" htmlFor="last-to">
           {t("filters.lastTo")}
         </label>
         <input
@@ -143,7 +143,7 @@ function Devices() {
           type="datetime-local"
           value={lastTo}
           onChange={(e) => setLastTo(e.target.value)}
-          className="border-lightgray focus:border-primary rounded border px-3 py-2 text-sm outline-none"
+          className="border-border focus-visible:border-primary rounded-sm border px-3 py-2 text-body outline-none"
         />
       </div>
     </>
@@ -154,12 +154,12 @@ function Devices() {
       <PageHeader title={t("title")} />
 
       {/* Filters */}
-      <div className="border-lightgray mb-6 flex flex-col gap-4 rounded-xl border bg-white p-4">
+      <div className="border-border mb-6 flex flex-col gap-4 rounded-md border bg-surface p-4">
         {isMobile ? (
           /* Mobile: name search inline + Filters button */
           <div className="flex gap-3 items-end">
             <div className="flex flex-1 flex-col">
-              <label className="mb-1 text-sm" htmlFor="device-search">
+              <label className="mb-1 text-body" htmlFor="device-search">
                 {t("filters.nameLabel")}
               </label>
               <input
@@ -168,7 +168,7 @@ function Devices() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={t("filters.namePlaceholder")}
-                className="border-lightgray focus:border-primary rounded border px-3 py-2 text-sm outline-none"
+                className="border-border focus-visible:border-primary rounded-sm border px-3 py-2 text-body outline-none"
               />
             </div>
             <Button
@@ -184,7 +184,7 @@ function Devices() {
           <>
             <div className="flex flex-col gap-4 md:flex-row md:items-end">
               <div className="flex w-full flex-col md:w-1/4">
-                <label className="mb-1 text-sm" htmlFor="device-search">
+                <label className="mb-1 text-body" htmlFor="device-search">
                   {t("filters.nameLabel")}
                 </label>
                 <input
@@ -193,7 +193,7 @@ function Devices() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder={t("filters.namePlaceholder")}
-                  className="border-lightgray focus:border-primary rounded border px-3 py-2 text-sm outline-none"
+                  className="border-border focus-visible:border-primary rounded-sm border px-3 py-2 text-body outline-none"
                 />
               </div>
               {filterControls}

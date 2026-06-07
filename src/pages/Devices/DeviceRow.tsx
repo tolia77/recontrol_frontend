@@ -20,9 +20,9 @@ function DeviceRow({ device }: DeviceRowProps) {
   };
 
   const getStatusBg = () => {
-    if (status === "active") return "bg-accent";
-    if (status === "used") return "bg-amber";
-    return "bg-gray-300";
+    if (status === "active") return "bg-success";
+    if (status === "used") return "bg-warning";
+    return "bg-muted-foreground";
   };
 
   const statusLabel = getStatusLabel();
@@ -44,28 +44,28 @@ function DeviceRow({ device }: DeviceRowProps) {
   };
 
   return (
-    <tr className="transition-colors hover:bg-gray-50">
-      <td className="text-text p-4 text-left text-sm leading-5 font-normal">
+    <tr className="transition-colors hover:bg-surface-muted">
+      <td className="text-foreground p-4 text-left text-body leading-5 font-normal">
         <span>{device.name}</span>
       </td>
-      <td className="text-text p-4 text-left text-sm leading-5 font-normal">
+      <td className="text-foreground p-4 text-left text-body leading-5 font-normal">
         <span
-          className={`inline-flex h-[30px] items-center justify-center rounded-lg px-3 text-xs font-medium text-white ${statusBg}`}
+          className={`inline-flex h-[30px] items-center justify-center rounded-md px-3 text-caption font-medium text-white ${statusBg}`}
         >
           {statusLabel}
         </span>
       </td>
-      <td className="text-text p-4 text-left text-sm leading-5 font-normal">
+      <td className="text-foreground p-4 text-left text-body leading-5 font-normal">
         {lastSeen}
       </td>
-      <td className="text-text p-4 text-left text-sm leading-5 font-normal">
+      <td className="text-foreground p-4 text-left text-body leading-5 font-normal">
         {owner}
       </td>
-      <td className="text-text p-4 text-left text-sm leading-5 font-normal">
+      <td className="text-foreground p-4 text-left text-body leading-5 font-normal">
         <div className="flex items-center justify-start gap-2">
           <button
             onClick={handleConnect}
-            className="bg-primary flex h-[35px] items-center gap-2 rounded-lg px-3 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            className="bg-primary flex h-[35px] items-center gap-2 rounded-md px-3 text-body font-medium text-white transition-colors duration-150 hover:bg-primary-hover active:bg-primary-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={status !== "active"}
           >
             <LinkIcon className="h-5 w-5" />
@@ -73,7 +73,7 @@ function DeviceRow({ device }: DeviceRowProps) {
           </button>
           <button
             onClick={handleSettings}
-            className="p-1 transition-opacity hover:opacity-80"
+            className="rounded p-1 transition-colors duration-150 hover:bg-surface-muted"
             aria-label={t("table.settings")}
           >
             <SettingsIcon

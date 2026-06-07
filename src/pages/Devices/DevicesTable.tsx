@@ -10,23 +10,23 @@ function DevicesTable({ devices }: DeviceTableProps) {
   const { t } = useTranslation("devices");
 
   return (
-    <div className="border-lightgray overflow-x-auto rounded-xl border bg-white shadow-sm">
+    <div className="border-border overflow-x-auto rounded-md border bg-surface">
       <table className="w-full min-w-[700px] table-auto border-collapse md:min-w-0">
         <thead>
           <tr>
-            <th className="border-lightgray text-text border-b p-4 text-left text-xl leading-7 font-medium">
+            <th className="border-border text-foreground border-b p-4 text-left text-heading leading-7 font-medium">
               {t("table.name")}
             </th>
-            <th className="border-lightgray text-text border-b p-4 text-left text-xl leading-7 font-medium">
+            <th className="border-border text-foreground border-b p-4 text-left text-heading leading-7 font-medium">
               {t("table.status")}
             </th>
-            <th className="border-lightgray text-text border-b p-4 text-left text-xl leading-7 font-medium">
+            <th className="border-border text-foreground border-b p-4 text-left text-heading leading-7 font-medium">
               {t("table.lastSeen")}
             </th>
-            <th className="border-lightgray text-text border-b p-4 text-left text-xl leading-7 font-medium">
+            <th className="border-border text-foreground border-b p-4 text-left text-heading leading-7 font-medium">
               {t("table.owner")}
             </th>
-            <th className="border-lightgray text-text border-b p-4 text-left text-xl leading-7 font-medium">
+            <th className="border-border text-foreground border-b p-4 text-left text-heading leading-7 font-medium">
               {t("table.actions")}
             </th>
           </tr>

@@ -47,7 +47,7 @@ const PermissionsEditor: React.FC<PermissionsEditorProps> = ({
             onChange={toggle(perm.key)}
             className="h-4 w-4"
           />
-          <span className="text-sm text-gray-700">{perm.label}</span>
+          <span className="text-body text-foreground">{perm.label}</span>
         </label>
       ))}
     </div>
