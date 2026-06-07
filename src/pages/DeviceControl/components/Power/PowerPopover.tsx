@@ -74,7 +74,7 @@ function PowerPopover({ addAction, disabled }: PowerPopoverProps) {
         aria-expanded={open}
         aria-label={t("topbar.power.title")}
         title={t("topbar.power.title")}
-        className="text-darkgray hover:text-text hover:bg-tertiary rounded-lg p-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+        className="text-muted-foreground hover:text-foreground hover:bg-primary/8 rounded-md p-2 transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <PowerIcon className="h-5 w-5" />
       </button>
@@ -82,9 +82,9 @@ function PowerPopover({ addAction, disabled }: PowerPopoverProps) {
       {open && (
         <div
           role="menu"
-          className="border-lightgray bg-background absolute top-full right-0 z-50 mt-2 w-48 rounded-xl border p-1.5 shadow-lg"
+          className="border-border bg-surface absolute top-full right-0 z-50 mt-2 w-48 rounded-lg border p-1.5 shadow-overlay"
         >
-          <h3 className="text-darkgray px-2 py-1 text-xs font-semibold tracking-wide uppercase">
+          <h3 className="text-muted-foreground px-2 py-1 text-caption font-semibold tracking-wide uppercase">
             {t("topbar.power.title")}
           </h3>
           {POWER_OPTIONS.map((opt) => (
@@ -96,7 +96,7 @@ function PowerPopover({ addAction, disabled }: PowerPopoverProps) {
                 sendAction(opt.key);
                 setOpen(false);
               }}
-              className="text-text hover:bg-tertiary w-full rounded-lg px-3 py-2 text-left text-sm transition-colors"
+              className="text-foreground hover:bg-primary/8 w-full rounded-md px-3 py-2 text-left text-body transition-colors duration-150"
             >
               {opt.label}
             </button>

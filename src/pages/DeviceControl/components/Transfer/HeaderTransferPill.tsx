@@ -28,7 +28,7 @@ function HeaderTransferPill({
     <button
       type="button"
       onClick={onClick}
-      className="bg-accent mt-2 w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-white hover:opacity-90"
+      className="bg-success mt-2 w-full rounded-md px-3 py-2 text-left text-body font-medium text-white transition-colors duration-150 hover:bg-success/80"
     >
       {`${count} ${count === 1 ? "transfer" : "transfers"} - ${pct}%`}
     </button>

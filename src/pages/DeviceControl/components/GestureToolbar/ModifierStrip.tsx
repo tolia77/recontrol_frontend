@@ -238,17 +238,17 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
 
     const modifierClass = (isActive: boolean) =>
       [
-        "flex min-h-[44px] min-w-[44px] items-center justify-center rounded px-2 py-1 text-sm font-medium select-none transition-colors border",
+        "flex min-h-[44px] min-w-[44px] items-center justify-center rounded-sm px-2 py-1 text-body font-medium select-none transition-colors duration-150 border",
         isActive
-          ? "bg-accent/15 border-accent text-accent"
-          : "bg-background border-lightgray text-darkgray hover:bg-tertiary",
+          ? "bg-primary/15 border-primary text-primary"
+          : "bg-surface border-border text-muted-foreground hover:bg-primary/8",
         disabled ? "opacity-50 pointer-events-none" : "",
       ]
         .filter(Boolean)
         .join(" ");
 
     const nonStickyClass = [
-      "flex min-h-[44px] min-w-[44px] items-center justify-center rounded px-2 py-1 text-sm font-medium select-none transition-colors border border-lightgray bg-background text-darkgray hover:bg-tertiary",
+      "flex min-h-[44px] min-w-[44px] items-center justify-center rounded-sm px-2 py-1 text-body font-medium select-none transition-colors duration-150 border border-border bg-surface text-muted-foreground hover:bg-primary/8",
       disabled ? "opacity-50 pointer-events-none" : "",
     ]
       .filter(Boolean)
@@ -260,7 +260,7 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
 
     return (
       <div
-        className="fixed left-0 right-0 z-50 flex items-center gap-1 overflow-x-auto border-t border-lightgray bg-background px-2 py-1"
+        className="fixed left-0 right-0 z-50 flex items-center gap-1 overflow-x-auto border-t border-border bg-surface px-2 py-1"
         style={{ bottom: keyboardHeightPx }}
         aria-label={t("mobile.modifierStrip.ariaLabel")}
         role="toolbar"

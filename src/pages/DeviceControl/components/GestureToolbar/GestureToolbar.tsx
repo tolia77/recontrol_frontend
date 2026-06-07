@@ -308,68 +308,68 @@ function GestureToolbar({
         <div className="mb-3 flex flex-col items-end gap-2">
           {/* 1. Touch mode indicator — read-only pill (D-04: Interactive-only on mobile) */}
           <div
-            className="flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-lg border border-lightgray bg-background px-3 py-2 shadow-md"
+            className="flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 shadow-overlay"
             aria-label={t("mobile.toolbar.trackpadMode")}
           >
-            <span className="h-2 w-2 shrink-0 rounded-full bg-accent" aria-hidden="true" />
-            <span className="text-sm text-text">{t("mobile.toolbar.trackpadMode")}</span>
+            <span className="h-2 w-2 shrink-0 rounded-full bg-success" aria-hidden="true" />
+            <span className="text-body text-foreground">{t("mobile.toolbar.trackpadMode")}</span>
           </div>
 
           {/* 2. Files launcher */}
           <button
             type="button"
             onClick={() => handleSelectPanel("files")}
-            className={`flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-lg border px-3 py-2 shadow-md transition-colors ${
+            className={`flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-md border px-3 py-2 shadow-overlay transition-colors duration-150 ${
               rightPaneActive === "files"
-                ? "border-accent/30 bg-tertiary text-text"
-                : "border-lightgray bg-background text-darkgray hover:text-text hover:bg-tertiary"
+                ? "border-primary/30 bg-primary/10 text-foreground"
+                : "border-border bg-surface text-muted-foreground hover:text-foreground hover:bg-primary/8"
             }`}
           >
             <FilesToggleIcon className="h-5 w-5" />
-            <span className="text-sm">{t("mobile.toolbar.files")}</span>
+            <span className="text-body">{t("mobile.toolbar.files")}</span>
           </button>
 
           {/* 3. Assistant launcher (AI-gated) */}
           <button
             type="button"
             onClick={handleAssistant}
-            className={`flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-lg border px-3 py-2 shadow-md transition-colors ${
+            className={`flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-md border px-3 py-2 shadow-overlay transition-colors duration-150 ${
               rightPaneActive === "assistant"
-                ? "border-accent/30 bg-tertiary text-text"
-                : "border-lightgray bg-background text-darkgray hover:text-text hover:bg-tertiary"
+                ? "border-primary/30 bg-primary/10 text-foreground"
+                : "border-border bg-surface text-muted-foreground hover:text-foreground hover:bg-primary/8"
             }`}
           >
             <AssistantToggleIcon className="h-5 w-5" />
-            <span className="text-sm">{t("mobile.toolbar.assistant")}</span>
+            <span className="text-body">{t("mobile.toolbar.assistant")}</span>
           </button>
 
           {/* 4. Scenarios launcher */}
           <button
             type="button"
             onClick={() => handleSelectPanel("scenarios")}
-            className={`flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-lg border px-3 py-2 shadow-md transition-colors ${
+            className={`flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-md border px-3 py-2 shadow-overlay transition-colors duration-150 ${
               rightPaneActive === "scenarios"
-                ? "border-accent/30 bg-tertiary text-text"
-                : "border-lightgray bg-background text-darkgray hover:text-text hover:bg-tertiary"
+                ? "border-primary/30 bg-primary/10 text-foreground"
+                : "border-border bg-surface text-muted-foreground hover:text-foreground hover:bg-primary/8"
             }`}
           >
             <ScenariosIcon className="h-5 w-5" />
-            <span className="text-sm">{t("mobile.toolbar.scenarios")}</span>
+            <span className="text-body">{t("mobile.toolbar.scenarios")}</span>
           </button>
 
           {/* 5. Keyboard toggle (D-10) */}
           <button
             type="button"
             onClick={handleKeyboardToggle}
-            className={`flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-lg border px-3 py-2 shadow-md transition-colors ${
+            className={`flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-md border px-3 py-2 shadow-overlay transition-colors duration-150 ${
               keyboardRaised
-                ? "border-accent text-accent bg-background"
-                : "border-lightgray bg-background text-darkgray hover:text-text hover:bg-tertiary"
+                ? "border-primary text-primary bg-surface"
+                : "border-border bg-surface text-muted-foreground hover:text-foreground hover:bg-primary/8"
             }`}
             aria-pressed={keyboardRaised}
           >
             <KeyboardIcon className="h-5 w-5" />
-            <span className="text-sm">
+            <span className="text-body">
               {keyboardRaised
                 ? t("mobile.toolbar.keyboardOn")
                 : t("mobile.toolbar.keyboard")}
@@ -377,9 +377,9 @@ function GestureToolbar({
           </button>
 
           {/* 6. Power — re-hosts the existing PowerPopover (T-36-06 gate) */}
-          <div className="flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-lg border border-lightgray bg-background px-3 py-2 shadow-md text-error">
+          <div className="flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 shadow-overlay text-destructive">
             <PowerIcon className="h-5 w-5" />
-            <span className="text-sm">{t("mobile.toolbar.power")}</span>
+            <span className="text-body">{t("mobile.toolbar.power")}</span>
             <div className="ml-auto">
               <PowerPopover addAction={addAction} disabled={disabled} />
             </div>
@@ -389,19 +389,19 @@ function GestureToolbar({
           <button
             type="button"
             onClick={handleDisconnect}
-            className="flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-lg border border-lightgray bg-background px-3 py-2 shadow-md text-error transition-colors hover:bg-tertiary"
+            className="flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 shadow-overlay text-destructive transition-colors duration-150 hover:bg-destructive/10"
           >
             <CloseIcon className="h-5 w-5" />
-            <span className="text-sm">{t("mobile.toolbar.disconnect")}</span>
+            <span className="text-body">{t("mobile.toolbar.disconnect")}</span>
           </button>
 
           {/* Back to devices (alternative to disconnect) */}
           <button
             type="button"
             onClick={handleNavigateBack}
-            className="flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-lg border border-lightgray bg-background px-3 py-2 shadow-md text-darkgray transition-colors hover:text-text hover:bg-tertiary"
+            className="flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 shadow-overlay text-muted-foreground transition-colors duration-150 hover:text-foreground hover:bg-primary/8"
           >
-            <span className="text-sm">{t("mobile.toolbar.back")}</span>
+            <span className="text-body">{t("mobile.toolbar.back")}</span>
           </button>
         </div>
       )}
@@ -412,7 +412,7 @@ function GestureToolbar({
         onClick={() => setOpen((o) => !o)}
         aria-label={t("mobile.toolbar.openControls") as string}
         aria-expanded={open}
-        className="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-primary text-white shadow-lg transition-opacity hover:opacity-90 active:opacity-80"
+        className="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-primary text-white shadow-overlay transition-colors duration-150 hover:bg-primary-hover active:bg-primary-active"
       >
         <DotsIcon className="h-6 w-6" />
       </button>

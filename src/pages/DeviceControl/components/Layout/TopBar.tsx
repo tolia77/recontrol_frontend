@@ -63,15 +63,15 @@ function PanelTab({
       aria-pressed={active}
       title={hint}
       data-testid={testId}
-      className={`flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium transition-colors ${
+      className={`flex h-8 items-center gap-1.5 rounded-md px-2.5 text-body font-medium transition-colors duration-150 ${
         active
-          ? "bg-accent/10 text-text ring-accent/30 ring-1"
-          : "text-darkgray hover:text-text hover:bg-tertiary"
+          ? "bg-primary/10 text-foreground ring-primary/30 ring-1"
+          : "text-muted-foreground hover:text-foreground hover:bg-primary/8"
       }`}
     >
       {icon}
       <span>{label}</span>
-      <span className="text-darkgray/70 hidden text-[10px] font-normal lg:inline">
+      <span className="text-muted-foreground/70 hidden text-[10px] font-normal lg:inline">
         {hint}
       </span>
     </button>
@@ -120,32 +120,32 @@ function TopBar({
   const webRtcUp = connectionState === "connected";
 
   const dotColor = webRtcUp
-    ? "bg-accent"
+    ? "bg-success"
     : isStreamBusy
-      ? "bg-amber"
-      : "bg-error";
+      ? "bg-warning"
+      : "bg-destructive";
 
   return (
-    <header className="border-lightgray bg-background flex h-[52px] shrink-0 items-center gap-3 border-b px-3">
+    <header className="border-border bg-surface flex h-[52px] shrink-0 items-center gap-3 border-b px-3">
       {/* LEFT — Identity */}
       <button
         type="button"
         onClick={() => navigate("/devices")}
         aria-label={t("sidebar.control")}
-        className="text-darkgray hover:text-text hover:bg-tertiary rounded-lg p-1.5 transition-colors"
+        className="text-muted-foreground hover:text-foreground hover:bg-primary/8 rounded-md p-1.5 transition-colors duration-150"
       >
         <ChevronLeftIcon className="h-5 w-5" />
       </button>
 
       <div
-        className="border-lightgray bg-background flex items-center gap-2 rounded-full border px-3 py-1"
+        className="border-border bg-surface flex items-center gap-2 rounded-full border px-3 py-1"
         title={deviceName || t("topbar.deviceLabel")}
       >
         <span
           className={`h-2 w-2 shrink-0 rounded-full ${dotColor}`}
           aria-hidden="true"
         />
-        <span className="text-text max-w-[12rem] truncate text-sm font-medium">
+        <span className="text-foreground max-w-[12rem] truncate text-body font-medium">
           {deviceName || t("topbar.deviceLabel")}
         </span>
       </div>
@@ -168,14 +168,14 @@ function TopBar({
       )}
 
       {/* CENTER — Workspace */}
-      <div className="bg-tertiary flex h-8 items-center rounded-lg p-0.5">
+      <div className="bg-primary/10 flex h-8 items-center rounded-md p-0.5">
         <button
           type="button"
           onClick={() => setActiveMode("interactive")}
-          className={`h-7 rounded-md px-3 text-sm font-medium transition-colors ${
+          className={`h-7 rounded-sm px-3 text-body font-medium transition-colors duration-150 ${
             activeMode === "interactive"
-              ? "text-accent bg-background shadow-sm"
-              : "text-darkgray hover:text-text"
+              ? "text-primary bg-surface"
+              : "text-muted-foreground hover:text-foreground"
           }`}
         >
           {t("sidebar.interactive")}
@@ -183,10 +183,10 @@ function TopBar({
         <button
           type="button"
           onClick={() => setActiveMode("manual")}
-          className={`h-7 rounded-md px-3 text-sm font-medium transition-colors ${
+          className={`h-7 rounded-sm px-3 text-body font-medium transition-colors duration-150 ${
             activeMode === "manual"
-              ? "text-text bg-background shadow-sm"
-              : "text-darkgray hover:text-text"
+              ? "text-foreground bg-surface"
+              : "text-muted-foreground hover:text-foreground"
           }`}
         >
           {t("sidebar.manual")}
@@ -256,7 +256,7 @@ function TopBar({
               type="button"
               disabled={disabled || isStreamBusy}
               onClick={() => onStopStream?.()}
-              className="flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-100 px-3 py-1.5 text-sm font-medium text-red-700 transition-colors hover:border-red-300 hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex items-center gap-1.5 rounded-md border border-destructive/20 bg-destructive/10 px-3 py-1.5 text-body font-medium text-destructive transition-colors duration-150 hover:border-destructive/30 hover:bg-destructive/20 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <StopIcon className="h-3.5 w-3.5" />
               <span>
@@ -270,7 +270,7 @@ function TopBar({
               type="button"
               disabled={disabled}
               onClick={() => onStartStream?.()}
-              className="bg-secondary hover:bg-primary disabled:bg-lightgray disabled:text-darkgray rounded-lg px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors disabled:cursor-not-allowed"
+              className="bg-primary hover:bg-primary-hover disabled:bg-border disabled:text-muted-foreground rounded-md px-3 py-1.5 text-body font-medium text-white transition-colors duration-150 disabled:cursor-not-allowed"
             >
               {t("manual.quick.startStream")}
             </button>

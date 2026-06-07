@@ -40,15 +40,15 @@ export interface ClipboardPillProps {
 
 // D-06 per-state background tokens (Tailwind, project palette).
 const PILL_BG: Record<PillState, string> = {
-  "connected-idle": "bg-accent",
-  pulsing: "bg-accent",
-  paused: "bg-amber",
-  "read-only": "bg-amber",
-  "refused-too-large": "bg-amber",
-  disabled: "bg-secondary",
-  disconnected: "bg-error/60",
-  "permission-required": "bg-error/60",
-  "unsupported-browser": "bg-secondary",
+  "connected-idle": "bg-success",
+  pulsing: "bg-success",
+  paused: "bg-warning",
+  "read-only": "bg-warning",
+  "refused-too-large": "bg-warning",
+  disabled: "bg-primary",
+  disconnected: "bg-destructive/60",
+  "permission-required": "bg-destructive/60",
+  "unsupported-browser": "bg-primary",
 };
 
 // D-15 i18n key suffix per PillState (matches en/clipboard.ts pill.state.*).
@@ -217,7 +217,7 @@ function ClipboardPill(props: ClipboardPillProps) {
       : t(result.tooltipKey);
 
   const className = [
-    "mt-2 w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-white hover:opacity-90",
+    "mt-2 w-full rounded-md px-3 py-2 text-left text-body font-medium text-white transition-colors duration-150 hover:opacity-80",
     bg,
     isPulsing
       ? "animate-pulse [animation-duration:400ms] [animation-iteration-count:1] motion-reduce:animate-none motion-reduce:transition-opacity motion-reduce:duration-[400ms]"

@@ -95,7 +95,7 @@ function DeviceControlBottomSheet({ open, onClose, title, children, forceFullHei
   // Sheet panel CSS classes — always mounted, toggle visibility via CSS
   const baseClasses = [
     "fixed left-0 right-0 bottom-0 z-30",
-    "bg-background border-t border-lightgray shadow-xl",
+    "bg-surface border-t border-border shadow-modal",
     "pb-[calc(env(safe-area-inset-bottom)+1rem)]",
     "overflow-y-auto",
     "transition-transform duration-300 ease-out",
@@ -104,8 +104,8 @@ function DeviceControlBottomSheet({ open, onClose, title, children, forceFullHei
   const orientationClasses = isLandscape
     ? "inset-0 h-dvh rounded-none"
     : forceFullHeight
-      ? "h-dvh rounded-t-2xl"
-      : "h-[50dvh] rounded-t-2xl";
+      ? "h-dvh rounded-t-lg"
+      : "h-[50dvh] rounded-t-lg";
 
   const visibilityClasses = open
     ? "translate-y-0"
@@ -142,18 +142,18 @@ function DeviceControlBottomSheet({ open, onClose, title, children, forceFullHei
           onPointerUp={handleDragPointerUp}
           aria-hidden="true"
         >
-          {/* Centered pill — w-10 h-1 bg-lightgray rounded-full */}
-          <div className="h-1 w-10 rounded-full bg-lightgray" />
+          {/* Centered pill — w-10 h-1 bg-border rounded-full */}
+          <div className="h-1 w-10 rounded-full bg-border" />
         </div>
 
         {/* Header — title left, close button right (D-06 dismiss path 3) */}
         <div className="flex items-center justify-between px-4 pb-0 pt-2">
-          <span className="text-[20px] font-medium text-text">{title}</span>
+          <span className="text-[20px] font-medium text-foreground">{title}</span>
           <button
             type="button"
             onClick={onClose}
             aria-label={t("mobile.sheet.closePanel")}
-            className="flex h-[44px] w-[44px] items-center justify-center rounded-lg bg-transparent text-darkgray transition-colors hover:text-text"
+            className="flex h-[44px] w-[44px] items-center justify-center rounded-md bg-transparent text-muted-foreground transition-colors duration-150 hover:text-foreground hover:bg-primary/8"
           >
             <CloseIcon className="h-5 w-5" />
           </button>
