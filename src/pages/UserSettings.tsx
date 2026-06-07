@@ -7,7 +7,7 @@ import { getErrorMessage } from "src/utils/getErrorMessage";
 import { useTranslation } from "react-i18next";
 import { useToast } from "src/components/ui/Toast";
 import Button from "src/components/ui/Button";
-import { LoadingState, PageHeader } from "src/components/ui";
+import { LoadingState, PageHeader, Input } from "src/components/ui";
 
 function UserSettings() {
   const { t } = useTranslation("userSettings");
@@ -100,48 +100,32 @@ function UserSettings() {
       <PageHeader title={t("title")} />
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="text-text text-sm font-medium" htmlFor="username">
-            {t("fields.username")}
-          </label>
-          <input
-            id="username"
-            type="text"
-            className="mt-1 w-full"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </div>
+        <Input
+          label={t("fields.username")}
+          id="username"
+          type="text"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+        />
 
-        <div>
-          <label className="text-text text-sm font-medium" htmlFor="email">
-            {t("fields.email")}
-          </label>
-          <input
-            id="email"
-            type="email"
-            className="mt-1 w-full"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
+        <Input
+          label={t("fields.email")}
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
 
-        <div>
-          <label className="text-text text-sm font-medium" htmlFor="password">
-            {t("fields.password")}{" "}
-            <span className="opacity-60">({t("fields.passwordHelp")})</span>
-          </label>
-          <input
-            id="password"
-            type="password"
-            className="mt-1 w-full"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder={t("fields.passwordPlaceholder")}
-          />
-        </div>
+        <Input
+          label={`${t("fields.password")} (${t("fields.passwordHelp")})`}
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder={t("fields.passwordPlaceholder")}
+        />
 
         <Button type="submit" loading={saving}>
           {saving ? t("buttons.saving") : t("buttons.save")}
