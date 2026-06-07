@@ -93,7 +93,7 @@ function Splitter({
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerUp}
-            className="bg-lightgray hover:bg-primary w-1 flex-shrink-0 cursor-col-resize transition-colors"
+            className="bg-border hover:bg-primary w-1 flex-shrink-0 cursor-col-resize transition-colors"
           />
           <div
             style={{ width: `${(1 - ratio) * 100}%` }}

@@ -47,8 +47,8 @@ function DownloadBlockedDialog({
     >
       <Modal.Header>{t("dialogs.downloadBlocked.title")}</Modal.Header>
       <Modal.Body>
-        <p className="text-text/80 mb-2 text-sm break-all">{fileName}</p>
-        <p className="text-text/80 text-sm">
+        <p className="text-foreground/80 mb-2 text-body break-all">{fileName}</p>
+        <p className="text-foreground/80 text-body">
           {t("dialogs.downloadBlocked.body", { sizeMb })}
         </p>
       </Modal.Body>
@@ -57,7 +57,7 @@ function DownloadBlockedDialog({
           ref={okRef}
           type="button"
           onClick={onClose}
-          className="bg-accent rounded-md px-4 py-2 text-white hover:opacity-90"
+          className="bg-primary rounded-md px-4 py-2 text-white hover:bg-primary-hover transition-colors"
         >
           {t("dialogs.ok")}
         </button>

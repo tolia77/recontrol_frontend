@@ -572,7 +572,7 @@ function FileManagerPanel({
       <div
         ref={rootRef}
         tabIndex={0}
-        className="bg-background text-text text-darkgray flex h-full w-full items-center justify-center p-8 text-center text-sm outline-none"
+        className="bg-surface text-muted-foreground flex h-full w-full items-center justify-center p-8 text-center text-body outline-none"
       >
         {t("channelDisconnected")}
       </div>
@@ -585,7 +585,7 @@ function FileManagerPanel({
       <div
         ref={rootRef}
         tabIndex={0}
-        className="bg-background text-text flex h-full w-full outline-none"
+        className="bg-surface text-foreground flex h-full w-full outline-none"
       >
         <FileManagerEmptyAllowlist />
       </div>
@@ -597,7 +597,7 @@ function FileManagerPanel({
       ref={rootRef}
       tabIndex={0}
       onKeyDown={keyboard.onKeyDown}
-      className="bg-background text-text flex h-full w-full outline-none"
+      className="bg-surface text-foreground flex h-full w-full outline-none"
     >
       {/* Browsing chrome — presentational view (D-01 / D-08) */}
       <FileManagerView
@@ -683,7 +683,7 @@ function FileManagerPanel({
                 ))}
               </ul>
               {uiState.confirm.names.length > 5 && (
-                <p className="text-darkgray mt-1 text-sm">
+                <p className="text-muted-foreground mt-1 text-body">
                   {t("dialogs.delete.andMore", {
                     count: uiState.confirm.names.length - 5,
                   })}

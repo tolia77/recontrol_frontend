@@ -21,8 +21,8 @@ function DropZoneOverlay() {
       className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center"
       aria-hidden="true"
     >
-      <div className="bg-accent/10 border-accent flex h-[92%] w-[92%] items-center justify-center rounded-lg border-2 border-dashed">
-        <p className="text-accent text-base font-medium">
+      <div className="bg-primary/10 border-primary flex h-[92%] w-[92%] items-center justify-center rounded-lg border-2 border-dashed">
+        <p className="text-primary text-body-lg font-medium">
           {t("dropZone.drop")}
         </p>
       </div>

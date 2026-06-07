@@ -234,15 +234,15 @@ function FolderPickerModal({
     >
       <Modal.Header>{title}</Modal.Header>
       <Modal.Body>
-        <div className="border-lightgray bg-background mb-4 max-h-[60vh] overflow-auto rounded-md border p-1">
+        <div className="border-border bg-surface mb-4 max-h-[60vh] overflow-auto rounded-md border p-1">
           {rootsError ? (
-            <div className="text-error p-3 text-sm">{rootsError}</div>
+            <div className="text-destructive p-3 text-body">{rootsError}</div>
           ) : roots === null ? (
-            <div className="text-darkgray p-3 text-sm">
+            <div className="text-muted-foreground p-3 text-body">
               {t("dialogs.folderPicker.loading")}
             </div>
           ) : roots.length === 0 ? (
-            <div className="text-darkgray p-3 text-sm">
+            <div className="text-muted-foreground p-3 text-body">
               {t("dialogs.folderPicker.noSharedFolders")}
             </div>
           ) : (
@@ -272,7 +272,7 @@ function FolderPickerModal({
           type="button"
           onClick={onCancel}
           disabled={!!isBusy}
-          className="border-lightgray text-text hover:bg-tertiary rounded-md border px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="border-border text-foreground hover:bg-surface-muted rounded-md border px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         >
           {t("dialogs.cancel")}
         </button>
@@ -282,7 +282,7 @@ function FolderPickerModal({
             if (selectedPath) onConfirm(selectedPath);
           }}
           disabled={!canConfirm}
-          className="bg-accent inline-flex items-center gap-2 rounded-md px-4 py-2 text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+          className="bg-success inline-flex items-center gap-2 rounded-md px-4 py-2 text-white hover:bg-success/90 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isBusy && (
             <span
@@ -342,7 +342,7 @@ function TreeNode({
   const rowCls = [
     "flex items-center gap-1 py-1 pl-1 pr-2 rounded transition-colors",
     isSelected
-      ? "bg-accent/20 border-l-4 border-accent"
+      ? "bg-primary/8 border-l-4 border-primary"
       : isCurrent
         ? "bg-primary/5 border-l-4 border-primary/40"
         : "border-l-4 border-transparent",
@@ -350,7 +350,7 @@ function TreeNode({
       ? isCurrent
         ? "cursor-default"
         : "opacity-50 cursor-not-allowed"
-      : "hover:bg-tertiary cursor-pointer",
+      : "hover:bg-surface-muted cursor-pointer",
   ]
     .filter(Boolean)
     .join(" ");
@@ -373,7 +373,7 @@ function TreeNode({
             e.stopPropagation();
             onToggle(entry.path);
           }}
-          className="hover:bg-lightgray/30 text-text rounded p-0.5"
+          className="hover:bg-surface-muted text-foreground rounded p-0.5 transition-colors"
         >
           {isExpanded ? (
             <ChevronDownIcon className="h-3 w-3" />
@@ -382,7 +382,7 @@ function TreeNode({
           )}
         </button>
         <FolderIcon className="text-primary h-4 w-4" />
-        <span className="text-text truncate" title={entry.path}>
+        <span className="text-foreground truncate" title={entry.path}>
           {entry.name}
         </span>
         {isCurrent && (
@@ -395,14 +395,14 @@ function TreeNode({
         )}
         {node.loading && (
           <span
-            className="border-darkgray ml-1 inline-block h-3 w-3 animate-spin rounded-full border-2 border-t-transparent"
+            className="border-muted-foreground ml-1 inline-block h-3 w-3 animate-spin rounded-full border-2 border-t-transparent"
             aria-hidden="true"
           />
         )}
       </div>
       {node.error && isExpanded && (
         <div
-          className="text-error py-1 pl-2 text-xs"
+          className="text-destructive py-1 pl-2 text-caption"
           style={{ paddingLeft: `${(depth + 1) * 16 + 4}px` }}
         >
           {node.error}
@@ -410,7 +410,7 @@ function TreeNode({
       )}
       {isExpanded && node.loaded && node.children.length === 0 && (
         <div
-          className="text-darkgray py-1 text-xs"
+          className="text-muted-foreground py-1 text-caption"
           style={{ paddingLeft: `${(depth + 1) * 16 + 4}px` }}
         >
           {t("dialogs.folderPicker.noFolders")}

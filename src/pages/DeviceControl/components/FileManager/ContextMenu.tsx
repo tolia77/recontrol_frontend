@@ -95,7 +95,7 @@ function ContextMenu({ state, onClose }: ContextMenuProps) {
       <div
         ref={menuRef}
         role="menu"
-        className="bg-background border-lightgray fixed z-50 min-w-[180px] rounded-md border py-1 shadow-lg"
+        className="bg-surface border-border fixed z-50 min-w-[180px] rounded-md border py-1 shadow-overlay"
         style={{ left, top }}
         // Stop click bubbling so clicks INSIDE the menu don't hit the overlay.
         onClick={(e) => e.stopPropagation()}
@@ -106,17 +106,19 @@ function ContextMenu({ state, onClose }: ContextMenuProps) {
             return (
               <hr
                 key={`sep-${idx}`}
-                className="border-lightgray my-1 border-t"
+                className="border-border my-1 border-t"
               />
             );
           }
           const cls = [
-            "block w-full text-left px-3 py-1.5 text-sm transition-colors",
+            "block w-full text-left px-3 py-1.5 text-body transition-colors",
             item.disabled
-              ? "opacity-50 cursor-not-allowed text-darkgray"
-              : "hover:bg-tertiary cursor-pointer",
-            item.danger && !item.disabled ? "text-error" : "",
-            item.danger && item.disabled ? "text-error/50" : "",
+              ? "opacity-50 cursor-not-allowed text-muted-foreground"
+              : item.danger
+                ? "hover:bg-destructive/10 cursor-pointer"
+                : "hover:bg-surface-muted cursor-pointer",
+            item.danger && !item.disabled ? "text-destructive" : "",
+            item.danger && item.disabled ? "text-destructive/50" : "",
           ]
             .filter(Boolean)
             .join(" ");

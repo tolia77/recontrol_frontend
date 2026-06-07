@@ -38,14 +38,14 @@ function NameConflictDialog({
     >
       <Modal.Header>{t("dialogs.nameConflict.title")}</Modal.Header>
       <Modal.Body>
-        <p className="text-text/80 text-sm">
+        <p className="text-foreground/80 text-body">
           {t("dialogs.nameConflict.bodyPrefix")}{" "}
           <span className="font-medium">&quot;{fileName}&quot;</span>{" "}
           {t("dialogs.nameConflict.bodySuffix", { operationLabel })}
         </p>
-        <p className="text-text/70 mt-1 text-xs break-all">{destinationPath}</p>
+        <p className="text-foreground/70 mt-1 text-caption break-all">{destinationPath}</p>
 
-        <label className="text-text mt-4 flex cursor-pointer items-center gap-2 text-sm select-none">
+        <label className="text-foreground mt-4 flex cursor-pointer items-center gap-2 text-body select-none">
           <input
             type="checkbox"
             checked={applyToAll}
@@ -59,7 +59,7 @@ function NameConflictDialog({
         <button
           type="button"
           onClick={() => onDecide("replace", applyToAll)}
-          className="bg-accent rounded-md px-3 py-2 text-white hover:opacity-90"
+          className="bg-success rounded-md px-3 py-2 text-white hover:bg-success/90 transition-colors"
         >
           {t("dialogs.nameConflict.replace")}
         </button>
@@ -67,14 +67,14 @@ function NameConflictDialog({
           ref={skipRef}
           type="button"
           onClick={() => onDecide("skip", applyToAll)}
-          className="border-lightgray text-text hover:bg-tertiary rounded-md border px-3 py-2"
+          className="border-border text-foreground hover:bg-surface-muted rounded-md border px-3 py-2 transition-colors"
         >
           {t("dialogs.nameConflict.skip")}
         </button>
         <button
           type="button"
           onClick={() => onDecide("keepBoth", applyToAll)}
-          className="bg-primary rounded-md px-3 py-2 text-white hover:opacity-90"
+          className="bg-primary rounded-md px-3 py-2 text-white hover:bg-primary-hover transition-colors"
         >
           {t("dialogs.nameConflict.keepBoth")}
         </button>
