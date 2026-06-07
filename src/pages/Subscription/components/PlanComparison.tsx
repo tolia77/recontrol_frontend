@@ -92,8 +92,8 @@ function PlanComparison({
             padding="lg"
             className={
               isHighlighted
-                ? "border-2 border-primary rounded-lg flex flex-col"
-                : "border border-lightgray rounded-lg flex flex-col"
+                ? "border-2 border-primary rounded-md flex flex-col"
+                : "border border-border rounded-md flex flex-col"
             }
           >
             {/* Column header — plan name + price */}
@@ -104,10 +104,10 @@ function PlanComparison({
                   : ""
               }
             >
-              <h3 className="text-xl font-semibold mb-2">
+              <h3 className="text-heading font-semibold mb-2">
                 {t(`plan.${plan.name}`)}
               </h3>
-              <p className="text-sm text-darkgray">
+              <p className="text-body text-muted-foreground">
                 {plan.monthly_price === 0
                   ? t("price.free")
                   : t("price.paid", { price: formatPrice(plan.monthly_price) })}
@@ -135,12 +135,12 @@ function PlanComparison({
                 return (
                   <div
                     key={row.key}
-                    className={`flex justify-between text-sm px-1 rounded ${isGatedRow ? "bg-primary/5" : ""}`}
+                    className={`flex justify-between text-body px-1 rounded-sm ${isGatedRow ? "bg-primary/5" : ""}`}
                   >
                     <span className={isGatedRow ? "font-semibold" : ""}>
                       {t(`comparison.feature.${row.key}`)}
                     </span>
-                    <span className={included ? "text-accent" : "text-darkgray"}>
+                    <span className={included ? "text-success" : "text-muted-foreground"}>
                       {displayValue}
                     </span>
                   </div>

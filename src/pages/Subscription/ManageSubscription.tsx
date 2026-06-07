@@ -24,7 +24,7 @@ function ManageSubscription() {
       <StatusHeader status={status} />
       <UsageCard />
       <section className="mt-8">
-        <h3 className="text-xl font-semibold mb-4">{t("choosePlan")}</h3>
+        <h3 className="text-heading font-semibold mb-4">{t("choosePlan")}</h3>
         <PlanCards status={status} />
       </section>
     </div>

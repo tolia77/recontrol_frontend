@@ -76,18 +76,18 @@ function SubscriptionReturn() {
 
         {phase === "success" && (
           <div className="flex flex-col gap-3 text-center">
-            <div className="text-accent text-5xl" aria-hidden="true">
+            <div className="text-success text-5xl" aria-hidden="true">
               &#10003;
             </div>
-            <h2 className="text-xl font-semibold">{t("return.successHeading")}</h2>
-            <p className="text-sm text-darkgray">
+            <h2 className="text-heading font-semibold">{t("return.successHeading")}</h2>
+            <p className="text-body text-muted-foreground">
               {t("return.successBody", {
                 plan: activePlan ? t(`plan.${activePlan}`) : "",
               })}
             </p>
             <Link
               to="/subscription"
-              className="mt-2 inline-flex items-center justify-center px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:opacity-90"
+              className="mt-2 inline-flex items-center justify-center px-4 py-2 bg-primary text-white text-body font-medium rounded-md transition-colors duration-150 hover:bg-primary-hover active:bg-primary-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
             >
               {t("return.manageCta")}
             </Link>
@@ -96,8 +96,8 @@ function SubscriptionReturn() {
 
         {phase === "timeout" && (
           <div className="flex flex-col gap-3 text-center">
-            <h2 className="text-xl font-semibold">{t("return.pendingHeading")}</h2>
-            <p className="text-sm text-darkgray">{t("return.pendingBody")}</p>
+            <h2 className="text-heading font-semibold">{t("return.pendingHeading")}</h2>
+            <p className="text-body text-muted-foreground">{t("return.pendingBody")}</p>
             <div className="flex flex-col gap-3 mt-2">
               <Button
                 variant="primary"
@@ -108,7 +108,7 @@ function SubscriptionReturn() {
               </Button>
               <Link
                 to="/subscription"
-                className="inline-flex items-center justify-center px-4 py-2 bg-background text-primary border border-lightgray text-sm font-medium rounded-lg hover:bg-tertiary"
+                className="inline-flex items-center justify-center px-4 py-2 bg-surface text-primary border border-border text-body font-medium rounded-md transition-colors duration-150 hover:bg-primary/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
               >
                 {t("return.manageCta")}
               </Link>
@@ -118,11 +118,11 @@ function SubscriptionReturn() {
 
         {phase === "abandoned" && (
           <div className="flex flex-col gap-3 text-center">
-            <h2 className="text-xl font-semibold">{t("return.abandonedHeading")}</h2>
-            <p className="text-sm text-darkgray">{t("return.abandonedBody")}</p>
+            <h2 className="text-heading font-semibold">{t("return.abandonedHeading")}</h2>
+            <p className="text-body text-muted-foreground">{t("return.abandonedBody")}</p>
             <Link
               to="/subscription"
-              className="mt-2 inline-flex items-center justify-center px-4 py-2 bg-background text-primary border border-lightgray text-sm font-medium rounded-lg hover:bg-tertiary"
+              className="mt-2 inline-flex items-center justify-center px-4 py-2 bg-surface text-primary border border-border text-body font-medium rounded-md transition-colors duration-150 hover:bg-primary/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
             >
               {t("return.backCta")}
             </Link>

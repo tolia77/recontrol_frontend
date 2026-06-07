@@ -275,7 +275,7 @@ function PlanCards({ status }: PlanCardsProps) {
       : null;
 
     return (
-      <div className="space-y-2 text-sm">
+      <div className="space-y-2 text-body">
         <p>
           {renewalDate
             ? t("confirmCancelBody", { renewalDate })
@@ -307,7 +307,7 @@ function PlanCards({ status }: PlanCardsProps) {
         return {
           title: t("confirmSubscribeTitle", { plan: t(`plan.${plan.name}`) }),
           body: (
-            <p className="text-sm">
+            <p className="text-body">
               {t("confirmSubscribeBody", { price })}
             </p>
           ),
@@ -319,7 +319,7 @@ function PlanCards({ status }: PlanCardsProps) {
         return {
           title: t("confirmUpgradeTitle", { plan: t(`plan.${plan.name}`) }),
           body: (
-            <p className="text-sm">
+            <p className="text-body">
               {t("confirmUpgradeBody", { price })}
             </p>
           ),
@@ -330,7 +330,7 @@ function PlanCards({ status }: PlanCardsProps) {
         return {
           title: t("confirmDowngradeTitle", { plan: t(`plan.${plan.name}`) }),
           body: (
-            <p className="text-sm">
+            <p className="text-body">
               {t("confirmDowngradeBody", {
                 currentPlan: currentPlanLabel,
                 renewalDate: renewalDate ?? "",
@@ -363,7 +363,7 @@ function PlanCards({ status }: PlanCardsProps) {
       <>
         {/* Pending downgrade note — D-04: read-only, NO revert button */}
         {status?.scheduled_plan && plan.name === currentPlanName && (
-          <p className="text-darkgray mb-3 text-sm">
+          <p className="text-muted-foreground mb-3 text-body">
             {t("pendingDowngrade.note", {
               plan: t(`plan.${status.scheduled_plan}`),
               date: status.period_end
@@ -380,7 +380,7 @@ function PlanCards({ status }: PlanCardsProps) {
         {isCurrent ? (
           <span
             role="status"
-            className="text-primary border-primary block rounded-lg border px-4 py-2 text-center text-sm font-medium"
+            className="text-primary border-primary block rounded-md border px-4 py-2 text-center text-body font-medium"
           >
             {t("planCard.current")}
           </span>
@@ -398,7 +398,7 @@ function PlanCards({ status }: PlanCardsProps) {
   }
 
   if (loadingPlans) {
-    return <div className="py-8 text-center text-sm text-darkgray">{t("loadingPlans")}</div>;
+    return <div className="py-8 text-center text-body text-muted-foreground">{t("loadingPlans")}</div>;
   }
 
   return (
