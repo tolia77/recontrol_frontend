@@ -146,7 +146,8 @@ export function useAdminAiUsage(): UseAdminAiUsageReturn {
     }
 
     const unsortedRows: PerUserRow[] = [...byUser.entries()].map(
-      ([user_id, { modelTokens: _mt, ...v }]) => ({ user_id, ...v }),
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      ([user_id, { modelTokens: _modelTokens, ...v }]) => ({ user_id, ...v }),
     );
 
     // Sort per-user rows
