@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Card, LoadingState, EmptyState } from "src/components/ui";
 import type {
@@ -53,9 +54,8 @@ export default function AdminSubscriptionsTable({
             </thead>
             <tbody>
               {rows.map((row) => (
-                <>
+                <Fragment key={row.id}>
                   <tr
-                    key={row.id}
                     className="hover:bg-surface-muted border-b align-top last:border-b-0"
                   >
                     <td className="px-2 py-2">
@@ -100,7 +100,6 @@ export default function AdminSubscriptionsTable({
                   </tr>
                   {expandedRowId === row.id && (
                     <tr
-                      key={`${row.id}-billing`}
                       className="bg-surface-muted border-b"
                     >
                       <td colSpan={COL_COUNT} className="px-4 py-3">
@@ -156,7 +155,7 @@ export default function AdminSubscriptionsTable({
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               ))}
             </tbody>
           </table>
