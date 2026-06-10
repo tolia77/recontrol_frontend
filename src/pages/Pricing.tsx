@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
+import { isAuthenticated } from "src/utils/auth";
 import SiteHeader from "src/components/Shell/SiteHeader";
 import Button from "src/components/ui/Button";
 
@@ -71,6 +72,7 @@ interface PlanFeature {
 
 function PlanCard({ planKey, highlighted }: PlanCardProps) {
   const { t } = useTranslation("pricing");
+  const loggedIn = isAuthenticated();
   const name = t(`plans.${planKey}.name`);
   const features = t(`plans.${planKey}.features`, {
     returnObjects: true,
@@ -118,7 +120,7 @@ function PlanCard({ planKey, highlighted }: PlanCardProps) {
       </ul>
 
       <div className="mt-auto">
-        <Link to="/signup" className="block">
+        <Link to={loggedIn ? "/subscription" : "/signup"} className="block">
           <Button
             variant={highlighted ? "primary" : "secondary"}
             size="md"
