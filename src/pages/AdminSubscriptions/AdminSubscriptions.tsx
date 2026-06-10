@@ -51,6 +51,10 @@ const AdminSubscriptions = () => {
   const [overrideUserId, setOverrideUserId] = useState("");
   const [overridePlanId, setOverridePlanId] = useState("");
 
+  // NOTE: this gate is cosmetic — it hides admin UI for non-admin users but
+  // does not enforce security. All admin API endpoints enforce authorization
+  // server-side and return 403 for non-admins. The role value comes from
+  // localStorage and can be modified client-side.
   if (currentRole !== "admin") {
     return (
       <div className="p-6">
