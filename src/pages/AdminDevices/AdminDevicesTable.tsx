@@ -66,7 +66,7 @@ export default function AdminDevicesTable({
                       size="sm"
                       onClick={() => setDeleteTarget(device)}
                     >
-                      {t("table.actions")}
+                      {t("messages.deleteConfirm.confirm")}
                     </Button>
                   </td>
                 </tr>
