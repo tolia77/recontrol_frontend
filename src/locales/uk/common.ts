@@ -12,6 +12,9 @@ export const common = {
     settings: "Налаштування",
     subscription: "Підписка",
     users: "Користувачі",
+    adminSubscriptions: "Підписки",
+    adminDevices: "Пристрої",
+    aiUsage: "Використання ШІ",
     back: "Назад",
   },
   dashboard: {

@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link, NavLink } from "react-router";
 import logo from "src/assets/img/logo-full-white-text.svg";
 import dashboardIcon from "src/assets/img/icons/dashboard.svg";
 import devicesIcon from "src/assets/img/icons/device.svg";
@@ -38,59 +38,129 @@ function Sidebar({ isOpen = false, onClose, isMobile = false }: SidebarProps) {
         onClick={onClose}
         className="mt-[30px] space-y-[5px] pl-[10px] text-white"
       >
-        <Link
+        <NavLink
           to="/dashboard"
-          className="flex h-[45px] items-center gap-1 rounded-md transition-colors hover:bg-primary/8"
+          className={({ isActive }) =>
+            `flex h-[45px] items-center gap-1 rounded-md transition-colors hover:bg-primary/8 ${
+              isActive ? "bg-primary/8 font-semibold" : ""
+            }`
+          }
         >
           <img src={dashboardIcon} alt={t("nav.dashboard")} />
           <p>{t("nav.dashboard")}</p>
-        </Link>
-        <Link
+        </NavLink>
+        <NavLink
           to="/devices"
-          className="flex h-[45px] items-center gap-1 rounded-md transition-colors hover:bg-primary/8"
+          className={({ isActive }) =>
+            `flex h-[45px] items-center gap-1 rounded-md transition-colors hover:bg-primary/8 ${
+              isActive ? "bg-primary/8 font-semibold" : ""
+            }`
+          }
         >
           <img src={devicesIcon} alt={t("nav.devices")} />
           <p>{t("nav.devices")}</p>
-        </Link>
-        <Link
+        </NavLink>
+        <NavLink
           to="/scenarios"
-          className="flex h-[45px] items-center gap-1 rounded-md transition-colors hover:bg-primary/8"
+          className={({ isActive }) =>
+            `flex h-[45px] items-center gap-1 rounded-md transition-colors hover:bg-primary/8 ${
+              isActive ? "bg-primary/8 font-semibold" : ""
+            }`
+          }
         >
           <img src={scenariosIcon} alt={t("nav.scenarios")} />
           <p>{t("nav.scenarios")}</p>
-        </Link>
-        <Link
+        </NavLink>
+        <NavLink
           to="/settings"
-          className="flex h-[45px] items-center gap-1 rounded-md transition-colors hover:bg-primary/8"
+          className={({ isActive }) =>
+            `flex h-[45px] items-center gap-1 rounded-md transition-colors hover:bg-primary/8 ${
+              isActive ? "bg-primary/8 font-semibold" : ""
+            }`
+          }
         >
           <img src={settingsIcon} alt={t("nav.settings")} />
           <p>{t("nav.settings")}</p>
-        </Link>
-        <Link
+        </NavLink>
+        <NavLink
           to="/subscription"
-          className="flex h-[45px] items-center gap-1 rounded-md transition-colors hover:bg-primary/8"
+          className={({ isActive }) =>
+            `flex h-[45px] items-center gap-1 rounded-md transition-colors hover:bg-primary/8 ${
+              isActive ? "bg-primary/8 font-semibold" : ""
+            }`
+          }
         >
           <img src={subscriptionIcon} alt={t("nav.subscription")} />
           <p>{t("nav.subscription")}</p>
-        </Link>
+        </NavLink>
         {role === "admin" && (
-          <Link
-            to="/admin/users"
-            className="flex h-[45px] items-center gap-1 rounded-md transition-colors hover:bg-primary/8"
-          >
-            <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-white/20 text-body text-white">
-              U
-            </span>
-            <p>{t("nav.users")}</p>
-          </Link>
+          <>
+            <div className="mt-2 mb-1 border-t border-white/20" />
+            <NavLink
+              to="/admin/users"
+              className={({ isActive }) =>
+                `flex h-[45px] items-center gap-1 rounded-md transition-colors hover:bg-primary/8 ${
+                  isActive ? "bg-primary/8 font-semibold" : ""
+                }`
+              }
+            >
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-white/20 text-body text-white">
+                U
+              </span>
+              <p>{t("nav.users")}</p>
+            </NavLink>
+            <NavLink
+              to="/admin/subscriptions"
+              className={({ isActive }) =>
+                `flex h-[45px] items-center gap-1 rounded-md transition-colors hover:bg-primary/8 ${
+                  isActive ? "bg-primary/8 font-semibold" : ""
+                }`
+              }
+            >
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-white/20 text-body text-white">
+                S
+              </span>
+              <p>{t("nav.adminSubscriptions")}</p>
+            </NavLink>
+            <NavLink
+              to="/admin/devices"
+              className={({ isActive }) =>
+                `flex h-[45px] items-center gap-1 rounded-md transition-colors hover:bg-primary/8 ${
+                  isActive ? "bg-primary/8 font-semibold" : ""
+                }`
+              }
+            >
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-white/20 text-body text-white">
+                D
+              </span>
+              <p>{t("nav.adminDevices")}</p>
+            </NavLink>
+            <NavLink
+              to="/admin/ai-usage"
+              className={({ isActive }) =>
+                `flex h-[45px] items-center gap-1 rounded-md transition-colors hover:bg-primary/8 ${
+                  isActive ? "bg-primary/8 font-semibold" : ""
+                }`
+              }
+            >
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-white/20 text-body text-white">
+                A
+              </span>
+              <p>{t("nav.aiUsage")}</p>
+            </NavLink>
+          </>
         )}
-        <Link
+        <NavLink
           to="/help"
-          className="flex h-[45px] items-center gap-1 rounded-md transition-colors hover:bg-primary/8"
+          className={({ isActive }) =>
+            `flex h-[45px] items-center gap-1 rounded-md transition-colors hover:bg-primary/8 ${
+              isActive ? "bg-primary/8 font-semibold" : ""
+            }`
+          }
         >
           <img src={helpIcon} alt="Help" />
           <p>{t("nav.help")}</p>
-        </Link>
+        </NavLink>
       </nav>
     </>
   );

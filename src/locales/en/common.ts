@@ -12,6 +12,9 @@ export const common = {
     settings: "Settings",
     subscription: "Subscription",
     users: "Users",
+    adminSubscriptions: "Subscriptions",
+    adminDevices: "Devices",
+    aiUsage: "AI Usage",
     back: "Back",
   },
   dashboard: {
