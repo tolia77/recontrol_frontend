@@ -69,8 +69,8 @@ const AdminDevices = () => {
             className="border-border rounded-md border px-3 py-2 text-body"
           >
             <option value="">{t("filters.all")}</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
+            <option value="active">{t("statusValues.active")}</option>
+            <option value="inactive">{t("statusValues.inactive")}</option>
           </select>
         </div>
         <Input

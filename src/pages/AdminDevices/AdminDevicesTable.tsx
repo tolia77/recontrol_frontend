@@ -50,7 +50,10 @@ export default function AdminDevicesTable({
                           : "text-muted-foreground"
                       }
                     >
-                      {device.status}
+                      {device.status === "active" ||
+                      device.status === "inactive"
+                        ? t(`statusValues.${device.status}`)
+                        : device.status}
                     </span>
                   </td>
                   <td className="px-2 py-2">{device.user.username}</td>

@@ -30,5 +30,9 @@ export const adminDevices = {
     name: "Фільтр за назвою",
     all: "Всі",
   },
+  statusValues: {
+    active: "Активний",
+    inactive: "Неактивний",
+  },
   refreshLabel: "Оновити список пристроїв",
 };

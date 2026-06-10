@@ -30,5 +30,9 @@ export const adminDevices = {
     name: "Filter by name",
     all: "All",
   },
+  statusValues: {
+    active: "Active",
+    inactive: "Inactive",
+  },
   refreshLabel: "Refresh device list",
 };
