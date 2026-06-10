@@ -11,9 +11,6 @@ export interface UseAdminDevicesReturn {
   setStatusFilter: (v: string) => void;
   nameFilter: string;
   setNameFilter: (v: string) => void;
-  page: number;
-  setPage: (v: number) => void;
-  perPage: number;
   deleteTarget: Device | null;
   setDeleteTarget: (v: Device | null) => void;
   deleting: boolean;
@@ -29,8 +26,7 @@ export function useAdminDevices(): UseAdminDevicesReturn {
   const [devices, setDevices] = useState<Device[]>([]);
   const [statusFilter, setStatusFilter] = useState("");
   const [nameFilter, setNameFilter] = useState("");
-  const [page, setPage] = useState(1);
-  const perPage = 25;
+  const perPage = 200;
   const [deleteTarget, setDeleteTarget] = useState<Device | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -40,7 +36,7 @@ export function useAdminDevices(): UseAdminDevicesReturn {
       const result = await devicesService.listAll({
         ...(statusFilter ? { status: statusFilter as "active" | "inactive" } : {}),
         ...(nameFilter ? { name: nameFilter } : {}),
-        page,
+        page: 1,
         per_page: perPage,
       });
       setDevices(result.devices);
@@ -49,7 +45,7 @@ export function useAdminDevices(): UseAdminDevicesReturn {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, nameFilter, page, perPage, t, toast]);
+  }, [statusFilter, nameFilter, perPage, t, toast]);
 
   useEffect(() => {
     void loadDevices();
@@ -79,9 +75,6 @@ export function useAdminDevices(): UseAdminDevicesReturn {
       setStatusFilter,
       nameFilter,
       setNameFilter,
-      page,
-      setPage,
-      perPage,
       deleteTarget,
       setDeleteTarget,
       deleting,
@@ -93,8 +86,6 @@ export function useAdminDevices(): UseAdminDevicesReturn {
       devices,
       statusFilter,
       nameFilter,
-      page,
-      perPage,
       deleteTarget,
       deleting,
       loadDevices,

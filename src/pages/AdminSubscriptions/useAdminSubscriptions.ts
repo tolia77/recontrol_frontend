@@ -8,19 +8,14 @@ import {
 } from "src/services/backend/adminSubscriptionsService";
 import { usersService, type UserResponse } from "src/services/backend/usersService";
 import { subscriptionService, type Plan } from "src/services/backend/subscriptionService";
-import type { Meta } from "src/services/backend/envelope";
 
 export interface UseAdminSubscriptionsReturn {
   loading: boolean;
   rows: SubscriptionAdminRow[];
-  meta: Meta | null;
   stateFilter: string;
   setStateFilter: (v: string) => void;
   planIdFilter: string;
   setPlanIdFilter: (v: string) => void;
-  page: number;
-  setPage: (v: number) => void;
-  perPage: number;
   cancelTarget: SubscriptionAdminRow | null;
   setCancelTarget: (v: SubscriptionAdminRow | null) => void;
   cancelling: boolean;
@@ -43,11 +38,9 @@ export function useAdminSubscriptions(): UseAdminSubscriptionsReturn {
 
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<SubscriptionAdminRow[]>([]);
-  const [meta, setMeta] = useState<Meta | null>(null);
   const [stateFilter, setStateFilter] = useState("");
   const [planIdFilter, setPlanIdFilter] = useState("");
-  const [page, setPage] = useState(1);
-  const perPage = 20;
+  const perPage = 200;
 
   const [cancelTarget, setCancelTarget] = useState<SubscriptionAdminRow | null>(null);
   const [cancelling, setCancelling] = useState(false);
@@ -71,17 +64,16 @@ export function useAdminSubscriptions(): UseAdminSubscriptionsReturn {
       const result = await adminSubscriptionsService.list({
         state: stateFilter || undefined,
         plan_id: planIdFilter || undefined,
-        page,
+        page: 1,
         per_page: perPage,
       });
       setRows(result.subscriptions);
-      setMeta(result.meta);
     } catch {
       toast.error(t("errors.loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, [stateFilter, planIdFilter, page, perPage, t, toast]);
+  }, [stateFilter, planIdFilter, perPage, t, toast]);
 
   const loadUsers = useCallback(async () => {
     try {
@@ -183,14 +175,10 @@ export function useAdminSubscriptions(): UseAdminSubscriptionsReturn {
     () => ({
       loading,
       rows,
-      meta,
       stateFilter,
       setStateFilter,
       planIdFilter,
       setPlanIdFilter,
-      page,
-      setPage,
-      perPage,
       cancelTarget,
       setCancelTarget,
       cancelling,
@@ -209,10 +197,8 @@ export function useAdminSubscriptions(): UseAdminSubscriptionsReturn {
     [
       loading,
       rows,
-      meta,
       stateFilter,
       planIdFilter,
-      page,
       cancelTarget,
       cancelling,
       expandedRowId,
