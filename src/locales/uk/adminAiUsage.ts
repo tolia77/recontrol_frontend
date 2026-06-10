@@ -16,7 +16,6 @@ export const adminAiUsage = {
   dateFilter: {
     from: "Від",
     to: "До",
-    apply: "Застосувати",
   },
   messages: {
     loading: "Завантаження даних використання ШІ...",

@@ -79,6 +79,10 @@ export function useAdminAiUsage(): UseAdminAiUsageReturn {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   const loadData = useCallback(async () => {
+    // Fetches all available rows from the backend in a single unbounded request.
+    // Client-side date filtering is intentional: the backend returns a bounded
+    // daily-aggregation window. If the backend later paginates or caps this
+    // endpoint, date filtering should be pushed server-side instead.
     setLoading(true);
     try {
       const rows = await adminAiUsageService.index();

@@ -16,7 +16,6 @@ export const adminAiUsage = {
   dateFilter: {
     from: "From",
     to: "To",
-    apply: "Apply",
   },
   messages: {
     loading: "Loading AI usage data...",
