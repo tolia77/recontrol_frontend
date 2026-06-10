@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { devicesService } from "src/services/backend/devicesService";
+import { scenarioRunsService } from "src/services/backend/scenarioRunsService";
 import Card from "src/components/ui/Card";
 import CardHeader from "src/components/ui/CardHeader";
 import Button from "src/components/ui/Button";
@@ -26,7 +27,8 @@ function Dashboard() {
   const [devices, setDevices] = useState<Device[]>([]);
   const [loadingDevices, setLoadingDevices] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
-  const [activity] = useState<ActivityItem[]>([]);
+  const [activity, setActivity] = useState<ActivityItem[]>([]);
+  const [loadingActivity, setLoadingActivity] = useState(false);
 
   useEffect(() => {
     setLoadingDevices(true);
@@ -39,6 +41,23 @@ function Dashboard() {
         setDevices([]);
       })
       .finally(() => setLoadingDevices(false));
+  }, []);
+
+  useEffect(() => {
+    setLoadingActivity(true);
+    scenarioRunsService.index({ per_page: 5 })
+      .then(({ runs }) => {
+        setActivity(
+          runs.map((r) => ({
+            id: r.id,
+            type: r.status,
+            description: r.scenario_name_snapshot,
+            at: r.started_at ?? r.created_at,
+          }))
+        );
+      })
+      .catch(() => setActivity([]))
+      .finally(() => setLoadingActivity(false));
   }, []);
 
   const firstDeviceId = devices.length ? devices[0].id : null;
@@ -182,7 +201,9 @@ function Dashboard() {
         {/* Recent Activity */}
         <Card className="flex flex-col">
           <CardHeader title={t("dashboard.recentActivity")} />
-          {activity.length === 0 ? (
+          {loadingActivity ? (
+            <LoadingState message={t("dashboard.loading")} />
+          ) : activity.length === 0 ? (
             <p className="text-body text-muted-foreground">—</p>
           ) : (
             <ul className="space-y-2 text-body">
