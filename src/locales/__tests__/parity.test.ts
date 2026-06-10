@@ -135,6 +135,18 @@ describe("uk scenarios plural coverage", () => {
   });
 });
 
+// Defense-in-depth: assert UK has all four CLDR plural categories for
+// common.dashboard.devicesCount (WR-03). The PLURAL_SUFFIX normalisation in
+// collectKeys would otherwise let UK ship only _one+_other and still pass.
+describe("uk common devicesCount plural coverage", () => {
+  it("has all four CLDR plural suffix variants", () => {
+    expect("devicesCount_one" in uk_common.dashboard).toBe(true);
+    expect("devicesCount_few" in uk_common.dashboard).toBe(true);
+    expect("devicesCount_many" in uk_common.dashboard).toBe(true);
+    expect("devicesCount_other" in uk_common.dashboard).toBe(true);
+  });
+});
+
 // The subscription namespace has no count-bearing keys (no {{count}} interpolation is
 // used by any component), so no CLDR plural coverage block is needed for it.
 
