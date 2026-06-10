@@ -49,17 +49,17 @@ function getDefaultDates(): { fromDate: string; toDate: string } {
   return { fromDate: toIsoDate(from), toDate: toIsoDate(today) };
 }
 
-function getMostFrequentModel(rows: AiUsageRow[]): string {
+function getTopModelByTokens(rows: AiUsageRow[]): string {
   if (rows.length === 0) return "";
-  const counts = new Map<string, number>();
+  const tokensByModel = new Map<string, number>();
   for (const r of rows) {
-    counts.set(r.top_model, (counts.get(r.top_model) ?? 0) + 1);
+    tokensByModel.set(r.top_model, (tokensByModel.get(r.top_model) ?? 0) + r.total_tokens);
   }
   let bestModel = "";
-  let bestCount = 0;
-  for (const [model, count] of counts) {
-    if (count > bestCount) {
-      bestCount = count;
+  let bestTokens = 0;
+  for (const [model, tokens] of tokensByModel) {
+    if (tokens > bestTokens) {
+      bestTokens = tokens;
       bestModel = model;
     }
   }
@@ -112,7 +112,8 @@ export function useAdminAiUsage(): UseAdminAiUsageReturn {
       (r) => r.day >= fromDate && r.day <= toDate,
     );
 
-    // Group by user_id, summing tokens and sessions
+    // Group by user_id, summing tokens and sessions; track per-model token
+    // totals to determine the dominant model across the selected date range.
     const byUser = new Map<
       string,
       {
@@ -120,20 +121,28 @@ export function useAdminAiUsage(): UseAdminAiUsageReturn {
         total_tokens: number;
         session_count: number;
         top_model: string;
+        modelTokens: Map<string, number>;
       }
     >();
     for (const r of filtered) {
       const existing = byUser.get(r.user_id);
+      const modelTokens = existing?.modelTokens ?? new Map<string, number>();
+      modelTokens.set(r.top_model, (modelTokens.get(r.top_model) ?? 0) + r.total_tokens);
+      const topEntry = [...modelTokens.entries()].reduce(
+        (best, cur) => (cur[1] > best[1] ? cur : best),
+        ["", 0] as [string, number],
+      );
       byUser.set(r.user_id, {
         username: r.username,
         total_tokens: (existing?.total_tokens ?? 0) + r.total_tokens,
         session_count: (existing?.session_count ?? 0) + r.session_count,
-        top_model: r.top_model,
+        top_model: topEntry[0],
+        modelTokens,
       });
     }
 
     const unsortedRows: PerUserRow[] = [...byUser.entries()].map(
-      ([user_id, v]) => ({ user_id, ...v }),
+      ([user_id, { modelTokens: _mt, ...v }]) => ({ user_id, ...v }),
     );
 
     // Sort per-user rows
@@ -153,7 +162,7 @@ export function useAdminAiUsage(): UseAdminAiUsageReturn {
     const totalTokens = filtered.reduce((s, r) => s + r.total_tokens, 0);
     const totalSessions = filtered.reduce((s, r) => s + r.session_count, 0);
     const uniqueUsers = new Set(filtered.map((r) => r.user_id)).size;
-    const topModel = getMostFrequentModel(filtered);
+    const topModel = getTopModelByTokens(filtered);
 
     const summary: AiUsageSummary = {
       totalTokens,
