@@ -2,6 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import { adminUsers as en_adminUsers } from "../en/adminUsers";
 import { adminUsers as uk_adminUsers } from "../uk/adminUsers";
+import { adminSubscriptions as en_adminSubscriptions } from "../en/adminSubscriptions";
+import { adminSubscriptions as uk_adminSubscriptions } from "../uk/adminSubscriptions";
+import { adminDevices as en_adminDevices } from "../en/adminDevices";
+import { adminDevices as uk_adminDevices } from "../uk/adminDevices";
+import { adminAiUsage as en_adminAiUsage } from "../en/adminAiUsage";
+import { adminAiUsage as uk_adminAiUsage } from "../uk/adminAiUsage";
 import { assistant as en_assistant } from "../en/assistant";
 import { assistant as uk_assistant } from "../uk/assistant";
 import { auth as en_auth } from "../en/auth";
@@ -51,6 +57,9 @@ function collectKeys(
 
 const NAMESPACE_PAIRS = [
   ["adminUsers", en_adminUsers, uk_adminUsers],
+  ["adminSubscriptions", en_adminSubscriptions, uk_adminSubscriptions],
+  ["adminDevices", en_adminDevices, uk_adminDevices],
+  ["adminAiUsage", en_adminAiUsage, uk_adminAiUsage],
   ["assistant", en_assistant, uk_assistant],
   ["auth", en_auth, uk_auth],
   ["clipboard", en_clipboard, uk_clipboard],

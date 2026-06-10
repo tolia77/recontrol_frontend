@@ -25,6 +25,12 @@ import { userSettings } from "src/locales/en/userSettings.ts";
 import { userSettings as userSettings_uk } from "src/locales/uk/userSettings.ts";
 import { adminUsers } from "src/locales/en/adminUsers.ts";
 import { adminUsers as adminUsers_uk } from "src/locales/uk/adminUsers.ts";
+import { adminSubscriptions } from "src/locales/en/adminSubscriptions.ts";
+import { adminSubscriptions as adminSubscriptions_uk } from "src/locales/uk/adminSubscriptions.ts";
+import { adminDevices } from "src/locales/en/adminDevices.ts";
+import { adminDevices as adminDevices_uk } from "src/locales/uk/adminDevices.ts";
+import { adminAiUsage } from "src/locales/en/adminAiUsage.ts";
+import { adminAiUsage as adminAiUsage_uk } from "src/locales/uk/adminAiUsage.ts";
 import { clipboard } from "src/locales/en/clipboard.ts";
 import { clipboard as clipboard_uk } from "src/locales/uk/clipboard.ts";
 import { assistant } from "src/locales/en/assistant.ts";
@@ -51,6 +57,9 @@ void i18n
       "fileManager",
       "userSettings",
       "adminUsers",
+      "adminSubscriptions",
+      "adminDevices",
+      "adminAiUsage",
       "clipboard",
       "assistant",
       "scenarios",
@@ -70,6 +79,9 @@ void i18n
         fileManager,
         userSettings,
         adminUsers,
+        adminSubscriptions,
+        adminDevices,
+        adminAiUsage,
         clipboard,
         assistant,
         scenarios,
@@ -87,6 +99,9 @@ void i18n
         fileManager: fileManager_uk,
         userSettings: userSettings_uk,
         adminUsers: adminUsers_uk,
+        adminSubscriptions: adminSubscriptions_uk,
+        adminDevices: adminDevices_uk,
+        adminAiUsage: adminAiUsage_uk,
         clipboard: clipboard_uk,
         assistant: assistant_uk,
         scenarios: scenarios_uk,

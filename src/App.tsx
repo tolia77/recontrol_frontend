@@ -13,6 +13,9 @@ import DeviceSettings from "src/pages/DeviceSettings/DeviceSettings";
 import Help from "src/pages/Help";
 import UserSettings from "src/pages/UserSettings";
 import AdminUsers from "src/pages/AdminUsers/AdminUsers";
+import AdminSubscriptions from "src/pages/AdminSubscriptions/AdminSubscriptions";
+import AdminDevices from "src/pages/AdminDevices/AdminDevices";
+import AdminAiUsage from "src/pages/AdminAiUsage/AdminAiUsage";
 import ManageSubscription from "src/pages/Subscription/ManageSubscription";
 import SubscriptionReturn from "src/pages/Subscription/SubscriptionReturn";
 
@@ -39,6 +42,9 @@ function App() {
           />
           <Route path="/settings" element={<UserSettings />} />
           <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
+          <Route path="/admin/devices" element={<AdminDevices />} />
+          <Route path="/admin/ai-usage" element={<AdminAiUsage />} />
           <Route path="/subscription" element={<ManageSubscription />} />
           <Route path="/subscription/return" element={<SubscriptionReturn />} />
         </Route>
