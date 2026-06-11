@@ -175,6 +175,11 @@ export function usePeerConnection({
         wasConnectedRef.current = true;
         isReconnectingRef.current = false;
         retryCountRef.current = 0;
+        // Reset the 45s episode budget: each disconnect episode gets a fresh
+        // TOTAL_TIMEOUT_MS window. Without this, the second disconnect of a
+        // session measures elapsed time from the FIRST episode's start and
+        // insta-fails with zero retries.
+        reconnectStartRef.current = 0;
         clearReconnectTimer();
         // Video element may have just mounted -- try attaching the stream
         setTimeout(attachStream, 50);
