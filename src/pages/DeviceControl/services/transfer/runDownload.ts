@@ -102,7 +102,7 @@ export function createRunDownload(deps: CreateRunDownloadDeps): RunDownloadFn {
       return;
     }
 
-    // -------- 1. Begin handshake --------
+    // 1. Begin handshake
     const sep = detectSeparator(item.parentPath);
     const sourcePath = joinPath([item.parentPath, item.name], sep);
     let begin: BeginResp;
@@ -128,7 +128,7 @@ export function createRunDownload(deps: CreateRunDownloadDeps): RunDownloadFn {
     }
     queue.updateItem(item.id, { transferId: begin.transferId });
 
-    // -------- 2. Construct DownloadTransfer + register router --------
+    // 2. Construct DownloadTransfer + register router
     const transfer = new DownloadTransfer(
       begin.transferId,
       begin.name,
@@ -143,7 +143,7 @@ export function createRunDownload(deps: CreateRunDownloadDeps): RunDownloadFn {
     // never lingers across runs.
     deps.onActiveChange?.(transfer);
 
-    // -------- 3. Race: complete | error | cancel --------
+    // 3. Race: complete | error | cancel
     type Winner =
       | { kind: "complete" }
       | { kind: "error"; payload: ErrorPayload }

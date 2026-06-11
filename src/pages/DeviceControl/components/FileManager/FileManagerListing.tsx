@@ -42,7 +42,7 @@ interface FileManagerListingProps {
   /** Called when a file/folder row is double-clicked or activated by Enter. */
   onActivate: (entry: FileEntry) => void;
 
-  // ----- Plan 10-04 additions -----
+  // Plan 10-04 additions
 
   /** When true, render a pseudo-row at the top of the list with an inline input. */
   newFolderPending: boolean;

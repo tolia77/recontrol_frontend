@@ -179,7 +179,7 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
 
   const togglePause = useCallback(() => setIsPaused((p) => !p), []);
 
-  // ---- Outbound: focus / visibilitychange driven readText -> envelope ----
+  // Outbound: focus / visibilitychange driven readText -> envelope
   // WR-10: use explicit primitive/ref deps instead of the entire `args` object.
   // The args object is reconstructed on every parent render via inline destructuring,
   // so `[args, nextSeq]` would re-bind focus/visibilitychange listeners on every
@@ -282,7 +282,7 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
     buildCapsEnvelope,
   ]);
 
-  // ---- Inbound: subscribe to ClipboardChannelClient when channel opens ----
+  // Inbound: subscribe to ClipboardChannelClient when channel opens
   // CR-04: depend on clipboardCtlOpen state so the effect re-runs when the data
   // channel actually transitions to 'open' (which is normally AFTER
   // connectionState='connected'). The previous version snapshotted
@@ -456,7 +456,7 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
     }
   }, [loopGate, lastRemoteApplyTimeRef]);
 
-  // ---- Listener registration: window 'focus' + document 'visibilitychange' (DEGRADE-02) ----
+  // Listener registration: window 'focus' + document 'visibilitychange' (DEGRADE-02)
   // Browsers expose no clipboard-change event, and a user controlling a remote
   // desktop in-tab never loses browser focus — so 'copy'/'cut' are also bound
   // here. Without them, Ctrl+C in the browser does not push outbound until the

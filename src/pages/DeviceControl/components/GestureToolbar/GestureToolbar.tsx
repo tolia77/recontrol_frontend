@@ -185,9 +185,7 @@ function GestureToolbar({
     navigate("/devices");
   };
 
-  // ---------------------------------------------------------------------------
   // KBD-02: Hidden input typing pipeline
-  // ---------------------------------------------------------------------------
 
   /**
    * handleHiddenInput — processes characters typed on the soft keyboard.

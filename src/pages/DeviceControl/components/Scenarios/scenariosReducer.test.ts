@@ -28,9 +28,7 @@ import {
 } from "./scenariosReducer";
 import type { ScenarioRunBroadcast } from "src/pages/DeviceControl/hooks/realtime/useScenarioRunChannel";
 
-// ----------------------------------------------------------------------------
 // Helpers
-// ----------------------------------------------------------------------------
 
 function launch(
   state: ScenariosState,
@@ -55,9 +53,7 @@ function broadcast(
   return scenariosReducer(state, { type: "broadcast", broadcast: msg });
 }
 
-// ----------------------------------------------------------------------------
 // mapStopReasonToStatus
-// ----------------------------------------------------------------------------
 
 describe("mapStopReasonToStatus", () => {
   it("maps each of the eight terminal reasons to the matching ActiveRunStatus", () => {
@@ -77,9 +73,7 @@ describe("mapStopReasonToStatus", () => {
   });
 });
 
-// ----------------------------------------------------------------------------
 // initialScenariosState
-// ----------------------------------------------------------------------------
 
 describe("initialScenariosState", () => {
   it('has activeRun=null and segment="library"', () => {
@@ -88,9 +82,7 @@ describe("initialScenariosState", () => {
   });
 });
 
-// ----------------------------------------------------------------------------
 // segment_set
-// ----------------------------------------------------------------------------
 
 describe("segment_set", () => {
   it("toggles between library and history", () => {
@@ -123,9 +115,7 @@ describe("segment_set", () => {
   });
 });
 
-// ----------------------------------------------------------------------------
 // run_launch
-// ----------------------------------------------------------------------------
 
 describe("run_launch", () => {
   it('initializes activeRun with status="running", empty skipped, and transcript sessionToken=runId', () => {
@@ -140,9 +130,7 @@ describe("run_launch", () => {
   });
 });
 
-// ----------------------------------------------------------------------------
 // broadcast — run_started
-// ----------------------------------------------------------------------------
 
 describe("broadcast — run_started", () => {
   it("is a no-op when activeRun already matches the broadcast run_id", () => {
@@ -178,9 +166,7 @@ describe("broadcast — run_started", () => {
   });
 });
 
-// ----------------------------------------------------------------------------
 // broadcast — scenario_step_skipped
-// ----------------------------------------------------------------------------
 
 describe("broadcast — scenario_step_skipped", () => {
   it("appends to skipped[] preserving order", () => {
@@ -233,9 +219,7 @@ describe("broadcast — scenario_step_skipped", () => {
   });
 });
 
-// ----------------------------------------------------------------------------
 // transcript delegation
-// ----------------------------------------------------------------------------
 
 describe("broadcast — tool_call_start delegation", () => {
   it("grows the transcript.rows by one ToolRow in running state", () => {
@@ -287,9 +271,7 @@ describe("broadcast — tool_call_result delegation", () => {
   });
 });
 
-// ----------------------------------------------------------------------------
 // done idempotent
-// ----------------------------------------------------------------------------
 
 describe("broadcast — done idempotent", () => {
   it("first done sets terminal status; second done is ignored", () => {
@@ -327,9 +309,7 @@ describe("broadcast — done idempotent", () => {
   });
 });
 
-// ----------------------------------------------------------------------------
 // error broadcast
-// ----------------------------------------------------------------------------
 
 describe("broadcast — error sets status to error when activeRun present", () => {
   it("transitions activeRun.status to error", () => {
@@ -365,9 +345,7 @@ describe("broadcast — error sets status to error when activeRun present", () =
   });
 });
 
-// ----------------------------------------------------------------------------
 // run_stop_requested
-// ----------------------------------------------------------------------------
 
 describe("run_stop_requested transitions running -> stopping", () => {
   it("flips running to stopping", () => {
@@ -397,9 +375,7 @@ describe("run_stop_requested transitions running -> stopping", () => {
   });
 });
 
-// ----------------------------------------------------------------------------
 // run_clear
-// ----------------------------------------------------------------------------
 
 describe("run_clear sets activeRun to null", () => {
   it("full reset from a populated activeRun", () => {
@@ -414,9 +390,7 @@ describe("run_clear sets activeRun to null", () => {
   });
 });
 
-// ----------------------------------------------------------------------------
 // cross-run defense
-// ----------------------------------------------------------------------------
 
 describe("cross-run defense", () => {
   it("broadcast with mismatched run_id leaves state untouched (no skipped append, no transcript change)", () => {

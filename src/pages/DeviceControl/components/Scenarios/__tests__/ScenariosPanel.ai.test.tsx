@@ -50,9 +50,7 @@ import type {
   ScenarioCreatePayload,
 } from "src/services/backend/scenariosService.ts";
 
-// -----------------------------------------------------------------------------
 // Mocks — must be defined BEFORE importing the component.
-// -----------------------------------------------------------------------------
 
 vi.mock("src/services/backend/scenariosService.ts", async () => {
   const actual = await vi.importActual<
@@ -145,9 +143,7 @@ const mockedCreate = vi.mocked(scenariosService.create);
 const mockedIndex = vi.mocked(scenariosService.index);
 const mockedRunsIndex = vi.mocked(scenarioRunsService.index);
 
-// -----------------------------------------------------------------------------
 // Fixtures
-// -----------------------------------------------------------------------------
 
 function makeScenario(overrides: Partial<Scenario> = {}): Scenario {
   return {
@@ -210,9 +206,7 @@ function renderPanel(deviceId: string = "dev-1") {
   );
 }
 
-// -----------------------------------------------------------------------------
 // Lifecycle
-// -----------------------------------------------------------------------------
 
 beforeAll(async () => {
   if (!i18next.isInitialized) {
@@ -294,9 +288,7 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-// -----------------------------------------------------------------------------
 // Tests
-// -----------------------------------------------------------------------------
 
 describe("ScenariosPanel — AI segment widening (Plan 23-09)", () => {
   it("renders 3-segment SegmentedControl: Library / History / AI", async () => {

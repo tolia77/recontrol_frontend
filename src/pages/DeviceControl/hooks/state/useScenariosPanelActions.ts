@@ -28,10 +28,8 @@ import {
   type ScenariosState,
 } from "src/pages/DeviceControl/components/Scenarios/scenariosReducer";
 
-// ---------------------------------------------------------------------------
 // PanelMode — duplicated here so the hook does not need to import from the
 // component file (avoids a circular dep). Kept identical to ScenariosPanel.tsx.
-// ---------------------------------------------------------------------------
 
 type PanelMode =
   | { kind: "library" }
@@ -51,9 +49,7 @@ type PanelMode =
     }
   | { kind: "history_detail"; runId: string };
 
-// ---------------------------------------------------------------------------
 // Modal state types — kept co-located with the hook that owns them.
-// ---------------------------------------------------------------------------
 
 interface ModalState {
   open: boolean;
@@ -92,9 +88,7 @@ function backTargetForRun(segment: ScenariosSegment): "library" | "history" {
   return segment === "history" ? "history" : "library";
 }
 
-// ---------------------------------------------------------------------------
 // Public interfaces
-// ---------------------------------------------------------------------------
 
 export interface UseScenariosPanelActionsArgs {
   deviceId: string;
@@ -218,11 +212,9 @@ export function useScenariosPanelActions(
     onBroadcast,
   });
 
-  // ---------------------------------------------------------------------------
   // Library → modal opener flow per D-22-07 + RUN-01.
   // The library row already holds the full Scenario from the index payload, so
   // we hand it straight to the modal and only the policy preview round-trips.
-  // ---------------------------------------------------------------------------
   const handleRunClick = useCallback(
     async (scenario: Scenario) => {
       setModalState({
@@ -319,9 +311,7 @@ export function useScenariosPanelActions(
     setSegment("history");
   }, [setMode, setSegment]);
 
-  // ---------------------------------------------------------------------------
   // Phase 23 / Plan 23-09 — AI draft flow handlers
-  // ---------------------------------------------------------------------------
 
   // ScenariosAISegment → onDraftReady. Opens DraftReviewModal with the
   // draft payload. Quota piggyback stays internal to the AI segment.

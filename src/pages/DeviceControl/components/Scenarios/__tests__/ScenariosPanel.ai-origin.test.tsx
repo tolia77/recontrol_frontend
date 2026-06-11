@@ -45,9 +45,7 @@ import type {
   ScenarioCreatePayload,
 } from "src/services/backend/scenariosService.ts";
 
-// -----------------------------------------------------------------------------
 // Mocks (mirrors ScenariosPanel.ai.test.tsx — must precede component import)
-// -----------------------------------------------------------------------------
 
 vi.mock("src/services/backend/scenariosService.ts", async () => {
   const actual = await vi.importActual<
@@ -133,9 +131,7 @@ const mockedCreate = vi.mocked(scenariosService.create);
 const mockedIndex = vi.mocked(scenariosService.index);
 const mockedRunsIndex = vi.mocked(scenarioRunsService.index);
 
-// -----------------------------------------------------------------------------
 // Fixtures
-// -----------------------------------------------------------------------------
 
 function makeScenario(overrides: Partial<Scenario> = {}): Scenario {
   return {
@@ -205,9 +201,7 @@ function triggerSuccess(
   );
 }
 
-// -----------------------------------------------------------------------------
 // Lifecycle
-// -----------------------------------------------------------------------------
 
 beforeAll(async () => {
   if (!i18next.isInitialized) {
@@ -289,9 +283,7 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-// -----------------------------------------------------------------------------
 // Tests (Plan 23-11 / AI-10)
-// -----------------------------------------------------------------------------
 
 describe("ScenariosPanel — AI-10 token persistence", () => {
   it("[Accept and save] forwards usage.total_tokens as created_via_ai_token_count", async () => {

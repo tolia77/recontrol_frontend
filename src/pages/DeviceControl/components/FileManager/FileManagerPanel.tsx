@@ -88,20 +88,20 @@ function FileManagerPanel({
   const rootsResult = useFilesRoots(channel);
   const toast = useToast();
 
-  // ----- UI-flow reducer (D-03) -----
+  // UI-flow reducer (D-03)
   const [uiState, dispatch] = useReducer(
     fileManagerUiReducer,
     initialFileManagerUiState,
   );
 
-  // ----- Browse / listing state (D-04: stays as plain useState) -----
+  // Browse / listing state (D-04: stays as plain useState)
   const [refreshKey, setRefreshKey] = useState(0);
   const [visibleEntries, setVisibleEntries] = useState<FileEntry[]>([]);
 
   const rootRef = useRef<HTMLDivElement>(null);
   const rightColumnRef = useRef<HTMLDivElement>(null);
 
-  // ----- D-05: Promise resolver stash (functions MUST NOT live in reducer) -----
+  // D-05: Promise resolver stash (functions MUST NOT live in reducer)
   const pendingResolversRef = useRef<{
     largeUpload?: (approved: boolean) => void;
     conflict?: (choice: { mode: NameConflictMode; applyToAll: boolean }) => void;
@@ -135,12 +135,12 @@ function FileManagerPanel({
     [],
   );
 
-  // ----- Refresh helper -----
+  // Refresh helper
   const handleRefresh = useCallback(() => {
     setRefreshKey((k) => k + 1);
   }, []);
 
-  // ----- Root / path helpers -----
+  // Root / path helpers
   useEffect(() => {
     if (!rootsResult.roots || rootsResult.roots.length === 0) return;
     if (state.currentPath === null) return;
@@ -185,10 +185,10 @@ function FileManagerPanel({
     [setCurrentPath],
   );
 
-  // ----- Selection -----
+  // Selection
   const selection = useFileManagerSelection(visibleEntries);
 
-  // ----- Four hooks/files/ hooks (D-06) -----
+  // Four hooks/files/ hooks (D-06)
   const { handleUploadFiles } = useFileUpload({
     queue,
     filesByItemIdRef,
@@ -246,7 +246,7 @@ function FileManagerPanel({
     t,
   });
 
-  // ----- Activation: Enter on focused row OR double-click on a row -----
+  // Activation: Enter on focused row OR double-click on a row
   const handleActivate = useCallback(
     (entry: FileEntry) => {
       if (entry.isDirectory) {
@@ -258,7 +258,7 @@ function FileManagerPanel({
     [setCurrentPath, triggerDownload],
   );
 
-  // ----- Navigate up: Backspace OR Alt+ArrowLeft -----
+  // Navigate up: Backspace OR Alt+ArrowLeft
   const handleNavigateUp = useCallback(() => {
     if (!state.currentPath || !activeRootPath) return;
     if (state.currentPath === activeRootPath) return;
@@ -272,14 +272,14 @@ function FileManagerPanel({
     }
   }, [state.currentPath, activeRootPath, setCurrentPath]);
 
-  // ----- New folder -----
+  // New folder
   const handleNewFolder = useCallback(() => {
     if (!state.currentPath) return;
     dispatch({ type: "CLOSE_RENAME" });
     dispatch({ type: "OPEN_NEW_FOLDER" });
   }, [state.currentPath]);
 
-  // ----- Rename -----
+  // Rename
   const handleRequestRename = useCallback(() => {
     if (selection.state.selected.size !== 1) return;
     const target = [...selection.state.selected][0];
@@ -287,7 +287,7 @@ function FileManagerPanel({
     dispatch({ type: "OPEN_RENAME", payload: target });
   }, [selection.state.selected]);
 
-  // ----- Context-menu: row right-click (D-07) -----
+  // Context-menu: row right-click (D-07)
   const handleRowContextMenu = useCallback(
     (e: MouseEvent, entry: FileEntry) => {
       if (!selection.state.selected.has(entry.path)) {
@@ -353,7 +353,7 @@ function FileManagerPanel({
     ],
   );
 
-  // ----- Context-menu: empty-area right-click -----
+  // Context-menu: empty-area right-click
   const handleEmptyContextMenu = useCallback(
     (e: MouseEvent) => {
       const canMkdir = !!state.currentPath;
@@ -379,7 +379,7 @@ function FileManagerPanel({
     dispatch({ type: "CLOSE_CONTEXT_MENU" });
   }, []);
 
-  // ----- Mobile: kebab → ContextMenu adapter -----
+  // Mobile: kebab → ContextMenu adapter
   // Synthesizes a MouseEvent-like object from the kebab button's DOMRect so the
   // existing handleRowContextMenu can position the ContextMenu at the button's
   // bottom-right corner.
@@ -393,7 +393,7 @@ function FileManagerPanel({
     [handleRowContextMenu],
   );
 
-  // ----- Keyboard handler -----
+  // Keyboard handler
   const keyboard = useKeyboardShortcuts({
     rootRef,
     enabled:
@@ -421,7 +421,7 @@ function FileManagerPanel({
     initialFocusedRef.current = true;
   }, [channel.status, isMobile]);
 
-  // ----- Disconnect listener -----
+  // Disconnect listener
   const prevStatusRef = useRef(channel.status);
   useEffect(() => {
     const prev = prevStatusRef.current;
@@ -478,7 +478,7 @@ function FileManagerPanel({
     });
   }, [queue, state.currentPath]);
 
-  // ----- 1s stall interval (download + upload recovery) -----
+  // 1s stall interval (download + upload recovery)
   const prevBytesRef = useRef<{ id: string | null; bytes: number }>({
     id: null,
     bytes: 0,
@@ -522,7 +522,7 @@ function FileManagerPanel({
     // (mutating its .current never needs to re-run this effect).
   }, [queue]);
 
-  // ----- Upload-side STALLED event subscription -----
+  // Upload-side STALLED event subscription
   useEffect(() => {
     const client = channel.filesClient;
     if (!client) return;
@@ -541,7 +541,7 @@ function FileManagerPanel({
     return off;
   }, [channel.filesClient, queue]);
 
-  // ----- Disallowed paths for the folder picker -----
+  // Disallowed paths for the folder picker
   const pickerDisallowedPaths = useMemo<string[]>(() => {
     const out = new Set<string>();
     if (uiState.picker?.kind === "move") {
@@ -553,7 +553,7 @@ function FileManagerPanel({
     return Array.from(out);
   }, [state.currentPath, uiState.picker, selection.state.selected]);
 
-  // ----- Download warning decision handlers (D-05) -----
+  // Download warning decision handlers (D-05)
   const handleWarningConfirm = useCallback(() => {
     dispatch({ type: "CLOSE_LARGE_UPLOAD_WARN" });
     pendingResolversRef.current.largeUpload?.(true);
@@ -566,7 +566,7 @@ function FileManagerPanel({
     delete pendingResolversRef.current.largeUpload;
   }, []);
 
-  // ----- Handle channel-closed placeholder -----
+  // Handle channel-closed placeholder
   if (channel.status === "closed" || channel.status === "failed") {
     return (
       <div
@@ -579,7 +579,7 @@ function FileManagerPanel({
     );
   }
 
-  // ----- Handle empty-allowlist state -----
+  // Handle empty-allowlist state
   if (rootsResult.isEmpty) {
     return (
       <div

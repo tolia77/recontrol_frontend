@@ -28,9 +28,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-// ---------------------------------------------------------------------------
 // Synthetic pointer event factory
-// ---------------------------------------------------------------------------
 
 function makePointerEvent(
   overrides: Partial<{
@@ -89,9 +87,7 @@ function makeIntrinsic(nW = 1920, nH = 1080) {
   return { nW, nH };
 }
 
-// ---------------------------------------------------------------------------
 // Hook harness: renders useTouchGestures with spied addAction
-// ---------------------------------------------------------------------------
 
 function renderGestureHook(disabled = false) {
   const addAction = vi.fn<(action: CommandAction) => void>();
@@ -110,9 +106,7 @@ function renderGestureHook(disabled = false) {
   return { addAction, handlers: result.current };
 }
 
-// ---------------------------------------------------------------------------
 // Pure helper unit tests
-// ---------------------------------------------------------------------------
 
 describe("classifyTap (pure helper)", () => {
   it("returns true for press within TAP_MAX_MS and small movement", () => {
@@ -166,9 +160,7 @@ describe("clicksFromDelta (pure helper)", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
 // Threshold constants exported and match spec
-// ---------------------------------------------------------------------------
 
 describe("threshold constants (TOUCH spec-locked values)", () => {
   it("TAP_MAX_MS is 200", () => expect(TAP_MAX_MS).toBe(200));
@@ -177,9 +169,7 @@ describe("threshold constants (TOUCH spec-locked values)", () => {
   it("LONG_PRESS_MS is 400", () => expect(LONG_PRESS_MS).toBe(400));
 });
 
-// ---------------------------------------------------------------------------
 // Integration tests via handler harness
-// ---------------------------------------------------------------------------
 
 describe("useTouchGestures integration", () => {
   beforeEach(() => {

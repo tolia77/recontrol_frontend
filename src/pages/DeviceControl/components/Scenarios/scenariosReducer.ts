@@ -32,9 +32,7 @@ import {
 import type { AssistantBroadcast } from "src/pages/DeviceControl/hooks/realtime/useAssistantChannel";
 import type { ScenarioRunBroadcast } from "src/pages/DeviceControl/hooks/realtime/useScenarioRunChannel";
 
-// ----------------------------------------------------------------------------
 // Types
-// ----------------------------------------------------------------------------
 
 export type ActiveRunStatus =
   | "idle"
@@ -105,9 +103,7 @@ export type ScenariosAction =
   | { type: "run_stop_requested" }
   | { type: "run_clear" };
 
-// ----------------------------------------------------------------------------
 // mapStopReasonToStatus — exported so the test can target it directly.
-// ----------------------------------------------------------------------------
 
 export function mapStopReasonToStatus(reason: string): ActiveRunStatus {
   switch (reason) {
@@ -132,9 +128,7 @@ export function mapStopReasonToStatus(reason: string): ActiveRunStatus {
   }
 }
 
-// ----------------------------------------------------------------------------
 // Reducer
-// ----------------------------------------------------------------------------
 
 /**
  * Adapt a ScenarioRunBroadcast into the AssistantBroadcast shape the inner

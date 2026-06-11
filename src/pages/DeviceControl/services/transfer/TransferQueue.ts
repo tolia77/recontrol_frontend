@@ -52,7 +52,7 @@ export class TransferQueue implements TransferQueueAPI {
     this.runDownload = runDownload;
   }
 
-  // ---------- Public API consumed by hooks / panel ----------
+  // Public API consumed by hooks / panel
 
   /**
    * Append `item` to the queue and trigger a tick. If no transfer is
@@ -139,7 +139,7 @@ export class TransferQueue implements TransferQueueAPI {
     return { items: this.items.slice(), activeId: this.activeId };
   }
 
-  // ---------- TransferQueueAPI surface (passed to runners) ----------
+  // TransferQueueAPI surface (passed to runners)
 
   /**
    * Merge `partial` into the item identified by `id` and notify listeners.
@@ -158,7 +158,7 @@ export class TransferQueue implements TransferQueueAPI {
     return this.cancelledIds.has(id);
   }
 
-  // ---------- Runner loop ----------
+  // Runner loop
 
   /**
    * Promotes the next 'queued' item to 'active' and invokes the matching
@@ -235,7 +235,7 @@ export class TransferQueue implements TransferQueueAPI {
     this.items = this.items.filter((i) => !dropIds.has(i.id));
   }
 
-  // ---------- Listener fan-out ----------
+  // Listener fan-out
 
   private notify(): void {
     const snap = this.getSnapshot();

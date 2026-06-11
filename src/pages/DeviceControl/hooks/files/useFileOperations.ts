@@ -94,7 +94,7 @@ export function useFileOperations({
   t,
 }: UseFileOperationsOptions): UseFileOperationsReturn {
 
-  // ----- Delete flow -----
+  // Delete flow
   // performDelete fires files.delete sequentially over the captured paths.
   // Sequential (NOT Promise.all) so error reporting stays clean and so the
   // remote desktop is never hammered in parallel. Wraps the loop in
@@ -157,7 +157,7 @@ export function useFileOperations({
     dispatch,
   ]);
 
-  // ----- Move / Copy flow -----
+  // Move / Copy flow
   // performMoveOrCopy fires files.move / files.copy sequentially over the
   // selected source paths. Wraps the loop in try/finally so isOperating is
   // always reset. Preserves the isAncestor guard (T-27-04).
@@ -237,7 +237,7 @@ export function useFileOperations({
     ],
   );
 
-  // ----- mkdir commit / cancel -----
+  // mkdir commit / cancel
   const createFolder = useCallback(
     (name: string) => {
       const request = channel.request;
@@ -275,7 +275,7 @@ export function useFileOperations({
     [dispatch],
   );
 
-  // ----- rename commit / cancel -----
+  // rename commit / cancel
   const commitRename = useCallback(
     (path: string, newName: string) => {
       const request = channel.request;
@@ -313,7 +313,7 @@ export function useFileOperations({
     [dispatch],
   );
 
-  // ----- Second-click-to-rename arming (from listing's row-click handler) -----
+  // Second-click-to-rename arming (from listing's row-click handler)
   const armRename = useCallback(
     (path: string) => {
       dispatch({ type: "CLOSE_NEW_FOLDER" });
@@ -322,7 +322,7 @@ export function useFileOperations({
     [dispatch],
   );
 
-  // ----- Move to… / Copy to… : open the FolderPickerModal -----
+  // Move to… / Copy to… : open the FolderPickerModal
   const openMovePicker = useCallback(() => {
     if (selection.state.selected.size === 0) return;
     dispatch({ type: "OPEN_MOVE_PICKER" });
@@ -333,7 +333,7 @@ export function useFileOperations({
     dispatch({ type: "OPEN_COPY_PICKER" });
   }, [dispatch, selection.state.selected.size]);
 
-  // ----- Copy path to clipboard -----
+  // Copy path to clipboard
   const copyPathToClipboard = useCallback(
     async (path: string) => {
       try {

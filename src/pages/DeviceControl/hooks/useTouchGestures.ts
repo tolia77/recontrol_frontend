@@ -22,10 +22,8 @@ import { mapButtonToBackend } from "src/pages/DeviceControl/utils/mouse";
 import type { CommandAction } from "src/pages/DeviceControl/types";
 import type { useVirtualCursor } from "./useVirtualCursor";
 
-// ---------------------------------------------------------------------------
 // Locked threshold constants (36-UI-SPEC §D / RESEARCH Pattern 3)
 // These are spec-locked and intentionally named for single-point tuning in UAT.
-// ---------------------------------------------------------------------------
 
 /** Maximum press duration (ms) for a touch to be classified as a tap. */
 export const TAP_MAX_MS = 200;
@@ -58,9 +56,7 @@ const SCROLL_SIGN = 1 as const;
 /** Pixels of two-finger vertical travel per one scroll notch (Clicks unit). */
 const PIXELS_PER_NOTCH = 120;
 
-// ---------------------------------------------------------------------------
 // Per-pointer tracking entry
-// ---------------------------------------------------------------------------
 
 export interface PointerEntry {
   startX: number;
@@ -70,9 +66,7 @@ export interface PointerEntry {
   lastY: number;
 }
 
-// ---------------------------------------------------------------------------
 // Exported pure helpers (for deterministic unit tests without hook machinery)
-// ---------------------------------------------------------------------------
 
 /**
  * Returns true if the pointer entry qualifies as a tap candidate:
@@ -104,9 +98,7 @@ export function clicksFromDelta(dy: number): number {
   return Math.sign(raw) * Math.max(1, Math.round(Math.abs(raw)));
 }
 
-// ---------------------------------------------------------------------------
 // Hook types
-// ---------------------------------------------------------------------------
 
 type VirtualCursorHandle = ReturnType<typeof useVirtualCursor>;
 
@@ -139,9 +131,7 @@ export interface TouchGestureHandlers {
   onPointerCancel: (e: React.PointerEvent<Element>) => void;
 }
 
-// ---------------------------------------------------------------------------
 // Internal state
-// ---------------------------------------------------------------------------
 
 /** Gesture mode for the currently active single finger. */
 type SingleFingerMode =
@@ -150,9 +140,7 @@ type SingleFingerMode =
   | "dragging"      // movement exceeded TAP_MAX_MOVE_PX — one-finger move
   | "hold-drag";    // long-press armed → dragging with button held
 
-// ---------------------------------------------------------------------------
 // useTouchGestures hook
-// ---------------------------------------------------------------------------
 
 /**
  * useTouchGestures
@@ -214,9 +202,7 @@ export function useTouchGestures({
     [],
   );
 
-  // ---------------------------------------------------------------------------
   // Emission helpers — all go through addAction (S1)
-  // ---------------------------------------------------------------------------
 
   const emit = useCallback(
     (action: CommandAction) => {
@@ -266,9 +252,7 @@ export function useTouchGestures({
     [addAction, disabled],
   );
 
-  // ---------------------------------------------------------------------------
   // Long-press arm: fires after LONG_PRESS_MS if still 1 pointer and < 8px move
-  // ---------------------------------------------------------------------------
 
   const armLongPress = useCallback(
     (pointerId: number) => {
@@ -302,9 +286,7 @@ export function useTouchGestures({
     [cursor, emitLeftDown],
   );
 
-  // ---------------------------------------------------------------------------
   // onPointerDown
-  // ---------------------------------------------------------------------------
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent<Element>) => {
@@ -364,9 +346,7 @@ export function useTouchGestures({
     [disabled, cursor, getIntrinsic, armLongPress],
   );
 
-  // ---------------------------------------------------------------------------
   // onPointerMove
-  // ---------------------------------------------------------------------------
 
   const onPointerMove = useCallback(
     (e: React.PointerEvent<Element>) => {
@@ -424,9 +404,7 @@ export function useTouchGestures({
     [disabled, cursor, getRect, getIntrinsic, scheduleScroll],
   );
 
-  // ---------------------------------------------------------------------------
   // onPointerUp
-  // ---------------------------------------------------------------------------
 
   const onPointerUp = useCallback(
     (e: React.PointerEvent<Element>) => {
@@ -451,7 +429,7 @@ export function useTouchGestures({
       const now = Date.now();
 
       if (twoFingerActiveRef.current) {
-        // --------------- Two-finger interaction (first or second finger lifting) --------
+        // Two-finger interaction (first or second finger lifting)
         const remainingAfter = pointersRef.current.size;
 
         if (remainingAfter === 1) {
@@ -481,7 +459,7 @@ export function useTouchGestures({
           }
         }
       } else if (countBefore === 1) {
-        // --------------- Single-finger lift -------------------------------------------
+        // Single-finger lift
         const mode = singleModeRef.current;
         singleModeRef.current = "idle";
 
@@ -522,9 +500,7 @@ export function useTouchGestures({
     ],
   );
 
-  // ---------------------------------------------------------------------------
   // onPointerCancel
-  // ---------------------------------------------------------------------------
 
   const onPointerCancel = useCallback(
     (e: React.PointerEvent<Element>) => {

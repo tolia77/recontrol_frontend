@@ -11,9 +11,7 @@ import type {
   ScenarioRunStepStatus,
 } from "src/services/backend/scenarioRunsService";
 
-// ---------------------------------------------------------------------------
 // Fixtures
-// ---------------------------------------------------------------------------
 
 function makeStep(
   i: number,
@@ -57,9 +55,7 @@ function makeRun(
   };
 }
 
-// ---------------------------------------------------------------------------
 // GLYPH_CATALOG
-// ---------------------------------------------------------------------------
 
 describe("GLYPH_CATALOG", () => {
   const expected: Record<string, string> = {
@@ -85,9 +81,7 @@ describe("GLYPH_CATALOG", () => {
   }
 });
 
-// ---------------------------------------------------------------------------
 // STATUS_BADGE_CLASS
-// ---------------------------------------------------------------------------
 
 describe("STATUS_BADGE_CLASS", () => {
   const checks: Array<[ScenarioRun["status"], string]> = [
@@ -111,9 +105,7 @@ describe("STATUS_BADGE_CLASS", () => {
   }
 });
 
-// ---------------------------------------------------------------------------
 // buildExitCodeTimeline
-// ---------------------------------------------------------------------------
 
 describe("buildExitCodeTimeline", () => {
   it("returns 3 entries in order for [success, success, failed]", () => {

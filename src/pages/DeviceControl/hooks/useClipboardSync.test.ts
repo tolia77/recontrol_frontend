@@ -25,7 +25,7 @@ describe("useClipboardSync (module load)", () => {
   });
 });
 
-// ----------------------------- Test harness -----------------------------
+// Test harness
 
 interface MockDataChannel {
   readyState: RTCDataChannelState;
@@ -113,7 +113,7 @@ function makeHarness(opts: { originId?: string | null } = {}): Harness {
   };
 }
 
-// ----------------------------- Tests -----------------------------
+// Tests
 
 describe("useClipboardSync — Phase 15 Plan 04", () => {
   beforeEach(() => {

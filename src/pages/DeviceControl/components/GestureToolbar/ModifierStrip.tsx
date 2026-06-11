@@ -3,11 +3,9 @@ import type { SyntheticEvent } from "react";
 import type { CommandAction } from "src/pages/DeviceControl/types";
 import { generateUUID } from "src/utils/uuid";
 
-// ---------------------------------------------------------------------------
 // VK constants (derived from utils/keyboard.ts — raw Windows VK codes)
 // The strip calls addAction directly with VK numbers (bypasses mapToVirtualKey
 // which requires a React.KeyboardEvent — see RESEARCH §Pitfall 8).
-// ---------------------------------------------------------------------------
 
 const MODIFIER_VK = {
   Ctrl: 17,
@@ -28,9 +26,7 @@ const FN_KEYS = Array.from({ length: 12 }, (_, i) => ({
   vk: 112 + i,
 }));
 
-// ---------------------------------------------------------------------------
 // Types
-// ---------------------------------------------------------------------------
 
 export interface ModifierStripHandle {
   /** True if at least one modifier key is currently sticky. */
@@ -57,9 +53,7 @@ interface ModifierStripProps {
   t: (key: string) => string;
 }
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 /**
  * ModifierStrip — sticky modifier + special-key row, docked above the soft
@@ -122,9 +116,7 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // -----------------------------------------------------------------------
     // Core dispatch — no-ops when disabled (T-37-02 security gate)
-    // -----------------------------------------------------------------------
 
     const send = useCallback(
       (type: string, payload: Record<string, unknown>) => {
@@ -134,22 +126,18 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
       [addAction, disabled],
     );
 
-    // -----------------------------------------------------------------------
     // Focus-steal guard — the strip only exists while the hidden input is
     // focused (GestureToolbar unmounts it on blur). Without this, tapping any
     // strip button blurs the input → keyboard collapses → the strip unmounts
     // between pointerdown and click, so onClick NEVER fires and no key is sent.
     // Canceling pointerdown suppresses the focus change but click still fires
     // (Pointer Events spec); mousedown preventDefault covers non-PE browsers.
-    // -----------------------------------------------------------------------
 
     const preventFocusSteal = (e: SyntheticEvent) => {
       e.preventDefault();
     };
 
-    // -----------------------------------------------------------------------
     // Modifier tap — toggles sticky state
-    // -----------------------------------------------------------------------
 
     const handleModifierTap = (key: StickyKey, vk: number) => {
       // Dispatch outside the setSticky updater: updaters must be pure, and
@@ -159,9 +147,7 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
       setSticky((prev) => ({ ...prev, [key]: next }));
     };
 
-    // -----------------------------------------------------------------------
     // Non-sticky key tap — keyDown immediately, keyUp after 50ms
-    // -----------------------------------------------------------------------
 
     const handleNonStickyTap = (vk: number) => {
       send("keyboard.keyDown", { Key: vk });
@@ -172,9 +158,7 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
       pendingTimers.current.set(id, vk);
     };
 
-    // -----------------------------------------------------------------------
     // Ctrl+Alt+Del compound action (D-07 — not sticky, single compound press)
-    // -----------------------------------------------------------------------
 
     const handleCtrlAltDel = () => {
       send("keyboard.keyDown", { Key: 17 }); // Ctrl
@@ -190,9 +174,7 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
       pendingTimers.current.set(id, [46, 18, 17]);
     };
 
-    // -----------------------------------------------------------------------
     // Imperative handle for GestureToolbar combo routing (D-09)
-    // -----------------------------------------------------------------------
 
     useImperativeHandle(
       ref,
@@ -232,9 +214,7 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
       [sticky, send],
     );
 
-    // -----------------------------------------------------------------------
     // Style helpers
-    // -----------------------------------------------------------------------
 
     const modifierClass = (isActive: boolean) =>
       [
@@ -254,9 +234,7 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
       .filter(Boolean)
       .join(" ");
 
-    // -----------------------------------------------------------------------
     // Render
-    // -----------------------------------------------------------------------
 
     return (
       <div
@@ -268,9 +246,7 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
         onMouseDown={preventFocusSteal}
       >
         {fnPage ? (
-          // ---------------------------------------------------------------
           // Fn page: F1–F12 + CAD + Fn toggle back
-          // ---------------------------------------------------------------
           <>
             {FN_KEYS.map(({ label, vk }) => (
               <button
@@ -307,9 +283,7 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
             </button>
           </>
         ) : (
-          // ---------------------------------------------------------------
           // Main row: modifiers + special keys + Fn toggle
-          // ---------------------------------------------------------------
           <>
             {/* Sticky modifiers */}
             <button

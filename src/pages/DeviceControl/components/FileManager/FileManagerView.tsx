@@ -14,9 +14,7 @@ import FileManagerStatusBar from "./FileManagerStatusBar";
 import TransferQueuePanel from "./TransferQueuePanel";
 import DropZoneOverlay from "./DropZoneOverlay";
 
-// ---------------------------------------------------------------------------
 // Grouped-prop sub-interfaces (D-08)
-// ---------------------------------------------------------------------------
 
 export interface BrowseProps {
   currentPath: string | null;
@@ -48,9 +46,7 @@ export interface TransferViewProps {
   onDismissDisconnect: () => void;
 }
 
-// ---------------------------------------------------------------------------
 // Top-level props
-// ---------------------------------------------------------------------------
 
 interface FileManagerViewProps {
   channel: UseFilesChannel;
@@ -82,7 +78,6 @@ interface FileManagerViewProps {
   onRowKebabClick?: (rect: DOMRect, entry: FileEntry) => void;
 }
 
-// ---------------------------------------------------------------------------
 // Component (D-01 / D-02)
 //
 // Renders ONLY the browsing chrome:
@@ -90,7 +85,6 @@ interface FileManagerViewProps {
 //   status bar / transfer-queue panel / drop-zone overlay.
 //
 // NO dialogs and NO context menu — those stay in the container (D-02).
-// ---------------------------------------------------------------------------
 
 function FileManagerView({
   channel,

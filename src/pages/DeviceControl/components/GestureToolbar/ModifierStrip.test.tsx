@@ -57,9 +57,7 @@ function renderStrip(
   );
 }
 
-// ---------------------------------------------------------------------------
 // KBD-03: Sticky modifier mechanics
-// ---------------------------------------------------------------------------
 
 describe("ModifierStrip — sticky modifier mechanics", () => {
   it("tapping Ctrl dispatches keyboard.keyDown with Key:17", () => {
@@ -124,9 +122,7 @@ describe("ModifierStrip — sticky modifier mechanics", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
 // KBD-03: Non-sticky keys (Esc, Tab, arrows)
-// ---------------------------------------------------------------------------
 
 describe("ModifierStrip — non-sticky keys", () => {
   it("tapping Esc dispatches keyDown(27)", async () => {
@@ -168,9 +164,7 @@ describe("ModifierStrip — non-sticky keys", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
 // KBD-03: deliverPrintable — combo routing via imperative handle
-// ---------------------------------------------------------------------------
 
 describe("ModifierStrip — deliverPrintable (combo routing)", () => {
   it("with Ctrl sticky, deliverPrintable('c') → keyDown(67), keyUp(67), keyUp(17), clears sticky", () => {
@@ -246,9 +240,7 @@ describe("ModifierStrip — deliverPrintable (combo routing)", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
 // KBD-03: Ctrl+Alt+Del compound action
-// ---------------------------------------------------------------------------
 
 describe("ModifierStrip — CAD (Ctrl+Alt+Del)", () => {
   it("tapping CAD dispatches keyDown(17,18,46) then keyUp(46,18,17)", async () => {
@@ -298,9 +290,7 @@ describe("ModifierStrip — CAD (Ctrl+Alt+Del)", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
 // Unmount cleanup: release sticky modifiers and flush pending keyUps (CR-01, CR-02)
-// ---------------------------------------------------------------------------
 
 describe("ModifierStrip — unmount cleanup", () => {
   it("unmount with Ctrl armed dispatches keyUp(17)", () => {
@@ -388,10 +378,8 @@ describe("ModifierStrip — unmount cleanup", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
 // Focus-steal guard: strip taps must not blur the hidden input
 // (blur unmounts the strip before click fires → no key ever dispatched)
-// ---------------------------------------------------------------------------
 
 describe("ModifierStrip — focus-steal guard", () => {
   it("pointerdown on a strip button is default-prevented (hidden input keeps focus)", () => {
@@ -415,9 +403,7 @@ describe("ModifierStrip — focus-steal guard", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
 // Fn page toggle
-// ---------------------------------------------------------------------------
 
 describe("ModifierStrip — Fn page toggle", () => {
   it("tapping Fn shows the F1-F12 page and CAD button", () => {

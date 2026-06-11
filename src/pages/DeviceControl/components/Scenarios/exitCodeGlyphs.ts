@@ -5,11 +5,9 @@ import type {
   ScenarioRunStepStatus,
 } from "src/services/backend/scenarioRunsService";
 
-// ---------------------------------------------------------------------------
 // GLYPH_CATALOG — single source of truth for the exit-code timeline.
 // Sourced from UI-SPEC §Exit-code glyph catalog (lines 249-259) + 22-CONTEXT.md
 // "Claude's Discretion" exit-code glyph row. Reused by Plan 22.10 HistoryDetail.
-// ---------------------------------------------------------------------------
 
 type GlyphCatalogKey =
   | ScenarioRunStepStatus
@@ -32,10 +30,8 @@ export const GLYPH_CATALOG: Readonly<Record<GlyphCatalogKey, GlyphEntry>> = {
   access_revoked: { glyph: "⚠", colorClass: "text-warning" },
 } as const;
 
-// ---------------------------------------------------------------------------
 // STATUS_BADGE_CLASS — per-run status badge color mapping.
 // Sourced from UI-SPEC §History list status badge colors (lines 240-246).
-// ---------------------------------------------------------------------------
 
 export const STATUS_BADGE_CLASS: Readonly<Record<ScenarioRunStatus, string>> = {
   running: "bg-primary/8 text-primary",
@@ -49,11 +45,9 @@ export const STATUS_BADGE_CLASS: Readonly<Record<ScenarioRunStatus, string>> = {
   abandoned: "bg-warning/10 text-warning",
 } as const;
 
-// ---------------------------------------------------------------------------
 // buildExitCodeTimeline — pure helper. Maps per-step statuses to glyph entries
 // with a 12-cap and synthesizes a trailing ⚠ glyph when run.status is
 // 'access_revoked'.
-// ---------------------------------------------------------------------------
 
 export interface ExitCodeGlyphEntry {
   glyph: string;

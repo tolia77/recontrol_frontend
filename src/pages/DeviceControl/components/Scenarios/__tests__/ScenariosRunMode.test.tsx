@@ -43,9 +43,7 @@ beforeAll(async () => {
   }
 });
 
-// ---------------------------------------------------------------------------
 // Fixtures
-// ---------------------------------------------------------------------------
 
 function makeToolRow(
   toolCallId: string,
@@ -107,9 +105,7 @@ function renderWithToast(el: ReactElement) {
   return render(<ToastProvider>{el}</ToastProvider>);
 }
 
-// ---------------------------------------------------------------------------
 // Tests
-// ---------------------------------------------------------------------------
 
 describe("ScenariosRunMode — header buttons", () => {
   it("renders [Stop run] when status=running", () => {

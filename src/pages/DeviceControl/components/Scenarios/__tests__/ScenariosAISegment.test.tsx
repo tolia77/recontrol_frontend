@@ -37,25 +37,19 @@ import type {
   UseDraftGenerationResult,
 } from "../useDraftGeneration";
 
-// ---------------------------------------------------------------------------
 // Mock i18n.language → always 'en' for deterministic locale assertion.
-// ---------------------------------------------------------------------------
 vi.mock("src/i18n.ts", () => ({
   i18n: { language: "en" },
 }));
 
-// ---------------------------------------------------------------------------
 // Mock useGate — gate defaults open (allowed: true) so the existing tests
 // exercise the original Generate flow unchanged. Gate-closed behaviour is
 // covered by the gate unit tests in src/hooks/__tests__/useGate.test.ts.
-// ---------------------------------------------------------------------------
 vi.mock("src/hooks/useGate", () => ({
   useGate: () => ({ allowed: true, reason: null }),
 }));
 
-// ---------------------------------------------------------------------------
 // Mock useDraftGeneration. Each test sets hookState + spies via mockReturnValue.
-// ---------------------------------------------------------------------------
 const generateSpy = vi.fn();
 const cancelSpy = vi.fn();
 const resetSpy = vi.fn();

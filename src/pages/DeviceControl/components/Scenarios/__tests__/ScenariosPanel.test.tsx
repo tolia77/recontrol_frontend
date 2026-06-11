@@ -27,9 +27,7 @@ import type {
   ScenarioRunStatus,
 } from "src/services/backend/scenarioRunsService";
 
-// -----------------------------------------------------------------------------
 // Mocks — must be defined BEFORE importing the component.
-// -----------------------------------------------------------------------------
 
 vi.mock("src/services/backend/scenariosService", async () => {
   const actual = await vi.importActual<
@@ -94,9 +92,7 @@ const mockedScenariosShow = vi.mocked(scenariosService.show);
 const mockedPolicyPreview = vi.mocked(scenariosService.policyPreview);
 const mockedRunsIndex = vi.mocked(scenarioRunsService.index);
 
-// -----------------------------------------------------------------------------
 // Fixtures
-// -----------------------------------------------------------------------------
 
 function makeScenario(overrides: Partial<Scenario> = {}): Scenario {
   return {
@@ -176,9 +172,7 @@ function renderPanel(deviceId: string = "dev-1") {
   );
 }
 
-// -----------------------------------------------------------------------------
 // Lifecycle
-// -----------------------------------------------------------------------------
 
 beforeAll(async () => {
   if (!i18next.isInitialized) {
@@ -266,9 +260,7 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-// -----------------------------------------------------------------------------
 // Tests
-// -----------------------------------------------------------------------------
 
 describe("ScenariosPanel — segmented control & sessionStorage", () => {
   it("renders SegmentedControl in library mode", async () => {

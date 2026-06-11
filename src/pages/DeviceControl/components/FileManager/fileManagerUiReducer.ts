@@ -23,9 +23,7 @@ import type { ContextMenuState } from "./types";
  *     return state`).
  */
 
-// ---------------------------------------------------------------------------
 // State
-// ---------------------------------------------------------------------------
 
 export interface FileManagerUiState {
   // Delete flow
@@ -86,9 +84,7 @@ export interface FileManagerUiState {
   disconnectBanner: string | null;
 }
 
-// ---------------------------------------------------------------------------
 // Initial state
-// ---------------------------------------------------------------------------
 
 export const initialFileManagerUiState: FileManagerUiState = {
   confirm: null,
@@ -106,9 +102,7 @@ export const initialFileManagerUiState: FileManagerUiState = {
   disconnectBanner: null,
 };
 
-// ---------------------------------------------------------------------------
 // Action union
-// ---------------------------------------------------------------------------
 
 export type FileManagerUiAction =
   // Delete dialog
@@ -160,16 +154,14 @@ export type FileManagerUiAction =
   // Disconnect banner
   | { type: "SET_DISCONNECT_BANNER"; payload: string | null };
 
-// ---------------------------------------------------------------------------
 // Reducer
-// ---------------------------------------------------------------------------
 
 export function fileManagerUiReducer(
   state: FileManagerUiState,
   action: FileManagerUiAction,
 ): FileManagerUiState {
   switch (action.type) {
-    // ---- Delete dialog -------------------------------------------------- //
+    // Delete dialog
 
     case "OPEN_DELETE_CONFIRM":
       return {
@@ -202,7 +194,7 @@ export function fileManagerUiReducer(
         ? { ...state, confirm: { ...state.confirm, suppressOnConfirm: action.payload } }
         : state;
 
-    // ---- Move / copy picker --------------------------------------------- //
+    // Move / copy picker
 
     case "OPEN_MOVE_PICKER":
       return { ...state, picker: { kind: "move" } };
@@ -216,7 +208,7 @@ export function fileManagerUiReducer(
     case "SET_OPERATING":
       return { ...state, isOperating: action.payload };
 
-    // ---- Upload warning prompt ------------------------------------------ //
+    // Upload warning prompt
 
     case "OPEN_LARGE_UPLOAD_WARN":
       return { ...state, warningPrompt: action.payload };
@@ -224,7 +216,7 @@ export function fileManagerUiReducer(
     case "CLOSE_LARGE_UPLOAD_WARN":
       return { ...state, warningPrompt: null };
 
-    // ---- Conflict prompt ------------------------------------------------- //
+    // Conflict prompt
 
     case "OPEN_CONFLICT_PROMPT":
       return { ...state, conflictPrompt: action.payload };
@@ -232,7 +224,7 @@ export function fileManagerUiReducer(
     case "CLOSE_CONFLICT_PROMPT":
       return { ...state, conflictPrompt: null };
 
-    // ---- Download gates -------------------------------------------------- //
+    // Download gates
 
     case "OPEN_DOWNLOAD_BLOCKED":
       return { ...state, downloadBlocked: action.payload };
@@ -246,7 +238,7 @@ export function fileManagerUiReducer(
     case "CLOSE_DOWNLOAD_WARN":
       return { ...state, pendingDownloadWarn: null };
 
-    // ---- Inline edit ----------------------------------------------------- //
+    // Inline edit
 
     case "OPEN_NEW_FOLDER":
       return { ...state, newFolderPending: true };
@@ -260,7 +252,7 @@ export function fileManagerUiReducer(
     case "CLOSE_RENAME":
       return { ...state, renamingPath: null };
 
-    // ---- Context menu ---------------------------------------------------- //
+    // Context menu
 
     case "OPEN_CONTEXT_MENU":
       return { ...state, contextMenu: action.payload };
@@ -268,12 +260,12 @@ export function fileManagerUiReducer(
     case "CLOSE_CONTEXT_MENU":
       return { ...state, contextMenu: null };
 
-    // ---- Disconnect banner ----------------------------------------------- //
+    // Disconnect banner
 
     case "SET_DISCONNECT_BANNER":
       return { ...state, disconnectBanner: action.payload };
 
-    // ---- Forward-compat: unknown action types are silently ignored ------- //
+    // Forward-compat: unknown action types are silently ignored
 
     default:
       return state;

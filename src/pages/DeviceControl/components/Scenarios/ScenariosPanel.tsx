@@ -15,7 +15,6 @@ import type { ScenariosSegment } from "./scenariosReducer";
 import { useScenariosPanelActions } from "src/pages/DeviceControl/hooks/state/useScenariosPanelActions";
 import type { CableConsumerLike } from "src/pages/DeviceControl/hooks/realtime/useCableConsumer";
 
-// -----------------------------------------------------------------------------
 // PanelMode discriminated union — Plan 23-09 extends the P22 shape with a
 // real `{ kind: 'ai' }` variant (replacing the Plan 23-07 `toLegacySegment`
 // narrowing bridge) and widens the `editor` variant with optional
@@ -25,7 +24,6 @@ import type { CableConsumerLike } from "src/pages/DeviceControl/hooks/realtime/u
 // `run.backTo` stays a `'library' | 'history'` literal (run-mode launched
 // from AI flow is not a target the v1.5 UI exposes; if a run launches from
 // AI it logically goes back to library).
-// -----------------------------------------------------------------------------
 
 type PanelMode =
   | { kind: "library" }

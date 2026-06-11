@@ -102,7 +102,7 @@ export function createRunUpload(deps: CreateRunUploadDeps): RunUploadFn {
       return;
     }
 
-    // -------- 1. Begin handshake --------
+    // 1. Begin handshake
     let begin: BeginResp;
     try {
       begin = await request<
@@ -136,7 +136,7 @@ export function createRunUpload(deps: CreateRunUploadDeps): RunUploadFn {
     }
     queue.updateItem(item.id, { transferId: begin.transferId });
 
-    // -------- 2. Backpressure setup (W3C standard) --------
+    // 2. Backpressure setup (W3C standard)
     dc.bufferedAmountLowThreshold = LOW_WATER;
     const waitForLow = (): Promise<void> =>
       new Promise((resolve) => {
@@ -169,7 +169,7 @@ export function createRunUpload(deps: CreateRunUploadDeps): RunUploadFn {
       }
     };
 
-    // -------- 3. Chunk loop --------
+    // 3. Chunk loop
     try {
       for (let start = 0; start < file.size; start += CHUNK_PAYLOAD) {
         if (queue.isCancelled(item.id)) {
@@ -230,7 +230,7 @@ export function createRunUpload(deps: CreateRunUploadDeps): RunUploadFn {
         return;
       }
 
-      // -------- 4. Drain bufferedAmount before complete (Pitfall 3) --------
+      // 4. Drain bufferedAmount before complete (Pitfall 3)
       const drainStart = Date.now();
       while (dc.bufferedAmount > 0) {
         if (queue.isCancelled(item.id)) {
@@ -257,7 +257,7 @@ export function createRunUpload(deps: CreateRunUploadDeps): RunUploadFn {
         await new Promise((r) => setTimeout(r, DRAIN_POLL_MS));
       }
 
-      // -------- 5. Complete handshake --------
+      // 5. Complete handshake
       // Size-proportional timeout (rough heuristic: 1 ms per KiB) with a
       // 15s floor so small files still get a reasonable window for the
       // desktop to atomically rename the .partial -> final.
