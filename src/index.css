@@ -73,35 +73,35 @@ input::placeholder {
   --color-darkgray: initial;
   --color-amber: initial;
 
-  /* ── Neutrals (D-04) ── */
+  /* Neutrals (D-04) */
   --color-surface: #ffffff;
   --color-surface-muted: #f3f4f6;
   --color-foreground: #111827;
   --color-muted-foreground: #6b7280;
   --color-border: #e5e7eb;
 
-  /* ── Primary (D-01, D-03) ── */
+  /* Primary (D-01, D-03) */
   --color-primary: #1e3a8a;
   --color-primary-hover: #1e40af;
   --color-primary-active: #1d3070;
 
-  /* ── Status (D-03) ── */
+  /* Status (D-03) */
   --color-destructive: #ef4444;
   --color-destructive-hover: #dc2626;
   --color-destructive-active: #b91c1c;
   --color-warning: #f59e0b;
   --color-success: #10b981;
 
-  /* ── Shadows (D-09) ── */
+  /* Shadows (D-09) */
   --shadow-overlay: 0 4px 12px 0 rgb(0 0 0 / 0.12);
   --shadow-modal: 0 8px 32px 0 rgb(0 0 0 / 0.16);
 
-  /* ── Radius (D-10) ── */
+  /* Radius (D-10) */
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
 
-  /* ── Typography ladder (D-05) ── */
+  /* Typography ladder (D-05) */
   --text-caption: 0.75rem;
   --text-body: 0.875rem;
   --text-body-lg: 1rem;
@@ -110,7 +110,7 @@ input::placeholder {
   --text-display: 2rem;
 }
 
-/* ── Safe-area inset utilities (requires viewport-fit=cover in index.html) ── */
+/* Safe-area inset utilities (requires viewport-fit=cover in index.html) */
 @utility safe-pt {
   padding-top: env(safe-area-inset-top);
 }
@@ -127,10 +127,10 @@ input::placeholder {
   padding-right: env(safe-area-inset-right);
 }
 
-/* ── Touch-screen custom variant (pointer:coarse + max-width — same query as useMobileDetect) ── */
+/* Touch-screen custom variant (pointer:coarse + max-width — same query as useMobileDetect) */
 @custom-variant touch-screen (@media (pointer: coarse) and (max-width: 767px));
 
-/* ── Bottom-sheet slide-up animation (for Modal on mobile) ── */
+/* Bottom-sheet slide-up animation (for Modal on mobile) */
 @keyframes slide-up {
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }

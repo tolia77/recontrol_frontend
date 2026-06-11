@@ -1,6 +1,6 @@
 import { BaseService } from "src/services/backend/BaseService.ts";
 
-// ── Shared types ─────────────────────────────────────────────────────────────
+// Shared types
 
 export interface SubscriptionStatus {
   state: "pending" | "active" | "upgrading" | "past_due" | "cancelled" | "expired";
@@ -56,7 +56,7 @@ export interface PlanLimitEnvelope {
   reset_at?: string;
 }
 
-// ── SubscriptionContextValue (also exported for SubscriptionContext.tsx) ─────
+// SubscriptionContextValue (also exported for SubscriptionContext.tsx)
 
 export interface SubscriptionContextValue {
   status: SubscriptionStatus | null;  // null = never subscribed (404 from API)
@@ -67,7 +67,7 @@ export interface SubscriptionContextValue {
   refresh: () => void;
 }
 
-// ── subscriptionService ───────────────────────────────────────────────────────
+// subscriptionService
 
 class SubscriptionService extends BaseService {
   async getStatus(): Promise<SubscriptionStatus> {

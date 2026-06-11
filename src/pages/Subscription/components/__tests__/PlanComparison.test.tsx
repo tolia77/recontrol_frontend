@@ -27,7 +27,7 @@ beforeAll(async () => {
   }
 });
 
-// ── Stub plans ────────────────────────────────────────────────────────────────
+// Stub plans
 
 const stubPlans: Plan[] = [
   { id: "plan-free",     name: "free",     monthly_price: 0,     currency: "UAH" },
@@ -36,7 +36,7 @@ const stubPlans: Plan[] = [
   { id: "plan-business", name: "business", monthly_price: 99900, currency: "UAH" },
 ];
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
+// Tests
 
 describe("PlanComparison", () => {
   it("renders all four plan column headers", () => {

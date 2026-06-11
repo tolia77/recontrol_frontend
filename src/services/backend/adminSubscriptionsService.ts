@@ -1,7 +1,7 @@
 import { BaseService } from "src/services/backend/BaseService.ts";
 import type { Meta } from "src/services/backend/envelope.ts";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// Types
 
 export interface SubscriptionAdminRow {
   id: string;
@@ -33,7 +33,7 @@ export interface AdminSubscriptionParams {
   per_page?: number;
 }
 
-// ── AdminSubscriptionsService ─────────────────────────────────────────────────
+// AdminSubscriptionsService
 
 class AdminSubscriptionsService extends BaseService {
   async list(

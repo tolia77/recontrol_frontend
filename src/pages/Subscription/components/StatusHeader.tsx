@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import Card from "src/components/ui/Card";
 import type { SubscriptionStatus } from "src/services/backend/subscriptionService";
 
-// ── State badge color map ──────────────────────────────────────────────────────
+// State badge color map
 
 const stateBadgeClasses: Record<string, string> = {
   active: "text-success bg-success/10",
@@ -13,7 +13,7 @@ const stateBadgeClasses: Record<string, string> = {
   expired: "text-muted-foreground bg-surface-muted",
 };
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// Component
 
 interface StatusHeaderProps {
   status: SubscriptionStatus | null;

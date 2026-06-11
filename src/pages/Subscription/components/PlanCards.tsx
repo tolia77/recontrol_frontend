@@ -13,12 +13,12 @@ import { getErrorMessage } from "src/utils/getErrorMessage";
 import { formatPrice } from "src/utils/formatPrice";
 import PlanComparison from "./PlanComparison";
 
-// ── Free-tier limits for cancel-impact diff (D-16) ───────────────────────────
+// Free-tier limits for cancel-impact diff (D-16)
 const FREE_DEVICE_LIMIT = 2;
 const FREE_SCENARIO_LIMIT = 3;
 const FREE_AI_DRAFT_LIMIT = 0;
 
-// ── LiqPay auto-POST helper (D-05, RESEARCH.md Pattern 3) ────────────────────
+// LiqPay auto-POST helper (D-05, RESEARCH.md Pattern 3)
 function submitToLiqPay(blob: LiqPayBlob): void {
   // Don't leak our referrer to LiqPay. In local dev the referrer is http://localhost,
   // which LiqPay stores in its own Matomo `_pk_ref` cookie and then its WAF 403s the
@@ -53,7 +53,7 @@ function submitToLiqPay(blob: LiqPayBlob): void {
   form.submit();
 }
 
-// ── CTA action types ──────────────────────────────────────────────────────────
+// CTA action types
 type ConfirmAction = "subscribe" | "upgrade" | "resubscribe" | "downgrade" | "cancel";
 
 interface ConfirmState {
@@ -61,12 +61,12 @@ interface ConfirmState {
   plan: Plan;
 }
 
-// ── Props ─────────────────────────────────────────────────────────────────────
+// Props
 interface PlanCardsProps {
   status: SubscriptionStatus | null;
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// Component
 function PlanCards({ status }: PlanCardsProps) {
   const { t } = useTranslation("subscription");
   const { plans, loading: loadingPlans, refresh } = useSubscription();
@@ -83,12 +83,12 @@ function PlanCards({ status }: PlanCardsProps) {
     device_sharing: boolean;
   } | null>(null);
 
-  // ── Derive current plan price from fetched plans list ─────────────────────
+  // Derive current plan price from fetched plans list
   const currentPlanName = status?.plan_name ?? "free";
   const currentPlan = plans.find((p) => p.name === currentPlanName);
   const currentPrice = currentPlan?.monthly_price ?? 0;
 
-  // ── Determine CTA per plan card (D-02) ────────────────────────────────────
+  // Determine CTA per plan card (D-02)
   type CtaVariant =
     | "current"
     | "none"
@@ -135,7 +135,7 @@ function PlanCards({ status }: PlanCardsProps) {
     return "subscribe";
   }
 
-  // ── Open cancel modal + fetch usage for diff (D-16) ──────────────────────
+  // Open cancel modal + fetch usage for diff (D-16)
   async function openCancelConfirm(plan: Plan) {
     try {
       const usage = await subscriptionService.getUsage();
@@ -151,7 +151,7 @@ function PlanCards({ status }: PlanCardsProps) {
     setConfirm({ action: "cancel", plan });
   }
 
-  // ── Open any confirm modal ────────────────────────────────────────────────
+  // Open any confirm modal
   function openConfirm(action: ConfirmAction, plan: Plan) {
     if (action === "cancel") {
       void openCancelConfirm(plan);
@@ -164,7 +164,7 @@ function PlanCards({ status }: PlanCardsProps) {
     setConfirm(null);
   }
 
-  // ── Perform confirmed action ──────────────────────────────────────────────
+  // Perform confirmed action
   async function handleConfirm() {
     if (!confirm) return;
     setBusy(true);
@@ -224,7 +224,7 @@ function PlanCards({ status }: PlanCardsProps) {
     }
   }
 
-  // ── Build cancel-impact body (D-16) ───────────────────────────────────────
+  // Build cancel-impact body (D-16)
   function buildCancelImpactBody(): React.ReactNode {
     const lines: React.ReactNode[] = [];
 
@@ -288,7 +288,7 @@ function PlanCards({ status }: PlanCardsProps) {
     );
   }
 
-  // ── Build modal config for current confirm state ──────────────────────────
+  // Build modal config for current confirm state
   function getModalConfig() {
     if (!confirm) return null;
     const { action, plan } = confirm;
@@ -354,7 +354,7 @@ function PlanCards({ status }: PlanCardsProps) {
 
   const modalConfig = getModalConfig();
 
-  // ── Per-plan CTA, rendered INSIDE each PlanComparison card (D-07 fix) ──────
+  // Per-plan CTA, rendered INSIDE each PlanComparison card (D-07 fix)
   function renderCta(plan: Plan): React.ReactNode {
     const cta = getCta(plan);
     const isCurrent = cta === "current";

@@ -16,11 +16,11 @@ import {
 import { getErrorMessage } from "src/utils/getErrorMessage";
 import { setUsageInvalidationHandler } from "src/utils/usageInvalidationBus.ts";
 
-// ── Context ───────────────────────────────────────────────────────────────────
+// Context
 
 export const SubscriptionContext = createContext<SubscriptionContextValue | null>(null);
 
-// ── Hook ──────────────────────────────────────────────────────────────────────
+// Hook
 
 export function useSubscription(): SubscriptionContextValue {
   const context = useContext(SubscriptionContext);
@@ -30,7 +30,7 @@ export function useSubscription(): SubscriptionContextValue {
   return context;
 }
 
-// ── Provider ──────────────────────────────────────────────────────────────────
+// Provider
 
 interface SubscriptionProviderProps {
   children: ReactNode;

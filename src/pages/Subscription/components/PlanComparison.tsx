@@ -23,7 +23,7 @@ interface PlanComparisonProps {
   renderCta?: (plan: Plan) => ReactNode;
 }
 
-// ── Static feature row data (per-plan values) ─────────────────────────────────
+// Static feature row data (per-plan values)
 // Source: 34-UI-SPEC.md §Feature Row Specification
 // These are display values for the comparison grid ONLY — NOT consumed by gate logic.
 // Gate logic reads server-provided usage values from SubscriptionContext.
@@ -70,7 +70,7 @@ function planHasFeature(
   return val !== "0" && val !== "—";
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// Component
 
 function PlanComparison({
   plans,

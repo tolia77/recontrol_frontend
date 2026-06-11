@@ -16,7 +16,7 @@ export const backendInstance = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL,
 });
 
-// ── Request interceptor ────────────────────────────────────────────────────
+// Request interceptor
 // Injects Authorization on every request unless config.skipAuth is true.
 backendInstance.interceptors.request.use((config) => {
   if (config.skipAuth) return config;
@@ -27,7 +27,7 @@ backendInstance.interceptors.request.use((config) => {
   return config;
 });
 
-// ── Refresh mutex ──────────────────────────────────────────────────────────
+// Refresh mutex
 // Prevents concurrent refresh calls from racing and cascade-revoking sessions.
 let refreshPromise: Promise<string | null> | null = null;
 
@@ -63,7 +63,7 @@ export async function refreshAccessTokenOnce(): Promise<string | null> {
   return refreshPromise;
 }
 
-// ── Response interceptor ───────────────────────────────────────────────────
+// Response interceptor
 backendInstance.interceptors.response.use(
   (response) => {
     const body = response.data;

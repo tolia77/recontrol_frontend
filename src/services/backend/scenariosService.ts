@@ -88,13 +88,11 @@ export interface PolicyDenyError {
   reason: string;
 }
 
-// ────────────────────────────────────────────────────────────────────────────
 // AI draft generation (Phase 23) — D-12: drafts have no step `id`; backend
 // `before_validation` hook assigns UUIDs only at save time. The amber
 // `dry_intent_warning` is draft-time-only and is discarded on [Accept and save]
 // (D-11): saved scenarios are independently re-classified by the run-time
 // irreversible-intent catalog inside PolicyPreviewModal.
-// ────────────────────────────────────────────────────────────────────────────
 
 // AI-05 frontend half: shape produced by `CommandPolicy.dry_intent_check`
 // (recontrol_backend/app/services/command_policy/dry_intent_patterns.rb).

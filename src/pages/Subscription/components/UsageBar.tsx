@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// Helpers
 
 function formatCount(n: number): string {
   if (n >= 1000) return `${Math.round(n / 1000)}k`;
@@ -24,7 +24,7 @@ const barFillClasses: Record<BarColor, string> = {
   none: "",
 };
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// Component
 
 interface UsageBarProps {
   label: string;

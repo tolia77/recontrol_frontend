@@ -2,11 +2,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 
-// ── Navigation mock ────────────────────────────────────────────────────────────
+// Navigation mock
 const mockNavigate = vi.fn();
 vi.mock("react-router", () => ({ useNavigate: () => mockNavigate }));
 
-// ── i18next mock ──────────────────────────────────────────────────────────────
+// i18next mock
 // Simple passthrough: returns the key so assertions can match the key string.
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -22,7 +22,7 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-// ── SubscriptionContext mock ───────────────────────────────────────────────────
+// SubscriptionContext mock
 import type { Plan, SubscriptionUsage } from "src/services/backend/subscriptionService";
 
 const stubPlans: Plan[] = [
@@ -64,7 +64,7 @@ afterEach(() => {
   mockNavigate.mockReset();
 });
 
-// ── Helper ─────────────────────────────────────────────────────────────────────
+// Helper
 function renderModal(props: {
   feature: GateKey;
   current?: number;
@@ -85,7 +85,7 @@ function renderModal(props: {
   );
 }
 
-// ── Tests ──────────────────────────────────────────────────────────────────────
+// Tests
 
 describe("UpgradeModal", () => {
   describe("gate-specific header rendering", () => {

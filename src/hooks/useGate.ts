@@ -2,7 +2,7 @@
 // requiredPlan uses tier ORDERING + current plan only — never per-tier numeric limits.
 import { useSubscription } from "src/contexts/SubscriptionContext";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// Types
 
 export type GateKey =
   | "device_sharing"
@@ -19,7 +19,7 @@ export interface GateResult {
   requiredPlan?: string;
 }
 
-// ── Tier ordering (RD-1) ──────────────────────────────────────────────────────
+// Tier ordering (RD-1)
 
 const TIER_ORDER = ["free", "pro", "advanced", "business"] as const;
 
@@ -31,7 +31,7 @@ const BOOLEAN_GATE_UNLOCK_TIER: Record<"device_sharing" | "ai_access", string> =
     ai_access: "pro",
   };
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// Helpers
 
 /**
  * Returns the plan name of the cheapest paid tier strictly ABOVE the user's
@@ -49,7 +49,7 @@ function nextTierAbove(currentPlanName: string): string | undefined {
   return TIER_ORDER[nextIdx];
 }
 
-// ── Hook ──────────────────────────────────────────────────────────────────────
+// Hook
 
 export function useGate(gate: GateKey): GateResult {
   const { usage, plans, status } = useSubscription();
@@ -59,7 +59,7 @@ export function useGate(gate: GateKey): GateResult {
 
   const currentPlanName = status?.plan_name ?? "free";
 
-  // ── Boolean gates ────────────────────────────────────────────────────────
+  // Boolean gates
   if (gate === "device_sharing") {
     if (usage.device_sharing) return { allowed: true, reason: null };
     const unlockTier = BOOLEAN_GATE_UNLOCK_TIER.device_sharing;
@@ -82,7 +82,7 @@ export function useGate(gate: GateKey): GateResult {
     };
   }
 
-  // ── Count gates ───────────────────────────────────────────────────────────
+  // Count gates
   let used: number;
   let limit: number | null;
 

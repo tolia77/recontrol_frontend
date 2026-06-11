@@ -7,7 +7,7 @@ import { useSubscription } from "src/contexts/SubscriptionContext";
 import PlanComparison from "src/pages/Subscription/components/PlanComparison";
 import type { GateKey } from "src/hooks/useGate";
 
-// ── Props ─────────────────────────────────────────────────────────────────────
+// Props
 
 interface UpgradeModalProps {
   /** The gate that triggered the modal (selects the header copy and highlighted row). */
@@ -22,7 +22,7 @@ interface UpgradeModalProps {
   onClose: () => void;
 }
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// Component
 
 function UpgradeModal({
   feature,

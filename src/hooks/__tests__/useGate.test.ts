@@ -5,7 +5,7 @@ import { cleanup, renderHook } from "@testing-library/react";
 import React from "react";
 import { useGate } from "../useGate";
 
-// ── Mock context ──────────────────────────────────────────────────────────────
+// Mock context
 
 import { SubscriptionContext } from "src/contexts/SubscriptionContext";
 import type { SubscriptionContextValue } from "src/services/backend/subscriptionService";
@@ -72,7 +72,7 @@ function wrapper(contextValue: SubscriptionContextValue) {
 
 afterEach(() => cleanup());
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
+// Tests
 
 describe("useGate — fail-open passthrough (T-34-06 mitigation)", () => {
   it("returns allowed:true, reason:null when usage is null (loading)", () => {
