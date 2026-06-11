@@ -28,6 +28,7 @@ import {
 } from "./components/Assistant/transcriptReducer";
 import { useClipboardSync } from "./hooks/realtime/useClipboardSync";
 import { useClipboardCapability } from "./hooks/useClipboardCapability";
+import { useOrientation } from "./hooks/useOrientation";
 import { useRefusalToastThrottle } from "./hooks/useRefusalToastThrottle";
 import { useTranslation } from "react-i18next";
 import { useFileManagerState } from "./hooks/state/useFileManagerState";
@@ -46,6 +47,7 @@ interface CommandWebSocketProps {
 
 function DeviceControl({ wsUrl }: CommandWebSocketProps) {
   const isMobile = useMobileDetect();
+  const { isLandscape } = useOrientation();
   const navigate = useNavigate();
 
   // Orchestrator-level identity state (3 remaining useState after Wave C)
@@ -431,6 +433,19 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
       payload: { resolution },
     });
   };
+
+  // REL-12: force a keyframe on orientation change so the decoder recovers
+  // immediately instead of waiting for the next natural IDR frame (Phase 36 deferred UAT).
+  // prevIsLandscapeRef guards against firing on initial mount and on unrelated re-renders.
+  // The ref is updated BEFORE the connected check so a rotation while disconnected
+  // does not queue a stale send when connectionState later becomes "connected".
+  const prevIsLandscapeRef = useRef(isLandscape);
+  useEffect(() => {
+    if (prevIsLandscapeRef.current === isLandscape) return;
+    prevIsLandscapeRef.current = isLandscape;
+    if (connectionState !== "connected") return;
+    sendSingleAction({ type: "webrtc.request_keyframe", payload: {} });
+  }, [isLandscape, connectionState]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const requestListProcesses = () => {
     if (!connected) return;
