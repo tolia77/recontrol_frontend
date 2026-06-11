@@ -29,16 +29,14 @@ export function useWebRtcSignaling({
 
       if (command === "webrtc.answer") {
         const sdp = payload.sdp as string;
-        pc.setRemoteDescription(
-          new RTCSessionDescription({ type: "answer", sdp }),
-        );
+        pc.setRemoteDescription(new RTCSessionDescription({ type: "answer", sdp }))
+          .catch((err) => console.error("[webrtc] setRemoteDescription failed:", err));
       } else if (command === "webrtc.ice_candidate") {
         const candidate = payload.candidate as string;
         const sdpMid = (payload.sdpMid as string) || "0";
         const sdpMLineIndex = (payload.sdpMLineIndex as number) || 0;
-        pc.addIceCandidate(
-          new RTCIceCandidate({ candidate, sdpMid, sdpMLineIndex }),
-        );
+        pc.addIceCandidate(new RTCIceCandidate({ candidate, sdpMid, sdpMLineIndex }))
+          .catch((err) => console.error("[webrtc] addIceCandidate failed:", err));
       }
     },
     // pcRef is a ref object — stable reference; empty deps array is correct

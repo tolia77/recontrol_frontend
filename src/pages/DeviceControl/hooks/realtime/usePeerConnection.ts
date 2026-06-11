@@ -42,7 +42,7 @@ const FALLBACK_ICE_SERVERS: RTCIceServer[] = [
 ];
 
 const MAX_BACKOFF_MS = 8000;
-const TOTAL_TIMEOUT_MS = 20000;
+const TOTAL_TIMEOUT_MS = 45000;
 
 async function fetchIceServers(): Promise<RTCIceServer[]> {
   try {
