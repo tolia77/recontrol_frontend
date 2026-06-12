@@ -43,6 +43,12 @@ const FALLBACK_ICE_SERVERS: RTCIceServer[] = [
 
 const MAX_BACKOFF_MS = 8000;
 const TOTAL_TIMEOUT_MS = 45000;
+// Per-attempt watchdog: if the newly created pc never reaches "connected" within
+// this window (e.g. peer is offline, no remote description -> no ICE events),
+// re-enter attemptReconnect so the 45s budget check fires even without a
+// connectionstatechange event. Stored in the same reconnectTimerRef slot so
+// clearReconnectTimer / stopWebRtc / connected-branch already cover cleanup.
+const WATCHDOG_MS = 9000;
 
 async function fetchIceServers(): Promise<RTCIceServer[]> {
   try {
@@ -304,6 +310,19 @@ export function usePeerConnection({
         return;
       }
       void createPeerConnection();
+      // Per-attempt watchdog: arm a timer (in the same reconnectTimerRef slot)
+      // that re-enters attemptReconnect if the new pc never reaches "connected".
+      // This ensures the 45s elapsed check fires even when the peer is offline
+      // and no connectionstatechange event ever fires (pc stays in "new" forever).
+      // Reusing reconnectTimerRef means clearReconnectTimer(), stopWebRtc(),
+      // retryWebRtc(), the connected branch, and the unmount cleanup all cancel
+      // this watchdog with no extra code.
+      reconnectTimerRef.current = setTimeout(() => {
+        reconnectTimerRef.current = null;
+        if (pcRef.current?.connectionState !== "connected") {
+          attemptReconnect();
+        }
+      }, WATCHDOG_MS);
     }, backoff);
   }, [cleanupPeerConnection, clearReconnectTimer, createPeerConnection]);
 
