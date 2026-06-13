@@ -121,6 +121,13 @@ export function usePeerConnection({
   }, []);
 
   const cleanupPeerConnection = useCallback(() => {
+    // Invalidate any in-flight TURN-credentials fetch. A createPeerConnection
+    // call awaiting fetchIceServers() captured a generation before this
+    // teardown; bumping the counter here makes its gen !== pcGenRef.current
+    // guard fail so it bails instead of resurrecting a pc (and re-sending
+    // webrtc.offer) after stop / 45s-timeout / unmount.
+    pcGenRef.current++;
+
     // Dispose data-channel wrappers BEFORE closing the RTCPeerConnection.
     // Spike C ordering (Landmine 6): cleanupDataChannels() runs first,
     // then pc.close() below drives the actual channel teardown on both sides.
