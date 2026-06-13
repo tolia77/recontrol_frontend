@@ -201,15 +201,13 @@ export function usePeerConnection({
         state === "disconnected" ||
         state === "closed"
       ) {
-        // first failure after a good connection: start a reconnect episode
+        // first failure after a good connection: start a reconnect episode.
+        // Once an episode is active, the per-attempt watchdog (armed in
+        // attemptReconnect) drives re-entry and the 45s budget check -- a
+        // pending timer always occupies reconnectTimerRef during an episode,
+        // so failure events on the retry pc are intentionally not re-driven
+        // here (that path is unreachable and was removed).
         if (wasConnectedRef.current && !isReconnectingRef.current) {
-          attemptReconnect();
-        } else if (isReconnectingRef.current && reconnectTimerRef.current === null) {
-          // A failure event fired on the retry pc while an episode is already
-          // active AND no backoff/watchdog timer is currently pending. Re-drive
-          // the loop so events accelerate the episode instead of being swallowed.
-          // The reconnectTimerRef.current === null guard prevents double-scheduling
-          // against the Task-1 watchdog or an already-queued backoff timer.
           attemptReconnect();
         } else if (!isReconnectingRef.current) {
           // Never connected and not reconnecting -> fail immediately
