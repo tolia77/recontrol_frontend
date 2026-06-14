@@ -52,14 +52,7 @@ export function useWebRtcSignaling({
             for (const init of pending) {
               pc.addIceCandidate(new RTCIceCandidate(init)).catch((err) => {
                 console.error("[webrtc] buffered addIceCandidate failed:", err);
-                // Phase 42.1 Fix C: TEMPORARY un-redacted candidate string so we can
-                // identify which candidate Chrome rejects (OperationError). Remove
-                // the `candidate` field once the OperationError root cause is fixed.
-                frontendLogger.log('error', 'webrtc', 'ice_candidate_flush_failed', {
-                  err: String(err),
-                  candidate: init.candidate,
-                  sdpMid: init.sdpMid,
-                });
+                frontendLogger.log('error', 'webrtc', 'ice_candidate_flush_failed', { err: String(err) });
               });
             }
           })
@@ -88,12 +81,7 @@ export function useWebRtcSignaling({
         if (pc.remoteDescription) {
           pc.addIceCandidate(new RTCIceCandidate(init)).catch((err) => {
             console.error("[webrtc] addIceCandidate failed:", err);
-            // Phase 42.1 Fix C: TEMPORARY un-redacted candidate string for diagnosis.
-            frontendLogger.log('error', 'webrtc', `${command}_failed`, {
-              err: String(err),
-              candidate: init.candidate,
-              sdpMid: init.sdpMid,
-            });
+            frontendLogger.log('error', 'webrtc', `${command}_failed`, { err: String(err) });
           });
         } else {
           pendingCandidatesRef.current.push(init);
