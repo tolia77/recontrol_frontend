@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import type React from "react";
+import { frontendLogger } from "src/utils/logger";
 
 /**
  * Handles incoming WebRTC signaling messages (webrtc.answer, webrtc.ice_candidate).
@@ -27,16 +28,28 @@ export function useWebRtcSignaling({
       const pc = pcRef.current;
       if (!pc) return;
 
+      // Log command name + safe structural ICE fields only (no SDP body, no raw candidate string).
+      frontendLogger.log('info', 'webrtc', command, {
+        sdpMid: payload.sdpMid as string | undefined,
+        sdpMLineIndex: payload.sdpMLineIndex as number | undefined,
+      });
+
       if (command === "webrtc.answer") {
         const sdp = payload.sdp as string;
         pc.setRemoteDescription(new RTCSessionDescription({ type: "answer", sdp }))
-          .catch((err) => console.error("[webrtc] setRemoteDescription failed:", err));
+          .catch((err) => {
+            console.error("[webrtc] setRemoteDescription failed:", err);
+            frontendLogger.log('error', 'webrtc', `${command}_failed`, { err: String(err) });
+          });
       } else if (command === "webrtc.ice_candidate") {
         const candidate = payload.candidate as string;
         const sdpMid = (payload.sdpMid as string) || "0";
         const sdpMLineIndex = (payload.sdpMLineIndex as number) || 0;
         pc.addIceCandidate(new RTCIceCandidate({ candidate, sdpMid, sdpMLineIndex }))
-          .catch((err) => console.error("[webrtc] addIceCandidate failed:", err));
+          .catch((err) => {
+            console.error("[webrtc] addIceCandidate failed:", err);
+            frontendLogger.log('error', 'webrtc', `${command}_failed`, { err: String(err) });
+          });
       }
     },
     // pcRef is a ref object — stable reference; empty deps array is correct

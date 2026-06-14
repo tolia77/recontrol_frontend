@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { frontendLogger } from "src/utils/logger";
 import { FilesChannelClient } from "src/pages/DeviceControl/services/files/FilesChannelClient";
 import { FilesDataChannel } from "src/pages/DeviceControl/services/files/FilesDataChannel";
 import { ClipboardLoopGate } from "src/pages/DeviceControl/services/clipboard/clipboardLoopGate";
@@ -70,6 +71,7 @@ export function useDataChannels(): UseDataChannelsReturn {
   // to the SIPSorcery peer -- so we rely on pc.close() below to drive the
   // teardown. Here we only detach listeners and reject pending requests.
   const cleanupDataChannels = useCallback(() => {
+    frontendLogger.log('info', 'webrtc', 'data_channels_cleanup', {});
     filesClientRef.current?.dispose();
     filesClientRef.current = null;
     filesDataChannelRef.current?.dispose();
@@ -107,6 +109,7 @@ export function useDataChannels(): UseDataChannelsReturn {
         filesCtlRef.current = filesCtl;
         filesCtl.addEventListener("open", () => {
           console.log("[files-ctl] open");
+          frontendLogger.log('info', 'webrtc', 'data_channel_open', { label: filesCtl.label });
           filesClientRef.current = new FilesChannelClient(filesCtl);
           // Expose on window so Plan 09-05's browser-console demo can call
           // window.__filesCtl.request('files.list', { path: '...' }).
@@ -131,6 +134,7 @@ export function useDataChannels(): UseDataChannelsReturn {
         filesDataRef.current = filesData;
         filesData.addEventListener("open", () => {
           console.log("[files-data] open");
+          frontendLogger.log('info', 'webrtc', 'data_channel_open', { label: filesData.label });
           filesDataChannelRef.current = new FilesDataChannel(filesData);
         });
         filesData.addEventListener("close", () => {
@@ -142,6 +146,7 @@ export function useDataChannels(): UseDataChannelsReturn {
         const clipboard = pc.createDataChannel("clipboard", { ordered: true });
         clipboardRef.current = clipboard;
         clipboard.addEventListener("open", () => {
+          frontendLogger.log('info', 'webrtc', 'data_channel_open', { label: clipboard.label });
           const originId = crypto.randomUUID();
           clipboardOriginIdRef.current = originId;
           clipboardLoopGateRef.current.reset();
