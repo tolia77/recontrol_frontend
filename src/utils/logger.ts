@@ -118,3 +118,9 @@ class FrontendLogger {
 }
 
 export const frontendLogger = new FrontendLogger();
+
+// Expose on window so the diagnostic operator can run `frontendLogger.download()`
+// directly from the DevTools console during a streaming session (D-07).
+if (typeof window !== "undefined") {
+  (window as Window & { frontendLogger?: FrontendLogger }).frontendLogger = frontendLogger;
+}

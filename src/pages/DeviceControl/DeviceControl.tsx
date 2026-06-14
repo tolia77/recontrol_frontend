@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useReducer } from "react";
 import { useNavigate } from "react-router";
 import { generateUUID } from "src/utils/uuid";
+import { frontendLogger } from "src/utils/logger";
 import TopBar from "./components/Layout/TopBar";
 import MainContent from "./components/Layout/MainContent";
 import GestureToolbar from "./components/GestureToolbar/GestureToolbar";
@@ -623,6 +624,20 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
       />
     ) : null;
 
+  // Diagnostic log export (phase 42.1, D-07): always-available floating trigger
+  // that dumps the frontendLogger ring buffer to a JSONL download. Positioned
+  // bottom-left to stay clear of the mobile GestureToolbar FAB cluster (bottom-right).
+  const downloadLogsButton = (
+    <button
+      type="button"
+      onClick={() => frontendLogger.download()}
+      title="Download diagnostic logs (JSONL)"
+      className="fixed bottom-3 left-3 z-40 rounded-md bg-black/60 px-3 py-1.5 text-xs font-medium text-white/90 shadow-lg backdrop-blur transition-colors hover:bg-black/80"
+    >
+      Download Logs
+    </button>
+  );
+
   // UpgradeModal is shared — always rendered regardless of mobile/desktop path (z-50)
   const upgradeModal = showAiUpgradeModal ? (
     <UpgradeModal
@@ -639,6 +654,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
     return (
       <div className="command-websocket flex h-dvh w-full flex-col bg-[#0a0d18] font-sans antialiased">
         {upgradeModal}
+        {downloadLogsButton}
         <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <MainContent
             disabled={overallDisabled}
@@ -750,6 +766,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
         }}
       />
       {upgradeModal}
+      {downloadLogsButton}
       <main
         className={`flex min-h-0 flex-1 flex-col ${activeMode === "interactive" ? "overflow-hidden" : ""}`}
       >
