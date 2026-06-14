@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ProcessInfo } from "src/pages/DeviceControl/hooks/state/useTerminalSession";
 import type { CableConsumerLike } from "./useCableConsumer";
+import { frontendLogger } from "src/utils/logger";
 
 function stringifyResult(val: unknown): string {
   try {
@@ -77,6 +78,8 @@ export function useDeviceSocket(
     try {
       if (!inner || typeof inner !== "object") return;
       const msg = inner as InnerMessage;
+      // Log command type only — never the message body/params (may carry clipboard/terminal/file data).
+      frontendLogger.log('info', 'command', 'message_received', { command: msg.command });
       const cmd = msg.command;
       const payload = msg.payload ?? {};
       const originalCmd = msg.id ? pendingCommandsRef.current.get(msg.id) : undefined;
@@ -125,6 +128,7 @@ export function useDeviceSocket(
       {
         connected: () => {
           setConnected(true);
+          frontendLogger.log('info', 'command', 'socket_connected', {});
           // App-level heartbeat: backend derives the device "used" status from a
           // TTL'd cache entry refreshed by these. ActionCable's own ping does
           // not trigger it.
@@ -135,6 +139,7 @@ export function useDeviceSocket(
         },
         disconnected: () => {
           setConnected(false);
+          frontendLogger.log('info', 'command', 'socket_disconnected', {});
           if (heartbeatInterval.current) {
             clearInterval(heartbeatInterval.current);
             heartbeatInterval.current = null;
