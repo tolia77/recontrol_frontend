@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { turnService } from "src/services/backend/turnService";
+import { frontendLogger } from "src/utils/logger";
 import type React from "react";
 import type { WebRtcConnectionState } from "./useWebRtc";
 
@@ -30,7 +31,17 @@ export interface UsePeerConnectionReturn {
   retryWebRtc: () => void;
   connectionState: WebRtcConnectionState;
   hasReceivedFrame: boolean;
-  desktopStats: { framesSkipped: number; encoder?: string } | null;
+  desktopStats: {
+    framesSkipped: number;
+    encoder?: string;
+    seq?: number;
+    rtpTs?: number;
+    captureUs?: number;
+    encodeUs?: number;
+    fps?: number;
+    nulls?: number;
+    sentBytes?: number;
+  } | null;
 }
 
 // STUN-only fallback. Used if the backend's /turn_credentials endpoint is
@@ -88,12 +99,23 @@ export function usePeerConnection({
   // instead of clobbering the live peer connection.
   const pcGenRef = useRef(0);
 
+  // requestVideoFrameCallback id — tracks the pending one-shot rvfc registration
+  // so it can be cancelled in cleanupPeerConnection (T-42.1-16 mitigation).
+  const rvfcIdRef = useRef<number | null>(null);
+
   const [connectionState, setConnectionState] =
     useState<WebRtcConnectionState>("idle");
   const [hasReceivedFrame, setHasReceivedFrame] = useState(false);
   const [desktopStats, setDesktopStats] = useState<{
     framesSkipped: number;
     encoder?: string;
+    seq?: number;
+    rtpTs?: number;
+    captureUs?: number;
+    encodeUs?: number;
+    fps?: number;
+    nulls?: number;
+    sentBytes?: number;
   } | null>(null);
 
   // Whenever the video element mounts or the stream changes, attach it
@@ -103,15 +125,59 @@ export function usePeerConnection({
     }
   }, []);
 
+  /**
+   * Per-rendered-frame callback (T-42.1-15 mitigation: body is ONLY logger enqueue
+   * + re-register; no awaits, no DOM work, no JSON.stringify in this callback).
+   * One-shot API — re-register at the end of each call (RESEARCH Pitfall 3).
+   */
+  const attachRvfc = useCallback((video: HTMLVideoElement) => {
+    const onFrame = (
+      now: DOMHighResTimeStamp,
+      metadata: VideoFrameCallbackMetadata,
+    ) => {
+      frontendLogger.timing("webrtc", "frame_rendered", {
+        rtpTimestamp: metadata.rtpTimestamp,
+        captureTime: metadata.captureTime,
+        receiveTime: metadata.receiveTime,
+        presentationTime: metadata.presentationTime,
+        paintTs: now,
+        presentedFrames: metadata.presentedFrames,
+      });
+      // Re-register for next frame (rvfc is one-shot — Pitfall 3)
+      rvfcIdRef.current = video.requestVideoFrameCallback(onFrame);
+    };
+    rvfcIdRef.current = video.requestVideoFrameCallback(onFrame);
+  }, []);
+
+  /**
+   * Cancel the pending rvfc registration (T-42.1-16 mitigation).
+   * Must be called BEFORE pc.close() in cleanupPeerConnection.
+   */
+  const detachRvfc = useCallback((video: HTMLVideoElement) => {
+    if (rvfcIdRef.current !== null) {
+      video.cancelVideoFrameCallback(rvfcIdRef.current);
+      rvfcIdRef.current = null;
+    }
+  }, []);
+
   // Callback ref: parent layout swaps (e.g. opening the file manager panel)
   // remount the <video> element. Re-attach srcObject every time the node
   // changes so the live MediaStream binds to the new DOM node.
-  const setVideoNode = useCallback((node: HTMLVideoElement | null) => {
-    videoRef.current = node;
-    if (node && streamRef.current) {
-      node.srcObject = streamRef.current;
-    }
-  }, []);
+  const setVideoNode = useCallback(
+    (node: HTMLVideoElement | null) => {
+      // Detach rvfc from the old node before switching
+      if (videoRef.current && videoRef.current !== node) {
+        detachRvfc(videoRef.current);
+      }
+      videoRef.current = node;
+      if (node && streamRef.current) {
+        node.srcObject = streamRef.current;
+        // Attach rvfc to the new node now that it has a srcObject
+        attachRvfc(node);
+      }
+    },
+    [attachRvfc, detachRvfc],
+  );
 
   const clearReconnectTimer = useCallback(() => {
     if (reconnectTimerRef.current) {
@@ -127,6 +193,12 @@ export function usePeerConnection({
     // guard fail so it bails instead of resurrecting a pc (and re-sending
     // webrtc.offer) after stop / 45s-timeout / unmount.
     pcGenRef.current++;
+
+    // Cancel any pending requestVideoFrameCallback BEFORE closing the PC
+    // (T-42.1-16 mitigation — rvfc must not fire after teardown).
+    if (videoRef.current) {
+      detachRvfc(videoRef.current);
+    }
 
     // Dispose data-channel wrappers BEFORE closing the RTCPeerConnection.
     // Spike C ordering (Landmine 6): cleanupDataChannels() runs first,
@@ -146,7 +218,7 @@ export function usePeerConnection({
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
-  }, [cleanupDataChannels]);
+  }, [cleanupDataChannels, detachRvfc]);
 
   const createPeerConnection = useCallback(async () => {
     cleanupPeerConnection();
@@ -242,10 +314,43 @@ export function usePeerConnection({
       if (event.channel.label === "stats") {
         event.channel.onmessage = (msg) => {
           try {
-            const data = JSON.parse(msg.data);
-            setDesktopStats({
-              framesSkipped: data.skipped,
+            const data = JSON.parse(msg.data as string) as {
+              skipped?: number;
+              encoder?: string;
+              resolution?: string;
+              seq?: number;
+              rtpTs?: number;
+              captureUs?: number;
+              encodeUs?: number;
+              fps?: number;
+              nulls?: number;
+              sentBytes?: number;
+            };
+
+            // Log extended desktop stats for cross-side correlation (D-08)
+            frontendLogger.timing("webrtc", "desktop_stats", {
+              skipped: data.skipped,
               encoder: data.encoder,
+              resolution: data.resolution,
+              seq: data.seq,
+              rtpTs: data.rtpTs,
+              captureUs: data.captureUs,
+              encodeUs: data.encodeUs,
+              fps: data.fps,
+              nulls: data.nulls,
+              sentBytes: data.sentBytes,
+            });
+
+            setDesktopStats({
+              framesSkipped: data.skipped ?? 0,
+              encoder: data.encoder,
+              seq: data.seq,
+              rtpTs: data.rtpTs,
+              captureUs: data.captureUs,
+              encodeUs: data.encodeUs,
+              fps: data.fps,
+              nulls: data.nulls,
+              sentBytes: data.sentBytes,
             });
           } catch {
             /* ignore parse errors */
@@ -265,11 +370,14 @@ export function usePeerConnection({
           sendMessage("webrtc.offer", { sdp: offer.sdp });
         });
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         // Without this, a rejection in createOffer/setLocalDescription dies as
         // an unhandled promise rejection and the UI stays stuck on 'connecting'
         // with no clue why.
         console.error("[webrtc] createOffer/setLocalDescription failed:", err);
+        frontendLogger.log("error", "webrtc", "create_offer_failed", {
+          err: String(err),
+        });
         setConnectionState("failed");
       });
   }, [
