@@ -245,6 +245,23 @@ export function usePeerConnection({
     };
 
     pc.ontrack = (event) => {
+      // Phase 42.1 Fix B (FINDINGS): the browser's jitter/playout buffer added
+      // ~220ms (p95 278ms) of receive->present latency — the dominant perceived
+      // lag for a remote-control stream. Bias the receiver toward minimal
+      // buffering: playoutDelayHint (Chromium, seconds; 0 = minimize) and the
+      // spec'd jitterBufferTarget (ms). Wrapped in try/catch — non-Chromium
+      // browsers don't implement these and would otherwise throw.
+      try {
+        const r = event.receiver as RTCRtpReceiver & {
+          playoutDelayHint?: number;
+          jitterBufferTarget?: number | null;
+        };
+        r.playoutDelayHint = 0;
+        r.jitterBufferTarget = 0;
+      } catch {
+        // Receiver latency hints unsupported on this browser — ignore.
+      }
+
       // SIPSorcery may not include MSID in SDP, so event.streams can be empty.
       // Fall back to creating a MediaStream from the track directly.
       const stream = event.streams[0] ?? new MediaStream([event.track]);
