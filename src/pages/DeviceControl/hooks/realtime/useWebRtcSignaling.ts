@@ -68,7 +68,18 @@ export function useWebRtcSignaling({
             frontendLogger.log('error', 'webrtc', `${command}_failed`, { err: String(err) });
           });
       } else if (command === "webrtc.ice_candidate") {
-        const candidate = payload.candidate as string;
+        // Phase 42.1 Fix C (root cause): SIPSorcery (desktop) emits the bare
+        // candidate-attribute WITHOUT the spec-required "candidate:" prefix
+        // (e.g. "122548911 1 udp ... typ host"). Chrome rejects the prefix-less
+        // form with `OperationError: Error processing ICE candidate`, so every
+        // trickled remote candidate was dropped — the connection only survived
+        // when the answer SDP happened to carry a usable inline candidate
+        // (LAN), and failed off-LAN. Normalize by prepending the prefix.
+        const rawCandidate = payload.candidate as string;
+        const candidate =
+          rawCandidate && !rawCandidate.startsWith("candidate:")
+            ? `candidate:${rawCandidate}`
+            : rawCandidate;
         const sdpMid = (payload.sdpMid as string) || "0";
         const sdpMLineIndex = (payload.sdpMLineIndex as number) || 0;
         const init: RTCIceCandidateInit = { candidate, sdpMid, sdpMLineIndex };
