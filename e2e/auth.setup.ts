@@ -8,7 +8,12 @@
 // Inputs are selected by name/type attribute (i18n label text differs by locale).
 import { test as setup } from "@playwright/test";
 import path from "path";
+import { fileURLToPath } from "url";
 import { AUDIT_EMAIL, AUDIT_PASSWORD } from "./audit-fixtures";
+
+// ESM does not expose __dirname; derive it from import.meta.url instead.
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const authFile = path.join(__dirname, "../playwright/.auth/user.json");
 
