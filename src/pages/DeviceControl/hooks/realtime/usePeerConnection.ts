@@ -83,6 +83,11 @@ export function usePeerConnection({
   setupDataChannels,
   cleanupDataChannels,
 }: UsePeerConnectionOptions): UsePeerConnectionReturn {
+  // AUDIT-ONLY — hook-level render counter for Phase 42.2 hot-path audit. Remove in Plan 04 (D-04).
+  const _auditRenderCount = useRef(0);
+  _auditRenderCount.current++;
+  frontendLogger.timing("profiler", "hook_render", { hook: "usePeerConnection", count: _auditRenderCount.current });
+
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const streamRef = useRef<MediaStream | null>(null);

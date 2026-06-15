@@ -2,6 +2,9 @@ import { useState, useEffect, useRef, useCallback, useReducer } from "react";
 import { useNavigate } from "react-router";
 import { generateUUID } from "src/utils/uuid";
 import { frontendLogger } from "src/utils/logger";
+// AUDIT-ONLY — temporary Profiler instrumentation for Phase 42.2 hot-path audit.
+// Remove all RenderTracker usages and this import in Plan 04 (D-04).
+import { RenderTracker } from "src/utils/renderCounter";
 import TopBar from "./components/Layout/TopBar";
 import MainContent from "./components/Layout/MainContent";
 import GestureToolbar from "./components/GestureToolbar/GestureToolbar";
@@ -577,20 +580,23 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
   // mutex with AssistantPanel works. `fmState.panelOpen` is kept in sync by
   // useFileManagerState (it tracks rightPaneActive === 'files') for any
   // legacy consumer that still reads the boolean.
+  // AUDIT-ONLY — RenderTracker wraps FileManagerPanel to count re-renders on pane open/close. Remove in Plan 04 (D-04).
   const fileManagerNode =
     fmState.rightPaneActive === "files" ? (
-      <FileManagerPanel
-        deviceId={deviceId}
-        channel={filesChannel}
-        state={fmState}
-        setCurrentPath={fmSetCurrentPath}
-        setSort={fmSetSort}
-        setShowHidden={fmSetShowHidden}
-        queue={transferQueue}
-        filesByItemIdRef={filesByItemIdRef}
-        activeDownloadRef={activeDownloadRef}
-        isMobile={isMobile}
-      />
+      <RenderTracker id="FileManagerPanel">
+        <FileManagerPanel
+          deviceId={deviceId}
+          channel={filesChannel}
+          state={fmState}
+          setCurrentPath={fmSetCurrentPath}
+          setSort={fmSetSort}
+          setShowHidden={fmSetShowHidden}
+          queue={transferQueue}
+          filesByItemIdRef={filesByItemIdRef}
+          activeDownloadRef={activeDownloadRef}
+          isMobile={isMobile}
+        />
+      </RenderTracker>
     ) : null;
 
   // Phase 20-06: AssistantPanel rendered when rightPaneActive='assistant'.
@@ -598,30 +604,36 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
   // subscription are lifted to this component (see assistantState above) so
   // the conversation survives the panel unmounting on pane switches.
   // deviceName falls back to deviceId when the device record has not loaded.
+  // AUDIT-ONLY — RenderTracker wraps AssistantPanel to count re-renders (AI pane is the mermaid/streamdown surface). Remove in Plan 04 (D-04).
   const assistantPanelNode =
     fmState.rightPaneActive === "assistant" ? (
-      <AssistantPanel
-        deviceId={deviceId}
-        state={assistantState}
-        dispatchTranscript={dispatchAssistantTranscript}
-        dispatch={assistantDispatch}
-        deviceName={deviceName || deviceId}
-        isMobile={isMobile}
-        onFullHeightChange={setAssistantForceFullHeight}
-      />
+      <RenderTracker id="AssistantPanel">
+        <AssistantPanel
+          deviceId={deviceId}
+          state={assistantState}
+          dispatchTranscript={dispatchAssistantTranscript}
+          dispatch={assistantDispatch}
+          deviceName={deviceName || deviceId}
+          isMobile={isMobile}
+          onFullHeightChange={setAssistantForceFullHeight}
+        />
+      </RenderTracker>
     ) : null;
 
   // Phase 21-06: ScenariosPanel scaffold mount. Library + editor land in
   // Plans 21-09 / 21-10; for this plan we render a placeholder so the
   // Splitter's right slot has a non-null node when rightPaneActive='scenarios'.
+  // AUDIT-ONLY — RenderTracker wraps ScenariosPanel to count re-renders on pane switch. Remove in Plan 04 (D-04).
   const scenariosPanelNode =
     fmState.rightPaneActive === "scenarios" ? (
-      <ScenariosPanel
-        deviceId={deviceId}
-        consumer={consumer}
-        connected={connected}
-        deviceName={deviceName || deviceId}
-      />
+      <RenderTracker id="ScenariosPanel">
+        <ScenariosPanel
+          deviceId={deviceId}
+          consumer={consumer}
+          connected={connected}
+          deviceName={deviceName || deviceId}
+        />
+      </RenderTracker>
     ) : null;
 
   // Diagnostic log export (phase 42.1, D-07): always-available floating trigger
@@ -655,34 +667,37 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
       <div className="command-websocket flex h-dvh w-full flex-col bg-[#0a0d18] font-sans antialiased">
         {upgradeModal}
         {downloadLogsButton}
+        {/* AUDIT-ONLY — RenderTracker wraps the mobile main content region. Remove in Plan 04 (D-04). */}
         <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <MainContent
-            disabled={overallDisabled}
-            addAction={sendSingleAction}
-            activeMode="interactive"
-            terminalResults={terminalResults}
-            processes={processes}
-            processesLoading={processesLoading}
-            requestListProcesses={requestListProcesses}
-            killProcess={killProcess}
-            permissions={permissions || undefined}
-            videoRef={videoRef}
-            setVideoNode={setVideoNode}
-            connectionState={connectionState}
-            hasReceivedFrame={hasReceivedFrame}
-            retryWebRtc={retryWebRtc}
-            streamStats={streamStats}
-            showStats={false}
-            scalingMode="fit"
-            panelOpen={false}
-            fileManagerNode={fileManagerNode}
-            assistantPanelNode={assistantPanelNode}
-            scenariosPanelNode={scenariosPanelNode}
-            splitRatio={fmState.splitRatio}
-            setSplitRatio={fmSetSplitRatio}
-            isMobile={true}
-            onStartStream={startWebRtc}
-          />
+          <RenderTracker id="DeviceControl-mobile-root">
+            <MainContent
+              disabled={overallDisabled}
+              addAction={sendSingleAction}
+              activeMode="interactive"
+              terminalResults={terminalResults}
+              processes={processes}
+              processesLoading={processesLoading}
+              requestListProcesses={requestListProcesses}
+              killProcess={killProcess}
+              permissions={permissions || undefined}
+              videoRef={videoRef}
+              setVideoNode={setVideoNode}
+              connectionState={connectionState}
+              hasReceivedFrame={hasReceivedFrame}
+              retryWebRtc={retryWebRtc}
+              streamStats={streamStats}
+              showStats={false}
+              scalingMode="fit"
+              panelOpen={false}
+              fileManagerNode={fileManagerNode}
+              assistantPanelNode={assistantPanelNode}
+              scenariosPanelNode={scenariosPanelNode}
+              splitRatio={fmState.splitRatio}
+              setSplitRatio={fmSetSplitRatio}
+              isMobile={true}
+              onStartStream={startWebRtc}
+            />
+          </RenderTracker>
         </main>
         {/* FAB cluster — overlays the stream, bottom-right, z-40 (36-UI-SPEC §B) */}
         <GestureToolbar
@@ -697,6 +712,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
           canUseKeyboard={canUseKeyboard}
         />
         {/* Always-mounted sheet — never unmounts (DCTL-02, T-36-08) */}
+        {/* AUDIT-ONLY — RenderTracker wraps the mobile bottom sheet (AI/FileManager/Scenarios panes). Remove in Plan 04 (D-04). */}
         <DeviceControlBottomSheet
           open={fmState.rightPaneActive !== null}
           onClose={() => { fmSetRightPaneActive(null); setAssistantForceFullHeight(false); }}
@@ -767,34 +783,37 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
       />
       {upgradeModal}
       {downloadLogsButton}
+      {/* AUDIT-ONLY — RenderTracker wraps the desktop main content region. Remove in Plan 04 (D-04). */}
       <main
         className={`flex min-h-0 flex-1 flex-col ${activeMode === "interactive" ? "overflow-hidden" : ""}`}
       >
-        <MainContent
-          disabled={overallDisabled}
-          addAction={sendSingleAction}
-          activeMode={activeMode}
-          terminalResults={terminalResults}
-          processes={processes}
-          processesLoading={processesLoading}
-          requestListProcesses={requestListProcesses}
-          killProcess={killProcess}
-          permissions={permissions || undefined}
-          videoRef={videoRef}
-          setVideoNode={setVideoNode}
-          connectionState={connectionState}
-          hasReceivedFrame={hasReceivedFrame}
-          retryWebRtc={retryWebRtc}
-          streamStats={streamStats}
-          showStats={showStats}
-          scalingMode={scalingMode}
-          panelOpen={fmState.rightPaneActive === "files"}
-          fileManagerNode={fileManagerNode}
-          assistantPanelNode={assistantPanelNode}
-          scenariosPanelNode={scenariosPanelNode}
-          splitRatio={fmState.splitRatio}
-          setSplitRatio={fmSetSplitRatio}
-        />
+        <RenderTracker id="DeviceControl-root">
+          <MainContent
+            disabled={overallDisabled}
+            addAction={sendSingleAction}
+            activeMode={activeMode}
+            terminalResults={terminalResults}
+            processes={processes}
+            processesLoading={processesLoading}
+            requestListProcesses={requestListProcesses}
+            killProcess={killProcess}
+            permissions={permissions || undefined}
+            videoRef={videoRef}
+            setVideoNode={setVideoNode}
+            connectionState={connectionState}
+            hasReceivedFrame={hasReceivedFrame}
+            retryWebRtc={retryWebRtc}
+            streamStats={streamStats}
+            showStats={showStats}
+            scalingMode={scalingMode}
+            panelOpen={fmState.rightPaneActive === "files"}
+            fileManagerNode={fileManagerNode}
+            assistantPanelNode={assistantPanelNode}
+            scenariosPanelNode={scenariosPanelNode}
+            splitRatio={fmState.splitRatio}
+            setSplitRatio={fmSetSplitRatio}
+          />
+        </RenderTracker>
       </main>
     </div>
   );
