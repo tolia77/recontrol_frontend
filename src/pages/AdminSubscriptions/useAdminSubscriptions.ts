@@ -7,7 +7,8 @@ import {
   type BillingHistoryEvent,
 } from "src/services/backend/adminSubscriptionsService";
 import { usersService, type UserResponse } from "src/services/backend/usersService";
-import { subscriptionService, type Plan } from "src/services/backend/subscriptionService";
+import type { Plan } from "src/services/backend/subscriptionService";
+import { useSubscription } from "src/contexts/SubscriptionContext";
 
 export interface UseAdminSubscriptionsReturn {
   loading: boolean;
@@ -36,6 +37,10 @@ export function useAdminSubscriptions(): UseAdminSubscriptionsReturn {
   const { t } = useTranslation("adminSubscriptions");
   const toast = useToast();
 
+  // RC-02: use plans from the global SubscriptionProvider context instead of
+  // fetching /plans separately (eliminated a redundant 4th /plans call on mount).
+  const { plans } = useSubscription();
+
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<SubscriptionAdminRow[]>([]);
   const [stateFilter, setStateFilter] = useState("");
@@ -56,7 +61,6 @@ export function useAdminSubscriptions(): UseAdminSubscriptionsReturn {
   const [overrideLoading, setOverrideLoading] = useState(false);
 
   const [users, setUsers] = useState<UserResponse[]>([]);
-  const [plans, setPlans] = useState<Plan[]>([]);
 
   const loadSubscriptions = useCallback(async () => {
     setLoading(true);
@@ -84,23 +88,13 @@ export function useAdminSubscriptions(): UseAdminSubscriptionsReturn {
     }
   }, []);
 
-  const loadPlans = useCallback(async () => {
-    try {
-      const result = await subscriptionService.getPlans();
-      setPlans(result);
-    } catch {
-      // non-critical — silently fail
-    }
-  }, []);
-
   useEffect(() => {
     void loadSubscriptions();
   }, [loadSubscriptions]);
 
   useEffect(() => {
     void loadUsers();
-    void loadPlans();
-  }, [loadUsers, loadPlans]);
+  }, [loadUsers]);
 
   const loadBillingHistory = useCallback(
     async (id: string) => {
