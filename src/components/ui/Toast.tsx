@@ -3,6 +3,7 @@ import {
   useContext,
   useState,
   useCallback,
+  useMemo,
   type ReactNode,
 } from "react";
 
@@ -15,8 +16,14 @@ interface Toast {
   duration?: number;
 }
 
+// NOTE: `toasts` (the live list) is intentionally NOT part of the context value.
+// It changes on every show/dismiss; if it were in the value object, useToast()
+// would return a new reference whenever a toast appears, churning the identity of
+// every consumer's `toast` — which turns any `useCallback`/`useEffect` that lists
+// `toast` in its deps into a refetch/re-render loop on the error path. The live
+// list is passed to ToastContainer via props instead; the context exposes only the
+// stable action methods, memoized once below.
 interface ToastContextValue {
-  toasts: Toast[];
   addToast: (type: ToastType, message: string, duration?: number) => void;
   removeToast: (id: string) => void;
   success: (message: string) => void;
@@ -77,10 +84,15 @@ function ToastProvider({ children }: ToastProviderProps) {
     [addToast],
   );
 
+  // Stable value: every method is a stable useCallback, so this object is created
+  // once and never changes identity — consumers' `toast` ref stays constant.
+  const value = useMemo(
+    () => ({ addToast, removeToast, success, error, info, warning }),
+    [addToast, removeToast, success, error, info, warning],
+  );
+
   return (
-    <ToastContext.Provider
-      value={{ toasts, addToast, removeToast, success, error, info, warning }}
-    >
+    <ToastContext.Provider value={value}>
       {children}
       <ToastContainer toasts={toasts} removeToast={removeToast} />
     </ToastContext.Provider>
