@@ -1,10 +1,10 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Route, Routes } from "react-router";
 import Layout from "src/components/Shell/Layout";
 import Index from "src/pages/Index";
 import Pricing from "src/pages/Pricing";
 import Login from "src/pages/Login";
 import Signup from "src/pages/Signup";
-import DeviceControl from "src/pages/DeviceControl/DeviceControl";
 import SubscriptionProvider from "src/contexts/SubscriptionContext";
 import Dashboard from "src/pages/Dashboard";
 import Devices from "src/pages/Devices/Devices";
@@ -12,12 +12,24 @@ import Scenarios from "src/pages/Scenarios/Scenarios";
 import DeviceSettings from "src/pages/DeviceSettings/DeviceSettings";
 import Help from "src/pages/Help";
 import UserSettings from "src/pages/UserSettings";
-import AdminUsers from "src/pages/AdminUsers/AdminUsers";
-import AdminSubscriptions from "src/pages/AdminSubscriptions/AdminSubscriptions";
-import AdminDevices from "src/pages/AdminDevices/AdminDevices";
-import AdminAiUsage from "src/pages/AdminAiUsage/AdminAiUsage";
 import ManageSubscription from "src/pages/Subscription/ManageSubscription";
 import SubscriptionReturn from "src/pages/Subscription/SubscriptionReturn";
+import Spinner from "src/components/ui/Spinner";
+
+// S-02a: admin pages lazy-loaded — non-admins never download these chunks
+const AdminUsers = lazy(() => import("src/pages/AdminUsers/AdminUsers"));
+const AdminSubscriptions = lazy(() => import("src/pages/AdminSubscriptions/AdminSubscriptions"));
+const AdminDevices = lazy(() => import("src/pages/AdminDevices/AdminDevices"));
+const AdminAiUsage = lazy(() => import("src/pages/AdminAiUsage/AdminAiUsage"));
+
+// S-02b: DeviceControl lazy-loaded — heavy page, only loaded when user navigates there
+const DeviceControl = lazy(() => import("src/pages/DeviceControl/DeviceControl"));
+
+const pageFallback = (
+  <div className="flex h-full items-center justify-center">
+    <Spinner />
+  </div>
+);
 
 function App() {
   return (
@@ -41,10 +53,11 @@ function App() {
             element={<DeviceSettings />}
           />
           <Route path="/settings" element={<UserSettings />} />
-          <Route path="/admin/users" element={<AdminUsers />} />
-          <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
-          <Route path="/admin/devices" element={<AdminDevices />} />
-          <Route path="/admin/ai-usage" element={<AdminAiUsage />} />
+          {/* S-02a: admin pages in lazy chunks — non-admins never download these */}
+          <Route path="/admin/users" element={<Suspense fallback={pageFallback}><AdminUsers /></Suspense>} />
+          <Route path="/admin/subscriptions" element={<Suspense fallback={pageFallback}><AdminSubscriptions /></Suspense>} />
+          <Route path="/admin/devices" element={<Suspense fallback={pageFallback}><AdminDevices /></Suspense>} />
+          <Route path="/admin/ai-usage" element={<Suspense fallback={pageFallback}><AdminAiUsage /></Suspense>} />
           <Route path="/subscription" element={<ManageSubscription />} />
           <Route path="/subscription/return" element={<SubscriptionReturn />} />
         </Route>
@@ -55,11 +68,14 @@ function App() {
         {/* Auth and utilities */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        {/* S-02b: DeviceControl in a lazy chunk — heavy page, only needed on this route */}
         <Route
           path="/device-control"
           element={
             <SubscriptionProvider>
-              <DeviceControl wsUrl={import.meta.env.VITE_WEBSOCKETS_URL} />
+              <Suspense fallback={pageFallback}>
+                <DeviceControl wsUrl={import.meta.env.VITE_WEBSOCKETS_URL} />
+              </Suspense>
             </SubscriptionProvider>
           }
         />
