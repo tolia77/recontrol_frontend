@@ -3,7 +3,6 @@ import { Outlet, useLocation, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import Sidebar from "./Sidebar";
 import { useMobileDetect } from "src/hooks/useMobileDetect";
-import SubscriptionProvider from "src/contexts/SubscriptionContext";
 import PastDueBanner from "src/pages/Subscription/components/PastDueBanner";
 import { setPlanLimitHandler } from "src/utils/planLimitBus";
 import { useToast } from "src/components/ui/Toast";
@@ -104,11 +103,11 @@ function LayoutInner() {
 }
 
 function Layout() {
-  return (
-    <SubscriptionProvider>
-      <LayoutInner />
-    </SubscriptionProvider>
-  );
+  // S-01r: SubscriptionProvider is mounted once globally in main.tsx (above the
+  // router). The previous per-Layout instance was redundant — it re-fetched
+  // status/usage/plans on every Layout mount and, after the lift, double-fetched
+  // alongside the global provider. Removed so a single provider fetches once.
+  return <LayoutInner />;
 }
 
 export default Layout;
