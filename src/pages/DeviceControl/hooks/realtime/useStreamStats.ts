@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import type React from "react";
 import { frontendLogger } from "src/utils/logger";
 
 export interface StreamStats {
@@ -24,7 +25,9 @@ export interface StreamStats {
 export function useStreamStats(
   pcRef: React.RefObject<RTCPeerConnection | null>,
   enabled: boolean,
-  desktopStats?: { framesSkipped: number; encoder?: string } | null,
+  // DC-RS-01: accept a ref so reading desktopStats inside the interval doesn't
+  // cause this hook (or DeviceControl) to re-render on every stats-channel tick.
+  desktopStatsRef?: React.RefObject<{ framesSkipped: number; encoder?: string } | null>,
 ): StreamStats | null {
   const [stats, setStats] = useState<StreamStats | null>(null);
 
@@ -90,8 +93,9 @@ export function useStreamStats(
                 stat.frameWidth && stat.frameHeight
                   ? `${stat.frameWidth}x${stat.frameHeight}`
                   : "unknown",
-              framesSkipped: desktopStats?.framesSkipped,
-              encoder: desktopStats?.encoder,
+              // DC-RS-01: read from ref — no React state involved
+              framesSkipped: desktopStatsRef?.current?.framesSkipped,
+              encoder: desktopStatsRef?.current?.encoder,
               framesDecoded: framesDecoded ?? undefined,
               framesReceived: framesReceived ?? undefined,
               framesDropped: framesDropped ?? undefined,
@@ -141,7 +145,10 @@ export function useStreamStats(
     }, 2000); // 2 s cadence (RF-2 — halves overhead vs 1 s for always-on period)
 
     return () => clearInterval(interval);
-  }, [pcRef, enabled, desktopStats]);
+  // DC-RS-01: desktopStatsRef is a stable ref object — not needed in deps.
+  // The interval reads .current at poll time so it always has fresh data.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pcRef, enabled]);
 
   return stats;
 }

@@ -30,7 +30,11 @@ export interface UseWebRtcReturn {
   retryWebRtc: () => void;
   connectionState: WebRtcConnectionState;
   hasReceivedFrame: boolean;
-  desktopStats: { framesSkipped: number; encoder?: string } | null;
+  /**
+   * DC-RS-01: ref (not state) so stats-channel ticks don't trigger root re-renders.
+   * useStreamStats reads this inside its 2s polling interval.
+   */
+  desktopStatsRef: React.RefObject<{ framesSkipped: number; encoder?: string } | null>;
   // --- Signaling (useWebRtcSignaling) ---
   handleSignalingMessage: (
     command: string,
@@ -102,7 +106,7 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     retryWebRtc: peer.retryWebRtc,
     connectionState: peer.connectionState,
     hasReceivedFrame: peer.hasReceivedFrame,
-    desktopStats: peer.desktopStats,
+    desktopStatsRef: peer.desktopStatsRef,
     // --- Signaling (useWebRtcSignaling) ---
     handleSignalingMessage: signaling.handleSignalingMessage,
     // --- Data channels — files + clipboard (useDataChannels) ---

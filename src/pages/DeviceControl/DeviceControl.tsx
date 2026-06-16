@@ -189,7 +189,8 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
     handleSignalingMessage,
     connectionState,
     hasReceivedFrame,
-    desktopStats,
+    // DC-RS-01: ref instead of state — stats-channel ticks no longer re-render root
+    desktopStatsRef,
     filesClientRef,
     filesDataRef,
     filesDataChannelRef,
@@ -209,7 +210,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
   const streamStats = useStreamStats(
     pcRef,
     showStats && connectionState === "connected",
-    desktopStats,
+    desktopStatsRef,
   );
 
   // File manager panel (Phase 10) -- Plan 11-04 threads filesDataRef so the

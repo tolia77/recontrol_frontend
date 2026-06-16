@@ -31,7 +31,13 @@ export interface UsePeerConnectionReturn {
   retryWebRtc: () => void;
   connectionState: WebRtcConnectionState;
   hasReceivedFrame: boolean;
-  desktopStats: {
+  /**
+   * DC-RS-01: desktopStats stored as a ref (not state) so per-stats-tick
+   * updates from the desktop data channel do NOT trigger React re-renders in
+   * the DeviceControl subtree. useStreamStats reads this ref inside its 2s
+   * polling interval — no React update cycle involved.
+   */
+  desktopStatsRef: React.RefObject<{
     framesSkipped: number;
     encoder?: string;
     seq?: number;
@@ -41,7 +47,7 @@ export interface UsePeerConnectionReturn {
     fps?: number;
     nulls?: number;
     sentBytes?: number;
-  } | null;
+  } | null>;
 }
 
 // STUN-only fallback. Used if the backend's /turn_credentials endpoint is
@@ -111,7 +117,10 @@ export function usePeerConnection({
   const [connectionState, setConnectionState] =
     useState<WebRtcConnectionState>("idle");
   const [hasReceivedFrame, setHasReceivedFrame] = useState(false);
-  const [desktopStats, setDesktopStats] = useState<{
+  // DC-RS-01: desktopStats stored as a ref so data-channel message handlers
+  // update it without triggering React re-renders. useStreamStats reads the ref
+  // inside its 2s polling interval — no React state flush, no root re-render.
+  const desktopStatsRef = useRef<{
     framesSkipped: number;
     encoder?: string;
     seq?: number;
@@ -363,7 +372,8 @@ export function usePeerConnection({
               sentBytes: data.sentBytes,
             });
 
-            setDesktopStats({
+            // DC-RS-01: write to ref, not state — no React re-render triggered
+            desktopStatsRef.current = {
               framesSkipped: data.skipped ?? 0,
               encoder: data.encoder,
               seq: data.seq,
@@ -373,7 +383,7 @@ export function usePeerConnection({
               fps: data.fps,
               nulls: data.nulls,
               sentBytes: data.sentBytes,
-            });
+            };
           } catch {
             /* ignore parse errors */
           }
@@ -475,7 +485,7 @@ export function usePeerConnection({
     reconnectStartRef.current = 0;
     retryCountRef.current = 0;
     setHasReceivedFrame(false);
-    setDesktopStats(null);
+    desktopStatsRef.current = null;
     setConnectionState("connecting");
     void createPeerConnection();
   }, [createPeerConnection, clearReconnectTimer]);
@@ -490,7 +500,7 @@ export function usePeerConnection({
     cleanupPeerConnection();
     setConnectionState("idle");
     setHasReceivedFrame(false);
-    setDesktopStats(null);
+    desktopStatsRef.current = null;
   }, [sendMessage, cleanupPeerConnection, clearReconnectTimer]);
 
   const retryWebRtc = useCallback(() => {
@@ -543,6 +553,6 @@ export function usePeerConnection({
     retryWebRtc,
     connectionState,
     hasReceivedFrame,
-    desktopStats,
+    desktopStatsRef,
   };
 }
