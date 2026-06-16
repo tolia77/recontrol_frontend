@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useReducer } from "react";
+import { lazy, Suspense, useState, useEffect, useRef, useCallback, useReducer } from "react";
 import { useNavigate } from "react-router";
 import { generateUUID } from "src/utils/uuid";
 import { frontendLogger } from "src/utils/logger";
@@ -38,7 +38,8 @@ import { useTranslation } from "react-i18next";
 import { useFileManagerState } from "./hooks/state/useFileManagerState";
 import { useTransferQueue } from "./hooks/state/useTransferQueue";
 import FileManagerPanel from "./components/FileManager/FileManagerPanel";
-import AssistantPanel from "./components/Assistant/AssistantPanel";
+// S-02c: AssistantPanel lazy-loaded — mermaid/streamdown only downloaded when AI panel opens
+const AssistantPanel = lazy(() => import("./components/Assistant/AssistantPanel"));
 import ScenariosPanel from "./components/Scenarios/ScenariosPanel";
 import { TransferQueue } from "./services/transfer/TransferQueue";
 import { createRunUpload } from "./services/transfer/runUpload";
@@ -605,19 +606,22 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
   // the conversation survives the panel unmounting on pane switches.
   // deviceName falls back to deviceId when the device record has not loaded.
   // AUDIT-ONLY — RenderTracker wraps AssistantPanel to count re-renders (AI pane is the mermaid/streamdown surface). Remove in Plan 04 (D-04).
+  // S-02c: AssistantPanel is lazy — Suspense boundary shows nothing while the chunk loads.
   const assistantPanelNode =
     fmState.rightPaneActive === "assistant" ? (
-      <RenderTracker id="AssistantPanel">
-        <AssistantPanel
-          deviceId={deviceId}
-          state={assistantState}
-          dispatchTranscript={dispatchAssistantTranscript}
-          dispatch={assistantDispatch}
-          deviceName={deviceName || deviceId}
-          isMobile={isMobile}
-          onFullHeightChange={setAssistantForceFullHeight}
-        />
-      </RenderTracker>
+      <Suspense fallback={null}>
+        <RenderTracker id="AssistantPanel">
+          <AssistantPanel
+            deviceId={deviceId}
+            state={assistantState}
+            dispatchTranscript={dispatchAssistantTranscript}
+            dispatch={assistantDispatch}
+            deviceName={deviceName || deviceId}
+            isMobile={isMobile}
+            onFullHeightChange={setAssistantForceFullHeight}
+          />
+        </RenderTracker>
+      </Suspense>
     ) : null;
 
   // Phase 21-06: ScenariosPanel scaffold mount. Library + editor land in
