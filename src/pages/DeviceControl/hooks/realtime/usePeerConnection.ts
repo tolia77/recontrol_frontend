@@ -67,20 +67,49 @@ const TOTAL_TIMEOUT_MS = 45000;
 // clearReconnectTimer / stopWebRtc / connected-branch already cover cleanup.
 const WATCHDOG_MS = 9000;
 
+// S-04: cache the in-flight or resolved TURN credentials fetch so that
+// prefetchIceServers() (called at component mount) and createPeerConnection()
+// (called when the user starts the stream) share a single network request.
+// The cache lives for the module lifetime — one cache per browser tab.
+let iceServersCache: RTCIceServer[] | null = null;
+let iceServersFetchInFlight: Promise<RTCIceServer[]> | null = null;
+
 async function fetchIceServers(): Promise<RTCIceServer[]> {
-  try {
-    const credentials = await turnService.getCredentials();
-    if (credentials?.ice_servers?.length) return credentials.ice_servers;
-    console.warn(
-      "[webrtc] /turn_credentials returned empty list, falling back to STUN-only",
-    );
-    return FALLBACK_ICE_SERVERS;
-  } catch (err) {
-    console.warn(
-      "[webrtc] /turn_credentials failed, falling back to STUN-only:",
-      err,
-    );
-    return FALLBACK_ICE_SERVERS;
+  if (iceServersCache) return iceServersCache;
+  if (iceServersFetchInFlight) return iceServersFetchInFlight;
+  iceServersFetchInFlight = (async () => {
+    try {
+      const credentials = await turnService.getCredentials();
+      if (credentials?.ice_servers?.length) {
+        iceServersCache = credentials.ice_servers;
+        return credentials.ice_servers;
+      }
+      console.warn(
+        "[webrtc] /turn_credentials returned empty list, falling back to STUN-only",
+      );
+      return FALLBACK_ICE_SERVERS;
+    } catch (err) {
+      console.warn(
+        "[webrtc] /turn_credentials failed, falling back to STUN-only:",
+        err,
+      );
+      return FALLBACK_ICE_SERVERS;
+    } finally {
+      iceServersFetchInFlight = null;
+    }
+  })();
+  return iceServersFetchInFlight;
+}
+
+/**
+ * S-04: warm the TURN credentials fetch at component mount time so the result
+ * is cached before the user clicks "Start Stream". Call from the DeviceControl
+ * init useEffect after deviceId is resolved to parallelise the fetch with
+ * other startup work (permissions fetch, device metadata).
+ */
+export function prefetchIceServers(): void {
+  if (!iceServersCache && !iceServersFetchInFlight) {
+    void fetchIceServers();
   }
 }
 

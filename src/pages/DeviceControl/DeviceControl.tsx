@@ -22,6 +22,7 @@ import { useStreamControls } from "./hooks/state/useStreamControls";
 import { useCableConsumer } from "./hooks/realtime/useCableConsumer";
 import { useDeviceSocket } from "./hooks/realtime/useDeviceSocket";
 import { useWebRtc } from "./hooks/realtime/useWebRtc";
+import { prefetchIceServers } from "./hooks/realtime/usePeerConnection";
 import { useStreamStats } from "./hooks/realtime/useStreamStats";
 import { useFilesChannel } from "./hooks/realtime/useFilesChannel";
 import { useAssistantChannel } from "./hooks/realtime/useAssistantChannel";
@@ -375,6 +376,11 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
       const paramDeviceId = params.get("device_id");
       if (!paramDeviceId) return;
       setDeviceId(paramDeviceId);
+      // S-04: prefetch TURN credentials in parallel with device/permissions fetch
+      // so the result is cached before the user clicks "Start Stream". The fetch
+      // fires here and the result is stored in the module-level cache in
+      // usePeerConnection; createPeerConnection() reuses it with no extra request.
+      prefetchIceServers();
       // Determine ownership first
       try {
         const device = await devicesService.get(paramDeviceId);
