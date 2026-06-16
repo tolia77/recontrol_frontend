@@ -1,10 +1,7 @@
-import { useRef } from "react";
+import type React from "react";
 import { FilesChannelClient } from "src/pages/DeviceControl/services/files/FilesChannelClient";
 import { FilesDataChannel } from "src/pages/DeviceControl/services/files/FilesDataChannel";
 import { ClipboardLoopGate } from "src/pages/DeviceControl/services/clipboard/clipboardLoopGate";
-import type React from "react";
-// AUDIT-ONLY — frontendLogger imported for hook-level render counter. Remove in Plan 04 (D-04).
-import { frontendLogger } from "src/utils/logger";
 import { useDataChannels } from "./useDataChannels";
 import { usePeerConnection } from "./usePeerConnection";
 import { useWebRtcSignaling } from "./useWebRtcSignaling";
@@ -76,11 +73,6 @@ export interface UseWebRtcReturn {
  * - useDataChannels: files + clipboard data-channel setup
  */
 export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
-  // AUDIT-ONLY — hook-level render counter for Phase 42.2 hot-path audit. Remove in Plan 04 (D-04).
-  const _auditRenderCount = useRef(0);
-  _auditRenderCount.current++;
-  frontendLogger.timing("profiler", "hook_render", { hook: "useWebRtc", count: _auditRenderCount.current });
-
   // Data channels owned by useDataChannels; provides setup/cleanup callbacks
   // for usePeerConnection to call during createPeerConnection / cleanupPeerConnection.
   const dataChannels = useDataChannels();

@@ -56,11 +56,6 @@ export function useDeviceSocket(
   consumer: CableConsumerLike | null,
   callbacks: UseDeviceSocketCallbacks,
 ): UseDeviceSocketReturn {
-  // AUDIT-ONLY — hook-level render counter for Phase 42.2 hot-path audit. Remove in Plan 04 (D-04).
-  const _auditRenderCount = useRef(0);
-  _auditRenderCount.current++;
-  frontendLogger.timing("profiler", "hook_render", { hook: "useDeviceSocket", count: _auditRenderCount.current });
-
   const { onSignaling, onTerminalOutput, onCommandResult, onProcessList } = callbacks;
 
   // Stale-closure ref mirrors so the router always calls the latest callbacks
