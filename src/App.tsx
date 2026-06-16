@@ -5,7 +5,6 @@ import Index from "src/pages/Index";
 import Pricing from "src/pages/Pricing";
 import Login from "src/pages/Login";
 import Signup from "src/pages/Signup";
-import SubscriptionProvider from "src/contexts/SubscriptionContext";
 import Dashboard from "src/pages/Dashboard";
 import Devices from "src/pages/Devices/Devices";
 import Scenarios from "src/pages/Scenarios/Scenarios";
@@ -69,14 +68,13 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         {/* S-02b: DeviceControl in a lazy chunk — heavy page, only needed on this route */}
+        {/* S-01r: SubscriptionProvider is now global (main.tsx) — no per-route instance needed */}
         <Route
           path="/device-control"
           element={
-            <SubscriptionProvider>
-              <Suspense fallback={pageFallback}>
-                <DeviceControl wsUrl={import.meta.env.VITE_WEBSOCKETS_URL} />
-              </Suspense>
-            </SubscriptionProvider>
+            <Suspense fallback={pageFallback}>
+              <DeviceControl wsUrl={import.meta.env.VITE_WEBSOCKETS_URL} />
+            </Suspense>
           }
         />
         </Routes>
