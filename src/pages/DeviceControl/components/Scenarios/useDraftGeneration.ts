@@ -57,7 +57,11 @@ export type DraftGenerationState =
 
 export interface UseDraftGenerationResult {
   state: DraftGenerationState;
-  generate: (prompt: string, locale: string) => Promise<void>;
+  generate: (
+    prompt: string,
+    locale: string,
+    platform?: string | null,
+  ) => Promise<void>;
   cancel: () => void;
   reset: () => void;
 }
@@ -97,7 +101,11 @@ export function useDraftGeneration(): UseDraftGenerationResult {
   }, []);
 
   const generate = useCallback(
-    async (prompt: string, locale: string): Promise<void> => {
+    async (
+      prompt: string,
+      locale: string,
+      platform?: string | null,
+    ): Promise<void> => {
       // Abort any prior in-flight controller — a second generate() while the
       // first is still pending must not race two responses into the reducer.
       controllerRef.current?.abort();
@@ -112,6 +120,7 @@ export function useDraftGeneration(): UseDraftGenerationResult {
           prompt,
           locale,
           controller.signal,
+          platform,
         );
         // Late resolve after cancel: signal.aborted is true → respect the
         // cancelled transition rather than overwriting with a stale success.

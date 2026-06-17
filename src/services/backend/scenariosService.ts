@@ -190,10 +190,14 @@ class ScenariosService extends BaseService {
     prompt: string,
     locale: string,
     signal?: AbortSignal,
+    platform?: string | null,
   ): Promise<DraftResponse> {
     const { data } = await this.api.post<DraftResponse>(
       "/scenarios/drafts",
-      { prompt },
+      // Target OS for generated commands. Sent only when the panel is opened in
+      // a device context; the device-less /scenarios page omits it and the
+      // backend falls back to portable guidance.
+      { prompt, ...(platform ? { platform } : {}) },
       {
         headers: {
           "Accept-Language": locale,

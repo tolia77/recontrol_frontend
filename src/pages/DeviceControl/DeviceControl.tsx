@@ -56,6 +56,9 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
   // Orchestrator-level identity state (3 remaining useState after Wave C)
   const [deviceId, setDeviceId] = useState("");
   const [deviceName, setDeviceName] = useState<string>("");
+  // Connected device's OS, threaded to ScenariosPanel so AI draft generation
+  // emits OS-native commands (e.g. systeminfo on Windows, not free/top).
+  const [devicePlatform, setDevicePlatform] = useState<string | null>(null);
   const [activeMode, setActiveMode] = useState<Mode>("interactive");
 
   // Feature state sub-hooks (Wave B)
@@ -396,6 +399,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
           String(deviceUserId) === String(currentUserId);
         setIsOwner(!!owner);
         if (device?.name) setDeviceName(device.name);
+        setDevicePlatform(device?.platform_name ?? null);
         await fetchPermissions(paramDeviceId, !!owner);
       } catch (e) {
         console.warn("Failed to fetch device info for ownership", e);
@@ -640,6 +644,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
         consumer={consumer}
         connected={connected}
         deviceName={deviceName || deviceId}
+        platform={devicePlatform}
       />
     ) : null;
 

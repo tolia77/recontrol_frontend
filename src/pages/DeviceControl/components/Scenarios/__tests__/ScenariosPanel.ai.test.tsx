@@ -515,7 +515,7 @@ describe("ScenariosPanel — DraftReviewModal flow", () => {
     fireEvent.click(generateBtn!);
     // generate spy was called with the prompt; the segment captured
     // lastAIPrompt at the panel via onPromptSubmitted.
-    expect(generateSpy).toHaveBeenCalledWith("diagnose nginx logs", "en");
+    expect(generateSpy).toHaveBeenCalledWith("diagnose nginx logs", "en", undefined);
     generateSpy.mockClear();
     // Now drive success → modal opens
     act(() => triggerSuccess(rerender));
@@ -534,7 +534,7 @@ describe("ScenariosPanel — DraftReviewModal flow", () => {
     // prompt. Since the panel re-renders after the token bump and our mocked
     // hook returns idle, the effect should fire.
     await waitFor(() => {
-      expect(generateSpy).toHaveBeenCalledWith("diagnose nginx logs", "en");
+      expect(generateSpy).toHaveBeenCalledWith("diagnose nginx logs", "en", undefined);
     });
   });
 });

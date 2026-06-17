@@ -160,7 +160,8 @@ describe("ScenariosAISegment", () => {
     fireEvent.change(textarea, { target: { value: "restart nginx" } });
     fireEvent.click(screen.getByRole("button", { name: /generate draft/i }));
     expect(generateSpy).toHaveBeenCalledTimes(1);
-    expect(generateSpy).toHaveBeenCalledWith("restart nginx", "en");
+    // Third arg is the target platform — undefined here (no platform prop).
+    expect(generateSpy).toHaveBeenCalledWith("restart nginx", "en", undefined);
   });
 
   it("4. state.generating → button label switches to ⏹ Cancel, counter visible, textarea disabled", () => {

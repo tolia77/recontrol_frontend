@@ -80,6 +80,14 @@ export interface ScenariosAISegmentProps {
    * changes. Typically the parent's `lastAIPrompt` state.
    */
   regeneratePrompt?: string | null;
+  /**
+   * Target OS for the generated commands, sourced from the connected device's
+   * platform when the panel is opened in a device context. Threaded to the
+   * backend so it emits OS-native diagnostics (e.g. systeminfo on Windows
+   * instead of free/top). Null/undefined on the device-less /scenarios page,
+   * where the backend falls back to portable guidance.
+   */
+  platform?: string | null;
 }
 
 const PROMPT_MAX_LENGTH = 1000;
@@ -140,6 +148,7 @@ function ScenariosAISegment({
   onPromptSubmitted,
   regenerateToken,
   regeneratePrompt,
+  platform,
 }: ScenariosAISegmentProps) {
   const { t } = useTranslation("scenarios");
   const { state, generate, cancel } = useDraftGeneration();
@@ -198,8 +207,8 @@ function ScenariosAISegment({
     // Locale flows through the Accept-Language header from i18n.language at
     // call-site per D-09. Binary names + args stay canonical English; only
     // descriptive prose responds to the locale directive.
-    void generate(prompt, i18n.language);
-  }, [prompt, generate, onPromptSubmitted]);
+    void generate(prompt, i18n.language, platform);
+  }, [prompt, generate, onPromptSubmitted, platform]);
 
   const handleGenerateGated = useCallback(() => {
     if (!gate.allowed) {
@@ -221,8 +230,8 @@ function ScenariosAISegment({
     if (!regeneratePrompt || regeneratePrompt.trim().length === 0) return;
     setErrorDismissed(false);
     setLastPrompt({ text: regeneratePrompt, at: Date.now() });
-    void generate(regeneratePrompt, i18n.language);
-  }, [regenerateToken, regeneratePrompt, generate]);
+    void generate(regeneratePrompt, i18n.language, platform);
+  }, [regenerateToken, regeneratePrompt, generate, platform]);
 
   const handleCancel = useCallback(() => {
     cancel();

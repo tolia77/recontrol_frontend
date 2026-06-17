@@ -9,6 +9,8 @@ export interface Device {
   id: string;
   name: string;
   status: "active" | "inactive" | string;
+  /** Desktop OS reported by the client (e.g. "windows", "linux"). */
+  platform_name?: string | null;
   last_active_at: string | null;
   created_at: string;
   updated_at: string;

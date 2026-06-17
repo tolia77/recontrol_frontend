@@ -75,6 +75,9 @@ export interface ScenariosPanelProps {
   // socket to dispatch a run over). Used by the standalone /scenarios page,
   // which hosts the panel device-less for authoring/management only.
   runEnabled?: boolean;
+  // Connected device's OS, threaded to AI draft generation so it emits
+  // OS-native commands. Omitted on the device-less /scenarios page.
+  platform?: string | null;
 }
 
 export default function ScenariosPanel({
@@ -83,6 +86,7 @@ export default function ScenariosPanel({
   connected,
   deviceName,
   runEnabled = true,
+  platform,
 }: ScenariosPanelProps) {
   const { t } = useTranslation("scenarios");
 
@@ -203,6 +207,7 @@ export default function ScenariosPanel({
               onPromptSubmitted={handlePromptSubmitted}
               regenerateToken={regenerateToken}
               regeneratePrompt={lastAIPrompt}
+              platform={platform}
             />
           </div>
         )}

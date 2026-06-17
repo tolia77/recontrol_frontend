@@ -94,15 +94,39 @@ describe("useDraftGeneration", () => {
       expect(result.current.state.startedAt).toBeLessThanOrEqual(Date.now());
     }
 
-    // Verify the service got our prompt + locale + an AbortSignal.
+    // Verify the service got our prompt + locale + an AbortSignal. No platform
+    // was supplied, so the 4th arg is undefined (device-less generation).
     expect(createDraftMock).toHaveBeenCalledWith(
       "p",
       "en",
       expect.any(AbortSignal),
+      undefined,
     );
 
     // Resolve to settle the promise so React doesn't warn about a hanging
     // act-scope.
+    act(() => {
+      d.resolve(makeDraft());
+    });
+  });
+
+  it("2b. forwards the target platform to createDraft when supplied", () => {
+    const d = defer<DraftResponse>();
+    createDraftMock.mockReturnValueOnce(d.promise);
+
+    const { result } = renderHook(() => useDraftGeneration());
+
+    act(() => {
+      void result.current.generate("p", "en", "windows");
+    });
+
+    expect(createDraftMock).toHaveBeenCalledWith(
+      "p",
+      "en",
+      expect.any(AbortSignal),
+      "windows",
+    );
+
     act(() => {
       d.resolve(makeDraft());
     });
