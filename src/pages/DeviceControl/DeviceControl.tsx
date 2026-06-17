@@ -65,6 +65,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
     processes,
     processesLoading,
     appendTerminalResult,
+    appendStreamChunk,
     setProcesses,
     setProcessesLoading,
   } = terminalSession;
@@ -116,13 +117,11 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
     ),
     onTerminalOutput: useCallback(
       (chunk: string, sessionId: string, stream: string) => {
-        appendTerminalResult({
-          id: sessionId,
-          status: stream,
-          result: chunk,
-        });
+        // Merge streamed chunks into one growing transcript per session so the
+        // output panel shows the whole readout, not just the last fragment.
+        appendStreamChunk(sessionId, stream, chunk);
       },
-      [appendTerminalResult],
+      [appendStreamChunk],
     ),
     onCommandResult: useCallback(
       (id: string, status: string, result: string) => {
