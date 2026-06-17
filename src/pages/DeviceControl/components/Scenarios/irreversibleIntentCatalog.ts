@@ -1,6 +1,11 @@
 /**
  * Frontend mirror of `recontrol_backend/app/services/irreversible_intent_catalog.rb`.
  *
+ * Catastrophic-only catalog — refined from the original broader list to cover
+ * only operations that are unrecoverable and system-wide destructive (e.g.
+ * wiping a block device, deleting root-adjacent paths recursively). Mirrors the
+ * refined backend `IrreversibleIntentCatalog` exactly.
+ *
  * The `IRREVERSIBLE_IDS` tuple MUST stay in sync with the backend
  * `IrreversibleIntentCatalog.ids` method (same strings, same order); the parity
  * test in `__tests__/irreversibleIntentCatalog.test.ts` asserts the literal tuple.
@@ -23,15 +28,11 @@
  */
 
 export const IRREVERSIBLE_IDS = [
-  "rm",
-  "truncate",
+  "rm_rf_root_adjacent",
   "dd_of_dev",
   "mkfs",
-  "systemctl_destruct",
-  "kill_9",
   "find_delete",
   "chmod_777_recursive",
-  "chown_recursive",
 ] as const;
 
 export type IrreversibleId = (typeof IRREVERSIBLE_IDS)[number];
@@ -49,16 +50,14 @@ export interface IrreversibleCheckInput {
 }
 
 export const IRREVERSIBLE_PATTERNS: readonly IrreversiblePattern[] = [
-  { id: "rm", binaryRegex: /^rm$/ },
-  { id: "truncate", binaryRegex: /^truncate$/ },
+  {
+    id: "rm_rf_root_adjacent",
+    binaryRegex: /^rm$/,
+    argMatch: /^-rf$|^-fr$|^-r$/,
+    arg2Match: /^(\/|\/home|~|\$HOME)\/?$|^(\/etc|\/var|\/usr|\/boot|\/root)(\/|$)/,
+  },
   { id: "dd_of_dev", binaryRegex: /^dd$/, argMatch: /^of=\/dev\// },
   { id: "mkfs", binaryRegex: /^mkfs(\..+)?$/ },
-  {
-    id: "systemctl_destruct",
-    binaryRegex: /^systemctl$/,
-    argMatch: /^(stop|disable|mask)$/,
-  },
-  { id: "kill_9", binaryRegex: /^kill$/, argMatch: /^-9$/ },
   { id: "find_delete", binaryRegex: /^find$/, argMatch: /^-delete$/ },
   {
     id: "chmod_777_recursive",
@@ -66,7 +65,6 @@ export const IRREVERSIBLE_PATTERNS: readonly IrreversiblePattern[] = [
     argMatch: /^-R$/,
     arg2Match: /^777$/,
   },
-  { id: "chown_recursive", binaryRegex: /^chown$/, argMatch: /^-R$/ },
 ] as const;
 
 /**
