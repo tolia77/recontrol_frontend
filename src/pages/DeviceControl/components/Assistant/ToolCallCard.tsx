@@ -99,6 +99,9 @@ const ToolCallCard: FC<ToolCallCardProps> = ({ row }) => {
     : clipTo(combinedRaw, MAX_LINES_DEFAULT);
 
   const argsText = row.args.map((a) => String(a)).join(" ");
+  // Guard against an empty command (e.g. a malformed envelope) rendering a bare
+  // `$`: fall back to the tool's human label.
+  const hasCommand = row.command.trim().length > 0;
 
   return (
     <Card
@@ -109,8 +112,14 @@ const ToolCallCard: FC<ToolCallCardProps> = ({ row }) => {
       <div className="flex flex-wrap items-center gap-2">
         <StatusBadge state={row.state} />
         <span className="min-w-0 flex-1 font-mono text-body break-all">
-          $ {row.command}
-          {argsText && ` ${argsText}`}
+          {hasCommand ? (
+            <>
+              $ {row.command}
+              {argsText && ` ${argsText}`}
+            </>
+          ) : (
+            row.label
+          )}
         </span>
         {elapsed !== null && (
           <span className="text-muted-foreground text-caption">
