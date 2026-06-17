@@ -31,6 +31,7 @@ export const assistant = {
     greeting: "What can I help with on {{deviceName}}?",
     hint: "Press Enter to send. Stop or Ctrl+Shift+A to interrupt.",
   },
+  thinking: "Thinking…",
   input: {
     placeholder: "Ask the assistant to act on this device…",
     send: "Send",
@@ -97,6 +98,12 @@ export const assistant = {
   errors: {
     connectionLost:
       "Connection lost to the assistant. Please refresh and try again.",
+    streamOutOfOrder:
+      "The assistant's response was interrupted. Please try again.",
+    subscriptionRejected:
+      "Could not connect to the assistant. Please refresh and try again.",
+    generic: "Something went wrong. Please try again.",
+    dismiss: "Dismiss",
   },
 };
 

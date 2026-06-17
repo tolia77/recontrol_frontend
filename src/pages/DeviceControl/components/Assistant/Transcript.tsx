@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, type FC } from "react";
+import { useTranslation } from "react-i18next";
 import type { Row } from "./transcriptReducer";
 import OperatorBubble from "./OperatorBubble";
 import AssistantMessage from "./AssistantMessage";
@@ -34,7 +35,35 @@ import ConfirmationCard from "./ConfirmationCard";
 interface TranscriptProps {
   rows: Row[];
   onConfirm: (confirmationId: string, decision: "allow" | "deny") => void;
+  /**
+   * Show the "thinking" indicator at the bottom of the transcript. The panel
+   * sets this while the agent is working but nothing is actively rendering
+   * progress yet (waiting for the first token, or between a tool result and
+   * the next token). Suppressed once an assistant row is streaming its caret.
+   */
+  showThinking?: boolean;
 }
+
+/** Three pulsing dots shown while the agent is working but silent. */
+const ThinkingIndicator: FC = () => {
+  const { t } = useTranslation("assistant");
+  const label = t("thinking", { defaultValue: "Thinking…" });
+  return (
+    <div
+      className="text-muted-foreground flex items-center gap-2 text-caption"
+      role="status"
+      aria-live="polite"
+      data-testid="assistant-thinking-indicator"
+    >
+      <span className="flex gap-1" aria-hidden="true">
+        <span className="bg-muted-foreground inline-block h-1.5 w-1.5 animate-pulse rounded-full [animation-delay:0ms]" />
+        <span className="bg-muted-foreground inline-block h-1.5 w-1.5 animate-pulse rounded-full [animation-delay:150ms]" />
+        <span className="bg-muted-foreground inline-block h-1.5 w-1.5 animate-pulse rounded-full [animation-delay:300ms]" />
+      </span>
+      {label}
+    </div>
+  );
+};
 
 function rowKey(row: Row): string {
   if (row.kind === "tool") return `tool:${row.toolCallId}`;
@@ -75,7 +104,7 @@ const RowRenderer: FC<{
   }
 };
 
-const Transcript: FC<TranscriptProps> = ({ rows, onConfirm }) => {
+const Transcript: FC<TranscriptProps> = ({ rows, onConfirm, showThinking }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const stickyToBottomRef = useRef(true);
 
@@ -99,7 +128,7 @@ const Transcript: FC<TranscriptProps> = ({ rows, onConfirm }) => {
       if (!el2) return;
       el2.scrollTop = el2.scrollHeight;
     });
-  }, [rows]);
+  }, [rows, showThinking]);
 
   return (
     <div
@@ -111,6 +140,7 @@ const Transcript: FC<TranscriptProps> = ({ rows, onConfirm }) => {
       {rows.map((row) => (
         <RowRenderer key={rowKey(row)} row={row} onConfirm={onConfirm} />
       ))}
+      {showThinking && <ThinkingIndicator />}
     </div>
   );
 };

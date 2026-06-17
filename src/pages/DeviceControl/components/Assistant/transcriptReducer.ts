@@ -87,6 +87,18 @@ export type PanelStatus =
   | "halted_quota"
   | "error";
 
+/**
+ * The error surfaced by the last `error` broadcast, retained so the panel can
+ * render a banner. `source` is the wire discriminator (connection_lost,
+ * stream_out_of_order, subscription_rejected, or a backend source like
+ * `openrouter`); the panel maps known sources to localized copy and falls back
+ * to `message`. Cleared on submit_prompt / reset / clear_error.
+ */
+export interface TranscriptError {
+  source: string;
+  message?: string;
+}
+
 export interface TranscriptState {
   rows: Row[];
   sessionToken: string | null;
@@ -99,6 +111,11 @@ export interface TranscriptState {
    * can suppress duplicate Toasts if the reducer is re-played.
    */
   quotaWarningShown: boolean;
+  /**
+   * Details of the last error broadcast, or null. Drives the InputBox error
+   * banner. The reducer stays pure (no i18n); the panel localizes `source`.
+   */
+  error: TranscriptError | null;
 }
 
 export const initialTranscriptState: TranscriptState = {
@@ -107,11 +124,13 @@ export const initialTranscriptState: TranscriptState = {
   stepCount: 0,
   status: "idle",
   quotaWarningShown: false,
+  error: null,
 };
 
 export type TranscriptAction =
   | { type: "submit_prompt"; text: string; sessionToken: string }
   | { type: "broadcast"; broadcast: AssistantBroadcast }
+  | { type: "clear_error" }
   | { type: "reset" };
 
 // Tiny id generator for client-side row keys. uuid is overkill for ephemeral
@@ -160,6 +179,19 @@ export function transcriptReducer(
         stepCount: 0,
         status: "streaming",
         quotaWarningShown: false,
+        // Clear any stale error banner from a previous run.
+        error: null,
+      };
+    }
+
+    case "clear_error": {
+      // Dismiss the error banner. If we're still parked in the error status
+      // (no run started since), fall back to idle so the controls read clean.
+      if (state.error === null) return state;
+      return {
+        ...state,
+        error: null,
+        status: state.status === "error" ? "idle" : state.status,
       };
     }
 
@@ -351,6 +383,7 @@ export function transcriptReducer(
           return {
             ...state,
             status: "error",
+            error: { source: msg.source, message: msg.message },
             rows: state.rows.map((r) =>
               r.kind === "assistant" && r.isStreaming
                 ? { ...r, isStreaming: false }

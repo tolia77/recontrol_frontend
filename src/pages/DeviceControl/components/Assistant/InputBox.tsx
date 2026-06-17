@@ -58,6 +58,13 @@ export interface InputBoxProps {
    * this value so the input is pinned above the soft keyboard (DCTL-04 D-10).
    */
   keyboardHeightPx?: number;
+  /**
+   * Localized error message to surface in a dismissible banner above the
+   * input, or null. Set by the panel from the reducer's `error` state.
+   */
+  errorMessage?: string | null;
+  /** Dismiss the error banner (clears the reducer's error state). */
+  onDismissError?: () => void;
 }
 
 /**
@@ -75,7 +82,14 @@ export interface InputBoxProps {
  *   - Send button is always visible (CONTEXT discretion: discoverability) and
  *     disabled when input is empty or the panel is disabled.
  */
-const InputBox: FC<InputBoxProps> = ({ status, onSubmit, isMobile, keyboardHeightPx = 0 }) => {
+const InputBox: FC<InputBoxProps> = ({
+  status,
+  onSubmit,
+  isMobile,
+  keyboardHeightPx = 0,
+  errorMessage = null,
+  onDismissError,
+}) => {
   const { t } = useTranslation("assistant");
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -151,6 +165,25 @@ const InputBox: FC<InputBoxProps> = ({ status, onSubmit, isMobile, keyboardHeigh
 
   return (
     <div className="border-border bg-surface border-t" style={outerStyle}>
+      {errorMessage && (
+        <div
+          className="text-destructive bg-destructive/5 border-destructive/20 flex items-start gap-2 border-b px-3 py-2 text-caption"
+          role="alert"
+          aria-live="assertive"
+          data-testid="assistant-error-message"
+        >
+          <span className="flex-1">{errorMessage}</span>
+          <button
+            type="button"
+            onClick={onDismissError}
+            className="text-destructive/70 hover:text-destructive shrink-0 font-medium"
+            aria-label={t("errors.dismiss", { defaultValue: "Dismiss" })}
+            data-testid="assistant-error-dismiss"
+          >
+            {t("errors.dismiss", { defaultValue: "Dismiss" })}
+          </button>
+        </div>
+      )}
       {resetMsg && (
         <div
           className="text-destructive bg-destructive/5 border-destructive/20 border-b px-3 py-2 text-caption"

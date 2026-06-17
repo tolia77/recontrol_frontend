@@ -431,6 +431,64 @@ describe("transcriptReducer", () => {
     expect(assistantRow?.isStreaming).toBe(false);
   });
 
+  it("error broadcast captures source + message into state.error for the banner", () => {
+    let s = transcriptReducer(initialTranscriptState, submit("q", "s"));
+    s = transcriptReducer(
+      s,
+      broadcast({
+        type: "error",
+        seq: 0,
+        session_token: "s",
+        source: "openrouter",
+        message: "upstream 502",
+      }),
+    );
+    expect(s.status).toBe("error");
+    expect(s.error).toEqual({ source: "openrouter", message: "upstream 502" });
+  });
+
+  it("clear_error dismisses the banner and drops error status back to idle", () => {
+    let s = transcriptReducer(initialTranscriptState, submit("q", "s"));
+    s = transcriptReducer(
+      s,
+      broadcast({
+        type: "error",
+        seq: 0,
+        session_token: "",
+        source: "connection_lost",
+      }),
+    );
+    expect(s.error?.source).toBe("connection_lost");
+    expect(s.status).toBe("error");
+
+    s = transcriptReducer(s, { type: "clear_error" });
+    expect(s.error).toBeNull();
+    expect(s.status).toBe("idle");
+  });
+
+  it("clear_error is a no-op when there is no error (same reference)", () => {
+    const s = transcriptReducer(initialTranscriptState, submit("q", "s"));
+    const ref = s;
+    const next = transcriptReducer(s, { type: "clear_error" });
+    expect(next).toBe(ref);
+  });
+
+  it("submit_prompt clears a stale error banner from the previous run", () => {
+    let s = transcriptReducer(initialTranscriptState, submit("q1", "s1"));
+    s = transcriptReducer(
+      s,
+      broadcast({
+        type: "error",
+        seq: 0,
+        session_token: "s1",
+        source: "openrouter",
+      }),
+    );
+    expect(s.error).not.toBeNull();
+    s = transcriptReducer(s, submit("q2", "s2"));
+    expect(s.error).toBeNull();
+  });
+
   it("synthetic connection_lost error from the hook bypasses the session_token filter", () => {
     let s = transcriptReducer(initialTranscriptState, submit("q", "s"));
     // Hook synthesizes session_token: '' on socket close.

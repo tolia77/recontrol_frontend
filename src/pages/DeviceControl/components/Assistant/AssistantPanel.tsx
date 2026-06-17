@@ -131,6 +131,10 @@ function AssistantPanel({
     dispatchTranscript({ type: "reset" });
   }, [dispatch, dispatchTranscript]);
 
+  const handleDismissError = useCallback(() => {
+    dispatchTranscript({ type: "clear_error" });
+  }, [dispatchTranscript]);
+
   const handleCopy = useCallback(() => {
     const md = copyAsMarkdown(state.rows);
     if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
@@ -159,6 +163,36 @@ function AssistantPanel({
 
   const isEmpty = state.rows.length === 0;
 
+  // "Thinking" indicator: the agent is working but nothing is actively
+  // rendering progress yet — i.e. waiting for the first token, or in the gap
+  // between a tool result and the next token. Suppressed once an assistant row
+  // is streaming its own caret, or a tool row is showing its running badge.
+  const lastRow = state.rows[state.rows.length - 1];
+  const showThinking =
+    state.status === "streaming" &&
+    !(lastRow?.kind === "assistant" && lastRow.isStreaming) &&
+    !(lastRow?.kind === "tool" && lastRow.state === "running");
+
+  // Map the wire error `source` to localized copy; fall back to the backend
+  // message, then a generic string. Known synthetic sources come from
+  // useAssistantChannel (connection_lost / stream_out_of_order /
+  // subscription_rejected).
+  let errorMessage: string | null = null;
+  if (state.error) {
+    const knownKey: Record<string, string> = {
+      connection_lost: "errors.connectionLost",
+      stream_out_of_order: "errors.streamOutOfOrder",
+      subscription_rejected: "errors.subscriptionRejected",
+    };
+    const key = knownKey[state.error.source];
+    errorMessage = key
+      ? t(key)
+      : (state.error.message ??
+        t("errors.generic", {
+          defaultValue: "Something went wrong. Please try again.",
+        }));
+  }
+
   return (
     <div
       data-testid="assistant-panel"
@@ -182,7 +216,11 @@ function AssistantPanel({
           })}
         </div>
       ) : (
-        <Transcript rows={state.rows} onConfirm={handleConfirm} />
+        <Transcript
+          rows={state.rows}
+          onConfirm={handleConfirm}
+          showThinking={showThinking}
+        />
       )}
 
       <InputBox
@@ -190,6 +228,8 @@ function AssistantPanel({
         onSubmit={handleSubmit}
         isMobile={isMobile}
         keyboardHeightPx={isMobile ? keyboardHeight : 0}
+        errorMessage={errorMessage}
+        onDismissError={handleDismissError}
       />
     </div>
   );
