@@ -3,6 +3,7 @@ import logoFull from "src/assets/img/logo-full.svg";
 import { Link, useNavigate } from "react-router";
 import { authService } from "src/services/backend/authService";
 import { saveTokens, saveUserId } from "src/utils/auth";
+import { triggerAuthChange } from "src/utils/authBus";
 import { getErrorMessage } from "src/utils/getErrorMessage";
 import { useTranslation, Trans } from "react-i18next";
 import Button from "src/components/ui/Button";
@@ -36,6 +37,7 @@ function Signup() {
       const res = await authService.register(username, email, password);
       saveTokens(res.data.access_token, res.data.refresh_token);
       saveUserId(res.data.user_id);
+      triggerAuthChange();
       navigate("/dashboard");
     } catch (error: unknown) {
       const status = (error as { response?: { status?: number } }).response

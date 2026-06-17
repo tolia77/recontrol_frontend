@@ -3,6 +3,7 @@ import logoFull from "src/assets/img/logo-full.svg";
 import { Link, useNavigate } from "react-router";
 import { authService } from "src/services/backend/authService";
 import { saveTokens, saveUserId, saveUserRole } from "src/utils/auth";
+import { triggerAuthChange } from "src/utils/authBus";
 import { useTranslation, Trans } from "react-i18next";
 import Button from "src/components/ui/Button";
 import { Input } from "src/components/ui";
@@ -27,6 +28,7 @@ function Login() {
       saveUserId(res.data.user_id);
       const role = res.data.role || null;
       saveUserRole(role);
+      triggerAuthChange();
       navigate("/dashboard");
     } catch (error: unknown) {
       const err = error as { response?: { status?: number } } | undefined;

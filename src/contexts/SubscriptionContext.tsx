@@ -15,6 +15,7 @@ import {
 } from "src/services/backend/subscriptionService.ts";
 import { getErrorMessage } from "src/utils/getErrorMessage";
 import { setUsageInvalidationHandler } from "src/utils/usageInvalidationBus.ts";
+import { setAuthChangeHandler } from "src/utils/authBus.ts";
 
 // Context
 
@@ -76,14 +77,22 @@ export default function SubscriptionProvider({
     void fetchAll();
   }, [fetchAll]);
 
-  // Keep usage fresh after any successful count-changing mutation, app-wide.
-  // Services fire the bus (debounced); we re-fetch silently so proactive gates
-  // always read a current count without a page reload.
+  // Wire the module-level buses that ask us to re-fetch. Both fire from outside
+  // React (service classes / auth flows); we register on mount and tear down on
+  // unmount.
+  //   - usage invalidation: silent re-fetch after a count-changing mutation so
+  //     proactive gates read a current count without a page reload.
+  //   - auth change: the provider mounts once globally (main.tsx), so its mount
+  //     fetch can run while logged out and 401, leaving a stale error that a
+  //     same-session login (SPA navigate) never clears. Re-fetch on the
+  //     login/signup transition.
   useEffect(() => {
-    setUsageInvalidationHandler(() => {
-      void fetchAll({ silent: true });
-    });
-    return () => setUsageInvalidationHandler(null);
+    setUsageInvalidationHandler(() => void fetchAll({ silent: true }));
+    setAuthChangeHandler(() => void fetchAll());
+    return () => {
+      setUsageInvalidationHandler(null);
+      setAuthChangeHandler(null);
+    };
   }, [fetchAll]);
 
   return (
