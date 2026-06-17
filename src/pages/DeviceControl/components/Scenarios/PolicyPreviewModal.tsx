@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button, Spinner } from "src/components/ui";
-import { isIrreversible } from "src/services/scenarios/irreversibleIntentCatalog";
+import { isIrreversible } from "./irreversibleIntentCatalog";
 import type {
   PolicyPreviewResponse,
   PolicyPreviewStep,

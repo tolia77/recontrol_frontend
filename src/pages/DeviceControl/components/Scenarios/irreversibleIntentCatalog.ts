@@ -5,8 +5,9 @@
  * `IrreversibleIntentCatalog.ids` method (same strings, same order); the parity
  * test in `__tests__/irreversibleIntentCatalog.test.ts` asserts the literal tuple.
  *
- * Used by `PolicyPreviewModal.tsx` (Plan 22.07) to render the red left-border +
- * "Irreversible" badge per POLICY-03 / D-22-06 without a server round-trip.
+ * Used by its sibling `PolicyPreviewModal.tsx` (Plan 22.07) to render the red
+ * left-border + "Irreversible" badge per POLICY-03 / D-22-06 without a server
+ * round-trip. Colocated with its sole consumer (a peer of `exitCodeGlyphs.ts`).
  *
  * Pattern shape mirrors the backend:
  *   - `id`:         stable identifier (mirrored to backend `:id`)
@@ -20,8 +21,6 @@
  * The backend remains the runtime source of truth (T-22-05 mitigation); the
  * frontend mirror is presentational defense-in-depth.
  */
-
-// TODO: why tf it's here
 
 export const IRREVERSIBLE_IDS = [
   "rm",

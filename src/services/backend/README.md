@@ -18,8 +18,13 @@ organized in subfolders: `clipboard/`, `files/`, `transfer/`.
 
 ### 3. Non-backend feature services — `src/services/<feature>/`
 
-Feature services that are not direct backend API wrappers live in a named subfolder under
-`src/services/`. Example: `src/services/scenarios/` for scenario-related utilities.
+Feature logic that is not a backend API wrapper *and* is shared across multiple pages lives
+in a named subfolder under `src/services/`.
+
+If such logic has a single page or component as its only consumer, colocate it with that
+consumer instead — e.g. a peer module under `src/pages/<Page>/components/<Feature>/` (as
+`irreversibleIntentCatalog.ts` sits beside `PolicyPreviewModal.tsx`). Reserve `src/services/`
+for genuinely cross-page features.
 
 ### 4. New service placement
 
