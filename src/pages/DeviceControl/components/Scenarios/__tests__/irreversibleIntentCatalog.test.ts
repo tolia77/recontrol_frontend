@@ -70,6 +70,10 @@ describe("isIrreversible — positive cases", () => {
       isIrreversible({ binary: "chmod", args: ["777", "-R", "/etc"] }),
     ).toBe(true);
   });
+
+  it("rm -rf /home (literal top-level) flags", () => {
+    expect(isIrreversible({ binary: "rm", args: ["-rf", "/home"] })).toBe(true);
+  });
 });
 
 describe("isIrreversible — negative cases (newly-allowed)", () => {
