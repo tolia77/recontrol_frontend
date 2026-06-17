@@ -12,9 +12,9 @@ import { WarningTriangleIcon } from "./icons";
  * `row.state === 'awaiting_confirmation'`. Selection between ToolCallCard
  * and ConfirmationCard happens in Transcript.tsx's RowRenderer.
  *
- * Zone tints (D-04, REQUIREMENTS §SAFETY-07 / §SAFETY-08):
+ * Zone tint (D-04, REQUIREMENTS §SAFETY-07 / §SAFETY-08):
  *   - `outside_list` → amber accent on a Card surface; soft amber background.
- *   - `deny_list`    → red (error palette) accent; soft red background.
+ *     (The legacy `deny_list` zone was removed with the deny-list.)
  *
  * Buttons:
  *   - `[Allow once]` (variant="secondary") — dispatches
@@ -42,12 +42,10 @@ import { WarningTriangleIcon } from "./icons";
 
 const ZONE_ACCENT: Record<NonNullable<ToolRow["zone"]>, string> = {
   outside_list: "border-l-4 border-warning bg-warning/5",
-  deny_list: "border-l-4 border-destructive bg-destructive/5",
 };
 
 const ZONE_BADGE: Record<NonNullable<ToolRow["zone"]>, string> = {
   outside_list: "bg-warning/15 text-warning",
-  deny_list: "bg-destructive/15 text-destructive",
 };
 
 interface ConfirmationCardProps {
@@ -63,20 +61,19 @@ const ConfirmationCard: FC<ConfirmationCardProps> = ({
   const zone = row.zone ?? "outside_list";
   const accentClass = ZONE_ACCENT[zone];
   const badgeClass = ZONE_BADGE[zone];
-  const iconColor = zone === "deny_list" ? "text-destructive" : "text-warning";
+  const iconColor = "text-warning";
 
   // Localized reason; falls back to a sensible default if the locale key is
   // missing (`row.reason` is server-provided and may be a forward-compat
   // string the current locale bundle does not cover).
   const reasonKey = `confirmation.reasons.${row.reason ?? zone}`;
-  const reasonFallback =
-    zone === "deny_list"
-      ? "This command is on the deny-list and needs explicit approval."
-      : "This command is outside the safe-list and needs your approval.";
-  const reasonText = t(reasonKey, { defaultValue: reasonFallback });
+  const reasonText = t(reasonKey, {
+    defaultValue:
+      "This command is outside the safe-list and needs your approval.",
+  });
 
   const zoneLabel = t(`confirmation.zone.${zone}`, {
-    defaultValue: zone === "deny_list" ? "Deny-list" : "Outside allow-list",
+    defaultValue: "Outside allow-list",
   });
 
   const argsText = row.args.map((a) => String(a)).join(" ");

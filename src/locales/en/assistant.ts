@@ -80,13 +80,10 @@ export const assistant = {
     reason: "Reason",
     zone: {
       outside_list: "Outside allow-list",
-      deny_list: "Deny-list",
     },
     reasons: {
       outside_list:
         "This command is outside the safe-list and needs your approval.",
-      deny_list:
-        "This command is on the deny-list and needs explicit approval.",
       destructive_tool: "This action is destructive and needs your approval.",
     },
   },
