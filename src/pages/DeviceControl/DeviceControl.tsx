@@ -156,11 +156,18 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
   const onAssistantBroadcast = useCallback((msg: AssistantBroadcast): void => {
     dispatchAssistantTranscript({ type: "broadcast", broadcast: msg });
   }, []);
+  // On reconnect (after the reactive token-refresh cycle drops and reopens the
+  // cable), clear the stale connection_lost banner so the panel stops telling
+  // the user to refresh a connection that has already recovered.
+  const onAssistantReconnect = useCallback((): void => {
+    dispatchAssistantTranscript({ type: "connection_restored" });
+  }, []);
   // Gate on ai_access: a null consumer skips the subscription entirely, so
   // AI-less tiers never trigger the guaranteed subscribe→reject round trip.
   const { dispatch: assistantDispatch } = useAssistantChannel({
     consumer: aiGate.allowed ? consumer : null,
     onBroadcast: onAssistantBroadcast,
+    onReconnect: onAssistantReconnect,
   });
 
   // Stable sendMessage wrapper for useWebRtc (Landmine 4 — sendMessage from

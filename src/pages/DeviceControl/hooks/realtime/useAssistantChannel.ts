@@ -45,7 +45,7 @@ export type AssistantBroadcast =
       args: unknown[];
       cwd?: string;
       reason: string;
-      zone: "deny_list" | "outside_list";
+      zone: "outside_list";
     }
   | {
       type: "quota_warning";
@@ -81,6 +81,15 @@ export interface UseAssistantChannelReturn {
 interface UseAssistantChannelOptions {
   consumer: CableConsumerLike | null;
   onBroadcast: (msg: AssistantBroadcast) => void;
+  /**
+   * Called whenever the subscription (re-)confirms (`connected`). The reactive
+   * token-refresh cycle (useCableConsumer) closes and reopens the socket every
+   * time the short-lived access token expires; that close latches a synthetic
+   * `connection_lost` banner the reducer never clears on its own. Wiring this to
+   * a `connection_restored` reducer dispatch lets the panel drop the stale
+   * banner once the socket is back. Optional — omit to keep the banner sticky.
+   */
+  onReconnect?: () => void;
 }
 
 interface AssistantSubscription {
@@ -130,7 +139,7 @@ let subscriptionNonce = 0;
  *    drop the action. A rejection drops the queue (never deliverable).
  */
 export function useAssistantChannel(
-  { consumer, onBroadcast }: UseAssistantChannelOptions,
+  { consumer, onBroadcast, onReconnect }: UseAssistantChannelOptions,
 ): UseAssistantChannelReturn {
   // Shared seq-ordered reorder buffer (D-12). resetMarker "accepted" resets
   // the buffer between assistant runs. AssistantChannel gap-close error has NO
@@ -162,6 +171,11 @@ export function useAssistantChannel(
     onBroadcastRef.current = onBroadcast;
   }, [onBroadcast]);
 
+  const onReconnectRef = useRef(onReconnect);
+  useEffect(() => {
+    onReconnectRef.current = onReconnect;
+  }, [onReconnect]);
+
   const subRef = useRef<AssistantSubscription | null>(null);
   // True once the server transmits the subscription confirmation; reset on
   // disconnect (ActionCable re-confirms after its automatic resubscribe).
@@ -179,6 +193,11 @@ export function useAssistantChannel(
       {
         connected: () => {
           confirmedRef.current = true;
+          // Clear any stale `connection_lost` banner left by the close that
+          // preceded this (re-)confirmation. No-op on the first connect (no
+          // error latched yet) and scoped reducer-side to connection_lost, so a
+          // genuine backend error survives a coincidental reconnect.
+          onReconnectRef.current?.();
           const pending = pendingRef.current;
           pendingRef.current = [];
           for (const [action, data] of pending) sub.perform(action, data);

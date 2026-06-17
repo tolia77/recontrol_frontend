@@ -64,7 +64,7 @@ export type ToolRow = {
   command: string;
   args: unknown[];
   cwd?: string;
-  zone?: "deny_list" | "outside_list";
+  zone?: "outside_list";
   reason?: string;
   state: ToolRowState;
   startedAt: number;
@@ -131,6 +131,7 @@ export type TranscriptAction =
   | { type: "submit_prompt"; text: string; sessionToken: string }
   | { type: "broadcast"; broadcast: AssistantBroadcast }
   | { type: "clear_error" }
+  | { type: "connection_restored" }
   | { type: "reset" };
 
 // Tiny id generator for client-side row keys. uuid is overkill for ephemeral
@@ -188,6 +189,25 @@ export function transcriptReducer(
       // Dismiss the error banner. If we're still parked in the error status
       // (no run started since), fall back to idle so the controls read clean.
       if (state.error === null) return state;
+      return {
+        ...state,
+        error: null,
+        status: state.status === "error" ? "idle" : state.status,
+      };
+    }
+
+    case "connection_restored": {
+      // The cable consumer reopened (the routine reactive token-refresh cycle:
+      // the backend rejects the stale access token with
+      // {reason:"unauthorized", reconnect:false}, the client refreshes and
+      // reconnects). That close path fires `disconnected` on every
+      // subscription, which latches a synthetic `connection_lost` banner even
+      // though the socket recovers seconds later. Once the subscription
+      // re-confirms we clear that specific banner so the panel stops telling
+      // the user to refresh a connection that is already back. Scoped to
+      // `connection_lost` only — a real backend error (openrouter, quota, etc.)
+      // is a genuine failure the operator must still see, so we leave it.
+      if (state.error?.source !== "connection_lost") return state;
       return {
         ...state,
         error: null,

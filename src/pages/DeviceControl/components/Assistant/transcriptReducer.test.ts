@@ -169,8 +169,8 @@ describe("transcriptReducer", () => {
         label: "Run command",
         command: "rm",
         args: ["-rf", "/tmp/x"],
-        reason: "deny_list",
-        zone: "deny_list",
+        reason: "operator_review",
+        zone: "outside_list",
       }),
     );
     let toolRows = s.rows.filter((r): r is ToolRow => r.kind === "tool");
@@ -210,8 +210,8 @@ describe("transcriptReducer", () => {
         label: "x",
         command: "rm",
         args: [],
-        reason: "deny_list",
-        zone: "deny_list",
+        reason: "operator_review",
+        zone: "outside_list",
       }),
     );
     expect(s.stepCount).toBe(0);
@@ -296,8 +296,8 @@ describe("transcriptReducer", () => {
         label: "rm",
         command: "rm",
         args: ["-rf", "/"],
-        reason: "deny_list",
-        zone: "deny_list",
+        reason: "operator_review",
+        zone: "outside_list",
       }),
     );
     s = transcriptReducer(
@@ -487,6 +487,50 @@ describe("transcriptReducer", () => {
     expect(s.error).not.toBeNull();
     s = transcriptReducer(s, submit("q2", "s2"));
     expect(s.error).toBeNull();
+  });
+
+  it("connection_restored clears a latched connection_lost banner and drops status to idle", () => {
+    let s = transcriptReducer(initialTranscriptState, submit("q", "s"));
+    s = transcriptReducer(
+      s,
+      broadcast({
+        type: "error",
+        seq: 0,
+        session_token: "",
+        source: "connection_lost",
+      }),
+    );
+    expect(s.error?.source).toBe("connection_lost");
+    expect(s.status).toBe("error");
+
+    s = transcriptReducer(s, { type: "connection_restored" });
+    expect(s.error).toBeNull();
+    expect(s.status).toBe("idle");
+  });
+
+  it("connection_restored leaves a real backend error intact (only clears connection_lost)", () => {
+    let s = transcriptReducer(initialTranscriptState, submit("q", "s"));
+    s = transcriptReducer(
+      s,
+      broadcast({
+        type: "error",
+        seq: 0,
+        session_token: "s",
+        source: "openrouter",
+        message: "upstream 502",
+      }),
+    );
+    const ref = s;
+    const next = transcriptReducer(s, { type: "connection_restored" });
+    expect(next).toBe(ref);
+    expect(next.error).toEqual({ source: "openrouter", message: "upstream 502" });
+  });
+
+  it("connection_restored is a no-op when there is no error (same reference)", () => {
+    const s = transcriptReducer(initialTranscriptState, submit("q", "s"));
+    const ref = s;
+    const next = transcriptReducer(s, { type: "connection_restored" });
+    expect(next).toBe(ref);
   });
 
   it("synthetic connection_lost error from the hook bypasses the session_token filter", () => {

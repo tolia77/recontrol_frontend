@@ -26,6 +26,7 @@ function useChannelWithReducer(consumer: MockConsumer | null): {
       broadcastsRef.current.push(msg);
       dispatchTranscript({ type: "broadcast", broadcast: msg });
     },
+    onReconnect: () => dispatchTranscript({ type: "connection_restored" }),
   });
   return { state, broadcasts: broadcastsRef.current };
 }
@@ -60,6 +61,29 @@ describe("useAssistantChannel — VERIFY-04 stream-drop (consumer)", () => {
     act(() => c.emitDisconnected("AssistantChannel", false));
     act(() => vi.advanceTimersByTime(5_000));
     expect(result.current.state.status).toBe("error");
+  });
+
+  it("clears the latched connection_lost banner when the socket reconnects", () => {
+    const c = makeMockConsumer();
+    const { result } = renderHook(() => useChannelWithReducer(c));
+
+    act(() => {
+      c.emitReceived("AssistantChannel", {
+        type: "token",
+        seq: 1,
+        session_token: "sess-reconnect",
+        content: "hello",
+      });
+    });
+    // Auth-refresh cycle: server rejects the stale token, ActionCable closes
+    // every subscription, then reopens with a fresh token and re-confirms.
+    act(() => c.emitDisconnected("AssistantChannel", false));
+    expect(result.current.state.status).toBe("error");
+    expect(result.current.state.error?.source).toBe("connection_lost");
+
+    act(() => c.emitConnected("AssistantChannel"));
+    expect(result.current.state.error).toBeNull();
+    expect(result.current.state.status).toBe("idle");
   });
 
   it("clears the 500ms gap-close timer on disconnect (no spurious stream_out_of_order)", () => {
