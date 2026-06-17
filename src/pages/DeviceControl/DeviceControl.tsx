@@ -461,7 +461,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
     if (!permissions?.access_terminal) return; // gate
     setProcessesLoading(true);
     setProcesses([]);
-    sendSingleAction({ type: "terminal.listProcesses" });
+    sendSingleAction({ id: generateUUID(), type: "terminal.listProcesses" });
   };
 
   const killProcess = (pid: number) => {
