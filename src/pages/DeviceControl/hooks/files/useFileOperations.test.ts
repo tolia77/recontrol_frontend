@@ -741,10 +741,12 @@ describe("useFileOperations — commitRename", () => {
 
   it("dispatches CLOSE_RENAME when channel.request is null", () => {
     const dispatch = makeDispatch();
+    const toast = makeToast();
     const entries = [makeEntry("/home/user/a.txt", "a.txt")];
     const opts = buildOptions({
       channel: makeChannel(null),
       dispatch,
+      toast,
       visibleEntries: entries,
     });
 
@@ -754,6 +756,7 @@ describe("useFileOperations — commitRename", () => {
       result.current.commitRename("/home/user/a.txt", "b.txt");
     });
 
+    expect(toast.error).toHaveBeenCalledWith("panel.filesChannelDisconnected");
     expect(dispatch).toHaveBeenCalledWith({ type: "CLOSE_RENAME" });
   });
 });

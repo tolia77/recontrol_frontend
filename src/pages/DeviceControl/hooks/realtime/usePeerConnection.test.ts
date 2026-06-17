@@ -371,12 +371,19 @@ describe("usePeerConnection", () => {
       vi.advanceTimersByTime(MAX_BACKOFF_MS);
       await Promise.resolve();
     });
-    // The hook is still reconnecting (total elapsed < TOTAL_TIMEOUT_MS)
-    // unless it timed out; let's just confirm it progressed past state
-    // changes without throwing.
-    expect(
-      ["reconnecting", "failed"].includes(hook.result.current.connectionState),
-    ).toBe(true);
+    // Total elapsed so far: 1000 + (WATCHDOG_MS+100) + 2000 + (WATCHDOG_MS+100)
+    //   + 4000 + (WATCHDOG_MS+100) + MAX_BACKOFF_MS = 42300ms < TOTAL_TIMEOUT_MS (45000ms).
+    // The watchdog for this retry PC has NOT fired yet — the hook must still be reconnecting.
+    expect(hook.result.current.connectionState).toBe("reconnecting");
+
+    // Now advance through the watchdog window for this retry PC.
+    // After WATCHDOG_MS fires, total elapsed ~51300ms > TOTAL_TIMEOUT_MS (45000ms),
+    // so the watchdog re-entry path declares failure.
+    await act(async () => {
+      vi.advanceTimersByTime(WATCHDOG_MS + 100);
+      await Promise.resolve();
+    });
+    expect(hook.result.current.connectionState).toBe("failed");
   });
 
   // ---------------------------------------------------------------------

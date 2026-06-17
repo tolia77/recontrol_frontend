@@ -114,11 +114,29 @@ export function makeRtcStub(): RtcStub {
  * The most recently constructed stub via the RTCPeerConnection constructor
  * installed by installRtcGlobals(). Tests grab it as:
  *   const stub = lastStub();
+ *
+ * Scoped to the current installRtcGlobals/restoreRtcGlobals pair — reset on
+ * both install and restore so it cannot leak across test files or between
+ * beforeEach/afterEach cycles.
  */
 let _lastStub: RtcStub | null = null;
 export function lastStub(): RtcStub | null {
   return _lastStub;
 }
+
+// Names of the globals this helper installs — used for targeted restoration.
+const STUBBED_GLOBALS = [
+  "RTCPeerConnection",
+  "RTCSessionDescription",
+  "RTCIceCandidate",
+  "RTCRtpReceiver",
+  "MediaStream",
+] as const;
+
+// Saved original values, set during installRtcGlobals and consumed by
+// restoreRtcGlobals. Typed as unknown because these globals are undefined in
+// jsdom and we just need to round-trip the original value.
+let _savedGlobals: Record<string, unknown> = {};
 
 /**
  * Install WebRTC globals that jsdom does not provide. Call in beforeEach (or
@@ -129,6 +147,15 @@ export function lastStub(): RtcStub | null {
  * call creates a fresh RtcStub and stores it in lastStub() so tests can reach it.
  */
 export function installRtcGlobals(): void {
+  // Reset stub tracker so previous test-file state cannot bleed in.
+  _lastStub = null;
+
+  // Save originals before overwriting so restoreRtcGlobals can do a targeted
+  // restore without touching globals owned by other infrastructure.
+  for (const name of STUBBED_GLOBALS) {
+    _savedGlobals[name] = (globalThis as Record<string, unknown>)[name];
+  }
+
   // RTCPeerConnection — constructor that always returns a fresh stub
   function FakeRTCPeerConnection(_config?: RTCConfiguration) {
     const stub = makeRtcStub();
@@ -166,9 +193,16 @@ export function installRtcGlobals(): void {
 }
 
 /**
- * Restore all globals stubbed by installRtcGlobals(). Call in afterEach.
+ * Restore ONLY the globals stubbed by installRtcGlobals(). Call in afterEach.
+ *
+ * Uses targeted restoration (vi.stubGlobal back to saved originals) instead of
+ * vi.unstubAllGlobals() to avoid nuking globals installed by other test
+ * infrastructure running in the same worker.
  */
 export function restoreRtcGlobals(): void {
   _lastStub = null;
-  vi.unstubAllGlobals();
+  for (const name of STUBBED_GLOBALS) {
+    vi.stubGlobal(name, _savedGlobals[name]);
+  }
+  _savedGlobals = {};
 }

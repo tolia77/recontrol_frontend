@@ -280,6 +280,7 @@ export function useFileOperations({
     (path: string, newName: string) => {
       const request = channel.request;
       if (!request) {
+        toast.error(t("panel.filesChannelDisconnected"));
         dispatch({ type: "CLOSE_RENAME" });
         return;
       }
