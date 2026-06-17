@@ -60,7 +60,8 @@ import { usePeerConnection } from "./usePeerConnection";
 // Constants (mirror usePeerConnection.ts — changes here signal source drift)
 // -----------------------------------------------------------------------
 const WATCHDOG_MS = 9000;
-const TOTAL_TIMEOUT_MS = 45000;
+// TOTAL_TIMEOUT_MS (45000) is the source's failure deadline; referenced in the
+// comments below to explain how many cycles we advance, not used directly.
 const MAX_BACKOFF_MS = 8000;
 
 // -----------------------------------------------------------------------
@@ -278,8 +279,6 @@ describe("usePeerConnection", () => {
     // NOTE: we must always await microtasks after advancing timers because
     // createPeerConnection is async (awaits fetchIceServers).
 
-    let totalAdvanced = 0;
-
     // Run enough cycles to exceed TOTAL_TIMEOUT_MS (45000ms).
     // Each iteration advances: current backoff + WATCHDOG_MS.
     // Worst case: all MAX_BACKOFF_MS (8000) + WATCHDOG (9000) = 17000 per round.
@@ -290,18 +289,22 @@ describe("usePeerConnection", () => {
         vi.advanceTimersByTime(MAX_BACKOFF_MS + 100);
         await Promise.resolve();
       });
-      totalAdvanced += MAX_BACKOFF_MS + 100;
 
-      if (hook.result.current.connectionState === "failed") break;
+      // Read into a fresh local each time: comparing the shared
+      // `result.current.connectionState` expression twice makes TS narrow it
+      // after the first `break`, wrongly concluding the second compare can
+      // never be "failed" (the value actually changes via act() above).
+      const afterBackoff = hook.result.current.connectionState;
+      if (afterBackoff === "failed") break;
 
       // Fire the watchdog (WATCHDOG_MS after the retry PC was created)
       await act(async () => {
         vi.advanceTimersByTime(WATCHDOG_MS + 100);
         await Promise.resolve();
       });
-      totalAdvanced += WATCHDOG_MS + 100;
 
-      if (hook.result.current.connectionState === "failed") break;
+      const afterWatchdog = hook.result.current.connectionState;
+      if (afterWatchdog === "failed") break;
     }
 
     // By this point total elapsed >> TOTAL_TIMEOUT_MS — watchdog must have

@@ -15,6 +15,10 @@ import { renderHook, act, cleanup } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useFileOperations } from "./useFileOperations";
 import type { UseFileOperationsOptions } from "./useFileOperations";
+import type {
+  UseFilesChannel,
+  FilesChannelRequest,
+} from "src/pages/DeviceControl/hooks/realtime/useFilesChannel";
 import type { FileEntry } from "src/pages/DeviceControl/services/files/filesProtocol.generated";
 import { FilesChannelError } from "src/pages/DeviceControl/services/files/FilesChannelClient";
 
@@ -68,11 +72,13 @@ function makeRootRef() {
   return { current: null } as React.RefObject<HTMLDivElement | null>;
 }
 
-// Minimal channel stub helpers
-function makeChannel(requestFn: ReturnType<typeof vi.fn> | null) {
+// Minimal channel stub helpers. The injected `request` is a vi.fn() whose
+// generic signature does not match FilesChannelRequest, so we cast it; the
+// hook only ever calls it, never inspects its type.
+function makeChannel(requestFn: ReturnType<typeof vi.fn> | null): UseFilesChannel {
   return {
     status: requestFn ? ("open" as const) : ("closed" as const),
-    request: requestFn,
+    request: requestFn as unknown as FilesChannelRequest | null,
     filesDataRef: { current: null },
     filesClient: null,
     filesDataChannel: null,

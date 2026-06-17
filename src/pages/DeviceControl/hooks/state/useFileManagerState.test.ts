@@ -242,11 +242,11 @@ describe("useFileManagerState — setters write to localStorage", () => {
     const { result } = renderHook(() => useFileManagerState(DEVICE_ID));
 
     act(() => {
-      result.current.setSort({ column: "modifiedUtc", direction: "desc" });
+      result.current.setSort({ column: "modified", direction: "desc" });
     });
 
     const stored = localStorage.getItem(key(DEVICE_ID, "sort"));
-    expect(JSON.parse(stored!)).toEqual({ column: "modifiedUtc", direction: "desc" });
+    expect(JSON.parse(stored!)).toEqual({ column: "modified", direction: "desc" });
   });
 
   it("setPanelOpen(true) writes panelOpen=true and rightPaneActive=files", () => {
@@ -321,10 +321,10 @@ describe("useFileManagerState — setters update state", () => {
     const { result } = renderHook(() => useFileManagerState(DEVICE_ID));
 
     act(() => {
-      result.current.setSort({ column: "sizeBytes", direction: "asc" });
+      result.current.setSort({ column: "size", direction: "asc" });
     });
 
-    expect(result.current.state.sort).toEqual({ column: "sizeBytes", direction: "asc" });
+    expect(result.current.state.sort).toEqual({ column: "size", direction: "asc" });
   });
 });
 
