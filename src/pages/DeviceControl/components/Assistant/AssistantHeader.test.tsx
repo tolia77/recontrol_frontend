@@ -14,7 +14,6 @@ function renderHeader(status: PanelStatus, onNewChat = vi.fn()) {
     <AssistantHeader
       status={status}
       stepCount={0}
-      onStop={() => {}}
       onCopy={() => {}}
       onNewChat={onNewChat}
     />,

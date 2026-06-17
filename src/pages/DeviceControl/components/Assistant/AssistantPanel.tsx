@@ -202,7 +202,6 @@ function AssistantPanel({
       <AssistantHeader
         status={state.status}
         stepCount={state.stepCount}
-        onStop={handleStop}
         onCopy={handleCopy}
         onNewChat={handleNewChat}
         isMobile={isMobile}
@@ -226,6 +225,7 @@ function AssistantPanel({
       <InputBox
         status={state.status}
         onSubmit={handleSubmit}
+        onStop={handleStop}
         isMobile={isMobile}
         keyboardHeightPx={isMobile ? keyboardHeight : 0}
         errorMessage={errorMessage}

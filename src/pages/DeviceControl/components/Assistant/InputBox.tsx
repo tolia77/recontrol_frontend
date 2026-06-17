@@ -51,6 +51,11 @@ function timeToNextUtcMidnight(now: number): {
 export interface InputBoxProps {
   status: PanelStatus;
   onSubmit: (text: string) => void;
+  /**
+   * Interrupt the running agent loop. While the loop is active the Send button
+   * is replaced by a Stop button wired to this handler (CHAT-07).
+   */
+  onStop: () => void;
   /** When true, mobile-specific adaptations are applied (DCTL-04) */
   isMobile?: boolean;
   /**
@@ -85,6 +90,7 @@ export interface InputBoxProps {
 const InputBox: FC<InputBoxProps> = ({
   status,
   onSubmit,
+  onStop,
   isMobile,
   keyboardHeightPx = 0,
   errorMessage = null,
@@ -213,17 +219,31 @@ const InputBox: FC<InputBoxProps> = ({
           style={{ maxHeight: `${MAX_TEXTAREA_PX}px` }}
           data-testid="assistant-input-textarea"
         />
-        <Button
-          variant="primary"
-          size="sm"
-          disabled={disabled || !value.trim()}
-          onClick={submit}
-          aria-label={t("input.send", { defaultValue: "Send" })}
-          data-testid="assistant-send-button"
-          className={isMobile ? "min-h-[44px] min-w-[44px]" : undefined}
-        >
-          {t("input.send", { defaultValue: "Send" })}
-        </Button>
+        {loopActive ? (
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={onStop}
+            aria-label={t("header.stop", { defaultValue: "Stop" })}
+            title={t("header.stop", { defaultValue: "Stop" })}
+            data-testid="assistant-stop-button"
+            className={isMobile ? "min-h-[44px] min-w-[44px]" : undefined}
+          >
+            {t("header.stop", { defaultValue: "Stop" })}
+          </Button>
+        ) : (
+          <Button
+            variant="primary"
+            size="sm"
+            disabled={disabled || !value.trim()}
+            onClick={submit}
+            aria-label={t("input.send", { defaultValue: "Send" })}
+            data-testid="assistant-send-button"
+            className={isMobile ? "min-h-[44px] min-w-[44px]" : undefined}
+          >
+            {t("input.send", { defaultValue: "Send" })}
+          </Button>
+        )}
       </div>
     </div>
   );

@@ -34,6 +34,48 @@ export const AssistantToggleIcon: FC<IconProps> = ({
 );
 
 /**
+ * Copy icon (two overlapping sheets) for the header "Copy as Markdown" action.
+ * Icon-only button; the accessible label lives on the Button.
+ */
+export const CopyIcon: FC<IconProps> = ({ className = "w-4 h-4" }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+  </svg>
+);
+
+/**
+ * New chat icon (speech bubble with a plus) for the header "New chat" action.
+ */
+export const NewChatIcon: FC<IconProps> = ({ className = "w-4 h-4" }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+    <path d="M12 8v6" />
+    <path d="M9 11h6" />
+  </svg>
+);
+
+/**
  * Warning triangle icon for ConfirmationCard zone-tinted accent (D-04).
  * Rendered alongside the zone badge in the confirmation card body.
  */
