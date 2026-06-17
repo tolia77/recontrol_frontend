@@ -143,11 +143,15 @@ function FileManagerView({
           onCopyTo={onCopyTo}
           onUploadFiles={onUploadFiles}
           isMobile={isMobile}
+          roots={roots.roots}
+          activeRootPath={activeRootPath}
+          onSelectRoot={onSelectRoot}
         />
         <FileManagerBreadcrumb
           currentPath={browse.currentPath}
           rootPath={activeRootPath}
           onNavigate={onNavigate}
+          isMobile={isMobile}
         />
         <FileManagerListing
           channel={channel}

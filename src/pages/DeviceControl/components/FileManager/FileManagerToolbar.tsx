@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
+import type { FileEntry } from "src/pages/DeviceControl/services/files/filesProtocol.generated";
 import { RefreshIcon } from "src/pages/DeviceControl/components/icons/icons";
 import {
   FolderPlusIcon,
@@ -40,6 +41,17 @@ interface FileManagerToolbarProps {
   onUploadFiles: (files: File[]) => void;
   /** Mobile: when true, the upload trigger button gets min-h-[44px] min-w-[44px]. */
   isMobile?: boolean;
+
+  /**
+   * Mobile: the sidebar root-picker is suppressed on phones, so the toolbar
+   * surfaces a native `<select>` to choose/switch the shared-folder root.
+   * Ignored on desktop (the sidebar handles it).
+   */
+  roots?: FileEntry[] | null;
+  /** Mobile: path of the root containing the current folder, or null. */
+  activeRootPath?: string | null;
+  /** Mobile: called when a root is chosen from the dropdown. */
+  onSelectRoot?: (path: string) => void;
 }
 
 /**
@@ -59,6 +71,9 @@ function FileManagerToolbar({
   onCopyTo,
   onUploadFiles,
   isMobile,
+  roots,
+  activeRootPath,
+  onSelectRoot,
 }: FileManagerToolbarProps) {
   const { t } = useTranslation("fileManager");
   const renameEnabled = !disabled && selectionCount === 1;
@@ -88,6 +103,28 @@ function FileManagerToolbar({
 
   return (
     <div className="border-border bg-surface flex flex-shrink-0 items-center gap-2 border-b p-2">
+      {isMobile && (
+        <>
+          <select
+            value={activeRootPath ?? ""}
+            onChange={(e) => {
+              if (e.target.value) onSelectRoot?.(e.target.value);
+            }}
+            aria-label={t("toolbar.selectFolder")}
+            className="border-border bg-surface text-foreground min-h-[44px] max-w-[45%] flex-shrink rounded border px-2 text-body"
+          >
+            <option value="" disabled>
+              {t("toolbar.selectFolder")}
+            </option>
+            {(roots ?? []).map((root) => (
+              <option key={root.path} value={root.path}>
+                {root.name}
+              </option>
+            ))}
+          </select>
+          <div className="bg-border h-5 w-px" aria-hidden="true" />
+        </>
+      )}
       <button
         type="button"
         onClick={onRefresh}

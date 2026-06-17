@@ -11,6 +11,8 @@ interface FileManagerBreadcrumbProps {
   currentPath: string | null;
   rootPath: string | null;
   onNavigate: (path: string) => void;
+  /** Mobile: the empty-state prompt points at the toolbar dropdown, not the (hidden) sidebar. */
+  isMobile?: boolean;
 }
 
 /**
@@ -26,6 +28,7 @@ function FileManagerBreadcrumb({
   currentPath,
   rootPath,
   onNavigate,
+  isMobile,
 }: FileManagerBreadcrumbProps) {
   const { t } = useTranslation("fileManager");
   if (!currentPath) {
@@ -34,7 +37,9 @@ function FileManagerBreadcrumb({
         aria-label={t("breadcrumb.ariaLabel")}
         className="border-border text-muted-foreground bg-surface min-h-[36px] flex-shrink-0 border-b px-3 py-2 text-body"
       >
-        {t("breadcrumb.selectFolderPrompt")}
+        {isMobile
+          ? t("breadcrumb.selectFolderPromptMobile")
+          : t("breadcrumb.selectFolderPrompt")}
       </nav>
     );
   }

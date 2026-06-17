@@ -371,7 +371,9 @@ function FileManagerListing({
       >
         {state.kind === "idle" && !path && (
           <div className="text-muted-foreground p-4 text-body">
-            {t("listing.selectFolderPrompt")}
+            {isMobile
+              ? t("listing.selectFolderPromptMobile")
+              : t("listing.selectFolderPrompt")}
           </div>
         )}
         {state.kind === "loading" && (

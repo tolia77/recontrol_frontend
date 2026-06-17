@@ -13,9 +13,11 @@ export const fileManager = {
     moveTo: "Перемістити в…",
     copyTo: "Копіювати в…",
     showHiddenFiles: "Показати приховані файли",
+    selectFolder: "Спільна папка",
   },
   breadcrumb: {
     selectFolderPrompt: "Оберіть папку з бічної панелі, щоб почати перегляд.",
+    selectFolderPromptMobile: "Оберіть спільну папку вгорі, щоб почати перегляд.",
     ariaLabel: "хлібні крихти",
   },
   listing: {
@@ -24,6 +26,8 @@ export const fileManager = {
     columnModified: "Змінено",
     columnType: "Тип",
     selectFolderPrompt: "Оберіть папку з бічної панелі, щоб почати перегляд.",
+    selectFolderPromptMobile:
+      "Оберіть спільну папку зі списку вгорі, щоб почати перегляд.",
     loading: "Завантаження...",
     emptyFolder: "Ця папка порожня.",
     defaultNewFolderName: "Нова папка",

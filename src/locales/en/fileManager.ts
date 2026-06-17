@@ -13,9 +13,11 @@ export const fileManager = {
     moveTo: "Move to…",
     copyTo: "Copy to…",
     showHiddenFiles: "Show hidden files",
+    selectFolder: "Shared folder",
   },
   breadcrumb: {
     selectFolderPrompt: "Select a folder from the sidebar to start browsing.",
+    selectFolderPromptMobile: "Choose a shared folder above to start browsing.",
     ariaLabel: "breadcrumb",
   },
   listing: {
@@ -24,6 +26,8 @@ export const fileManager = {
     columnModified: "Modified",
     columnType: "Type",
     selectFolderPrompt: "Select a folder from the sidebar to start browsing.",
+    selectFolderPromptMobile:
+      "Choose a shared folder from the dropdown above to start browsing.",
     loading: "Loading...",
     emptyFolder: "This folder is empty.",
     defaultNewFolderName: "New folder",
