@@ -80,9 +80,6 @@ const ConfirmationCard: FC<ConfirmationCardProps> = ({
   });
 
   const argsText = row.args.map((a) => String(a)).join(" ");
-  // Guard against an empty command (e.g. a malformed envelope) rendering a bare
-  // `$`: fall back to the tool's human label.
-  const hasCommand = row.command.trim().length > 0;
   const confirmationId = row.confirmationId;
   const canDecide = Boolean(confirmationId);
 
@@ -105,14 +102,8 @@ const ConfirmationCard: FC<ConfirmationCardProps> = ({
           </span>
           <p className="mt-1 text-body">{reasonText}</p>
           <pre className="mt-1 rounded-sm bg-surface-muted p-1.5 font-mono text-caption break-all whitespace-pre-wrap">
-            {hasCommand ? (
-              <>
-                $ {row.command}
-                {argsText && ` ${argsText}`}
-              </>
-            ) : (
-              row.label
-            )}
+            $ {row.command}
+            {argsText && ` ${argsText}`}
           </pre>
           <div className="mt-2 flex gap-2">
             <Button
