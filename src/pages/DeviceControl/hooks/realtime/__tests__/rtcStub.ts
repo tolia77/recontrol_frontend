@@ -1,0 +1,174 @@
+/**
+ * Hand-rolled RTCPeerConnection stub for WebRTC hook tests.
+ *
+ * Design mirrors mockConsumer.ts: a make*() factory returns the fake object
+ * plus a test-only emit surface. No WebRTC mock library is used (D-07).
+ *
+ * Globals must be installed PER TEST FILE via installRtcGlobals() /
+ * restoreRtcGlobals() — never via src/test/setup.ts.
+ *
+ * Members implemented are exactly those consumed by usePeerConnection.ts and
+ * useWebRtcSignaling.ts (enumerated from source reads):
+ *   methods:  addTransceiver, createOffer, setLocalDescription,
+ *             setRemoteDescription, addIceCandidate, close
+ *   handlers: onicecandidate, ontrack, onconnectionstatechange, ondatachannel
+ *   props:    connectionState (settable), remoteDescription (settable)
+ *   static:   RTCRtpReceiver.getCapabilities (returns null by default)
+ *   globals:  RTCPeerConnection (factory), RTCSessionDescription,
+ *             RTCIceCandidate, RTCRtpReceiver, MediaStream
+ */
+
+import { vi } from "vitest";
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export interface FakeTransceiver {
+  setCodecPreferences: ReturnType<typeof vi.fn>;
+}
+
+export interface RtcStub {
+  // Methods
+  addTransceiver: ReturnType<typeof vi.fn>;
+  createOffer: ReturnType<typeof vi.fn>;
+  setLocalDescription: ReturnType<typeof vi.fn>;
+  setRemoteDescription: ReturnType<typeof vi.fn>;
+  addIceCandidate: ReturnType<typeof vi.fn>;
+  close: ReturnType<typeof vi.fn>;
+
+  // Event handler slots
+  onicecandidate: ((event: { candidate: RTCIceCandidate | null }) => void) | null;
+  ontrack: ((event: Partial<RTCTrackEvent>) => void) | null;
+  onconnectionstatechange: (() => void) | null;
+  ondatachannel: ((event: { channel: Partial<RTCDataChannel> }) => void) | null;
+
+  // Settable props
+  connectionState: RTCPeerConnectionState;
+  remoteDescription: RTCSessionDescription | null;
+
+  // Test-only emit surface
+  emitIceCandidate: (candidate: RTCIceCandidate) => void;
+  emitTrack: (event: Partial<RTCTrackEvent>) => void;
+  emitConnectionState: (state: RTCPeerConnectionState) => void;
+  emitDataChannel: (channel: Partial<RTCDataChannel>) => void;
+}
+
+// ---------------------------------------------------------------------------
+// Factory
+// ---------------------------------------------------------------------------
+
+/**
+ * Create a fresh RtcStub. Most promise-returning methods resolve by default.
+ * Make specific methods reject for rejection-path tests:
+ *   stub.setRemoteDescription.mockRejectedValueOnce(new Error("fail"))
+ */
+export function makeRtcStub(): RtcStub {
+  const fakeTransceiver: FakeTransceiver = {
+    setCodecPreferences: vi.fn(),
+  };
+
+  const stub: RtcStub = {
+    // --- methods ---
+    addTransceiver: vi.fn(() => fakeTransceiver),
+    createOffer: vi.fn(() => Promise.resolve({ sdp: "<stub-sdp>", type: "offer" as RTCSdpType })),
+    setLocalDescription: vi.fn(() => Promise.resolve()),
+    setRemoteDescription: vi.fn(() => Promise.resolve()),
+    addIceCandidate: vi.fn(() => Promise.resolve()),
+    close: vi.fn(),
+
+    // --- handler slots ---
+    onicecandidate: null,
+    ontrack: null,
+    onconnectionstatechange: null,
+    ondatachannel: null,
+
+    // --- props ---
+    connectionState: "new",
+    remoteDescription: null,
+
+    // --- emit surface ---
+    emitIceCandidate(candidate: RTCIceCandidate) {
+      stub.onicecandidate?.({ candidate });
+    },
+    emitTrack(event: Partial<RTCTrackEvent>) {
+      stub.ontrack?.(event);
+    },
+    emitConnectionState(state: RTCPeerConnectionState) {
+      stub.connectionState = state;
+      stub.onconnectionstatechange?.();
+    },
+    emitDataChannel(channel: Partial<RTCDataChannel>) {
+      stub.ondatachannel?.({ channel });
+    },
+  };
+
+  return stub;
+}
+
+// ---------------------------------------------------------------------------
+// Global installer
+// ---------------------------------------------------------------------------
+
+/**
+ * The most recently constructed stub via the RTCPeerConnection constructor
+ * installed by installRtcGlobals(). Tests grab it as:
+ *   const stub = lastStub();
+ */
+let _lastStub: RtcStub | null = null;
+export function lastStub(): RtcStub | null {
+  return _lastStub;
+}
+
+/**
+ * Install WebRTC globals that jsdom does not provide. Call in beforeEach (or
+ * at the top of the describe block) of any test file that exercises WebRTC hooks.
+ * Pair with restoreRtcGlobals() in afterEach.
+ *
+ * RTCPeerConnection is installed as a constructor-factory: each `new RTCPeerConnection()`
+ * call creates a fresh RtcStub and stores it in lastStub() so tests can reach it.
+ */
+export function installRtcGlobals(): void {
+  // RTCPeerConnection — constructor that always returns a fresh stub
+  function FakeRTCPeerConnection(_config?: RTCConfiguration) {
+    const stub = makeRtcStub();
+    _lastStub = stub;
+    return stub;
+  }
+  vi.stubGlobal("RTCPeerConnection", FakeRTCPeerConnection);
+
+  // RTCSessionDescription — simple passthrough constructor
+  function FakeRTCSessionDescription(init: RTCSessionDescriptionInit) {
+    return { type: init.type, sdp: init.sdp ?? "" };
+  }
+  vi.stubGlobal("RTCSessionDescription", FakeRTCSessionDescription);
+
+  // RTCIceCandidate — simple passthrough constructor
+  function FakeRTCIceCandidate(init: RTCIceCandidateInit) {
+    return {
+      candidate: init.candidate ?? "",
+      sdpMid: init.sdpMid ?? null,
+      sdpMLineIndex: init.sdpMLineIndex ?? null,
+    };
+  }
+  vi.stubGlobal("RTCIceCandidate", FakeRTCIceCandidate);
+
+  // RTCRtpReceiver — only getCapabilities is needed; returns null (code null-guards)
+  vi.stubGlobal("RTCRtpReceiver", {
+    getCapabilities: vi.fn((_kind: string) => null),
+  });
+
+  // MediaStream — minimal stub; usePeerConnection falls back to new MediaStream([track])
+  function FakeMediaStream(_tracks?: MediaStreamTrack[]) {
+    return { id: "fake-stream", getTracks: () => [] };
+  }
+  vi.stubGlobal("MediaStream", FakeMediaStream);
+}
+
+/**
+ * Restore all globals stubbed by installRtcGlobals(). Call in afterEach.
+ */
+export function restoreRtcGlobals(): void {
+  _lastStub = null;
+  vi.unstubAllGlobals();
+}
