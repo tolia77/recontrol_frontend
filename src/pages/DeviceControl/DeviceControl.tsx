@@ -92,6 +92,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
   const {
     permissions,
     permissionsLoading,
+    isOwner,
     setIsOwner,
     fetchPermissions,
     canSend,
@@ -622,6 +623,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
           dispatchTranscript={dispatchAssistantTranscript}
           dispatch={assistantDispatch}
           deviceName={deviceName || deviceId}
+          accessDenied={permissions !== null && !isOwner}
           isMobile={isMobile}
           onFullHeightChange={setAssistantForceFullHeight}
         />

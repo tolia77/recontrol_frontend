@@ -25,6 +25,14 @@ export interface AssistantPanelProps {
   dispatchTranscript: Dispatch<TranscriptAction>;
   dispatch: (action: AssistantDispatchAction, data?: object) => void;
   deviceName: string;
+  /**
+   * When true, the current user is a confirmed non-owner. AssistantChannel is
+   * owner-only (backend `valid_subscription?`), so the panel renders a clear
+   * owner-only notice instead of the chat UI and the misleading
+   * `subscription_rejected` connection error. Computed by the parent once
+   * ownership has resolved, so it never flashes for a real owner mid-load.
+   */
+  accessDenied?: boolean;
   /** When true, mobile adaptations are applied (DCTL-04) */
   isMobile?: boolean;
   /**
@@ -85,6 +93,7 @@ function AssistantPanel({
   dispatchTranscript,
   dispatch,
   deviceName,
+  accessDenied,
   isMobile,
   onFullHeightChange,
 }: AssistantPanelProps): JSX.Element {
@@ -160,6 +169,28 @@ function AssistantPanel({
       );
     }
   }, [state.rows, toast, t]);
+
+  // Owner-only gate (mirrors backend AssistantChannel#valid_subscription?).
+  // Rendered after all hooks so the Rules of Hooks hold. Replaces the whole
+  // panel body — no header/input/transcript — and suppresses the
+  // subscription_rejected error banner a non-owner's rejected subscribe latches.
+  if (accessDenied) {
+    return (
+      <div
+        data-testid="assistant-panel"
+        data-device-id={deviceId}
+        data-access-denied="true"
+        className="bg-surface text-foreground flex h-full w-full flex-col items-center justify-center px-6 text-center outline-none"
+      >
+        <p className="text-foreground text-body font-medium">
+          {t("ownerOnly.title")}
+        </p>
+        <p className="text-muted-foreground mt-2 text-body">
+          {t("ownerOnly.body")}
+        </p>
+      </div>
+    );
+  }
 
   const isEmpty = state.rows.length === 0;
 

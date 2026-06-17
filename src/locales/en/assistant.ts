@@ -31,6 +31,10 @@ export const assistant = {
     greeting: "What can I help with on {{deviceName}}?",
     hint: "Press Enter to send. Stop or Ctrl+Shift+A to interrupt.",
   },
+  ownerOnly: {
+    title: "Assistant is owner-only",
+    body: "The AI assistant is available only to the device owner. Your shared access doesn't include it.",
+  },
   thinking: "Thinking…",
   input: {
     placeholder: "Ask the assistant to act on this device…",
