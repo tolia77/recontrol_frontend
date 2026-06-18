@@ -15,27 +15,25 @@ import type { ActiveRun } from "./scenariosReducer";
 import type { ToolRow } from "src/pages/DeviceControl/components/Assistant/transcriptReducer";
 
 /**
- * ScenariosHistoryDetail — full-takeover history detail per D-22-09 / AUDIT-04.
+ * ScenariosHistoryDetail — full-takeover history detail.
  *
  * Renders the persisted ScenarioRun (header + per-step metadata rows) plus,
  * for runs whose lifetime overlaps the current panel session, the live
- * ToolCallCard transcript inline above the per-step rows. For past-session
- * runs (or when no activeRun is supplied), a muted banner explains that the
- * live output is no longer available and only the persisted metadata remains.
+ * transcript inline above the per-step rows. For past-session runs (or when no
+ * activeRun is supplied), a muted banner explains that the live output is no
+ * longer available and only the persisted metadata remains.
  *
- * Live-vs-past branch invariant (AUDIT-04):
- *   live transcript renders IFF `activeRun?.runId === runId`. Otherwise the
- *   past-session banner is shown above the always-rendered per-step metadata
- *   rows.
+ * Live-vs-past branch invariant: the live transcript renders IFF
+ * `activeRun?.runId === runId`. Otherwise the past-session banner is shown
+ * above the always-rendered per-step metadata rows.
  *
- * Copy-as-Markdown (UI-06):
- *   - Current-session path uses the verbatim copyAsMarkdown(rows) reuse.
+ * Copy-as-Markdown:
+ *   - Current-session path reuses copyAsMarkdown(rows).
  *   - Past-session path uses an inline metadata-only serializer since the DB
- *     never persists stdout (SAFETY-01).
+ *     never persists stdout.
  *
- * Per-row delete (AUDIT-05 single-delete arm, D-22-09): single click executes
- * scenarioRunsService.destroy(runId); on success the parent transitions back
- * to the history list via onDeleted().
+ * Per-row delete: a single click executes scenarioRunsService.destroy(runId);
+ * on success the parent transitions back to the history list via onDeleted().
  */
 
 const RUN_ID_CHIP_LEN = 8;
@@ -54,8 +52,8 @@ export interface ScenariosHistoryDetailProps {
   // inline. Otherwise the past-session banner is shown.
   activeRun: ActiveRun | null;
   // Optional command_steps (from the parent's loaded scenario) — reserved for
-  // future enrichment of the per-step rows; the current AUDIT-04 surface only
-  // uses the persisted ScenarioRunStep payload.
+  // future enrichment of the per-step rows; currently the rows render only from
+  // the persisted ScenarioRunStep payload.
   commandSteps?: ReadonlyArray<HistoryDetailCommandStep>;
   onBack: () => void;
   onDeleted: () => void;
@@ -70,10 +68,9 @@ function statusBadgeClass(status: ScenarioRunStatus): string {
   return STATUS_BADGE_CLASS[status] ?? "";
 }
 
-// Past-session markdown serializer — metadata only (DB has no stdout per
-// SAFETY-01). Produces a human-readable Markdown block with the run header
-// and a fenced section per step listing binary, status, exit code, and
-// duration.
+// Past-session markdown serializer — metadata only (the DB has no stdout).
+// Produces a human-readable Markdown block with the run header and a fenced
+// section per step listing binary, status, exit code, and duration.
 function serializePastSession(run: ScenarioRun): string {
   const lines: string[] = [];
   lines.push(`# ${run.scenario_name_snapshot} — ${run.status}`);
@@ -116,7 +113,8 @@ export default function ScenariosHistoryDetail({
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<boolean>(false);
 
-  // Fetch effect — cancellation-guarded per the P21 ScenariosLibrary pattern.
+  // Fetch effect — cancellation-guarded so a stale response can't overwrite
+  // state after runId changes or the component unmounts.
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -280,7 +278,7 @@ export default function ScenariosHistoryDetail({
 
         {!loading && run && (
           <>
-            {/* Live transcript section (current-session only — AUDIT-04) */}
+            {/* Live transcript section (current-session only) */}
             {isLive && liveToolRows.length > 0 && (
               <div
                 className="mb-4 space-y-2"
@@ -303,7 +301,7 @@ export default function ScenariosHistoryDetail({
               </div>
             )}
 
-            {/* Per-step metadata rows — always rendered (AUDIT-04) */}
+            {/* Per-step metadata rows — always rendered */}
             <div className="space-y-2">
               {(run.steps ?? []).map((step) => {
                 const g = glyphFor(step.status);

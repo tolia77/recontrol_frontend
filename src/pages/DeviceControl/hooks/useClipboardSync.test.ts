@@ -1,10 +1,9 @@
-// Phase 15 Plan 04 hook integration tests.
+// Clipboard sync hook integration tests.
 //
-// Coverage: hook-level wiring of CAP-01 (caps send on open), CAP-04/05 (refusal
-// feed sourced from BOTH remote and local), CAP-06 (cache populated for
-// prepareOutbound consumption), POLICY-04 (discrete fields exposed), D-15
-// (pause stays browser-local; no wire activity), D-18 (re-advertise on
-// permission resolve).
+// Coverage: hook-level wiring of caps send on open, the refusal feed sourced
+// from BOTH remote and local, the cache populated for prepareOutbound
+// consumption, the discrete fields exposed, pause staying browser-local (no
+// wire activity), and re-advertise on permission resolve.
 //
 // Decision logic (prepareOutbound / decideInbound) lives in clipboardCore and is
 // covered by clipboardCore.test.ts. These tests assert React-glue behavior:
@@ -115,7 +114,7 @@ function makeHarness(opts: { originId?: string | null } = {}): Harness {
 
 // Tests
 
-describe("useClipboardSync — Phase 15 Plan 04", () => {
+describe("useClipboardSync", () => {
   beforeEach(() => {
     Object.defineProperty(globalThis.navigator, "clipboard", {
       configurable: true,
@@ -202,7 +201,7 @@ describe("useClipboardSync — Phase 15 Plan 04", () => {
     expect(typeof result.current.lastRefusal?.at).toBe("number");
   });
 
-  it("inbound refused PERMISSION_DENIED is accepted (not dropped by WR-01 gate)", () => {
+  it("inbound refused PERMISSION_DENIED is accepted (not dropped by the origin gate)", () => {
     const h = makeHarness();
     const { result } = renderHook(() => useClipboardSync(h.args()));
     act(() => {
@@ -222,7 +221,7 @@ describe("useClipboardSync — Phase 15 Plan 04", () => {
   });
 
   it("local refused-local from prepareOutbound sets lastRefusal source='local'", async () => {
-    // C11 fixture from clipboardCore.test.ts: 24 control chars + 1 letter -> 96% control
+    // 24 control chars + 1 letter -> 96% control, classified as non-text.
     const controlText = "\x01".repeat(24) + "a";
     const readText = vi.fn().mockResolvedValue(controlText);
     Object.defineProperty(globalThis.navigator, "clipboard", {
@@ -285,7 +284,7 @@ describe("useClipboardSync — Phase 15 Plan 04", () => {
     expect(sentOnReopen.kind).toBe("capabilities");
   });
 
-  it("togglePause does NOT send a capabilities envelope (D-15 wire-quiet pause)", () => {
+  it("togglePause does NOT send a capabilities envelope (pause stays wire-quiet)", () => {
     const h = makeHarness();
     const { result } = renderHook(() => useClipboardSync(h.args()));
     // Initial caps send already happened. Reset.
@@ -297,12 +296,11 @@ describe("useClipboardSync — Phase 15 Plan 04", () => {
     expect(result.current.isPaused).toBe(true);
   });
 
-  it("CR-01 regression: caps flip does NOT wipe cachedDesktopCaps", () => {
-    // CR-01 in 15-REVIEW.md: the previous shape listed caps.* in the inbound
-    // subscribe effect's deps, so the effect tore down (clearing the cache)
-    // every time useClipboardCapability flipped from initial-false to detected.
-    // The fix splits re-advertise into a separate effect that does NOT touch
-    // subscription state.
+  it("caps flip does NOT wipe cachedDesktopCaps", () => {
+    // Regression guard: listing caps.* in the inbound subscribe effect's deps
+    // tears the effect down (clearing the cache) every time
+    // useClipboardCapability flips from initial-false to detected. Re-advertise
+    // lives in a separate effect that does NOT touch subscription state.
     const h = makeHarness();
     const initialCaps: ClipboardCapability = {
       canRead: false,
@@ -342,11 +340,11 @@ describe("useClipboardSync — Phase 15 Plan 04", () => {
   });
 
   it("re-advertise on permission resolve (caps flip causes fresh capabilities send)", () => {
-    // D-18: when the browser's optimistic caps detection later flips (e.g. the
-    // user grants the permission prompt), the hook re-advertises so the desktop
-    // unblocks its inbound gate. After CR-01, this is driven by a dedicated
-    // re-advertise effect that watches caps.* and calls client.send WITHOUT
-    // touching the inbound subscription.
+    // When the browser's optimistic caps detection later flips (e.g. the user
+    // grants the permission prompt), the hook re-advertises so the desktop
+    // unblocks its inbound gate. Driven by a dedicated re-advertise effect that
+    // watches caps.* and calls client.send WITHOUT touching the inbound
+    // subscription.
     const h = makeHarness();
     const initialCaps: ClipboardCapability = {
       canRead: false,

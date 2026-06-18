@@ -1,4 +1,4 @@
-// VERIFY-04 stream-drop vitest, ported to the ActionCable consumer.
+// Stream-drop vitest over the ActionCable consumer.
 // The hook synthesizes {type:'error', source:'connection_lost'} on the
 // subscription's `disconnected` callback; the real transcriptReducer consumes
 // it to flip status streaming -> error. Driven via the mock consumer.
@@ -31,7 +31,7 @@ function useChannelWithReducer(consumer: MockConsumer | null): {
   return { state, broadcasts: broadcastsRef.current };
 }
 
-describe("useAssistantChannel — VERIFY-04 stream-drop (consumer)", () => {
+describe("useAssistantChannel — stream-drop (consumer)", () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => {
     vi.useRealTimers();

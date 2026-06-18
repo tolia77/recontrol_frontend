@@ -6,10 +6,6 @@ import { Modal } from "src/components/ui";
  * Modal shown when a user attempts to download a file > 100 MiB on a browser
  * that does NOT expose `window.showSaveFilePicker` (i.e. Firefox / Safari).
  *
- * CONTEXT-locked verbatim copy:
- *   `This file is too large to download in your browser ({size} MB). Use Chrome
- *    or Edge for files over 100 MB.`
- *
  * Single OK button, no Try Anyway escape hatch -- discoverability of the
  * blocking reason beats silent suppression. The Download menu item stays
  * enabled so the user can re-trigger and see the modal again.

@@ -3,11 +3,11 @@ import type { CableConsumerLike } from "./useCableConsumer";
 import { useOrderedBroadcast } from "./useOrderedBroadcast";
 
 /**
- * Inner broadcast envelope shape per Phase 18 STREAM-03 / STREAM-04 and Phase 20 D-11.
+ * Inner broadcast envelope shape.
  *
- * Phase 20 frontend consumes these seven shapes (six wire types plus a synthesized
+ * Consumes these seven shapes (six wire types plus a synthesized
  * `connection_lost` error). Unknown / forward-compat broadcast types are ignored
- * silently by the reducer (STREAM-03 forward-compat).
+ * silently by the reducer.
  */
 export type AssistantBroadcast =
   | { type: "token"; seq: number; session_token: string; content: string }
@@ -111,25 +111,24 @@ let subscriptionNonce = 0;
 /**
  * Subscribe to the Rails AssistantChannel via the shared ActionCable consumer.
  *
- * Options-object signature per D-11. Composes useOrderedBroadcast for the
- * seq-reorder buffer per D-12 (resetMarker "accepted", no seqless error
- * passthrough).
+ * Composes useOrderedBroadcast for the seq-reorder buffer (resetMarker
+ * "accepted", no seqless error passthrough).
  *
- * Wire-format invariants (Phase 18 STREAM-02..04, D-11):
+ * Wire-format invariants:
  *  - `seq` is monotonically increasing per session; gaps are reordered with a
  *    500ms gap-close timeout. After the timeout fires (and the connection is still
  *    open) the hook synthesizes `{type:'error', source:'stream_out_of_order'}`
  *    so the reducer can leave streaming state.
- *  - `session_token` discriminates streams; v1 leaves filtering to the reducer
- *    (20-07) which scopes rendering per session. The hook delivers all session
+ *  - `session_token` discriminates streams; filtering is left to the reducer
+ *    which scopes rendering per session. The hook delivers all session
  *    tokens unchanged.
  *  - Connection drop while broadcasts are still in flight synthesizes
  *    `{type:'error', source:'connection_lost'}` so the reducer can transition
- *    to the error state without waiting for the backend's STREAM-06
- *    ensure-block terminator (VERIFY-04).
+ *    to the error state without waiting for the backend's ensure-block
+ *    terminator.
  *  - On disconnect any pending gap-close timer is cleared so it never fires
- *    post-teardown — keeping the VERIFY-04 invariant that the synthesized
- *    `connection_lost` error is delivered within 5s of disconnect.
+ *    post-teardown, keeping the synthesized `connection_lost` error delivered
+ *    within 5s of disconnect.
  *  - The subscription identifier carries a per-mount `nonce` so remounts never
  *    reuse an identifier (a late unsubscribe from a previous mount would
  *    otherwise destroy the live subscription server-side).
@@ -141,8 +140,8 @@ let subscriptionNonce = 0;
 export function useAssistantChannel(
   { consumer, onBroadcast, onReconnect }: UseAssistantChannelOptions,
 ): UseAssistantChannelReturn {
-  // Shared seq-ordered reorder buffer (D-12). resetMarker "accepted" resets
-  // the buffer between assistant runs. AssistantChannel gap-close error has NO
+  // Shared seq-ordered reorder buffer. resetMarker "accepted" resets the
+  // buffer between assistant runs. AssistantChannel gap-close error has NO
   // `message` field (ScenarioRunChannel includes one — a twin difference).
   const { bufferRef, expectedSeqRef, gapTimerRef, closedRef, flushInOrder, reset } =
     useOrderedBroadcast<AssistantBroadcast>({

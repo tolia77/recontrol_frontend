@@ -1,13 +1,13 @@
 import { BaseService } from "src/services/backend/BaseService.ts";
 
-// D-12: per-step snapshot written by Scenario#before_save.
+// Per-step snapshot written by Scenario#before_save.
 export interface ClassifiedIntentAtSave {
   decision: "allow" | "needs_confirm" | "deny";
   reason: string;
   policy_version: string;
 }
 
-// D-10: verdict embedded in create/update response per step (not persisted; in-memory).
+// Verdict embedded in create/update response per step (not persisted; in-memory).
 export interface VerdictAtSave {
   decision: "allow" | "needs_confirm" | "deny";
   reason: string;
@@ -35,7 +35,7 @@ export interface Scenario {
   owner_email?: string | null;
   created_at: string;
   updated_at: string;
-  // Derived (LIB-02): present on `index`.
+  // Derived: present on `index`.
   last_run_at?: string | null;
   run_count?: number;
 }
@@ -45,16 +45,14 @@ export interface ScenarioCreatePayload {
   description?: string | null;
   pinned_device_id?: string | null;
   is_shared?: boolean;
-  // Phase 23 / Plan 23-09 (AI-09 / D-10): set true by the DraftReviewModal
-  // Accept-and-save path so the backend stamps `created_via_ai: true` on the
-  // persisted Scenario row. Optional — manual editor saves omit it (default
-  // false on the backend `before_validation` hook).
+  // Set true by the DraftReviewModal Accept-and-save path so the backend stamps
+  // `created_via_ai: true` on the persisted Scenario row. Optional — manual
+  // editor saves omit it (defaults false on the backend `before_validation` hook).
   created_via_ai?: boolean;
-  // Phase 23 / Plan 23-11 (AI-10): OpenRouter `usage.total_tokens` captured at
-  // draft generation time and forwarded on [Accept and save]. The backend
-  // nullifies this field when `created_via_ai != true` (T-23-44 guard), so it
-  // is safe to send unconditionally — but in practice the modal only sends it
-  // alongside `created_via_ai: true`.
+  // OpenRouter `usage.total_tokens` captured at draft generation time and
+  // forwarded on [Accept and save]. The backend nullifies this field when
+  // `created_via_ai != true`, so it is safe to send unconditionally — but in
+  // practice the modal only sends it alongside `created_via_ai: true`.
   created_via_ai_token_count?: number;
   command_steps: Array<
     Omit<
@@ -81,20 +79,20 @@ export interface PolicyPreviewResponse {
   policy_drift: boolean;
 }
 
-// D-10: 422 deny envelope (one entry per denied step).
+// 422 deny envelope (one entry per denied step).
 export interface PolicyDenyError {
   step_index: number;
   decision: "deny";
   reason: string;
 }
 
-// AI draft generation (Phase 23) — D-12: drafts have no step `id`; backend
-// `before_validation` hook assigns UUIDs only at save time. The amber
-// `dry_intent_warning` is draft-time-only and is discarded on [Accept and save]
-// (D-11): saved scenarios are independently re-classified by the run-time
-// irreversible-intent catalog inside PolicyPreviewModal.
+// AI draft generation: drafts have no step `id`; the backend `before_validation`
+// hook assigns UUIDs only at save time. The amber `dry_intent_warning` is
+// draft-time-only and is discarded on [Accept and save]: saved scenarios are
+// independently re-classified by the run-time irreversible-intent catalog
+// inside PolicyPreviewModal.
 
-// AI-05 frontend half: shape produced by `CommandPolicy.dry_intent_check`
+// Shape produced by `CommandPolicy.dry_intent_check`
 // (recontrol_backend/app/services/command_policy/dry_intent_patterns.rb).
 // `message_key` matches /\Ascenarios\.ai\.dry_intent\.[a-z_]+\z/ — the frontend
 // passes it directly to i18next to render the localized tooltip.
@@ -103,7 +101,7 @@ export interface DryIntentWarning {
   message_key: string;
 }
 
-// Per-step draft shape returned by POST /scenarios/drafts. NO `id` per D-12.
+// Per-step draft shape returned by POST /scenarios/drafts. NO `id` (assigned at save).
 // `description` is `string | null` (model may emit JSON null). The optional
 // `dry_intent_warning` is absent when no draft-time heuristic pattern matched.
 export interface DraftStep {
@@ -114,8 +112,8 @@ export interface DraftStep {
   dry_intent_warning?: DryIntentWarning;
 }
 
-// Quota piggyback per AI-06 / AI-07: shared token ledger + independent
-// 30/day drafts counter. Used to drive the quota indicator UI.
+// Quota piggyback: shared token ledger + independent 30/day drafts counter.
+// Used to drive the quota indicator UI.
 export interface DraftQuota {
   tokens_used: number;
   tokens_limit: number;
@@ -123,7 +121,7 @@ export interface DraftQuota {
   drafts_limit: number;
 }
 
-// Per-call OpenRouter usage piggyback. Phase 23 / Plan 23-11 (AI-10):
+// Per-call OpenRouter usage piggyback:
 // `total_tokens = prompt_tokens + completion_tokens`. The DraftReviewModal
 // Accept handler captures this number and forwards it to `scenariosService.create`
 // as `created_via_ai_token_count` so the backend persists it on the row and
@@ -140,8 +138,8 @@ export interface DraftResponse {
     command_steps: DraftStep[];
   };
   quota: DraftQuota;
-  // Phase 23 / Plan 23-11 (AI-10) — surfaced by the backend so the frontend
-  // can persist `created_via_ai_token_count` on Accept.
+  // Surfaced by the backend so the frontend can persist
+  // `created_via_ai_token_count` on Accept.
   usage: DraftUsage;
 }
 
@@ -184,7 +182,7 @@ class ScenariosService extends BaseService {
     return data;
   }
 
-  // AI-01 frontend half: POST /scenarios/drafts. Generating a draft consumes the
+  // POST /scenarios/drafts. Generating a draft consumes the
   // daily AI-draft quota (ai_draft_daily_limit), so refresh usage on success.
   async createDraft(
     prompt: string,
@@ -234,7 +232,6 @@ class ScenariosService extends BaseService {
     return data;
   }
 
-  // POLICY-01
   async policyPreview(
     id: string,
     deviceId: string,

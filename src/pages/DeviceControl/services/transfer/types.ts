@@ -13,38 +13,35 @@ export type TransferDirection = "upload" | "download";
 /**
  * Closed union of every state a TransferItem may occupy.
  *
- * The 'stalled' and 'disconnected' values are defined here so the union is
- * complete from the type system's perspective; they are SET in plan 11-06
- * (stall watchdog + disconnect listener) but every consumer (TransferQueuePanel
- * row rendering, mapFilesErrorToMessage) must already handle them so plan 11-06
- * does not need to bump every switch statement.
+ * 'stalled' is set by the stall watchdog and 'disconnected' by the disconnect
+ * listener; every consumer (TransferQueuePanel row rendering,
+ * mapFilesErrorToMessage) handles them so the union stays exhaustive.
  */
 export type TransferState =
   | "queued"
   | "active"
-  | "stalled" // plan 11-06 sets this; defined here so the union is closed
+  | "stalled" // set by the stall watchdog; defined here so the union is closed
   | "cancelling" // user pressed Cancel; awaiting desktop ack
   | "completed"
   | "cancelled"
-  | "disconnected" // plan 11-06 sets this; defined here so the union is closed
+  | "disconnected" // set by the disconnect listener; defined here so the union is closed
   | "failed";
 
 /**
  * One row in the queue. Exactly one TransferItem per file (per-file enqueue,
- * not batch entries -- locked in 11-CONTEXT.md).
+ * not batch entries).
  *
- * Anti-pattern guard: this type intentionally has NO `file: File` field.
- * Plan 11-04 holds the source File in a separate Map keyed by item.id, dropped
- * on terminal transition so the underlying File can be GC'd once the entry
- * lands in completed-history.
+ * This type intentionally has NO `file: File` field. The upload runner holds
+ * the source File in a separate Map keyed by item.id, dropped on terminal
+ * transition so the underlying File can be GC'd once the entry lands in
+ * completed-history.
  */
 export interface TransferItem {
   /** Local UUID assigned at enqueue. STABLE for the lifetime of the entry. */
   id: string;
   /**
    * Wire u32 minted desktop-side via files.upload.begin / files.download.begin
-   * response. null until the runner has populated it. Never browser-allocated
-   * (locked in 11-01-SUMMARY.md).
+   * response. null until the runner has populated it. Never browser-allocated.
    */
   transferId: number | null;
   direction: TransferDirection;
@@ -88,10 +85,6 @@ export interface QueueState {
  * transfer reaches a terminal state. Throwing causes the queue to mark the
  * item as 'failed' (or 'cancelled' if isCancelled returned true) and advance
  * to the next queued item.
- *
- * Plan 11-04 supplies the upload runner. Plan 11-05 supplies the download
- * runner. This plan ships STUB runners that throw immediately so the panel
- * surface is exercisable end-to-end.
  */
 export type RunUploadFn = (
   item: TransferItem,

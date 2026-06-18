@@ -4,16 +4,16 @@ import ToolCallCard from "src/pages/DeviceControl/components/Assistant/ToolCallC
 import type { ToolRow } from "src/pages/DeviceControl/components/Assistant/transcriptReducer";
 
 /**
- * RunOutput — thin presentational wrapper around the existing v1.4 ToolCallCard
- * (UI-03: verbatim reuse). Hosts one step of a scenario run.
+ * RunOutput — thin presentational wrapper around ToolCallCard, hosting one step
+ * of a scenario run.
  *
  * When the step was skipped (a `scenario_step_skipped` envelope arrived for
  * this step's index), the parent passes a `skippedReason` string. The wrapper
- * applies `opacity-50` to the entire card and appends a small muted label
- * (`⊘ Skipped`) below it (UI-SPEC §Run-mode takeover body, lines 218–222).
+ * then dims the card (`opacity-50`) and appends a small muted `⊘ Skipped` label
+ * below it.
  *
  * Invariants:
- *   - ToolCallCard is imported and rendered without modification (UI-03).
+ *   - ToolCallCard is rendered without modification.
  *   - `row` is passed through unchanged — never mutated.
  *   - Pure presentational; accepts no callbacks.
  */

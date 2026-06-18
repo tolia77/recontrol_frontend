@@ -15,15 +15,12 @@ import type { ScenariosSegment } from "./scenariosReducer";
 import { useScenariosPanelActions } from "src/pages/DeviceControl/hooks/state/useScenariosPanelActions";
 import type { CableConsumerLike } from "src/pages/DeviceControl/hooks/realtime/useCableConsumer";
 
-// PanelMode discriminated union — Plan 23-09 extends the P22 shape with a
-// real `{ kind: 'ai' }` variant (replacing the Plan 23-07 `toLegacySegment`
-// narrowing bridge) and widens the `editor` variant with optional
+// PanelMode discriminated union. The `editor` variant carries optional
 // `prefill` + `backTarget` fields so the AI flow can hand a draft to the
 // manual editor and round-trip via the [← Back] button.
 //
-// `run.backTo` stays a `'library' | 'history'` literal (run-mode launched
-// from AI flow is not a target the v1.5 UI exposes; if a run launches from
-// AI it logically goes back to library).
+// `run.backTo` is a `'library' | 'history'` literal; a run launched from the
+// AI flow logically goes back to library.
 
 type PanelMode =
   | { kind: "library" }
@@ -43,8 +40,8 @@ type PanelMode =
     }
   | { kind: "history_detail"; runId: string };
 
-// UI-05: sessionStorage key for the active segment. Wrapped in try/catch
-// throughout for private-browsing tolerance (matches Plan 22.06 / Pattern 14).
+// sessionStorage key for the active segment. Wrapped in try/catch throughout
+// for private-browsing tolerance.
 const SEGMENT_KEY = "scenarios_panel_segment";
 
 function readSegmentFromStorage(): ScenariosSegment {
@@ -90,7 +87,7 @@ export default function ScenariosPanel({
 }: ScenariosPanelProps) {
   const { t } = useTranslation("scenarios");
 
-  // Segment state — initialized from sessionStorage (UI-05).
+  // Segment state — initialized from sessionStorage.
   const initialSegment = readSegmentFromStorage();
   const [segment, setSegment] = useState<ScenariosSegment>(initialSegment);
 
@@ -275,7 +272,7 @@ export default function ScenariosPanel({
         onCancel={handleCancel}
       />
 
-      {/* Phase 23 / Plan 23-09: DraftReviewModal mounted at panel root */}
+      {/* DraftReviewModal mounted at panel root */}
       <DraftReviewModal
         open={draftModal.open}
         draft={draftModal.draft}

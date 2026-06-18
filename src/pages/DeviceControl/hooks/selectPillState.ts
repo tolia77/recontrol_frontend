@@ -5,9 +5,8 @@ import type {
 import type { ClipboardCapability } from "./useClipboardCapability";
 
 /**
- * Phase 16 D-01: nine distinct pill states (PILL-02 + DEGRADE-05). Visual
- * treatment per D-06 lives in the consuming component (ClipboardPill.tsx,
- * plan 16-03).
+ * The distinct pill states. Visual treatment lives in the consuming component
+ * (ClipboardPill.tsx).
  */
 export type PillState =
   | "connected-idle"
@@ -32,7 +31,7 @@ export interface SelectPillStateInput {
   isPaused: boolean;
   lastSyncAt: number | null;
   hookStatus: "idle" | "permission-required" | "unsupported" | "paused";
-  /** Injected current time so tests can pin time deterministically (D-03). */
+  /** Injected current time so tests can pin time deterministically. */
   now: number;
 }
 
@@ -45,22 +44,22 @@ const REFUSAL_HOLD_MS = 5_000;
 const PULSE_WINDOW_MS = 400;
 
 /**
- * Pure 10-state selector for the clipboard sync pill.
+ * Pure selector for the clipboard sync pill.
  *
- * Implements Phase 16 D-02's precedence ladder verbatim — first true wins:
+ * Precedence ladder — first true wins:
  *  1. disconnected         (WebRTC down)
  *  2. unsupported-browser  (Async Clipboard API missing OR insecure context)
  *  3. permission-required  (browser denied clipboard permission)
- *  4. disabled             (master off — both directions disabled, D-04)
+ *  4. disabled             (master off — both directions disabled)
  *  5. read-only            (exactly one direction disabled)
  *  6. refused-too-large    (last TOO_LARGE refusal within 5s)
  *  7. paused               (operator paused, no higher-priority signal)
  *  8. pulsing              (synced within last 400ms)
  *  9. connected-idle       (default)
  *
- * `now` is an input parameter — the function never reads the system clock —
- * so the fixture-table test in `selectPillState.test.ts` pins time
- * deterministically (D-03).
+ * `now` is an input parameter — the function never reads the system clock — so
+ * the fixture-table test in `selectPillState.test.ts` pins time
+ * deterministically.
  */
 export function selectPillState(input: SelectPillStateInput): PillStateResult {
   // Rung 1
@@ -68,7 +67,7 @@ export function selectPillState(input: SelectPillStateInput): PillStateResult {
     return { state: "disconnected", tooltipKey: "pill.tooltip.disconnected" };
   }
 
-  // Rung 2: DEGRADE-05 — feature-presence missing OR insecure context.
+  // Rung 2: feature-presence missing OR insecure context.
   if (
     (!input.browserCaps.canRead && !input.browserCaps.canWrite) ||
     !input.browserCaps.isSecureContext
@@ -87,7 +86,7 @@ export function selectPillState(input: SelectPillStateInput): PillStateResult {
     };
   }
 
-  // Rung 4: D-04 — master-off inferred from both directions disabled.
+  // Rung 4: master-off inferred from both directions disabled.
   if (
     input.cachedDesktopCaps?.outboundEnabled === false &&
     input.cachedDesktopCaps?.inboundEnabled === false

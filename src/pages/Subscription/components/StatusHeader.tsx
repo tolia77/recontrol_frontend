@@ -34,8 +34,8 @@ function StatusHeader({ status }: StatusHeaderProps) {
       })
     : null;
 
-  // A cancelled subscription keeps its paid plan until period_end, then reverts to Free
-  // (Phase 32 job). Say so explicitly rather than the misleading "Renews {date}".
+  // A cancelled subscription keeps its paid plan until period_end, then reverts
+  // to Free. Say so explicitly rather than the misleading "Renews {date}".
   const dateLine = periodEndDate
     ? stateLabel === "cancelled"
       ? t("statusHeader.switchesToFree", { date: periodEndDate })

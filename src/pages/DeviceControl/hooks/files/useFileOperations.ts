@@ -69,16 +69,15 @@ export interface UseFileOperationsReturn {
  * `toast.error(mapFilesErrorToMessage(err, t))`, and never swallow silently.
  *
  * Design invariants:
- *   - Dispatches against the Plan 27-01 reducer (FileManagerUiAction) instead of
- *     owning local state (D-03). Replaces setIsDeleting/setIsOperating/setNewFolderPending/
- *     setRenamingPath etc. with dispatch actions.
- *   - The `isAncestor` self-nest/path-traversal guard from pathUtils is preserved
- *     verbatim in performMoveOrCopy (T-27-04).
+ *   - Dispatches reducer actions (FileManagerUiAction) instead of owning local
+ *     state for isDeleting/isOperating/newFolderPending/renamingPath etc.
+ *   - The `isAncestor` self-nest/path-traversal guard from pathUtils is applied
+ *     in performMoveOrCopy.
  *   - delete/move/copy loops are sequential (NOT Promise.all) for clean error
  *     reporting and to avoid hammering the desktop in parallel.
  *   - try/finally ensures isDeleting/isOperating are always reset.
  *   - requestDelete skips the confirm dialog for single-file deletes when
- *     suppressSingleDeleteConfirm is true (D-05 commit-on-confirm semantics).
+ *     suppressSingleDeleteConfirm is true (commit-on-confirm semantics).
  */
 export function useFileOperations({
   channel,
@@ -99,8 +98,8 @@ export function useFileOperations({
   // Sequential (NOT Promise.all) so error reporting stays clean and so the
   // remote desktop is never hammered in parallel. Wraps the loop in
   // try/finally so isDeleting is always reset, even on uncaught rejection.
-  // No optimistic UI (Pitfall 3): the listing is only refreshed AFTER wire
-  // calls resolve. On error, surfaces a toast and STILL refreshes.
+  // No optimistic UI: the listing is only refreshed AFTER wire calls resolve.
+  // On error, surfaces a toast and STILL refreshes.
   const performDelete = useCallback(
     async (paths: string[]) => {
       const request = channel.request;
@@ -160,7 +159,7 @@ export function useFileOperations({
   // Move / Copy flow
   // performMoveOrCopy fires files.move / files.copy sequentially over the
   // selected source paths. Wraps the loop in try/finally so isOperating is
-  // always reset. Preserves the isAncestor guard (T-27-04).
+  // always reset. Applies the isAncestor guard.
   const performMoveOrCopy = useCallback(
     async (kind: "move" | "copy", dstParent: string) => {
       const request = channel.request;
@@ -178,7 +177,7 @@ export function useFileOperations({
           const name = namesByPath.get(src) ?? src.split(/[\\/]/).pop() ?? src;
           const dst = joinPath([dstParent, name], sep);
           // isAncestor guard: prevent move/copy into a descendant of the source
-          // (path-traversal / self-nest guard — T-27-04).
+          // (path-traversal / self-nest guard).
           if (isAncestor(src, dstParent)) {
             toast.error(t("panel.cannotMoveIntoSelf"));
             continue;
@@ -263,7 +262,7 @@ export function useFileOperations({
           rootRef.current?.focus();
         })
         .catch((err: unknown) => {
-          // Keep the editor open so the user can correct + retry (Pitfall 3).
+          // Keep the editor open so the user can correct + retry.
           toast.error(mapFilesErrorToMessage(err, t));
         });
     },

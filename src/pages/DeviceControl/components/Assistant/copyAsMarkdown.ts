@@ -3,16 +3,16 @@ import type { Row, ToolRow } from "./transcriptReducer";
 /**
  * Serialize a list of transcript rows into a single Markdown string.
  *
- * CHAT-09 contract: operator messages → ">" blockquote; assistant messages →
- * markdown pass-through; tool cards → fenced bash code block with the
- * shell-style command line, status badge, and stdout (and stderr / error if
- * present). Rows are emitted in transcript order separated by a blank line.
+ * Output: operator messages → ">" blockquote; assistant messages → markdown
+ * pass-through; tool cards → fenced bash code block with the shell-style
+ * command line, status badge, and stdout (and stderr / error if present).
+ * Rows are emitted in transcript order separated by a blank line.
  *
  * Pure function: no DOM, no side effects, deterministic for any given Row[].
  *
  * Notes:
- *   - ANSI codes have already been stripped by the backend (Phase 19 D-09),
- *     so this serializer does not strip again.
+ *   - ANSI codes have already been stripped by the backend, so this
+ *     serializer does not strip again.
  *   - The streaming caret element from AssistantMessage is purely visual and
  *     never lands in `row.markdown`; the serializer does not need to filter it.
  *   - Tool args are joined as space-delimited strings rather than rendered as

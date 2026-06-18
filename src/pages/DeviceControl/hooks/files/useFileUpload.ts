@@ -7,8 +7,8 @@ import type { TransferQueue } from "src/pages/DeviceControl/services/transfer/Tr
 import { detectSeparator, joinPath } from "src/pages/DeviceControl/components/FileManager/utils/pathUtils";
 
 /**
- * 100 MiB upload-warning threshold (TRANSFER-06). The CONTEXT-locked check is
- * binary MiB; the dialog displays decimal MB for user-facing copy.
+ * 100 MiB upload-warning threshold. The check is binary MiB; the dialog
+ * displays decimal MB for user-facing copy.
  */
 const LARGE_FILE_THRESHOLD = 100 * 1024 * 1024;
 
@@ -44,13 +44,12 @@ export interface UseFileUploadReturn {
  * the `handleUploadFiles` sequential batch loop. The hook's public surface is
  * only `handleUploadFiles`; the internal helpers are not returned.
  *
- * Design invariants (D-05):
+ * Design invariants:
  *   - The hook receives `requestLargeUploadApproval`/`requestConflictDecision`
  *     as injected callbacks; it does NOT own resolver refs.
- *   - The >100 MiB upload-warning guard (LARGE_FILE_THRESHOLD) is preserved
- *     verbatim (T-27-03).
- *   - The NAME_CONFLICT pause/resume with `applyToAll`/`rememberedMode`
- *     semantics are preserved exactly (T-27-03, D-05).
+ *   - The >100 MiB upload-warning guard uses LARGE_FILE_THRESHOLD.
+ *   - NAME_CONFLICT pauses the batch, prompts once, then resumes with
+ *     `applyToAll`/`rememberedMode` carrying the choice forward.
  */
 export function useFileUpload({
   queue,

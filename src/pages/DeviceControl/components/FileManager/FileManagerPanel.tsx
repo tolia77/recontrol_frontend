@@ -55,22 +55,18 @@ interface FileManagerPanelProps {
 }
 
 /**
- * Smart container for the file-manager UI (Plan 27-03 / D-01 / D-02).
+ * Smart container for the file-manager UI.
  *
  * Owns:
  *   - `useReducer(fileManagerUiReducer)` — all dialog/prompt/editing/menu/flow
- *     state (D-03). `refreshKey` and `visibleEntries` stay as plain `useState`
- *     (D-04).
+ *     state. `refreshKey` and `visibleEntries` stay as plain `useState`.
  *   - `pendingResolversRef` — Promise resolver stash for the upload/conflict
- *     prompt gates (D-05). Resolvers live here, NOT in reducer state.
+ *     prompt gates. Resolvers live here, NOT in reducer state.
  *   - Four `hooks/files/` hooks: `useFileUpload`, `useFileDownload`,
- *     `useFileDragDrop`, `useFileOperations` (D-06).
- *   - Context-menu item assembly (D-07).
+ *     `useFileDragDrop`, `useFileOperations`.
+ *   - Context-menu item assembly.
  *   - 6 dialogs + `ContextMenu` rendered directly alongside `<FileManagerView/>`
- *     (D-02) — the view renders no dialogs.
- *
- * The `FileManagerPanelProps` interface and the `DeviceControl.tsx` mount are
- * UNTOUCHED (D-01).
+ *     — the view renders no dialogs.
  */
 function FileManagerPanel({
   deviceId: _deviceId,
@@ -88,20 +84,20 @@ function FileManagerPanel({
   const rootsResult = useFilesRoots(channel);
   const toast = useToast();
 
-  // UI-flow reducer (D-03)
+  // UI-flow reducer
   const [uiState, dispatch] = useReducer(
     fileManagerUiReducer,
     initialFileManagerUiState,
   );
 
-  // Browse / listing state (D-04: stays as plain useState)
+  // Browse / listing state
   const [refreshKey, setRefreshKey] = useState(0);
   const [visibleEntries, setVisibleEntries] = useState<FileEntry[]>([]);
 
   const rootRef = useRef<HTMLDivElement>(null);
   const rightColumnRef = useRef<HTMLDivElement>(null);
 
-  // D-05: Promise resolver stash (functions MUST NOT live in reducer)
+  // Promise resolver stash (functions MUST NOT live in reducer)
   const pendingResolversRef = useRef<{
     largeUpload?: (approved: boolean) => void;
     conflict?: (choice: { mode: NameConflictMode; applyToAll: boolean }) => void;
@@ -188,7 +184,7 @@ function FileManagerPanel({
   // Selection
   const selection = useFileManagerSelection(visibleEntries);
 
-  // Four hooks/files/ hooks (D-06)
+  // Four hooks/files/ hooks
   const { handleUploadFiles } = useFileUpload({
     queue,
     filesByItemIdRef,
@@ -287,7 +283,7 @@ function FileManagerPanel({
     dispatch({ type: "OPEN_RENAME", payload: target });
   }, [selection.state.selected]);
 
-  // Context-menu: row right-click (D-07)
+  // Context-menu: row right-click
   const handleRowContextMenu = useCallback(
     (e: MouseEvent, entry: FileEntry) => {
       if (!selection.state.selected.has(entry.path)) {
@@ -553,7 +549,7 @@ function FileManagerPanel({
     return Array.from(out);
   }, [state.currentPath, uiState.picker, selection.state.selected]);
 
-  // Download warning decision handlers (D-05)
+  // Download warning decision handlers
   const handleWarningConfirm = useCallback(() => {
     dispatch({ type: "CLOSE_LARGE_UPLOAD_WARN" });
     pendingResolversRef.current.largeUpload?.(true);
@@ -599,7 +595,7 @@ function FileManagerPanel({
       onKeyDown={keyboard.onKeyDown}
       className="bg-surface text-foreground flex h-full w-full outline-none"
     >
-      {/* Browsing chrome — presentational view (D-01 / D-08) */}
+      {/* Browsing chrome — presentational view */}
       <FileManagerView
         channel={channel}
         roots={rootsResult}
@@ -650,9 +646,9 @@ function FileManagerPanel({
         onRowKebabClick={handleRowKebabClick}
       />
 
-      {/* 6 dialogs + ContextMenu rendered directly in the container (D-02) */}
+      {/* 6 dialogs + ContextMenu rendered directly in the container */}
       {/* On mobile, portal the ContextMenu to document.body so it escapes the
-          bottom sheet's transition-transform stacking context (RESEARCH Pitfall 5). */}
+          bottom sheet's transition-transform stacking context. */}
       {isMobile
         ? createPortal(
             <ContextMenu state={uiState.contextMenu} onClose={handleContextMenuClose} />,

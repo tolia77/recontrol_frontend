@@ -161,7 +161,7 @@ describe("MassDeleteConfirmModal", () => {
     await i18next.changeLanguage("uk");
     render(<MassDeleteConfirmModal {...defaultProps()} />);
     const body = screen.getByTestId("mass-delete-body");
-    // UK body must contain the literal latin string DELETE (D-22 mandate)
+    // UK body must contain the literal latin string DELETE
     expect(body.textContent).toContain("DELETE");
     const input = screen.getByTestId("mass-delete-input");
     typeInto(input, "Видалити");
@@ -176,7 +176,7 @@ describe("MassDeleteConfirmModal", () => {
 
   it("renders exactly one dialog boundary (the Modal shell, not the inner wrapper)", () => {
     render(<MassDeleteConfirmModal {...defaultProps()} />);
-    // WR-04: the inner wrapper must NOT carry role="dialog" — only the Modal shell should.
+    // The inner wrapper must NOT carry role="dialog" — only the Modal shell should.
     const inner = screen.getByTestId("mass-delete-modal");
     expect(inner.getAttribute("role")).toBeNull();
     expect(inner.getAttribute("aria-modal")).toBeNull();

@@ -22,12 +22,11 @@ export interface UseFileDragDropOptions {
  * The hook does NOT create the ref — it attaches listeners to the element
  * the container already owns (analog: useFileManagerSelection).
  *
- * Design invariants (D-07):
- *   - The 63-line drag-depth block is owned here (FILES-02 named target).
+ * Design invariants:
  *   - `dragDepthRef` counts dragenter/dragleave so internal panel boundaries
- *     do NOT flicker the overlay (Pitfall 6).
+ *     do NOT flicker the overlay.
  *   - Folder detection filters `kind === "file"` BEFORE `webkitGetAsEntry`,
- *     rejecting directories with t("panel.folderUploadUnsupported") (Pitfall 5).
+ *     rejecting directories with t("panel.folderUploadUnsupported").
  *   - `hasFiles()` gates on `dataTransfer.types` includes "Files".
  *   - On drop with no currentPath, toasts t("panel.navigateToFolderFirst").
  */
@@ -72,8 +71,8 @@ export function useFileDragDrop({
         toast.info(t("panel.navigateToFolderFirst"));
         return;
       }
-      // Folder detection (Pitfall 5: webkitGetAsEntry returns null for non-
-      // file items, so filter kind === 'file' BEFORE calling it).
+      // Folder detection: webkitGetAsEntry returns null for non-file items,
+      // so filter kind === 'file' BEFORE calling it.
       const items = Array.from(e.dataTransfer?.items ?? []);
       const entries = items
         .filter((i) => i.kind === "file")

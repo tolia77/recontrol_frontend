@@ -1,4 +1,4 @@
-// scenariosReducer vitest (Phase 22 Plan 06 Task 3).
+// scenariosReducer vitest.
 //
 // Coverage:
 //   - mapStopReasonToStatus: all eight terminal reasons + unknown → 'error'
@@ -102,7 +102,7 @@ describe("segment_set", () => {
     expect(next).toBe(s);
   });
 
-  it('accepts the "ai" segment (Phase 23 widening)', () => {
+  it('accepts the "ai" segment', () => {
     let s: ScenariosState = initialScenariosState;
     s = scenariosReducer(s, { type: "segment_set", segment: "ai" });
     expect(s.segment).toBe("ai");

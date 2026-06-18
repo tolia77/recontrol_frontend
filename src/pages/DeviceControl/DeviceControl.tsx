@@ -36,7 +36,7 @@ import { useTranslation } from "react-i18next";
 import { useFileManagerState } from "./hooks/state/useFileManagerState";
 import { useTransferQueue } from "./hooks/state/useTransferQueue";
 import FileManagerPanel from "./components/FileManager/FileManagerPanel";
-// S-02c: AssistantPanel lazy-loaded — mermaid/streamdown only downloaded when AI panel opens
+// AssistantPanel lazy-loaded — mermaid/streamdown only downloaded when AI panel opens
 const AssistantPanel = lazy(() => import("./components/Assistant/AssistantPanel"));
 import ScenariosPanel from "./components/Scenarios/ScenariosPanel";
 import { TransferQueue } from "./services/transfer/TransferQueue";
@@ -110,7 +110,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
     ((command: string, payload: Record<string, unknown>) => void) | null
   >(null);
 
-  // Wave C: socket hook — the lynchpin extraction (D-04/D-05/D-06/D-07)
+  // ActionCable consumer + the device command/signaling socket.
   const { consumer } = useCableConsumer(wsUrl, deviceId);
   const deviceSocket = useDeviceSocket(consumer, {
     onSignaling: useCallback(
@@ -146,13 +146,13 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
   const { connected } = deviceSocket;
 
   // Assistant conversation lives at page level, NOT inside AssistantPanel.
-  // The panel unmounts on every right-pane switch (D-01 mutex); if the
-  // transcript reducer and the AssistantChannel subscription lived there, a
-  // pane switch would wipe the visible chat AND tear down the server-side
-  // channel instance that owns the conversation history (2026-06-05 design:
-  // context lives for the subscription lifetime). Lifting both here scopes
-  // the conversation to the device-control session — it clears on leaving
-  // the page (CHAT-11), not on opening the file manager.
+  // The panel unmounts on every right-pane switch (the right pane is a mutex);
+  // if the transcript reducer and the AssistantChannel subscription lived there,
+  // a pane switch would wipe the visible chat AND tear down the server-side
+  // channel instance that owns the conversation history (the backend ties
+  // context to the subscription lifetime). Lifting both here scopes the
+  // conversation to the device-control session — it clears on leaving the
+  // page, not on opening the file manager.
   const [assistantState, dispatchAssistantTranscript] = useReducer(
     transcriptReducer,
     initialTranscriptState,
@@ -197,7 +197,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
     handleSignalingMessage,
     connectionState,
     hasReceivedFrame,
-    // DC-RS-01: ref instead of state — stats-channel ticks no longer re-render root
+    // ref instead of state — stats-channel ticks no longer re-render root
     desktopStatsRef,
     filesClientRef,
     filesDataRef,
@@ -221,10 +221,9 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
     desktopStatsRef,
   );
 
-  // File manager panel (Phase 10) -- Plan 11-04 threads filesDataRef so the
-  // upload runner has a live ref to the binary channel; Plan 11-05 also
-  // threads filesDataChannelRef so the download runner can reach the chunk
-  // router wrapper (registerDownload / unregisterDownload).
+  // File manager panel. filesDataRef gives the upload runner a live ref to the
+  // binary channel; filesDataChannelRef lets the download runner reach the
+  // chunk router wrapper (registerDownload / unregisterDownload).
   const filesChannel = useFilesChannel(
     filesClientRef,
     connectionState,
@@ -233,12 +232,10 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
     filesCtlOpen,
   );
 
-  // Phase 14: clipboard sync hook. Lives at DeviceControl mount level so isPaused
-  // survives WebRTC reconnects within this session (POLICY-05). Phase 16 will mount
-  // the pill UI and wire togglePause to it; Phase 14 leaves the return value unused
-  // by the JSX (the hook still binds focus/visibility listeners + inbound subscription).
-  // Phase 15 CAP-01 / D-18: detect browser-side clipboard capabilities so
-  // useClipboardSync can advertise them to the desktop on every channel open.
+  // Clipboard sync hook. Lives at DeviceControl mount level so isPaused
+  // survives WebRTC reconnects within this session. clipboardCaps detects
+  // browser-side clipboard capabilities so useClipboardSync can advertise them
+  // to the desktop on every channel open.
   const clipboardCaps = useClipboardCapability();
   const clipboardSync = useClipboardSync({
     pcRef,
@@ -250,8 +247,8 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
     clipboardCtlOpen,
     caps: clipboardCaps,
   });
-  // Phase 16: consume useClipboardSync outputs to drive the pill, the first-sync
-  // banner, and refusal toasts.
+  // Consume useClipboardSync outputs to drive the pill, the first-sync banner,
+  // and refusal toasts.
   const {
     isPaused: clipboardIsPaused,
     togglePause: clipboardTogglePause,
@@ -285,10 +282,9 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
     }
   }, [assistantState.quotaWarningShown, toast, tAssistant]);
 
-  // PILL-06 / D-13: fire a single info toast on the first successful sync of
-  // each browser session per device. sessionStorage namespace mirrors Phase
-  // 10's per-device-id convention. The literal lives in clipboard:toast.firstSync
-  // (en/clipboard.ts, em dash U+2014) — never hardcoded here per Pitfall 1.
+  // Fire a single info toast on the first successful sync of each browser
+  // session per device. The sessionStorage key is namespaced per device id.
+  // The message lives in clipboard:toast.firstSync — never hardcoded here.
   useEffect(() => {
     if (clipboardLastSyncAt == null || clipboardLastSyncAt === 0) return;
     if (!deviceId) return;
@@ -304,9 +300,8 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
     toast.info(tClipboard("toast.firstSync"));
   }, [clipboardLastSyncAt, deviceId, toast, tClipboard]);
 
-  // PILL-07 / D-12: throttle refusal toasts at most one per 2 seconds per
-  // reason category. useRefusalToastThrottle internally suppresses
-  // CAPS_UNKNOWN (RESEARCH OQ 2).
+  // Throttle refusal toasts to at most one per 2 seconds per reason category.
+  // useRefusalToastThrottle internally suppresses CAPS_UNKNOWN.
   useEffect(() => {
     if (!clipboardLastRefusal) return;
     fireRefusalToast(clipboardLastRefusal.reason);
@@ -383,7 +378,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
       const paramDeviceId = params.get("device_id");
       if (!paramDeviceId) return;
       setDeviceId(paramDeviceId);
-      // S-04: prefetch TURN credentials in parallel with device/permissions fetch
+      // Prefetch TURN credentials in parallel with device/permissions fetch
       // so the result is cached before the user clicks "Start Stream". The fetch
       // fires here and the result is stored in the module-level cache in
       // usePeerConnection; createPeerConnection() reuses it with no extra request.
@@ -454,8 +449,8 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
     });
   };
 
-  // REL-12: force a keyframe on orientation change so the decoder recovers
-  // immediately instead of waiting for the next natural IDR frame (Phase 36 deferred UAT).
+  // Force a keyframe on orientation change so the decoder recovers immediately
+  // instead of waiting for the next natural IDR frame.
   // prevIsLandscapeRef guards against firing on initial mount and on unrelated re-renders.
   // The ref is updated BEFORE the connected check so a rotation while disconnected
   // does not queue a stale send when connectionState later becomes "connected".
@@ -522,7 +517,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
           : "";
 
   // Ctrl+Shift+F toggles the file manager panel; Ctrl+Shift+A toggles the
-  // AssistantPanel (Phase 20-06, mirrors the F hotkey). Both share the same
+  // AssistantPanel (mirrors the F hotkey). Both share the same
   // focus-guard: bail if focus is inside the interactive overlay (which owns
   // its own keyboard capture) or inside any editable element. The overlay is
   // identified by the `.overlay` class (MainContent sets it on the video
@@ -547,7 +542,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
         (e.ctrlKey || e.metaKey) &&
         e.shiftKey &&
         (e.key === "A" || e.key === "a");
-      // Phase 21 UI-01: Ctrl+Shift+S toggles the Scenarios panel.
+      // Ctrl+Shift+S toggles the Scenarios panel.
       const isScenariosShortcut =
         (e.ctrlKey || e.metaKey) &&
         e.shiftKey &&
@@ -582,7 +577,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
           fmRightPaneActiveRef.current === "assistant" ? null : "assistant";
         fmSetRightPaneActiveRef.current(next);
       } else {
-        // Phase 21 UI-01: Scenarios mutex toggle.
+        // Scenarios mutex toggle.
         const next =
           fmRightPaneActiveRef.current === "scenarios" ? null : "scenarios";
         fmSetRightPaneActiveRef.current(next);
@@ -592,10 +587,9 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  // Phase 20-06: gate FileManager on rightPaneActive='files' so the D-01
-  // mutex with AssistantPanel works. `fmState.panelOpen` is kept in sync by
-  // useFileManagerState (it tracks rightPaneActive === 'files') for any
-  // legacy consumer that still reads the boolean.
+  // Gate FileManager on rightPaneActive='files' so the mutex with AssistantPanel
+  // works. `fmState.panelOpen` is kept in sync by useFileManagerState (it tracks
+  // rightPaneActive === 'files') for any consumer that still reads the boolean.
   const fileManagerNode =
     fmState.rightPaneActive === "files" ? (
       <FileManagerPanel
@@ -612,12 +606,12 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
       />
     ) : null;
 
-  // Phase 20-06: AssistantPanel rendered when rightPaneActive='assistant'.
+  // AssistantPanel rendered when rightPaneActive='assistant'.
   // The panel is presentational — transcript state and the AssistantChannel
   // subscription are lifted to this component (see assistantState above) so
   // the conversation survives the panel unmounting on pane switches.
   // deviceName falls back to deviceId when the device record has not loaded.
-  // S-02c: AssistantPanel is lazy — Suspense boundary shows nothing while the chunk loads.
+  // AssistantPanel is lazy — Suspense boundary shows nothing while the chunk loads.
   const assistantPanelNode =
     fmState.rightPaneActive === "assistant" ? (
       <Suspense fallback={null}>
@@ -634,9 +628,8 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
       </Suspense>
     ) : null;
 
-  // Phase 21-06: ScenariosPanel scaffold mount. Library + editor land in
-  // Plans 21-09 / 21-10; for this plan we render a placeholder so the
-  // Splitter's right slot has a non-null node when rightPaneActive='scenarios'.
+  // ScenariosPanel mount — occupies the Splitter's right slot when
+  // rightPaneActive='scenarios'.
   const scenariosPanelNode =
     fmState.rightPaneActive === "scenarios" ? (
       <ScenariosPanel
@@ -648,9 +641,9 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
       />
     ) : null;
 
-  // Diagnostic log export (phase 42.1, D-07): always-available floating trigger
-  // that dumps the frontendLogger ring buffer to a JSONL download. Positioned
-  // bottom-left to stay clear of the mobile GestureToolbar FAB cluster (bottom-right).
+  // Diagnostic log export: always-available floating trigger that dumps the
+  // frontendLogger ring buffer to a JSONL download. Positioned bottom-left to
+  // stay clear of the mobile GestureToolbar FAB cluster (bottom-right).
   const downloadLogsButton = (
     <button
       type="button"
@@ -671,9 +664,9 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
     />
   ) : null;
 
-  // Mobile render path (DCTL-01): full-width stream + GestureToolbar FAB + BottomSheet.
+  // Mobile render path: full-width stream + GestureToolbar FAB + BottomSheet.
   // CRITICAL: <video> lives only inside MainContent's single stream path; no <video>
-  // is added here. Branch strictly on isMobile; no md:/lg:/touch-screen: utilities (S5).
+  // is added here. Branch strictly on isMobile; no md:/lg:/touch-screen: utilities.
   if (isMobile) {
     return (
       <div className="command-websocket flex h-dvh w-full flex-col bg-[#0a0d18] font-sans antialiased">
@@ -720,7 +713,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
           deviceName={deviceName}
           canUseKeyboard={canUseKeyboard}
         />
-        {/* Always-mounted sheet — never unmounts (DCTL-02, T-36-08) */}
+        {/* Always-mounted sheet — never unmounts */}
         <DeviceControlBottomSheet
           open={fmState.rightPaneActive !== null}
           onClose={() => { fmSetRightPaneActive(null); setAssistantForceFullHeight(false); }}

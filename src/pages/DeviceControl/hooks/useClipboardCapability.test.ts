@@ -60,7 +60,7 @@ describe("useClipboardCapability (underlying detectCapability)", () => {
     });
   });
 
-  it("does not call navigator.permissions.query (DEGRADE-03 byproduct: function does not touch permissions API)", () => {
+  it("does not call navigator.permissions.query (function does not touch the permissions API)", () => {
     let called = false;
     const fakeNav = {
       clipboard: { readText: async () => "", writeText: async () => {} },

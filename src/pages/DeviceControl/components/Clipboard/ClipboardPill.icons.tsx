@@ -6,9 +6,8 @@ import type { IconProps } from "src/pages/DeviceControl/types";
  * Tailwind class which drives the SVG stroke. Mirrors the FileManager icons
  * pattern (recontrol_frontend/src/pages/DeviceControl/components/FileManager/icons.tsx).
  *
- * Per Phase 16 D-06, the `connected-idle` and `pulsing` states render a plain
- * white dot (no icon) — the consumer (ClipboardPill.tsx, plan 16-03) draws
- * the dot inline.
+ * The `connected-idle` and `pulsing` states render a plain white dot (no
+ * icon) — the consumer (ClipboardPill.tsx) draws the dot inline.
  */
 
 export const PauseIcon: React.FC<IconProps> = ({ className = "w-4 h-4" }) => (

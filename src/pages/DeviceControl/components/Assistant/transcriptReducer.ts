@@ -1,37 +1,35 @@
 import type { AssistantBroadcast } from "src/pages/DeviceControl/hooks/realtime/useAssistantChannel";
 
 /**
- * Transcript reducer (Plan 20-07).
+ * Transcript reducer.
  *
  * Pure state machine that consumes the six wire broadcast types delivered by
  * `useAssistantChannel` (plus the synthetic `connection_lost` /
  * `stream_out_of_order` error events the hook fabricates) and two synthetic
- * actions: `submit_prompt` dispatched by the InputBox in Plan 20-09, and
- * `reset` dispatched by the New chat button (clears the transcript; backend
- * history is cleared separately via the reset_conversation channel action).
+ * actions: `submit_prompt` dispatched by the InputBox, and `reset` dispatched
+ * by the New chat button (clears the transcript; backend history is cleared
+ * separately via the reset_conversation channel action).
  *
- * Invariants (cross-reference 20-CONTEXT / 20-RESEARCH):
+ * Invariants:
  *   - Pure function: no side effects, no setTimeout, no Date.now() in
  *     correlation logic. Time stamps used in row metadata are derived from
  *     Date.now() at action-receive time; this is acceptable because the
  *     reducer remains deterministic for any given (state, action) pair (the
  *     timestamp does not influence row identity or ordering).
- *   - Tool rows key on `tool_call_id` (D-05 / D-11). The same tool_call_id
- *     surfaces in `requires_confirmation` and the eventual `tool_call_start`,
- *     so the row mutates in place rather than being duplicated.
+ *   - Tool rows key on `tool_call_id`. The same tool_call_id surfaces in
+ *     `requires_confirmation` and the eventual `tool_call_start`, so the row
+ *     mutates in place rather than being duplicated.
  *   - `stepCount` increments ONLY on `tool_call_start` (NOT on
- *     `requires_confirmation`) — RESEARCH §Pitfall 5.
+ *     `requires_confirmation`).
  *   - `stepCount` resets to 0 on `submit_prompt`.
- *   - First `done` event wins; subsequent `done` events are idempotent
- *     (RESEARCH §Pitfall 6).
+ *   - First `done` event wins; subsequent `done` events are idempotent.
  *   - Broadcasts whose `session_token` mismatches the current session are
- *     dropped silently (STREAM-04). Synthetic error events that the hook
- *     fabricates carry `session_token: ''`; those bypass the filter so the
- *     reducer can transition to the error state on socket close.
- *   - `denied_by_operator` results transition the row to `'denied'` state
- *     (Phase 19 D-08); the agent loop continues.
- *   - Unknown / forward-compat broadcast types are ignored silently
- *     (STREAM-03).
+ *     dropped silently. Synthetic error events that the hook fabricates carry
+ *     `session_token: ''`; those bypass the filter so the reducer can
+ *     transition to the error state on socket close.
+ *   - `denied_by_operator` results transition the row to `'denied'` state;
+ *     the agent loop continues.
+ *   - Unknown / forward-compat broadcast types are ignored silently.
  */
 
 export type AssistantMsgRow = {
@@ -218,8 +216,8 @@ export function transcriptReducer(
     case "broadcast": {
       const msg = action.broadcast;
 
-      // STREAM-04: drop broadcasts whose session_token mismatches the
-      // current session. Synthetic hook events bypass this filter.
+      // Drop broadcasts whose session_token mismatches the current session.
+      // Synthetic hook events bypass this filter.
       if (
         !isSyntheticErrorEvent(msg) &&
         state.sessionToken !== null &&
@@ -255,7 +253,7 @@ export function transcriptReducer(
         }
 
         case "requires_confirmation": {
-          // D-11: requires_confirmation carries tool_call_id; rows key on it
+          // requires_confirmation carries tool_call_id; rows key on it
           // directly so an earlier `tool_call_start` for the same call shares
           // this row. AgentRunner emits tool_call_start before invoking the
           // tool (whose `await_confirmation` then fires this broadcast), so a
@@ -307,7 +305,7 @@ export function transcriptReducer(
           );
           if (existingIdx >= 0) {
             // Operator-allowed confirmation: existing row transitions
-            // awaiting_confirmation → running. (D-05 / D-11.)
+            // awaiting_confirmation → running.
             const rows = state.rows.slice();
             const existing = rows[existingIdx] as ToolRow;
             rows[existingIdx] = {
@@ -413,7 +411,7 @@ export function transcriptReducer(
         }
 
         default:
-          // Forward-compat (STREAM-03): unknown broadcast types are ignored.
+          // Forward-compat: unknown broadcast types are ignored.
           return state;
       }
     }

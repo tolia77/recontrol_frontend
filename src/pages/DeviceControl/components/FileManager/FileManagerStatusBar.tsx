@@ -3,7 +3,6 @@ import { formatBytes } from "./utils/formatters";
 
 interface FileManagerStatusBarProps {
   totalCount: number;
-  /** In 10-02 selectionCount is always 0; plan 10-03 wires it for real. */
   selectionCount: number;
   selectionSize: number;
 }

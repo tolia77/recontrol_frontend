@@ -6,11 +6,12 @@ const LANDSCAPE_QUERY = "(orientation: landscape)";
  * Returns `true` when the viewport is in landscape orientation.
  *
  * Driven off `matchMedia('(orientation: landscape)')` — NOT Tailwind
- * `md:`/`lg:`/`touch-screen:` breakpoints (those desync in landscape on phones;
- * see MEMORY: landscape-md-breakpoint-desync and Phase 35 35-06).
+ * `md:`/`lg:`/`touch-screen:` width breakpoints, which desync from true
+ * orientation on landscape phones (a narrow landscape phone can stay below the
+ * `md:` width and report the wrong layout).
  *
  * Used by DeviceControlBottomSheet to switch between half-height (portrait)
- * and full-screen (landscape) — D-05.
+ * and full-screen (landscape).
  */
 export function useOrientation(): { isLandscape: boolean } {
   const [isLandscape, setIsLandscape] = useState(

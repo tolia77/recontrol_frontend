@@ -8,7 +8,7 @@
  *
  * Security contract: CALLERS MUST NOT pass clipboard contents, terminal I/O,
  * file contents, or auth tokens in `data`. The logger is a neutral sink; redaction
- * is the caller's responsibility (enforced at instrumentation call sites, plan 42.1-06).
+ * is the caller's responsibility (enforced at instrumentation call sites).
  *
  * No external dependencies — all APIs are browser built-ins.
  */
@@ -16,7 +16,7 @@
 export interface LogEntry {
   /** performance.now() - sessionOrigin (monotonic ms since page load) */
   ts: number;
-  /** Date.now() at entry creation (UTC epoch ms — cross-machine anchor, D-08) */
+  /** Date.now() at entry creation (UTC epoch ms — cross-machine anchor) */
   wallMs: number;
   level: 'timing' | 'info' | 'warn' | 'error';
   /** Area / subsystem tag: 'webrtc' | 'command' | 'ui' | 'terminal' | 'clipboard' | 'files' | ... */
@@ -119,8 +119,8 @@ class FrontendLogger {
 
 export const frontendLogger = new FrontendLogger();
 
-// Expose on window so the diagnostic operator can run `frontendLogger.download()`
-// directly from the DevTools console during a streaming session (D-07).
+// Expose on window so an operator can run `frontendLogger.download()`
+// directly from the DevTools console during a streaming session.
 if (typeof window !== "undefined") {
   (window as Window & { frontendLogger?: FrontendLogger }).frontendLogger = frontendLogger;
 }

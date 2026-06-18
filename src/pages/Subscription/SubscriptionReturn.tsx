@@ -5,7 +5,7 @@ import { Card, Button, LoadingState } from "src/components/ui";
 import { subscriptionService } from "src/services/backend/subscriptionService";
 
 const POLL_INTERVAL = 2000;  // ms
-const POLL_TIMEOUT = 45000;  // ms (~45 s, D-07)
+const POLL_TIMEOUT = 45000;  // ms (~45 s)
 
 type Phase = "polling" | "success" | "timeout" | "abandoned";
 
@@ -41,7 +41,7 @@ function SubscriptionReturn() {
           return;
         }
 
-        // Check timeout (D-07)
+        // Check timeout
         if (Date.now() - startRef.current >= POLL_TIMEOUT) {
           window.clearInterval(handle);
           setPhase("timeout");

@@ -3,9 +3,9 @@ import type { CableConsumerLike } from "./useCableConsumer";
 import { useOrderedBroadcast } from "./useOrderedBroadcast";
 
 /**
- * Inner broadcast envelope shape for the ScenarioRunChannel (Phase 22 RUN-08).
+ * Inner broadcast envelope shape for the ScenarioRunChannel.
  *
- * Reuses three v1.4 envelope types verbatim from `AssistantBroadcast`
+ * Reuses three envelope types verbatim from `AssistantBroadcast`
  * (`tool_call_start` / `tool_call_result` / `done`) and adds two new types
  * specific to the scenario runner: `run_started` (emitted once per run before
  * any step dispatch) and `scenario_step_skipped` (emitted per step skipped
@@ -111,12 +111,11 @@ let subscriptionNonce = 0;
 /**
  * Subscribe to the Rails ScenarioRunChannel via the shared ActionCable consumer.
  *
- * Options-object signature per D-11. Composes useOrderedBroadcast for the
- * seq-reorder buffer per D-12 (resetMarker "run_started", allowSeqlessError
- * true — seqless error envelopes are forwarded directly before seq-routing).
+ * Composes useOrderedBroadcast for the seq-reorder buffer (resetMarker
+ * "run_started", allowSeqlessError true — seqless error envelopes are
+ * forwarded directly before seq-routing).
  *
- * Wire-format invariants (Phase 22; mirror of useAssistantChannel — Pitfall 2
- * and Pitfall 6 from 22-RESEARCH.md):
+ * Wire-format invariants (mirror of useAssistantChannel):
  *  - `seq` is monotonically increasing per run; gaps are reordered with a
  *    500ms gap-close timeout. After the timeout fires (and the connection is still
  *    open) the hook synthesizes `{type:'error', source:'stream_out_of_order'}`
@@ -133,7 +132,7 @@ let subscriptionNonce = 0;
  *    `{type:'error', source:'connection_lost', message:'connection_lost'}` so
  *    the consumer can transition to the error state without waiting for the
  *    backend's ensure-block terminator. (beforeunload tab-close handling is
- *    the consuming component's responsibility — Pitfall 6.)
+ *    the consuming component's responsibility.)
  *  - The subscription identifier carries a per-mount `nonce` so remounts never
  *    reuse an identifier (a late unsubscribe from a previous mount would
  *    otherwise destroy the live subscription server-side).
@@ -145,8 +144,8 @@ let subscriptionNonce = 0;
 export function useScenarioRunChannel(
   { consumer, onBroadcast }: UseScenarioRunChannelOptions,
 ): UseScenarioRunChannelReturn {
-  // Shared seq-ordered reorder buffer (D-12). resetMarker "run_started" resets
-  // the buffer between scenario runs. allowSeqlessError true — seqless `error`
+  // Shared seq-ordered reorder buffer. resetMarker "run_started" resets the
+  // buffer between scenario runs. allowSeqlessError true — seqless `error`
   // envelopes (single-in-flight run_in_progress rejection) forwarded directly.
   // ScenarioRun gap-close / connection_lost errors include a `message` field
   // (a twin difference from AssistantChannel which omits it).

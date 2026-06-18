@@ -58,7 +58,7 @@ function Modal({
   const cardRef = useRef<HTMLDivElement>(null);
   const prevFocusRef = useRef<Element | null>(null);
 
-  // Mobile bottom-sheet class overrides (D-08)
+  // Mobile bottom-sheet class overrides
   const mobileWrapperClasses = "flex items-end justify-center";
   const mobileCardClasses =
     "bg-surface border-t border-border rounded-t-lg shadow-modal w-full max-h-[90dvh] overflow-y-auto px-4 pt-4 pb-[calc(env(safe-area-inset-bottom)_+_1rem)] animate-slide-up";

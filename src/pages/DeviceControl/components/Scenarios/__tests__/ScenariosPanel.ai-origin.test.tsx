@@ -1,5 +1,5 @@
 /**
- * ScenariosPanel.ai-origin vitest — Phase 23 / Plan 23-11 Task 2 (AI-10).
+ * ScenariosPanel.ai-origin vitest.
  *
  * Verifies the OpenRouter `usage.total_tokens` round-trip:
  *   - DraftResponse carries usage.total_tokens at draft-time
@@ -9,7 +9,7 @@
  *     `scenarios.created_via_ai_token_count` and copies onto
  *     `scenario_runs.total_ai_gen_tokens` at run start)
  *
- * The mock fabric mirrors ScenariosPanel.ai.test.tsx (Plan 23-09): the
+ * The mock fabric mirrors ScenariosPanel.ai.test.tsx: the
  * `useDraftGeneration` hook is mocked so we can flip `hookState` to a
  * `{ kind: 'success', draft: DraftResponse }` and re-render. The segment's
  * own success-branch effect fires `onDraftReady(draft.draft, total_tokens)`
@@ -283,9 +283,9 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-// Tests (Plan 23-11 / AI-10)
+// Tests
 
-describe("ScenariosPanel — AI-10 token persistence", () => {
+describe("ScenariosPanel — token persistence", () => {
   it("[Accept and save] forwards usage.total_tokens as created_via_ai_token_count", async () => {
     sessionStorage.setItem("scenarios_panel_segment", "ai");
     mockedCreate.mockResolvedValue({

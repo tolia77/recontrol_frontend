@@ -1,27 +1,22 @@
 /**
- * ScenariosAISegment — Phase 23 / Plan 23-08 Task 2.
- *
- * The AI segment body inside ScenariosPanel (Plan 23-09 mounts it). Renders:
- *   - prompt textarea (maxLength=1000 per AI-SPEC Context Window Strategy)
+ * ScenariosAISegment — the AI segment body inside ScenariosPanel. Renders:
+ *   - prompt textarea (maxLength=1000)
  *   - [Generate Draft] / [⏹ Cancel generation] CTA with elapsed counter
  *   - quota indicator card (drafts + tokens; turns amber within 10% of cap)
- *   - ephemeral "Last: <prompt>" display (component state ONLY — D-04)
- *   - inline error card with per-code locale lookup (D-06)
+ *   - ephemeral "Last: <prompt>" display (component state only — never persisted)
+ *   - inline error card with per-code locale lookup
  *
  * State / lifecycle is delegated to useDraftGeneration; this component is the
  * presentational shell. On state.kind === 'success' it invokes onDraftReady
  * with the inner draft payload so the parent (ScenariosPanel) can open the
  * DraftReviewModal.
  *
- * Threat-model nots:
- *   - T-23-31 (lastPrompt persistence): lastPrompt lives only in component
- *     state. There are NO setItem calls into sessionStorage or localStorage —
- *     verified by the acceptance grep `sessionStorage|localStorage == 0`.
- *   - T-23-30 (paste-bomb): textarea maxLength={1000} clamps at the React
- *     layer; the backend has no further prompt cap (accepted trade-off).
- *   - T-23-32 (spoofed error code): the error code feeds into a locale-key
- *     lookup only, never into control flow.
- *   - T-23-33 (stale in-flight): handled inside useDraftGeneration via
+ * Security notes:
+ *   - lastPrompt lives only in component state — no sessionStorage/localStorage.
+ *   - textarea maxLength={1000} clamps at the React layer; the backend has no
+ *     further prompt cap (accepted trade-off).
+ *   - the error code feeds a locale-key lookup only, never control flow.
+ *   - stale in-flight requests are handled in useDraftGeneration via
  *     AbortController + signal.aborted guards on resolve/reject.
  */
 
@@ -46,11 +41,10 @@ export interface ScenariosAISegmentProps {
    * envelope — parent doesn't need the quota piggyback, which the segment
    * keeps internally for its quota indicator).
    *
-   * Phase 23 / Plan 23-11 (AI-10): second arg `totalTokens` carries the
-   * OpenRouter `usage.total_tokens` for this call. Parent forwards it on
-   * [Accept and save] as `created_via_ai_token_count`. May be 0 if the backend
-   * could not parse the usage block (graceful — backend nullifies bogus
-   * values, frontend simply stamps whatever it received).
+   * Second arg `totalTokens` carries the OpenRouter `usage.total_tokens` for
+   * this call. Parent forwards it on [Accept and save] as
+   * `created_via_ai_token_count`. May be 0 if the backend could not parse the
+   * usage block (frontend simply stamps whatever it received).
    */
   onDraftReady: (draft: DraftResponse["draft"], totalTokens: number) => void;
   /**
@@ -61,23 +55,22 @@ export interface ScenariosAISegmentProps {
    */
   initialQuota?: DraftQuota;
   /**
-   * Phase 23 / Plan 23-09: parent observer for prompt submissions. The
-   * panel records the most recent prompt so [Regenerate Draft] can re-send
-   * it verbatim (D-03). The segment never reads back from the parent;
-   * this is a one-way notify.
+   * Parent observer for prompt submissions. The panel records the most recent
+   * prompt so [Regenerate Draft] can re-send it verbatim. The segment never
+   * reads back from the parent; this is a one-way notify.
    */
   onPromptSubmitted?: (prompt: string) => void;
   /**
-   * Phase 23 / Plan 23-09: monotonically-increasing token bumped by the
-   * parent when [Regenerate Draft] fires. The segment effect watches this
-   * value and, on each change after first mount, re-invokes generate()
-   * with `regeneratePrompt`. Same AbortController lifecycle as a manual
-   * generate (prior in-flight is cancelled).
+   * Monotonically-increasing token bumped by the parent when [Regenerate Draft]
+   * fires. The segment effect watches this value and, on each change after
+   * first mount, re-invokes generate() with `regeneratePrompt`. Same
+   * AbortController lifecycle as a manual generate (prior in-flight is
+   * cancelled).
    */
   regenerateToken?: number;
   /**
-   * Phase 23 / Plan 23-09: prompt to re-submit when `regenerateToken`
-   * changes. Typically the parent's `lastAIPrompt` state.
+   * Prompt to re-submit when `regenerateToken` changes. Typically the parent's
+   * `lastAIPrompt` state.
    */
   regeneratePrompt?: string | null;
   /**
@@ -94,9 +87,9 @@ const PROMPT_MAX_LENGTH = 1000;
 const LAST_PROMPT_TRUNCATE = 60;
 
 /**
- * Resolve `state.code` → locale key. Per D-06 every code maps to a localized
- * card body; unknown codes fall back to network copy. This is a pure lookup
- * table — never used as a control-flow gate (T-23-32).
+ * Resolve `state.code` → locale key. Every code maps to a localized card body;
+ * unknown codes fall back to network copy. This is a pure lookup table — never
+ * used as a control-flow gate.
  */
 function errorCodeToLocaleKey(code: string): string {
   switch (code) {
@@ -180,10 +173,9 @@ function ScenariosAISegment({
     return () => window.clearInterval(handle);
   }, [state]);
 
-  // Success-branch effect: hand the draft to the parent, refresh quota from
-  // the piggyback (per D-04 Quota indicator data source), and stamp lastPrompt.
-  // Phase 23 / Plan 23-11 (AI-10): forward `usage.total_tokens` so the panel
-  // can persist it as `created_via_ai_token_count` on [Accept and save].
+  // Success-branch effect: hand the draft to the parent, refresh quota from the
+  // piggybacked snapshot, and forward `usage.total_tokens` so the panel can
+  // persist it as `created_via_ai_token_count` on [Accept and save].
   useEffect(() => {
     if (state.kind !== "success") return;
     setQuota(state.draft.quota);
@@ -204,9 +196,9 @@ function ScenariosAISegment({
     setErrorDismissed(false);
     setLastPrompt({ text: prompt, at: Date.now() });
     onPromptSubmitted?.(prompt);
-    // Locale flows through the Accept-Language header from i18n.language at
-    // call-site per D-09. Binary names + args stay canonical English; only
-    // descriptive prose responds to the locale directive.
+    // Locale flows through the Accept-Language header from i18n.language at the
+    // call-site. Binary names + args stay canonical English; only descriptive
+    // prose responds to the locale directive.
     void generate(prompt, i18n.language, platform);
   }, [prompt, generate, onPromptSubmitted, platform]);
 
@@ -218,10 +210,10 @@ function ScenariosAISegment({
     handleGenerate();
   }, [gate.allowed, handleGenerate]);
 
-  // Phase 23 / Plan 23-09: parent-driven regenerate. Watches `regenerateToken`
-  // and re-fires generate(regeneratePrompt) on each bump (skipping the
-  // initial mount value). Uses the hook's existing AbortController lifecycle
-  // so any in-flight request is cancelled.
+  // Parent-driven regenerate. Watches `regenerateToken` and re-fires
+  // generate(regeneratePrompt) on each bump (skipping the initial mount value).
+  // Uses the hook's existing AbortController lifecycle so any in-flight request
+  // is cancelled.
   const lastRegenerateTokenRef = useRef<number | undefined>(regenerateToken);
   useEffect(() => {
     if (regenerateToken === undefined) return;

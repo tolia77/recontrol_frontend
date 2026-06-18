@@ -1,13 +1,13 @@
 /**
- * useDraftGeneration — Phase 23 / Plan 23-08
+ * useDraftGeneration — 5-state machine driving the ScenariosAISegment
+ * prompt → draft round-trip.
  *
- * 5-state machine driving the ScenariosAISegment prompt → draft round-trip.
  * Wraps scenariosService.createDraft with an AbortController lifecycle so the
- * operator can cancel an in-flight request (D-05: client-side abort only; the
- * server may still complete and charge — documented trade-off, surfaced in UI
- * copy as "Cancel generation").
+ * operator can cancel an in-flight request. The abort is client-side only; the
+ * server may still complete and charge (trade-off surfaced in UI copy as
+ * "Cancel generation").
  *
- * State machine (UI-SPEC §State Machine, lines 298-310):
+ * State machine:
  *   idle       → generating (via generate)
  *   generating → success | error | cancelled
  *   success    → idle (via reset)
@@ -37,7 +37,7 @@ import {
 } from "src/services/backend/scenariosService.ts";
 
 /**
- * Discriminated union — exactly 5 kinds per UI-SPEC State Machine table.
+ * Discriminated union — exactly 5 kinds, one per state-machine state above.
  *
  * `generating.startedAt` is the epoch-ms timestamp captured at the moment
  * generate() was invoked; the segment component derives its elapsed counter
@@ -69,8 +69,8 @@ export interface UseDraftGenerationResult {
 /**
  * Extract the backend error code from an axios error shape. Falls back to
  * 'network' when no structured body is present (5xx, transport failure,
- * upstream timeout). Per D-06 the frontend treats the code as a locale-lookup
- * key only — never as a control-flow gate (T-23-32 mitigation).
+ * upstream timeout). The frontend treats the code as a locale-lookup key only
+ * — never as a control-flow gate.
  *
  * Supports both the new envelope error shape (`error: { code, message, details }`)
  * and a plain string for test/legacy compatibility.

@@ -4,21 +4,20 @@ import type { DownloadTransfer } from "src/pages/DeviceControl/services/transfer
 /**
  * Frontend-side binary-channel handler for `files-data`.
  *
- * Phase 11 chunk router: maintains a `Map<transferId, DownloadTransfer>` and
- * dispatches each incoming binary chunk to the matching DownloadTransfer's
- * `onChunk` method. Chunks for unknown transfer ids (e.g. post-cancel race --
- * the desktop's send loop may not have observed the cancel yet) are silently
+ * Chunk router: maintains a `Map<transferId, DownloadTransfer>` and dispatches
+ * each incoming binary chunk to the matching DownloadTransfer's `onChunk`
+ * method. Chunks for unknown transfer ids (e.g. post-cancel race -- the
+ * desktop's send loop may not have observed the cancel yet) are silently
  * dropped. This is normal and load-bearing for the cancel-discard contract.
  *
  * Non-binary (string) messages are rejected with a warning; the channel is
  * binary-only by protocol.
  *
- * Backpressure on this side is handled by the desktop (Recommendation A from
- * 09-SPIKE-FINDINGS): the browser only receives chunks that already passed
- * the desktop's HIGH_WATER / LOW_WATER throttle, so no browser-side
- * bufferedAmount handling is needed for the receive path. The send path
- * (uploads) uses W3C bufferedAmountLowThreshold + bufferedamountlow event in
- * createRunUpload.
+ * Backpressure on the receive path is handled entirely by the desktop: the
+ * browser only receives chunks that already passed the desktop's HIGH_WATER /
+ * LOW_WATER throttle, so no browser-side bufferedAmount handling is needed
+ * here. The send path (uploads) uses W3C bufferedAmountLowThreshold +
+ * bufferedamountlow event in createRunUpload.
  */
 export class FilesDataChannel {
   private readonly dc: RTCDataChannel;
@@ -44,8 +43,8 @@ export class FilesDataChannel {
 
   /**
    * Unregister a DownloadTransfer. Safe to call after cancel/finalize; further
-   * chunks for this id will be silently dropped (Plan 11-02 cancel-race
-   * coverage). Idempotent.
+   * chunks for this id will be silently dropped (cancel-race coverage).
+   * Idempotent.
    */
   unregisterDownload(transferId: number): void {
     this.downloads.delete(transferId);
@@ -72,9 +71,9 @@ export class FilesDataChannel {
 
   /**
    * Detach the message listener and clear the router map. Does not close the
-   * underlying data channel -- per 09-SPIKE-FINDINGS Spike C, frontend-
-   * initiated dc.close() is not observed by the SIPSorcery desktop peer, so
-   * channel lifecycle is driven by pc.close() on the RTCPeerConnection.
+   * underlying data channel -- a frontend-initiated dc.close() is not observed
+   * by the SIPSorcery desktop peer, so channel lifecycle is driven by
+   * pc.close() on the RTCPeerConnection.
    */
   dispose(): void {
     this.dc.removeEventListener("message", this.onMessage);

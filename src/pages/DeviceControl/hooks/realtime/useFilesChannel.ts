@@ -20,23 +20,23 @@ export interface UseFilesChannel {
   status: FilesChannelStatus;
   request: FilesChannelRequest | null;
   /**
-   * Live ref to the binary data channel. Plan 11-04+ runners read this at
-   * invocation time so reconnects pick up the new channel without panel-side
-   * rewiring. May be null while the channel is closed; callers must guard.
+   * Live ref to the binary data channel. Runners read this at invocation time
+   * so reconnects pick up the new channel without panel-side rewiring. May be
+   * null while the channel is closed; callers must guard.
    */
   filesDataRef: UseWebRtcReturn["filesDataRef"];
   /**
-   * Live FilesChannelClient (the files-ctl JSON wrapper). Exposed to Plan
-   * 11-05's runDownload so it can subscribe to server-push events
+   * Live FilesChannelClient (the files-ctl JSON wrapper). Exposed to
+   * runDownload so it can subscribe to server-push events
    * (`files.download.complete`, `files.transfer.error`) for the active
    * transferId. Null while the channel is closed.
    */
   filesClient: FilesChannelClient | null;
   /**
    * Live FilesDataChannel WRAPPER (the binary chunk router; NOT the raw
-   * RTCDataChannel which is on `filesDataRef`). Exposed to Plan 11-05's
-   * runDownload so it can call registerDownload / unregisterDownload.
-   * Null while the channel is closed.
+   * RTCDataChannel which is on `filesDataRef`). Exposed to runDownload so it
+   * can call registerDownload / unregisterDownload. Null while the channel is
+   * closed.
    */
   filesDataChannel: FilesDataChannel | null;
 }
@@ -48,10 +48,9 @@ export interface UseFilesChannel {
  * Derived-status hook: computes files channel status from WebRTC signals.
  * Does NOT subscribe to a raw WebSocket.
  *
- * Channel pattern exception per D-13: positional args from UseWebRtcReturn
- * (NOT options-object). Documented exception because the UseWebRtcReturn
- * surface is the stable contract (D-08) and adding a wrapper object would
- * create churn with zero benefit.
+ * Takes positional args from UseWebRtcReturn (NOT an options-object), because
+ * the UseWebRtcReturn surface is the stable contract and adding a wrapper
+ * object would create churn with zero benefit.
  *
  * Rules:
  * - When `connectionState !== 'connected'` -> status 'closed', request null.

@@ -14,7 +14,7 @@ import FileManagerStatusBar from "./FileManagerStatusBar";
 import TransferQueuePanel from "./TransferQueuePanel";
 import DropZoneOverlay from "./DropZoneOverlay";
 
-// Grouped-prop sub-interfaces (D-08)
+// Grouped-prop sub-interfaces
 
 export interface BrowseProps {
   currentPath: string | null;
@@ -78,13 +78,11 @@ interface FileManagerViewProps {
   onRowKebabClick?: (rect: DOMRect, entry: FileEntry) => void;
 }
 
-// Component (D-01 / D-02)
-//
-// Renders ONLY the browsing chrome:
+// Presentational component. Renders ONLY the browsing chrome:
 //   sidebar / right-column ref div / toolbar / breadcrumb / listing /
 //   status bar / transfer-queue panel / drop-zone overlay.
 //
-// NO dialogs and NO context menu — those stay in the container (D-02).
+// NO dialogs and NO context menu — those stay in the container.
 
 function FileManagerView({
   channel,
@@ -116,7 +114,7 @@ function FileManagerView({
 
   return (
     <>
-      {/* D-13: sidebar suppressed on mobile */}
+      {/* Sidebar suppressed on mobile */}
       {!isMobile && (
         <FileManagerSidebar
           roots={roots.roots}
@@ -185,7 +183,7 @@ function FileManagerView({
           disconnectMessage={transfer.disconnectMessage}
           onDismissDisconnect={transfer.onDismissDisconnect}
         />
-        {/* D-14: drag-drop overlay suppressed on mobile */}
+        {/* Drag-drop overlay suppressed on mobile */}
         {dragActive && !isMobile && <DropZoneOverlay />}
       </div>
     </>

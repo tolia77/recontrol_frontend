@@ -8,12 +8,11 @@ import type {
   PolicyPreviewStep,
 } from "src/services/backend/scenariosService";
 
-// D-22-04 / D-22-05 / D-22-06: center-screen modal that renders the
-// /policy_preview response as a per-step list with shell-like primary line
-// + expandable execve structured detail. Deny verdicts hard-block by removing
-// the [Run all] CTA entirely (POLICY-04). Irreversible-intent steps get a red
-// left-border + amber "Irreversible" badge sourced from the frontend mirror
-// catalog (POLICY-03). The POLICY-06 drift banner stacks below the deny banner.
+// Center-screen modal that renders the /policy_preview response as a per-step
+// list with a shell-like primary line plus expandable structured detail. Deny
+// verdicts hard-block by removing the [Run all] CTA entirely. Irreversible-intent
+// steps get a red left-border + amber "Irreversible" badge sourced from the
+// frontend mirror catalog. The drift banner stacks below the deny banner.
 
 export interface PolicyPreviewModalCommandStep {
   id: string;
@@ -38,11 +37,10 @@ export interface PolicyPreviewModalProps {
   onCancel: () => void;
 }
 
-// D-22-05: cosmetic shell-like reconstruction of (binary, args). Args
-// containing whitespace are wrapped in double quotes; embedded double quotes
-// are backslash-escaped. The runtime dispatch path is execve-only (SAFETY-02)
-// and never consumes this string — it's view-only. Co-located with the modal
-// for testability per Plan 22.07 acceptance criteria.
+// Cosmetic shell-like reconstruction of (binary, args). Args containing
+// whitespace are wrapped in double quotes; embedded double quotes are
+// backslash-escaped. The runtime dispatch path is execve-only and never
+// consumes this string — it's view-only.
 // eslint-disable-next-line react-refresh/only-export-components
 export function formatShellPreview(
   binary: string,
@@ -56,7 +54,7 @@ export function formatShellPreview(
   return tokens.length > 0 ? `${binary} ${tokens.join(" ")}` : binary;
 }
 
-// Per UI-SPEC §PolicyPreviewModal "Per-step row" — verdict badge color tokens.
+// Verdict badge color tokens, one per decision.
 const verdictBadgeClass: Record<"allow" | "needs_confirm" | "deny", string> = {
   allow: "bg-success/10 text-success",
   needs_confirm: "bg-warning/10 text-warning",
@@ -83,8 +81,7 @@ export default function PolicyPreviewModal({
 }: PolicyPreviewModalProps) {
   const { t } = useTranslation("scenarios");
 
-  // Per-step expand state for non-denied rows (denied rows auto-expand via
-  // memoized derivation below — D-22-06).
+  // Per-step expand state for non-denied rows (denied rows auto-expand below).
   const [manuallyExpanded, setManuallyExpanded] = useState<Set<number>>(
     () => new Set(),
   );
@@ -95,8 +92,7 @@ export default function PolicyPreviewModal({
     setManuallyExpanded(new Set());
   }, [response]);
 
-  // ESC dismisses while open (per UI-SPEC §PolicyPreviewModal Layout — keyboard
-  // accessibility default for modal portals).
+  // ESC dismisses while open.
   useEffect(() => {
     if (!open) return undefined;
     const handler = (e: KeyboardEvent): void => {
@@ -197,7 +193,7 @@ export default function PolicyPreviewModal({
             </div>
           )}
 
-          {/* Deny banner — D-22-06 / POLICY-04 */}
+          {/* Deny banner */}
           {hasDeny && (
             <div
               data-testid="policy-preview-deny-banner"
@@ -227,7 +223,7 @@ export default function PolicyPreviewModal({
             </div>
           )}
 
-          {/* Drift banner — POLICY-06 / VERIFY-05 */}
+          {/* Drift banner */}
           {response?.policy_drift && (
             <div
               data-testid="policy-preview-drift-banner"

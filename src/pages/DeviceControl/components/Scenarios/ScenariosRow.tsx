@@ -9,8 +9,8 @@ export interface ScenariosRowProps {
   onDuplicate: () => void;
   onDelete: () => void;
   onRun: () => void;
-  // D-22-08: disables [▶ Run] when the parent ScenariosLibrary knows a run is
-  // already in-flight on this row's pinned device (single-in-flight signal).
+  // Disables [▶ Run] when the parent ScenariosLibrary knows a run is already
+  // in-flight on this row's pinned device (single-in-flight signal).
   runDisabled?: boolean;
   // Hides [▶ Run] entirely. Used by the device-less /scenarios dashboard page,
   // where there is no live device socket to launch a run over.
@@ -41,8 +41,8 @@ export default function ScenariosRow({
   showRun = true,
 }: ScenariosRowProps) {
   const { t } = useTranslation("scenarios");
-  // SHARE-06: owner vs recipient. Recipients get a read-only marker and do NOT
-  // see [Edit] / [Duplicate] / [Delete] (those endpoints would 403 server-side).
+  // Owner vs recipient. Recipients get a read-only marker and do NOT see
+  // [Edit] / [Duplicate] / [Delete] (those endpoints would 403 server-side).
   const isOwner = scenario.user_id === currentUserId;
   const descriptionPreview = (scenario.description || "").slice(0, 80);
   const stepCount = scenario.command_steps?.length ?? 0;
@@ -53,10 +53,10 @@ export default function ScenariosRow({
       className="border-border bg-surface flex items-start gap-2 rounded-md border px-3 py-2"
       data-testid={`scenarios-row-${scenario.id}`}
     >
-      {/* D-22-08: primary [▶ Run] action on left edge in success token. The
-        Button primitive's variant="primary" sets bg-primary; the !bg-success
-        override forces the success token per UI-SPEC §[▶ Run] on library row.
-        Hidden entirely on the device-less /scenarios page (showRun=false). */}
+      {/* Primary [▶ Run] action on left edge in success token. The Button
+        primitive's variant="primary" sets bg-primary; the !bg-success override
+        forces the success token. Hidden entirely on the device-less /scenarios
+        page (showRun=false). */}
       {showRun && (
         <Button
           variant="primary"
@@ -109,9 +109,8 @@ export default function ScenariosRow({
           </span>
         </div>
       </div>
-      {/* D-22-08: P21 right-cluster actions are hidden for recipients (SHARE
-        rules). Recipients see only [▶ Run] + the 'Shared by' chip rendered in
-        the metadata block above. */}
+      {/* Right-cluster actions are hidden for recipients. Recipients see only
+        [▶ Run] + the 'Shared by' chip rendered in the metadata block above. */}
       {isOwner && (
         <div className="flex shrink-0 items-center gap-1">
           <button

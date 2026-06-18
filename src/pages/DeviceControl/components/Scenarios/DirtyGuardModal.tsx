@@ -8,9 +8,10 @@ export interface DirtyGuardModalProps {
   onKeepEditing: () => void;
 }
 
-// D-04: dirty-state confirm modal intercepts Cancel / [← Back to library]
-// when the editor has unsaved changes. suppressEsc + suppressOverlayClick keep
-// the intentional non-dismissable behavior (Pitfall 3 in 25-RESEARCH).
+// Dirty-state confirm modal: intercepts Cancel / [← Back to library] when the
+// editor has unsaved changes. suppressEsc + suppressOverlayClick make it
+// intentionally non-dismissable so changes can't be lost by an accidental
+// Esc/overlay click.
 export default function DirtyGuardModal({
   open,
   onDiscard,

@@ -53,14 +53,14 @@ const MainContent: React.FC<
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const videoContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // --- Mobile gesture engine (Plans 01/02) ---
+  // --- Mobile gesture engine ---
   // cursorRef: threaded to both useVirtualCursor (to mutate style.transform) and
   // VirtualCursorOverlay (to attach the DOM ref). No React state — direct DOM writes.
   const cursorRef = useRef<HTMLDivElement | null>(null);
 
   const cursor = useVirtualCursor({ addAction, disabled });
 
-  // Coordinate accessors for the gesture hook (S2: same wiring as getRealCoordsFromClient)
+  // Coordinate accessors for the gesture hook (same wiring as getRealCoordsFromClient)
   const getRect = useCallback(
     () => videoContainerRef.current?.getBoundingClientRect() ?? null,
     [],
@@ -79,7 +79,7 @@ const MainContent: React.FC<
   });
 
   // Wrapped pointer handlers: on top of touchHandlers, synchronously update
-  // the cursor DOM element (D-08 direct DOM mutation, no re-render latency).
+  // the cursor DOM element via direct DOM mutation (no re-render latency).
   // On first touch reveal the cursor (opacity 0 → 1); on each move update transform.
   const mobilePtrDown = useCallback(
     (e: React.PointerEvent<Element>) => {
@@ -490,25 +490,25 @@ const MainContent: React.FC<
     return null;
   };
 
-  // Phase 20-06 + Phase 21-06: D-01 mutex — at most one of fileManagerNode /
-  // assistantPanelNode / scenariosPanelNode is non-null at any time (enforced
-  // upstream by rightPaneActive in useFileManagerState). Pick whichever is
-  // present so the Splitter's right slot renders the active panel.
+  // Mutex: at most one of fileManagerNode / assistantPanelNode /
+  // scenariosPanelNode is non-null at any time (enforced upstream by
+  // rightPaneActive in useFileManagerState). Pick whichever is present so the
+  // Splitter's right slot renders the active panel.
   const rightNode = fileManagerNode ?? assistantPanelNode ?? scenariosPanelNode;
 
-  // Mobile branch (DCTL-01, RESEARCH Pattern 1A):
+  // Mobile branch:
   // Render the SAME renderStreamContent() output (which contains the ONE <video>
   // node via renderVideoStream) at a stable tree position. The gesture overlay
   // and VirtualCursorOverlay are siblings in the wrapper; the <video> is NEVER
   // duplicated into a second ternary branch.
-  // Desktop stats overlay is NOT surfaced on mobile (D-04).
+  // Desktop stats overlay is NOT surfaced on mobile.
   if (isMobile) {
     return (
       <div className="relative flex h-full w-full flex-col bg-[#0a0d18]">
         {/* Stream content — the single <video> lives here via renderStreamContent */}
         {renderStreamContent()}
         {/* Gesture overlay: only active when stream is live; idle/failed states must
-            remain tappable so "Start stream" and "Retry" CTAs are reachable (36-UI-SPEC §D) */}
+            remain tappable so "Start stream" and "Retry" CTAs are reachable */}
         {connectionState === "connected" && (
           <div
             className="overlay absolute inset-0 z-10 bg-transparent outline-none"

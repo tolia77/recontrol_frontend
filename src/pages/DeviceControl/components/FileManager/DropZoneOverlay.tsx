@@ -9,8 +9,8 @@ import { useTranslation } from "react-i18next";
  * pointer-events:none, the z-40 overlay would swallow drag events and prevent
  * the drop from registering.
  *
- * Plan 11-04 sizes the overlay to the right column (sibling of toolbar /
- * breadcrumb / listing / status / queue panel). The sidebar deliberately stays
+ * The overlay is sized to the right column (sibling of toolbar / breadcrumb /
+ * listing / status / queue panel). The sidebar deliberately stays
  * unobscured so the user can still read the destination context (active root +
  * shared-folders list) while dragging.
  */

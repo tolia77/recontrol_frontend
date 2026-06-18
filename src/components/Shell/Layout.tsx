@@ -41,7 +41,7 @@ function LayoutInner() {
     <div className="flex h-full">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} isMobile={isMobile} />
 
-      {/* Sidebar offset is driven by useMobileDetect (D-02/D-03), NOT the `md:`
+      {/* Sidebar offset is driven by useMobileDetect, NOT the `md:`
           width breakpoint. A landscape phone is wider than 768px yet still on
           the mobile path (no fixed sidebar rendered), so a width-based
           `md:ml-[220px]` would reserve a phantom 220px gap. */}
@@ -103,7 +103,7 @@ function LayoutInner() {
 }
 
 function Layout() {
-  // S-01r: SubscriptionProvider is mounted once globally in main.tsx (above the
+  // SubscriptionProvider is mounted once globally in main.tsx (above the
   // router). The previous per-Layout instance was redundant — it re-fetched
   // status/usage/plans on every Layout mount and, after the lift, double-fetched
   // alongside the global provider. Removed so a single provider fetches once.

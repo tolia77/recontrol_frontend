@@ -1,6 +1,6 @@
-// e2e/auth.setup.ts — Playwright auth setup for the Phase 42.2 audit crawl.
+// e2e/auth.setup.ts — Playwright auth setup for the audit crawl.
 //
-// Logs in once via the committed audit fixtures (D-05 revised) and writes
+// Logs in once via the committed audit fixtures and writes
 // storageState to playwright/.auth/user.json so downstream crawl tests can
 // reuse the authenticated session.
 //

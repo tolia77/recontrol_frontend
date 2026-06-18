@@ -7,13 +7,12 @@ import type { WebRtcConnectionState } from "./useWebRtc";
 /**
  * Owns the WebRTC peer connection lifecycle: pcRef, videoRef/setVideoNode,
  * start/stop/retryWebRtc, connectionState, hasReceivedFrame, desktopStats,
- * and the reconnect/backoff state machine. Internal to useWebRtc (D-09).
+ * and the reconnect/backoff state machine. Internal to useWebRtc.
  *
  * Receives setupDataChannels(pc) and cleanupDataChannels() from useDataChannels
  * via the options object (callback injection pattern). cleanupPeerConnection
- * calls cleanupDataChannels() BEFORE pc.close() to preserve Spike C ordering
- * (Landmine 6 / 09-SPIKE-FINDINGS.md: dc.close() from this side does not
- * propagate to SIPSorcery, so pc.close() drives teardown).
+ * calls cleanupDataChannels() BEFORE pc.close(): dc.close() from this side does
+ * not propagate to SIPSorcery, so pc.close() drives teardown.
  */
 
 interface UsePeerConnectionOptions {
@@ -32,9 +31,9 @@ export interface UsePeerConnectionReturn {
   connectionState: WebRtcConnectionState;
   hasReceivedFrame: boolean;
   /**
-   * DC-RS-01: desktopStats stored as a ref (not state) so per-stats-tick
-   * updates from the desktop data channel do NOT trigger React re-renders in
-   * the DeviceControl subtree. useStreamStats reads this ref inside its 2s
+   * desktopStats stored as a ref (not state) so per-stats-tick updates from
+   * the desktop data channel do NOT trigger React re-renders in the
+   * DeviceControl subtree. useStreamStats reads this ref inside its 2s
    * polling interval — no React update cycle involved.
    */
   desktopStatsRef: React.RefObject<{
@@ -67,7 +66,7 @@ const TOTAL_TIMEOUT_MS = 45000;
 // clearReconnectTimer / stopWebRtc / connected-branch already cover cleanup.
 const WATCHDOG_MS = 9000;
 
-// S-04: cache the in-flight or resolved TURN credentials fetch so that
+// Cache the in-flight or resolved TURN credentials fetch so that
 // prefetchIceServers() (called at component mount) and createPeerConnection()
 // (called when the user starts the stream) share a single network request.
 // The cache lives for the module lifetime — one cache per browser tab.
@@ -102,7 +101,7 @@ async function fetchIceServers(): Promise<RTCIceServer[]> {
 }
 
 /**
- * S-04: warm the TURN credentials fetch at component mount time so the result
+ * Warm the TURN credentials fetch at component mount time so the result
  * is cached before the user clicks "Start Stream". Call from the DeviceControl
  * init useEffect after deviceId is resolved to parallelise the fetch with
  * other startup work (permissions fetch, device metadata).
@@ -135,15 +134,15 @@ export function usePeerConnection({
   const pcGenRef = useRef(0);
 
   // requestVideoFrameCallback id — tracks the pending one-shot rvfc registration
-  // so it can be cancelled in cleanupPeerConnection (T-42.1-16 mitigation).
+  // so it can be cancelled in cleanupPeerConnection.
   const rvfcIdRef = useRef<number | null>(null);
 
   const [connectionState, setConnectionState] =
     useState<WebRtcConnectionState>("idle");
   const [hasReceivedFrame, setHasReceivedFrame] = useState(false);
-  // DC-RS-01: desktopStats stored as a ref so data-channel message handlers
-  // update it without triggering React re-renders. useStreamStats reads the ref
-  // inside its 2s polling interval — no React state flush, no root re-render.
+  // desktopStats stored as a ref so data-channel message handlers update it
+  // without triggering React re-renders. useStreamStats reads the ref inside
+  // its 2s polling interval — no React state flush, no root re-render.
   const desktopStatsRef = useRef<{
     framesSkipped: number;
     encoder?: string;
@@ -164,9 +163,9 @@ export function usePeerConnection({
   }, []);
 
   /**
-   * Per-rendered-frame callback (T-42.1-15 mitigation: body is ONLY logger enqueue
-   * + re-register; no awaits, no DOM work, no JSON.stringify in this callback).
-   * One-shot API — re-register at the end of each call (RESEARCH Pitfall 3).
+   * Per-rendered-frame callback. Body is ONLY a logger enqueue + re-register;
+   * no awaits, no DOM work, no JSON.stringify in this callback.
+   * One-shot API — re-register at the end of each call.
    */
   const attachRvfc = useCallback((video: HTMLVideoElement) => {
     const onFrame = (
@@ -181,14 +180,14 @@ export function usePeerConnection({
         paintTs: now,
         presentedFrames: metadata.presentedFrames,
       });
-      // Re-register for next frame (rvfc is one-shot — Pitfall 3)
+      // Re-register for next frame (rvfc is one-shot)
       rvfcIdRef.current = video.requestVideoFrameCallback(onFrame);
     };
     rvfcIdRef.current = video.requestVideoFrameCallback(onFrame);
   }, []);
 
   /**
-   * Cancel the pending rvfc registration (T-42.1-16 mitigation).
+   * Cancel the pending rvfc registration.
    * Must be called BEFORE pc.close() in cleanupPeerConnection.
    */
   const detachRvfc = useCallback((video: HTMLVideoElement) => {
@@ -232,15 +231,15 @@ export function usePeerConnection({
     // webrtc.offer) after stop / 45s-timeout / unmount.
     pcGenRef.current++;
 
-    // Cancel any pending requestVideoFrameCallback BEFORE closing the PC
-    // (T-42.1-16 mitigation — rvfc must not fire after teardown).
+    // Cancel any pending requestVideoFrameCallback BEFORE closing the PC —
+    // rvfc must not fire after teardown.
     if (videoRef.current) {
       detachRvfc(videoRef.current);
     }
 
-    // Dispose data-channel wrappers BEFORE closing the RTCPeerConnection.
-    // Spike C ordering (Landmine 6): cleanupDataChannels() runs first,
-    // then pc.close() below drives the actual channel teardown on both sides.
+    // Dispose data-channel wrappers BEFORE closing the RTCPeerConnection:
+    // cleanupDataChannels() runs first, then pc.close() below drives the
+    // actual channel teardown on both sides.
     cleanupDataChannels();
 
     const pc = pcRef.current;
@@ -283,12 +282,12 @@ export function usePeerConnection({
     };
 
     pc.ontrack = (event) => {
-      // Phase 42.1 Fix B (FINDINGS): the browser's jitter/playout buffer added
-      // ~220ms (p95 278ms) of receive->present latency — the dominant perceived
-      // lag for a remote-control stream. Bias the receiver toward minimal
-      // buffering: playoutDelayHint (Chromium, seconds; 0 = minimize) and the
-      // spec'd jitterBufferTarget (ms). Wrapped in try/catch — non-Chromium
-      // browsers don't implement these and would otherwise throw.
+      // The browser's jitter/playout buffer adds ~220ms (p95 278ms) of
+      // receive->present latency — the dominant perceived lag for a
+      // remote-control stream. Bias the receiver toward minimal buffering:
+      // playoutDelayHint (Chromium, seconds; 0 = minimize) and the spec'd
+      // jitterBufferTarget (ms). Wrapped in try/catch — non-Chromium browsers
+      // don't implement these and would otherwise throw.
       try {
         const r = event.receiver as RTCRtpReceiver & {
           playoutDelayHint?: number;
@@ -382,7 +381,7 @@ export function usePeerConnection({
               sentBytes?: number;
             };
 
-            // Log extended desktop stats for cross-side correlation (D-08)
+            // Log extended desktop stats for cross-side correlation
             frontendLogger.timing("webrtc", "desktop_stats", {
               skipped: data.skipped,
               encoder: data.encoder,
@@ -396,7 +395,7 @@ export function usePeerConnection({
               sentBytes: data.sentBytes,
             });
 
-            // DC-RS-01: write to ref, not state — no React re-render triggered
+            // Write to ref, not state — no React re-render triggered
             desktopStatsRef.current = {
               framesSkipped: data.skipped ?? 0,
               encoder: data.encoder,

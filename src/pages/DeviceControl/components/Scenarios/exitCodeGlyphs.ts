@@ -6,8 +6,6 @@ import type {
 } from "src/services/backend/scenarioRunsService";
 
 // GLYPH_CATALOG — single source of truth for the exit-code timeline.
-// Sourced from UI-SPEC §Exit-code glyph catalog (lines 249-259) + 22-CONTEXT.md
-// "Claude's Discretion" exit-code glyph row. Reused by Plan 22.10 HistoryDetail.
 
 type GlyphCatalogKey =
   | ScenarioRunStepStatus
@@ -31,7 +29,6 @@ export const GLYPH_CATALOG: Readonly<Record<GlyphCatalogKey, GlyphEntry>> = {
 } as const;
 
 // STATUS_BADGE_CLASS — per-run status badge color mapping.
-// Sourced from UI-SPEC §History list status badge colors (lines 240-246).
 
 export const STATUS_BADGE_CLASS: Readonly<Record<ScenarioRunStatus, string>> = {
   running: "bg-primary/8 text-primary",

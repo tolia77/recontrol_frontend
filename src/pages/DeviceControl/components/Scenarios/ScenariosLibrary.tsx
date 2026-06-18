@@ -20,8 +20,8 @@ export interface ScenariosLibraryProps {
   deviceId: string;
   onEdit: (id: string) => void;
   onNew: () => void;
-  // D-22-08: Plan 22.10's panel wiring plugs this into the PolicyPreviewModal
-  // opener. Plan 22.07 only requires the prop plumbing reach ScenariosRow.
+  // The panel wires this into the PolicyPreviewModal opener; here it is just
+  // plumbed through to each ScenariosRow.
   onRun: (scenario: Scenario) => void;
   // Single-in-flight signal — when an active run is running on this device id,
   // every row pinned to that device disables its [▶ Run] button.
@@ -58,19 +58,17 @@ export default function ScenariosLibrary({
   const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
-  // The library lives inside DeviceControl which is scoped to a single device.
-  // The pinned-device filter dropdown therefore offers exactly two values in
-  // P21: "" (all visible scenarios) and the currently-controlled device id.
-  // Full multi-device picker is a v1.6+ enhancement (CONTEXT "Claude's
-  // Discretion": "list devices the operator has access to ...").
+  // The library lives inside DeviceControl, scoped to a single device, so the
+  // pinned-device filter dropdown offers exactly two values: "" (all visible
+  // scenarios) and the currently-controlled device id.
   const [pinnedFilter, setPinnedFilter] = useState<string>("");
   // Pending-delete target: null means no dialog open; non-null means confirm modal open.
   const [deleteTarget, setDeleteTarget] = useState<Scenario | null>(null);
-  // In-flight delete lock — mirrors AdminUsers deleting pattern (WR-05).
+  // In-flight delete lock.
   const [deleting, setDeleting] = useState(false);
   const currentUserId = getUserId() ?? "";
 
-  // LIB-03: 200ms debounce per CONTEXT "Claude's Discretion".
+  // 200ms debounce on the search query.
   useEffect(() => {
     const handle = setTimeout(() => setDebouncedQ(q), 200);
     return () => clearTimeout(handle);
@@ -137,8 +135,8 @@ export default function ScenariosLibrary({
   };
 
   const handleDuplicate = async (s: Scenario) => {
-    // LIB-05: server appends "(copy)" with collision-suffix bumping; UI just
-    // calls the endpoint and jumps into the editor for the new row.
+    // Server appends "(copy)" with collision-suffix bumping; the UI just calls
+    // the endpoint and jumps into the editor for the new row.
     try {
       const result = await scenariosService.duplicate(s.id);
       await reload();

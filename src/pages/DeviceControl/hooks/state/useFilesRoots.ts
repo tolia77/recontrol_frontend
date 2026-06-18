@@ -9,7 +9,7 @@ export interface UseFilesRootsReturn {
   error: FilesChannelError | null;
   /**
    * True when `roots` has been loaded and is a non-null, empty array.
-   * Drives the ALLOW-05 empty-state.
+   * Drives the empty-state (no allowlisted roots).
    */
   isEmpty: boolean;
   refetch: () => void;
@@ -17,8 +17,7 @@ export interface UseFilesRootsReturn {
 
 /**
  * Fetch the allowlisted roots once per connected channel. Exposes a
- * `refetch` trigger for NAV-11 (Plan 10-03) so the sidebar can refresh
- * without tearing the panel down.
+ * `refetch` trigger so the sidebar can refresh without tearing the panel down.
  */
 export function useFilesRoots(channel: UseFilesChannel): UseFilesRootsReturn {
   const [roots, setRoots] = useState<FileEntry[] | null>(null);

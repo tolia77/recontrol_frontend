@@ -4,7 +4,7 @@ import { Card } from "src/components/ui";
 import { formatPrice } from "src/utils/formatPrice";
 import type { Plan } from "src/services/backend/subscriptionService";
 
-// Local gate-key union — plan 03 introduces GateKey; this union is assignable to it.
+// Local gate-key union — assignable to the shared GateKey type.
 type GateKey =
   | "device_sharing"
   | "device_limit"

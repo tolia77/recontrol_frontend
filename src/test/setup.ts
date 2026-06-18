@@ -9,8 +9,8 @@ afterEach(() => {
 });
 
 // jsdom does not implement window.matchMedia. The useMobileDetect hook
-// (Phase 35 mobile foundation) reads it during render, so every component
-// that consumes it — Modal, UpgradeModal, Layout/Sidebar — would throw
+// reads it during render, so every component that consumes it —
+// Modal, UpgradeModal, Layout/Sidebar — would throw
 // "matchMedia is not a function" in the test environment without this shim.
 //
 // Default to matches: false so components render in their DESKTOP

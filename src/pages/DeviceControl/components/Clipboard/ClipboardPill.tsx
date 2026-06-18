@@ -38,7 +38,7 @@ export interface ClipboardPillProps {
   };
 }
 
-// D-06 per-state background tokens (Tailwind, project palette).
+// Per-state background tokens (Tailwind, project palette).
 const PILL_BG: Record<PillState, string> = {
   "connected-idle": "bg-success",
   pulsing: "bg-success",
@@ -51,7 +51,7 @@ const PILL_BG: Record<PillState, string> = {
   "unsupported-browser": "bg-primary",
 };
 
-// D-15 i18n key suffix per PillState (matches en/clipboard.ts pill.state.*).
+// i18n key suffix per PillState (matches en/clipboard.ts pill.state.*).
 const STATE_TO_LABEL_KEY: Record<PillState, string> = {
   "connected-idle": "pill.state.idle",
   pulsing: "pill.state.pulsing",
@@ -98,7 +98,7 @@ function StateIcon({
 }
 
 /**
- * D-08 freshness windows for the hover tooltip:
+ * Freshness windows for the hover tooltip:
  *   <2s          → "Just synced"
  *   2s – 59s     → "Last synced N seconds ago" (CLDR plural)
  *   60s – 4m59s  → "Last synced N minutes ago" (CLDR plural)
@@ -133,9 +133,9 @@ function computeFreshnessTooltip(
 function ClipboardPill(props: ClipboardPillProps) {
   const { t } = useTranslation("clipboard");
 
-  // Session sync counter per D-07 / Claude's Discretion: ClipboardPill-internal
-  // useRef so useClipboardSync's contract stays Phase-15-frozen. Reset on a
-  // webRtcUp false→true transition.
+  // Session sync counter kept in a ClipboardPill-internal useRef so the
+  // useClipboardSync hook's contract stays unchanged. Reset on a webRtcUp
+  // false→true transition.
   const sessionCount = useRef(0);
   const prevSyncAt = useRef<number | null>(null);
   const prevWebRtcUp = useRef(props.webRtcUp);
@@ -201,13 +201,13 @@ function ClipboardPill(props: ClipboardPillProps) {
     };
   }, [result.state, props.lastSyncAt, props.lastRefusal]);
 
-  // PILL-01: render nothing until the WebRTC peer connection is up.
+  // Render nothing until the WebRTC peer connection is up.
   if (!props.webRtcUp) return null;
 
   const bg = PILL_BG[result.state];
   const isPulsing = result.state === "pulsing";
 
-  // D-08: prefer the freshness tooltip during pulsing/connected-idle (when a
+  // Prefer the freshness tooltip during pulsing/connected-idle (when a
   // recent sync exists); fall back to the static tooltipKey from
   // selectPillState in error / policy / degrade states.
   const freshness = computeFreshnessTooltip(props.lastSyncAt, Date.now(), t);
@@ -233,9 +233,9 @@ function ClipboardPill(props: ClipboardPillProps) {
       aria-pressed={props.isPaused}
       title={tooltip}
       className={className}
-      // RESEARCH Pitfall 3: re-mount on each lastSyncAt change so the one-shot
-      // pulse animation re-fires for each successful sync. Static key when not
-      // pulsing keeps the button identity stable.
+      // Re-mount on each lastSyncAt change so the one-shot pulse animation
+      // re-fires for each successful sync. Static key when not pulsing keeps
+      // the button identity stable.
       key={isPulsing ? `pulse-${props.lastSyncAt}` : "static"}
     >
       <span className="flex items-center gap-2">

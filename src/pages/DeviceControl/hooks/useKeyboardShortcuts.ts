@@ -7,11 +7,10 @@ import type { useFileManagerSelection } from "./state/useFileManagerSelection";
  * Scoped keyboard handler for the file manager panel. Returns an `onKeyDown`
  * suitable for `<div ref={rootRef} tabIndex={0} onKeyDown={...}>`.
  *
- * Critical guard (Research Pattern 4): the handler short-circuits when focus
- * is NOT inside `rootRef.current`. The interactive video overlay also uses a
+ * Critical guard: the handler short-circuits when focus is NOT inside
+ * `rootRef.current`. The interactive video overlay also uses a
  * tabIndex+onKeyDown pattern, so unguarded shortcuts here would race for the
- * same keystrokes when both are mounted side-by-side. The same guard the
- * Ctrl+Shift+F document-level toggle uses (added in plan 10-02).
+ * same keystrokes when both are mounted side-by-side.
  *
  * Keys handled:
  *   F5                   -> onRefresh
@@ -31,10 +30,6 @@ import type { useFileManagerSelection } from "./state/useFileManagerSelection";
  *   Ctrl+F  (browser find)
  *   Ctrl+R  (browser reload)
  *   Tab     (browser focus traversal)
- *
- * Plan 10-04 implements onRequestRename for real; plan 10-05 implements
- * onRequestDelete. In 10-03 they are wired but the panel passes
- * console-only stubs.
  */
 export function useKeyboardShortcuts(params: {
   rootRef: RefObject<HTMLDivElement | null>;

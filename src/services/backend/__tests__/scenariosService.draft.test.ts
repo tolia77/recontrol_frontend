@@ -1,4 +1,4 @@
-// scenariosService.createDraft vitest (Phase 23 Plan 07 Task 1).
+// scenariosService.createDraft vitest.
 //
 // Coverage:
 //   - createDraft('test prompt', 'en') issues POST /scenarios/drafts with body
@@ -155,7 +155,7 @@ describe("scenariosService.createDraft", () => {
     expect(result.draft.name).toBe("Diagnose nginx");
     expect(Array.isArray(result.draft.command_steps)).toBe(true);
 
-    // Exact 4-key quota contract (AI-06 / AI-07).
+    // Exact 4-key quota contract.
     expect(Object.keys(result.quota).sort()).toEqual(
       ["drafts_limit", "drafts_used", "tokens_limit", "tokens_used"].sort(),
     );
@@ -165,7 +165,7 @@ describe("scenariosService.createDraft", () => {
 
   it("exposes correctly-typed DraftStep / DryIntentWarning / DraftQuota interfaces", () => {
     // Type-level assertions — TypeScript compiles iff the interfaces are
-    // shaped as the plan requires. The expect() calls are runtime-trivial; the
+    // shaped as required. The expect() calls are runtime-trivial; the
     // value is in the compile-time structural checks above each.
 
     // DraftStep.description is `string | null` (the model may emit JSON null;
@@ -187,7 +187,7 @@ describe("scenariosService.createDraft", () => {
     };
     expect(stepWithoutWarning.dry_intent_warning).toBeUndefined();
 
-    // DryIntentWarning has both pattern + message_key (AI-05 contract).
+    // DryIntentWarning has both pattern + message_key.
     const warning: DryIntentWarning = {
       pattern: "find_delete",
       message_key: "scenarios.ai.dry_intent.find_delete",

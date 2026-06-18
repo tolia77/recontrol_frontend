@@ -30,7 +30,7 @@ export default defineConfig({
   // Start the Vite dev server in audit mode so it points at the audit backend
   // on port 3013 (loaded from committed .env.audit via --mode audit).
   // reuseExistingServer: true so the server can stay up during the full
-  // operator-assisted DeviceControl session (D-03).
+  // operator-assisted DeviceControl session.
   webServer: {
     command: "npm run dev -- --mode audit",
     url: "http://localhost:5175",

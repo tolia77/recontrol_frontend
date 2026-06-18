@@ -15,10 +15,8 @@ interface FileManagerSidebarProps {
 }
 
 /**
- * Left sidebar showing allowlisted roots. Phase-10 minimum: no tree
- * expansion (clicking a root opens it in the listing). Tree expansion is
- * noted as a follow-up (Research Pitfall 6) and can ship later without
- * changing this signature.
+ * Left sidebar showing allowlisted roots. No tree expansion — clicking a root
+ * opens it in the listing.
  */
 function FileManagerSidebar({
   roots,

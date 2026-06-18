@@ -1,5 +1,5 @@
 /**
- * DraftReviewModal vitest — Phase 23 / Plan 23-09 Task 1.
+ * DraftReviewModal vitest.
  *
  * ≥14 examples covering: null when closed, per-step rendering, all 7
  * dry_intent pattern display names, amber badge classes + title attribute,
@@ -135,7 +135,7 @@ describe("DraftReviewModal", () => {
     expect(screen.queryByTestId(/draft-review-dry-intent-/)).toBeNull();
   });
 
-  // (5) — parametric — all 7 pattern ids resolve to UI-SPEC display names
+  // (5) — parametric — all 7 pattern ids resolve to display names
   const patternCases: Array<{
     pattern: string;
     display: string;

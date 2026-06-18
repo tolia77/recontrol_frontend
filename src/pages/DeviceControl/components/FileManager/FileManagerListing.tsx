@@ -36,13 +36,13 @@ interface FileManagerListingProps {
    * Bubbles the post-filter, post-sort entries to the panel so that the
    * keyboard handler and status bar see the SAME visible array as the
    * listing. Identity changes here trigger selection invalidation in the
-   * selection hook (Pitfall 5).
+   * selection hook.
    */
   onVisibleEntriesChange: (entries: FileEntry[]) => void;
   /** Called when a file/folder row is double-clicked or activated by Enter. */
   onActivate: (entry: FileEntry) => void;
 
-  // Plan 10-04 additions
+  // Rename / new-folder inline editing
 
   /** When true, render a pseudo-row at the top of the list with an inline input. */
   newFolderPending: boolean;
@@ -101,7 +101,7 @@ function errorMessageFor(
  * header, monotonic request-id guard against stale responses, and Windows-
  * Explorer-style click-selection (single / shift-range / ctrl-toggle).
  *
- * Plan 10-04 adds:
+ * Inline editing and context menu:
  *   - Pseudo-row for new folder creation (rendered ABOVE the virtualized rows;
  *     not part of the virtualizer's index space so it doesn't shift the row
  *     indices the selection / keyboard handlers operate on).
@@ -180,8 +180,7 @@ function FileManagerListing({
       });
   }, [channel.request, path, refreshKey, toast, t]);
 
-  // Apply the show-hidden filter BEFORE sorting (NAV-14; isHidden guaranteed
-  // by plan 10-01).
+  // Apply the show-hidden filter BEFORE sorting.
   const visibleEntries = useMemo<FileEntry[]>(() => {
     if (state.kind !== "ready") return [];
     const filtered = showHidden

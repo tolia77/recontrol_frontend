@@ -9,9 +9,9 @@ const THROTTLE_MS = 2_000;
  * Per-reason i18n key under the `clipboard:` namespace.
  *
  * Notes:
- * - `CAPS_UNKNOWN` intentionally has no toast (RESEARCH OQ 2). It is a no-op
- *   condition for the operator, so it is simply not surfaced.
- * - `OUTBOUND_DISABLED` is unreachable in v1.3 per the Phase 15 schema
+ * - `CAPS_UNKNOWN` intentionally has no toast. It is a no-op condition for the
+ *   operator, so it is simply not surfaced.
+ * - `OUTBOUND_DISABLED` is unreachable per the current schema
  *   (clipboardProtocol.generated.ts:57-63) so it is omitted here. The locale
  *   file ships a defensive `toast.refused.outboundDisabled` entry; if a future
  *   schema bump adds the enum member, add it to this map.
@@ -23,7 +23,7 @@ const REASON_TO_KEY: Partial<Record<ClipboardRefusalReason, string>> = {
   INBOUND_DISABLED: "toast.refused.inboundDisabled",
   PAUSED: "toast.refused.paused",
   PERMISSION_DENIED: "toast.refused.permissionDenied",
-  // CAPS_UNKNOWN intentionally omitted (suppressed per RESEARCH OQ 2)
+  // CAPS_UNKNOWN intentionally omitted (suppressed — no operator action applies)
 };
 
 /**
@@ -45,8 +45,8 @@ export function useRefusalToastThrottle(): (
 
   return useCallback(
     (reason: ClipboardRefusalReason) => {
-      // RESEARCH OQ 2 — CAPS_UNKNOWN is intentionally not toasted (no operator
-      // action applies). Defensive: it is also unmapped in REASON_TO_KEY below.
+      // CAPS_UNKNOWN is intentionally not toasted (no operator action applies).
+      // It is also unmapped in REASON_TO_KEY above.
       if (reason === "CAPS_UNKNOWN") return;
 
       const key = REASON_TO_KEY[reason];

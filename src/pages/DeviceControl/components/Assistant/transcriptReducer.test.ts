@@ -1,12 +1,12 @@
-// Unit coverage for the pure transcriptReducer (Plan 20-07).
+// Unit coverage for the pure transcriptReducer.
 //
 // Strategy:
 //   - Reducer is pure ⇒ no React Testing Library, no fake timers; we build
 //     state by chaining reducer calls and assert on the returned shape.
-//   - One example per critical invariant (RESEARCH §Pitfall 5, §Pitfall 6,
-//     STREAM-04 session_token filter, D-05/D-11 tool row correlation,
-//     D-07 halted_quota transition, D-08 denied_by_operator → denied row
-//     state, hook-synthesized connection_lost error bypass).
+//   - One example per critical invariant (stepCount increment/reset,
+//     idempotent done, session_token filter, tool row correlation,
+//     halted_quota transition, denied_by_operator → denied row state,
+//     hook-synthesized connection_lost error bypass).
 //   - vitest.config.ts has globals:false, so describe/expect/it are explicit
 //     imports (mirrors selectPillState.test.ts).
 import { describe, expect, it } from "vitest";
@@ -137,7 +137,7 @@ describe("transcriptReducer", () => {
     expect(assistantRows[1].isStreaming).toBe(true);
   });
 
-  it("drops broadcasts whose session_token mismatches the current session (STREAM-04)", () => {
+  it("drops broadcasts whose session_token mismatches the current session", () => {
     let s = transcriptReducer(initialTranscriptState, submit("q", "sess-A"));
     s = transcriptReducer(
       s,
@@ -153,7 +153,7 @@ describe("transcriptReducer", () => {
     expect(s.rows[0].kind).toBe("operator");
   });
 
-  it("requires_confirmation + tool_call_start collapse into ONE tool row (D-05 / D-11)", () => {
+  it("requires_confirmation + tool_call_start collapse into ONE tool row", () => {
     let s: TranscriptState = transcriptReducer(
       initialTranscriptState,
       submit("q", "s"),
@@ -197,7 +197,7 @@ describe("transcriptReducer", () => {
     expect(s.status).toBe("streaming");
   });
 
-  it("stepCount increments on tool_call_start only, not on requires_confirmation (RESEARCH §Pitfall 5)", () => {
+  it("stepCount increments on tool_call_start only, not on requires_confirmation", () => {
     let s = transcriptReducer(initialTranscriptState, submit("q", "s"));
     s = transcriptReducer(
       s,
@@ -283,7 +283,7 @@ describe("transcriptReducer", () => {
     expect(toolRow?.endedAt).toBeGreaterThan(0);
   });
 
-  it("tool_call_result with denied_by_operator transitions row to denied, not error (Phase 19 D-08)", () => {
+  it("tool_call_result with denied_by_operator transitions row to denied, not error", () => {
     let s = transcriptReducer(initialTranscriptState, submit("q", "s"));
     s = transcriptReducer(
       s,
@@ -368,7 +368,7 @@ describe("transcriptReducer", () => {
     expect(s).toBe(ref);
   });
 
-  it("first done wins; subsequent done is idempotent (RESEARCH §Pitfall 6)", () => {
+  it("first done wins; subsequent done is idempotent", () => {
     let s = transcriptReducer(initialTranscriptState, submit("q", "s"));
     s = transcriptReducer(
       s,
@@ -395,7 +395,7 @@ describe("transcriptReducer", () => {
     expect(s).toBe(ref);
   });
 
-  it("done(stop_reason: quota) transitions to halted_quota (D-07)", () => {
+  it("done(stop_reason: quota) transitions to halted_quota", () => {
     let s = transcriptReducer(initialTranscriptState, submit("q", "s"));
     s = transcriptReducer(
       s,
@@ -560,7 +560,7 @@ describe("transcriptReducer", () => {
     expect(next).toEqual(initialTranscriptState);
   });
 
-  it("forward-compat: unknown broadcast types are ignored silently (STREAM-03)", () => {
+  it("forward-compat: unknown broadcast types are ignored silently", () => {
     let s = transcriptReducer(initialTranscriptState, submit("q", "s"));
     const ref = s;
     // Cast through unknown to bypass the discriminated-union check; this

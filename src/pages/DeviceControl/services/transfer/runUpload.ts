@@ -17,8 +17,8 @@ import type { RunUploadFn } from "./types";
  *  3. W3C-standard backpressure via bufferedAmountLowThreshold +
  *     bufferedamountlow event (HIGH=4MiB, LOW=1MiB). NOT polling.
  *  4. Drain loop after the last chunk: poll bufferedAmount until 0 BEFORE
- *     sending files.upload.complete (Pitfall 3 -- the desktop only sees
- *     bytes that have actually drained out of the SCTP buffer).
+ *     sending files.upload.complete -- the desktop only sees bytes that have
+ *     actually drained out of the SCTP buffer.
  *  5. files.upload.complete handshake -> desktop atomically renames .partial
  *     to the final filename.
  *
@@ -27,9 +27,9 @@ import type { RunUploadFn } from "./types";
  * with a 5s short timeout and advances regardless of ack outcome (the desktop
  * registry's CancelAll in CleanupPeerConnection covers the worst case).
  *
- * Channel-close safety (Pitfall 2): dc.readyState !== 'open' is checked
- * before every send and inside the chunk loop. dc.send raises silently on
- * closing channels so the readyState guard is the only reliable signal.
+ * Channel-close safety: dc.readyState !== 'open' is checked before every send
+ * and inside the chunk loop. dc.send raises silently on closing channels so
+ * the readyState guard is the only reliable signal.
  */
 const CHUNK_PAYLOAD = 16 * 1024;
 const HIGH_WATER = 4 * 1024 * 1024;
@@ -176,7 +176,7 @@ export function createRunUpload(deps: CreateRunUploadDeps): RunUploadFn {
           cancelled = true;
           break;
         }
-        // Pitfall 2 (dc.send on closing channel).
+        // dc.send on a closing channel raises silently; guard with readyState.
         if (dc.readyState !== "open") {
           throw new FilesChannelError({
             code: "CHANNEL_NOT_OPEN",
@@ -230,7 +230,8 @@ export function createRunUpload(deps: CreateRunUploadDeps): RunUploadFn {
         return;
       }
 
-      // 4. Drain bufferedAmount before complete (Pitfall 3)
+      // 4. Drain bufferedAmount before complete: the desktop only sees bytes
+      //    that have actually drained out of the SCTP buffer.
       const drainStart = Date.now();
       while (dc.bufferedAmount > 0) {
         if (queue.isCancelled(item.id)) {

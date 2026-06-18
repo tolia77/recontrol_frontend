@@ -6,13 +6,13 @@ import type { ToolRow } from "./transcriptReducer";
 import { WarningTriangleIcon } from "./icons";
 
 /**
- * ConfirmationCard (Plan 20-08).
+ * ConfirmationCard.
  *
  * Per-zone-tinted variant of ToolCallCard rendered when
  * `row.state === 'awaiting_confirmation'`. Selection between ToolCallCard
  * and ConfirmationCard happens in Transcript.tsx's RowRenderer.
  *
- * Zone tint (D-04, REQUIREMENTS §SAFETY-07 / §SAFETY-08):
+ * Zone tint:
  *   - `outside_list` → amber accent on a Card surface; soft amber background.
  *     (The legacy `deny_list` zone was removed with the deny-list.)
  *
@@ -32,12 +32,11 @@ import { WarningTriangleIcon } from "./icons";
  * always sends `row.confirmationId`.
  *
  * The buttons disable when `confirmationId` is undefined (defense-in-depth
- * against malformed envelopes); production envelopes always carry it (Phase
- * 19 D-11).
+ * against malformed envelopes); production envelopes always carry it.
  *
- * NEVER rendered as a modal (SAFETY-07: "inline in the transcript, NEVER as a
- * modal"). NEVER auto-dismisses on a timeout (the backend ConfirmationRegistry
- * enforces the 120s wall-clock; the frontend just waits).
+ * NEVER rendered as a modal — always inline in the transcript. NEVER
+ * auto-dismisses on a timeout (the backend ConfirmationRegistry enforces the
+ * 120s wall-clock; the frontend just waits).
  */
 
 const ZONE_ACCENT: Record<NonNullable<ToolRow["zone"]>, string> = {

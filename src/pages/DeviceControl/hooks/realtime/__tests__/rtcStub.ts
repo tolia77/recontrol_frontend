@@ -2,7 +2,7 @@
  * Hand-rolled RTCPeerConnection stub for WebRTC hook tests.
  *
  * Design mirrors mockConsumer.ts: a make*() factory returns the fake object
- * plus a test-only emit surface. No WebRTC mock library is used (D-07).
+ * plus a test-only emit surface. No WebRTC mock library is used.
  *
  * Globals must be installed PER TEST FILE via installRtcGlobals() /
  * restoreRtcGlobals() — never via src/test/setup.ts.

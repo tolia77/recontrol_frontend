@@ -1,13 +1,13 @@
 /**
- * ScenariosAISegment vitest — Phase 23 / Plan 23-08 Task 2.
+ * ScenariosAISegment vitest.
  *
  * vi.mocks `useDraftGeneration` so each test pins the hook to a known state
  * shape and inspects the rendered UI. The hook itself is exercised in its own
  * spec (useDraftGeneration.test.ts) — this file verifies the segment wires
- * state → UI per UI-SPEC ScenariosAISegment Layout (lines 119-165).
+ * state → UI.
  *
- * Coverage (≥10 examples; threat-model anchor: T-23-31 lastPrompt persistence,
- * verified via Storage.prototype.setItem spy with zero calls):
+ * Coverage (lastPrompt persistence verified via Storage.prototype.setItem spy
+ * with zero calls):
  *   1. Renders prompt textarea (maxLength=1000) + placeholder + Generate label
  *   2. Generate disabled when prompt empty; enabled after typing
  *   3. Generate click invokes hook.generate with (prompt, 'en')
@@ -17,7 +17,7 @@
  *   6. state.success → onDraftReady(draft.draft) invoked
  *   7. state.error 'draft_unparseable' → error card with unparseable copy
  *   8a-8e. error code routing per code
- *   9. Dismiss hides error card; prompt text preserved (D-06)
+ *   9. Dismiss hides error card; prompt text preserved
  *   10. Quota indicator renders both rows; turns amber at >=90% usage
  *   11. lastPrompt display: no sessionStorage / localStorage setItem calls
  */
@@ -189,8 +189,8 @@ describe("ScenariosAISegment", () => {
     const onDraftReady = vi.fn();
     render(<ScenariosAISegment {...defaultProps({ onDraftReady })} />);
     expect(onDraftReady).toHaveBeenCalledTimes(1);
-    // Plan 23-11 (AI-10): second arg is `usage.total_tokens` for end-to-end
-    // token persistence onto `scenarios.created_via_ai_token_count`.
+    // Second arg is `usage.total_tokens` for end-to-end token persistence
+    // onto `scenarios.created_via_ai_token_count`.
     expect(onDraftReady).toHaveBeenCalledWith(
       draft.draft,
       draft.usage.total_tokens,
@@ -245,7 +245,7 @@ describe("ScenariosAISegment", () => {
     expect(screen.getByTestId("ai-error-card")).toBeDefined();
     fireEvent.click(screen.getByRole("button", { name: /dismiss/i }));
     expect(screen.queryByTestId("ai-error-card")).toBeNull();
-    // Prompt text retained per D-06.
+    // Prompt text retained.
     expect((screen.getByRole("textbox") as HTMLTextAreaElement).value).toBe(
       "restart nginx",
     );
@@ -297,8 +297,8 @@ describe("ScenariosAISegment", () => {
       "restart nginx",
     );
 
-    // T-23-31 mitigation: lastPrompt is component-state ONLY. Verify no
-    // Storage.setItem calls occurred during the flow.
+    // lastPrompt is component-state ONLY. Verify no Storage.setItem calls
+    // occurred during the flow.
     expect(setItemSpy).not.toHaveBeenCalled();
 
     setItemSpy.mockRestore();

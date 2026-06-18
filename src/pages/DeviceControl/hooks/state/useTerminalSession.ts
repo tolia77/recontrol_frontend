@@ -34,11 +34,9 @@ export interface UseTerminalSessionReturn {
 /**
  * Owns the terminal output and process list state slices for DeviceControl.
  *
- * Per D-01: feature sub-hook extracted from DeviceControl's inline state.
- * Per D-02: plain useState (transitions are independent, no interrelation).
- * Per OQ-2 Option A: action functions (requestListProcesses, killProcess) stay
- * in DeviceControl where they compose canSend + sendSingleAction. This hook
- * owns state only and exposes setters for the dispatcher callback wiring (D-06).
+ * State-only: the action functions (requestListProcesses, killProcess) live in
+ * DeviceControl where they compose canSend + sendSingleAction. This hook just
+ * exposes the setters for the dispatcher callback wiring.
  */
 export function useTerminalSession(): UseTerminalSessionReturn {
   const [terminalResults, setTerminalResults] = useState<TerminalEntry[]>([]);

@@ -150,9 +150,9 @@ function TopBar({
         </span>
       </div>
 
-      {/* Phase 16: clipboard pill — rendered next to the device chip while
-          WebRTC is up. v1 keeps the component unchanged; the wrapper neutralizes
-          its sidebar-oriented mt-2/w-full so it sits inline in the bar. */}
+      {/* Clipboard pill — rendered next to the device chip while WebRTC is up.
+          The wrapper neutralizes the component's sidebar-oriented mt-2/w-full
+          so it sits inline in the bar. */}
       {clipboardPill && webRtcUp && (
         <div className="[&_button]:!mt-0 [&_button]:!w-auto">
           <ClipboardPill {...clipboardPill} />

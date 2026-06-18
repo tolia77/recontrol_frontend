@@ -22,27 +22,27 @@ import {
 export type { ScenarioEditorPrefill } from "src/pages/DeviceControl/hooks/state/useScenarioEditor";
 
 export interface ScenarioEditorProps {
-  // deviceId is plumbed in by ScenariosPanel; reserved for the future
-  // policy-preview / pre-approve gate (P22) — the editor itself does not
-  // currently call /policy_preview (D-09: save-time evaluate only).
+  // deviceId is plumbed in by ScenariosPanel; reserved for a future
+  // policy-preview / pre-approve gate — the editor itself does not currently
+  // call /policy_preview (policy is evaluated at save time only).
   deviceId: string;
   editingId: string | "new";
   onClose: () => void;
-  // Phase 23 / Plan 23-09: optional AI-draft prefill. When present AND
-  // `editingId === 'new'`, the initial form state is seeded from `prefill`
-  // instead of empty defaults. Steps from prefill have NO id field (D-12);
-  // the editor's blankStep-style UUID assignment is applied per-step on
-  // hydration so dirty-state + drag-reorder operate on stable keys.
+  // Optional AI-draft prefill. When present AND `editingId === 'new'`, the
+  // initial form state is seeded from `prefill` instead of empty defaults.
+  // Steps from prefill have NO id field; the editor's blankStep-style UUID
+  // assignment is applied per-step on hydration so dirty-state + drag-reorder
+  // operate on stable keys.
   prefill?: ScenarioEditorPrefill;
-  // Phase 23 / Plan 23-09: back-navigation target. When `'ai'`, the
-  // [← Back] button label uses `editor.backToAI` ("← Back to AI prompt").
-  // The dirty-state guard (DirtyGuardModal) fires regardless of backTarget.
+  // Back-navigation target. When `'ai'`, the [← Back] button label uses
+  // `editor.backToAI` ("← Back to AI prompt"). The dirty-state guard
+  // (DirtyGuardModal) fires regardless of backTarget.
   backTarget?: ScenariosSegment;
 }
 
-// D-01: full-takeover editor. ScenariosPanel mounts this when its mode
-// flips to `editor`; the header [← Back to library] button flips back via
-// onClose (intercepted by DirtyGuardModal when dirty).
+// Full-takeover editor. ScenariosPanel mounts this when its mode flips to
+// `editor`; the header [← Back to library] button flips back via onClose
+// (intercepted by DirtyGuardModal when dirty).
 export default function ScenarioEditor({
   editingId,
   onClose,
@@ -81,7 +81,7 @@ export default function ScenarioEditor({
 
   return (
     <div className="flex h-full flex-col" data-testid="scenario-editor">
-      {/* D-01: header with [← Back to library] */}
+      {/* header with [← Back to library] */}
       <div className="border-border flex items-center gap-2 border-b px-4 py-2">
         <button
           type="button"
@@ -210,7 +210,7 @@ export default function ScenarioEditor({
         </div>
       </div>
 
-      {/* D-02: sticky bottom bar */}
+      {/* sticky bottom bar */}
       <div className="border-border bg-surface sticky bottom-0 flex items-center justify-end gap-2 border-t px-4 py-2">
         <button
           type="button"

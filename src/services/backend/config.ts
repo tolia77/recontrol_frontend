@@ -99,7 +99,7 @@ backendInstance.interceptors.response.use(
 
       return Promise.reject(error);
     } else if (status === 402 || code === "plan_limit_reached") {
-      // D-15: global upgrade nudge — fire once and re-reject; no retry loop.
+      // Global upgrade nudge — fire once and re-reject; no retry loop.
       // The backend returns the new envelope shape:
       //   { data: null, meta: null, error: { code, message, details: { limit_name, … } } }
       // The interceptor does NOT unwrap error responses, so error.response.data

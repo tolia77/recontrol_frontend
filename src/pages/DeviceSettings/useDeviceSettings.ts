@@ -67,8 +67,7 @@ export interface UseDeviceSettingsReturn {
  * device + shares + permissions groups loading, update/delete device, invite/edit/delete shares,
  * and clone/save permissions groups.
  *
- * Per D-06: mechanical behavior-preserving extraction from DeviceSettings.tsx (P28.1-04).
- * Per D-02: plain useState (state fields are independent, no atomic transitions).
+ * Plain useState (state fields are independent, no atomic transitions).
  */
 export function useDeviceSettings(
   args: UseDeviceSettingsArgs,

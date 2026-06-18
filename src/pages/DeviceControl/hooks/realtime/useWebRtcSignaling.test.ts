@@ -162,7 +162,7 @@ describe("useWebRtcSignaling", () => {
   });
 
   // ---------------------------------------------------------------------
-  // 4. normalizes a prefix-less SIPSorcery candidate (Phase 42.1 Fix C)
+  // 4. normalizes a prefix-less SIPSorcery candidate
   // ---------------------------------------------------------------------
   it("normalizes a prefix-less SIPSorcery candidate", async () => {
     const stub = makeRtcStub();

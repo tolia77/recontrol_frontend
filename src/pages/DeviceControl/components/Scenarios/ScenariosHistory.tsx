@@ -16,8 +16,8 @@ import {
 import { STATUS_BADGE_CLASS, buildExitCodeTimeline } from "./exitCodeGlyphs";
 import MassDeleteConfirmModal from "./MassDeleteConfirmModal";
 
-// AUDIT-03 + AUDIT-05 (mass-delete arm) visible surface. Plan 22.10 wires the
-// onSelectRun callback into the panel's mode router to open HistoryDetail.
+// Run-history list with pagination and a mass-delete action. The onSelectRun
+// callback is wired by the panel to open the run's HistoryDetail view.
 
 const PER_PAGE = 25;
 

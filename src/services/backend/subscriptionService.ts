@@ -28,7 +28,7 @@ export interface SubscriptionUsage {
   ai_drafts_used: number;
   ai_draft_limit: number | null;     // null = unlimited
   device_sharing: boolean;
-  ai_access: boolean;                // server-provided runtime flag (RD-2)
+  ai_access: boolean;                // server-provided runtime flag
 }
 
 export interface LiqPayBlob {

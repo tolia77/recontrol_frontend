@@ -59,10 +59,10 @@ function raiseKeyboard(container: HTMLElement) {
   return input;
 }
 
-// KBD-02: Hidden input attributes
+// Hidden input attributes
 
 describe("GestureToolbar — hidden input attributes", () => {
-  it("has D-02 suppression attributes", () => {
+  it("has autocorrect/autocomplete suppression attributes", () => {
     const { container } = renderToolbar(vi.fn());
     const input = container.querySelector('input[aria-hidden="true"]') as HTMLInputElement;
     expect(input).toBeTruthy();
@@ -73,7 +73,7 @@ describe("GestureToolbar — hidden input attributes", () => {
   });
 });
 
-// KBD-02: onInput → typeText (no modifier)
+// onInput → typeText (no modifier)
 
 describe("GestureToolbar — onInput pipeline", () => {
   it("onInput with value 'h' and no modifier dispatches keyboard.typeText", () => {
@@ -119,7 +119,7 @@ describe("GestureToolbar — onInput pipeline", () => {
   });
 });
 
-// KBD-02: onKeyDown → keyDown + keyUp (control keys)
+// onKeyDown → keyDown + keyUp (control keys)
 
 describe("GestureToolbar — onKeyDown pipeline", () => {
   it("Enter dispatches keyDown(13) then keyUp(13) after 50ms", async () => {
@@ -198,7 +198,7 @@ describe("GestureToolbar — onKeyDown pipeline", () => {
   });
 });
 
-// KBD-02: ModifierStrip mount condition
+// ModifierStrip mount condition
 
 describe("GestureToolbar — ModifierStrip mount condition", () => {
   it("ModifierStrip is NOT rendered when keyboard is not raised", () => {
@@ -222,7 +222,7 @@ describe("GestureToolbar — ModifierStrip mount condition", () => {
   });
 });
 
-// Unmount cleanup: flush pending hidden-input keyUp timers (CR-02)
+// Unmount cleanup: flush pending hidden-input keyUp timers
 
 describe("GestureToolbar — unmount cleanup", () => {
   it("keyDown Enter then unmount before timers advance flushes keyUp(13) synchronously", () => {

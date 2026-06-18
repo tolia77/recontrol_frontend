@@ -13,7 +13,7 @@ export type ScenarioRunStatus =
 
 // Per-step status enum sourced from `recontrol_backend/app/models/scenario_run_step.rb`
 // (STATUSES = %w[running success failed skipped policy_denied timeout]).
-// Consumed by Plan 22.09 ScenariosHistory glyph timeline + Plan 22.10 HistoryDetail.
+// Consumed by the ScenariosHistory glyph timeline and HistoryDetail view.
 export type ScenarioRunStepStatus =
   | "running"
   | "success"
@@ -49,8 +49,8 @@ export interface ScenarioRun {
   total_ai_gen_tokens: number | null;
   created_at: string;
   updated_at: string;
-  // Populated by show(); index() may omit it. The Plan 22.09 history list
-  // gracefully degrades to a badge-only row when steps is absent.
+  // Populated by show(); index() may omit it. The history list gracefully
+  // degrades to a badge-only row when steps is absent.
   steps?: ScenarioRunStep[];
 }
 
@@ -82,7 +82,6 @@ class ScenarioRunsService extends BaseService {
     return res.data;
   }
 
-  // AUDIT-05 / D-14
   async destroy(id: string): Promise<void> {
     await this.api.delete(`/scenario-runs/${id}`);
   }

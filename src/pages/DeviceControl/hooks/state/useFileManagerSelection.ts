@@ -21,9 +21,9 @@ import type { SelectionState } from "src/pages/DeviceControl/components/FileMana
  *    (Explorer keeps the focus rectangle after Esc).
  *  - setFocus(i): only focusedIndex changes (selection / anchor untouched).
  *
- * Selection-invalidation rule (Research Pitfall 5): when the `entries` array
- * IDENTITY changes (navigation, sort, hidden-filter toggle), reset selected to
- * empty and anchor to -1, but clamp focusedIndex into the new valid range.
+ * Selection-invalidation rule: when the `entries` array IDENTITY changes
+ * (navigation, sort, hidden-filter toggle), reset selected to empty and anchor
+ * to -1, but clamp focusedIndex into the new valid range.
  * Length-only changes from in-place rewrites would not be detected here, but
  * the panel's data flow always replaces the array on refetch / sort / filter,
  * so this guard is sufficient.

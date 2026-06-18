@@ -5,13 +5,12 @@ import type {
   ClipboardRefusalReason,
 } from "./clipboardProtocol.generated";
 
-// WR-01: validate inbound `refused` reason strings against the schema enum
-// before dispatching. Without this gate, a malicious or buggy peer can stuff
-// any string into lastRefusal.reason -- Phase 16's i18n toast renderer would
-// then receive an unknown key and show no toast (or a fallback). The enum is
-// duplicated as a Set rather than imported from the generated file because
-// the generated module exports only types, not runtime values; keep the two
-// in lockstep (a CI grep on the generated file would catch drift).
+// Validate inbound `refused` reason strings against the schema enum before
+// dispatching. Without this gate, a malicious or buggy peer could stuff any
+// string into lastRefusal.reason and the i18n toast renderer would receive an
+// unknown key (no toast / fallback). The enum is duplicated as a Set rather
+// than imported because the generated module exports only types, not runtime
+// values; keep the two in lockstep.
 const VALID_REFUSAL_REASONS: ReadonlySet<ClipboardRefusalReason> =
   new Set<ClipboardRefusalReason>([
     "TOO_LARGE",
@@ -31,13 +30,11 @@ type RefusedHandler = (env: ClipboardRefusedEnvelope) => void;
  * Thin wrapper over the 'clipboard' RTCDataChannel.
  * Subscribes to onmessage; routes JSON-parsed envelopes to handlers via a
  * three-way kind discriminator (set / capabilities / refused). Each kind has
- * its own handler set so consumers (Plan 04 useClipboardSync) can subscribe
- * independently to each envelope kind.
+ * its own handler set so consumers can subscribe independently to each kind.
  *
  * Browser sends only 'set' or 'capabilities' envelopes -- the 'refused'
- * envelope is desktop-only on the wire (Phase 15 D-04). Browser-local
- * refusals are surfaced via clipboardCore's `refused-local` decision, not
- * over the data channel.
+ * envelope is desktop-only on the wire. Browser-local refusals are surfaced
+ * via clipboardCore's `refused-local` decision, not over the data channel.
  *
  * Channel teardown: NEVER call dc.close() -- pc.close() is the only mechanism (SIPSorcery #882).
  */
@@ -100,9 +97,9 @@ export class ClipboardChannelClient {
         const r = e as Partial<ClipboardRefusedEnvelope>;
         if (typeof r.originId !== "string" || typeof r.reason !== "string")
           return;
-        // WR-01: drop refused envelopes whose reason is not in the schema enum.
+        // Drop refused envelopes whose reason is not in the schema enum.
         // Permitting arbitrary strings would let a peer poison lastRefusal.reason
-        // and silently break Phase 16's i18n toast lookup.
+        // and silently break the i18n toast lookup.
         if (!VALID_REFUSAL_REASONS.has(r.reason as ClipboardRefusalReason)) {
           console.warn(
             "[clipboard] dropped refused with unknown reason:",
@@ -148,9 +145,9 @@ export class ClipboardChannelClient {
   send(envelope: ClipboardSetEnvelope | ClipboardCapabilitiesEnvelope): void {
     if (this.disposed) return;
     if (this.dc.readyState !== "open") {
-      // WR-11: log instead of silently dropping. The loop gate has already
-      // recorded the hash via prepareOutbound, so a silent drop here would
-      // leave the local peer believing the remote received the change.
+      // Log instead of silently dropping. The loop gate has already recorded
+      // the hash via prepareOutbound, so a silent drop here would leave the
+      // local peer believing the remote received the change.
       console.warn(
         `[clipboard] send dropped: channel readyState=${this.dc.readyState}`,
       );

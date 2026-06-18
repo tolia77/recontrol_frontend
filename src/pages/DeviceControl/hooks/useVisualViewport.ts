@@ -6,8 +6,8 @@ import { useState, useEffect } from "react";
  * Returns `keyboardHeight` in CSS px — the number of pixels the soft keyboard
  * occupies at the bottom of the screen. When no keyboard is visible, returns 0.
  *
- * Used by ModifierStrip to dock itself above the keyboard (KBD-03 D-05) and by
- * AssistantPanel to pin the InputBox above the keyboard (DCTL-04 D-10).
+ * Used by ModifierStrip to dock itself above the keyboard and by AssistantPanel
+ * to pin the InputBox above the keyboard.
  *
  * Guards `if (!vv) return` so jsdom tests do not crash (window.visualViewport
  * is undefined in the test environment).

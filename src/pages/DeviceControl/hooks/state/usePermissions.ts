@@ -3,8 +3,7 @@ import { deviceSharesService } from "src/services/backend/deviceSharesService";
 import type { DeviceShare } from "src/types";
 
 /**
- * Derived permissions interface for easier gating.
- * Moved from DeviceControl.tsx per D-01/DEVCTL-03. This is the single
+ * Derived permissions interface for easier gating. This is the single
  * definition site for device permission building and command gating.
  */
 export interface DevicePermissions {
@@ -33,10 +32,7 @@ export interface UsePermissionsReturn {
 /**
  * Owns all permission state for DeviceControl: the DevicePermissions slice,
  * ownership flag, fetchPermissions async flow, and canSend command-gating.
- *
- * Per D-01: feature sub-hook extracted from DeviceControl's inline state.
- * Per DEVCTL-03: buildPermissions and canSend exist in exactly one place here.
- * Per D-02: plain useState (transitions are independent, no interrelation).
+ * buildPermissions and canSend exist in exactly one place here.
  */
 export function usePermissions(): UsePermissionsReturn {
   const [permissionsLoading, setPermissionsLoading] = useState(false);

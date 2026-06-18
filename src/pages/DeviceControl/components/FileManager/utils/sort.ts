@@ -8,8 +8,8 @@ import { classify } from "./fileTypes";
  * default locale. Size uses numeric diff. Modified compares epoch ms. Type
  * compares `classify(name)` alphabetically with name as tiebreaker.
  *
- * Folders ALWAYS precede files regardless of sort direction -- this is
- * Windows Explorer behavior and CONTEXT-locked for Phase 10.
+ * Folders ALWAYS precede files regardless of sort direction -- this matches
+ * Windows Explorer behavior.
  */
 export function compareEntries(
   a: FileEntry,

@@ -2,10 +2,10 @@ import { useTranslation } from "react-i18next";
 import { FolderIcon } from "./icons";
 
 /**
- * ALLOW-05 empty-state. Rendered when `files.listRoots` resolves to an empty
- * array. The CTA button is intentionally a no-op -- the user is in the
- * browser and cannot open the desktop's Settings window. The copy tells them
- * to ask the desktop user (CONTEXT locked).
+ * Empty-state rendered when `files.listRoots` resolves to an empty array. The
+ * CTA button is intentionally a no-op -- the user is in the browser and cannot
+ * open the desktop's Settings window. The copy tells them to ask the desktop
+ * user.
  */
 function FileManagerEmptyAllowlist() {
   const { t } = useTranslation("fileManager");

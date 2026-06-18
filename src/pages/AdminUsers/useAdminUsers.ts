@@ -50,9 +50,7 @@ export interface UseAdminUsersReturn {
 /**
  * Owns all user-CRUD state for AdminUsers: load, create, in-place edit, and delete flows.
  *
- * Per D-06: mechanical behavior-preserving extraction from AdminUsers.tsx.
- * Per D-04: AdminUsers is an approved split candidate in phase 28.1.
- * Per CONVENTIONS.md §4: plain useState (transitions are independent, no interrelation).
+ * Plain useState (transitions are independent, no interrelation).
  */
 export function useAdminUsers(): UseAdminUsersReturn {
   const { t } = useTranslation("adminUsers");

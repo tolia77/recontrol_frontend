@@ -4,26 +4,22 @@ import Card from "src/components/ui/Card";
 import type { ToolRow, ToolRowState } from "./transcriptReducer";
 
 /**
- * ToolCallCard (Plan 20-08).
+ * ToolCallCard.
  *
  * Renders a tool row (`row.kind === 'tool'` with `state ∈ {pending, running,
- * done, error, denied}`) using the existing `Card` primitive (CHAT-10 — no
- * new layout abstractions).
+ * done, error, denied}`) using the existing `Card` primitive.
  *
  * Composition:
  *   - StatusBadge — pill that maps each ToolRowState to a Tailwind palette
  *     token. Includes a spinner glyph on `running`.
  *   - Command label — `$ <command> <args joined>` in monospaced font.
- *   - Elapsed time — `ran in {{seconds}}s` once `endedAt` is set
- *     (REQUIREMENTS §CHAT-04).
+ *   - Elapsed time — `ran in {{seconds}}s` once `endedAt` is set.
  *   - Collapsed `<details>` body — stdout/stderr capped at MAX_LINES_DEFAULT
- *     (200) lines with a "show all" escape that flips a local `showAll`
- *     state (REQUIREMENTS §CHAT-05).
+ *     (200) lines with a "show all" escape that flips a local `showAll` state.
  *
- * Security invariant (RESEARCH §Security Domain Pattern — XSS via tool
- * stdout): tool output renders as plain `<pre>`, NEVER as markdown or HTML.
- * Backend already strips ANSI / control chars (Phase 19 D-09); the frontend
- * does not re-sanitize.
+ * Security invariant (XSS via tool stdout): tool output renders as plain
+ * `<pre>`, NEVER as markdown or HTML. Backend already strips ANSI / control
+ * chars; the frontend does not re-sanitize.
  *
  * The ConfirmationCard variant (`awaiting_confirmation` state) is a sibling
  * component selected by Transcript.tsx's RowRenderer; ToolCallCard renders

@@ -1,5 +1,5 @@
 /**
- * useTouchGestures.test.ts — TOUCH-02/03/04/05 classification proof
+ * useTouchGestures.test.ts — gesture classification proof
  *
  * Tests the gesture classifier via two strategies:
  *   1. Pure helper functions extracted from the hook (classifyTap, clicksFromDelta)
@@ -160,9 +160,9 @@ describe("clicksFromDelta (pure helper)", () => {
   });
 });
 
-// Threshold constants exported and match spec
+// Threshold constants are exported and have their expected values
 
-describe("threshold constants (TOUCH spec-locked values)", () => {
+describe("threshold constants", () => {
   it("TAP_MAX_MS is 200", () => expect(TAP_MAX_MS).toBe(200));
   it("TAP_MAX_MOVE_PX is 8", () => expect(TAP_MAX_MOVE_PX).toBe(8));
   it("DOUBLE_TAP_WINDOW_MS is 300", () => expect(DOUBLE_TAP_WINDOW_MS).toBe(300));
@@ -176,8 +176,8 @@ describe("useTouchGestures integration", () => {
     vi.useFakeTimers();
   });
 
-  // TOUCH-02: one-finger tap → left click down/up
-  it("TOUCH-02: one-finger tap emits mouse.down then mouse.up with Button=0 (left)", async () => {
+  // one-finger tap → left click down/up
+  it("one-finger tap emits mouse.down then mouse.up with Button=0 (left)", async () => {
     const { addAction, handlers } = renderGestureHook();
 
     const down = makePointerEvent({ pointerId: 1, clientX: 100, clientY: 100 });
@@ -209,8 +209,8 @@ describe("useTouchGestures integration", () => {
     });
   });
 
-  // TOUCH-02: double-tap → two left down/up sequences
-  it("TOUCH-02: double-tap emits two left down/up sequences", async () => {
+  // double-tap → two left down/up sequences
+  it("double-tap emits two left down/up sequences", async () => {
     const { addAction, handlers } = renderGestureHook();
 
     const tap = (id = 1) =>
@@ -248,8 +248,8 @@ describe("useTouchGestures integration", () => {
     ]);
   });
 
-  // TOUCH-03: tap-hold-drag → mouse.down on arm, mouse.move during drag, mouse.up on lift
-  it("TOUCH-03: tap-hold-drag emits mouse.down on long-press arm, mouse.move on drag, mouse.up on lift", () => {
+  // tap-hold-drag → mouse.down on arm, mouse.move during drag, mouse.up on lift
+  it("tap-hold-drag emits mouse.down on long-press arm, mouse.move on drag, mouse.up on lift", () => {
     const { addAction, handlers } = renderGestureHook();
 
     const down = makePointerEvent({ pointerId: 1, clientX: 100, clientY: 100 });
@@ -300,8 +300,8 @@ describe("useTouchGestures integration", () => {
     expect(upCall?.[0].payload?.Button).toBe(0);
   });
 
-  // TOUCH-04: two-finger tap → right-click (mapButtonToBackend(2) → 1)
-  it("TOUCH-04: two-finger tap emits mouse.down/up with Button=1 (right, via mapButtonToBackend(2))", () => {
+  // two-finger tap → right-click (mapButtonToBackend(2) → 1)
+  it("two-finger tap emits mouse.down/up with Button=1 (right, via mapButtonToBackend(2))", () => {
     const { addAction, handlers } = renderGestureHook();
 
     const down1 = makePointerEvent({ pointerId: 1, clientX: 100, clientY: 100 });
@@ -329,8 +329,8 @@ describe("useTouchGestures integration", () => {
     expect(downCall?.[0].payload?.Button).toBe(1); // mapButtonToBackend(2) === 1
   });
 
-  // TOUCH-05: two-finger vertical drag → mouse.scroll
-  it("TOUCH-05: two-finger drag up emits mouse.scroll with positive Clicks (natural scroll)", () => {
+  // two-finger vertical drag → mouse.scroll
+  it("two-finger drag up emits mouse.scroll with positive Clicks (natural scroll)", () => {
     const { addAction, handlers } = renderGestureHook();
 
     const down1 = makePointerEvent({ pointerId: 1, clientX: 100, clientY: 200 });

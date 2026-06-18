@@ -1,8 +1,8 @@
 /**
- * ScenariosPanel.ai vitest — Phase 23 / Plan 23-09 Task 3.
+ * ScenariosPanel.ai vitest.
  *
  * Integration coverage for the AI segment widening + DraftReviewModal mount
- * + Accept/Edit/Regenerate flow + sessionStorage rehydration + D-11
+ * + Accept/Edit/Regenerate flow + sessionStorage rehydration +
  * dry_intent_warning stripping at the Accept seam.
  *
  * ≥7 examples (we ship 10):
@@ -16,7 +16,7 @@
  *   7. [Regenerate Draft] closes modal AND bumps regenerateToken so the segment
  *      re-fires generate(originalPrompt)
  *   8. sessionStorage rehydration: 'ai' value boots into AI mode
- *   9. D-11 dry_intent_warning stripping at Accept (both every-predicate AND
+ *   9. dry_intent_warning stripping at Accept (both every-predicate AND
  *      JSON.stringify-contains assertions)
  *  10. Editor with backTarget='ai' renders "Back to AI prompt" label
  */
@@ -290,7 +290,7 @@ afterEach(() => {
 
 // Tests
 
-describe("ScenariosPanel — AI segment widening (Plan 23-09)", () => {
+describe("ScenariosPanel — AI segment widening", () => {
   it("renders 3-segment SegmentedControl: Library / History / AI", async () => {
     renderPanel();
     await waitFor(() => {
@@ -394,7 +394,7 @@ describe("ScenariosPanel — DraftReviewModal flow", () => {
     );
   });
 
-  it("D-11: Accept payload strips dry_intent_warning from every step", async () => {
+  it("Accept payload strips dry_intent_warning from every step", async () => {
     sessionStorage.setItem("scenarios_panel_segment", "ai");
     mockedCreate.mockResolvedValue({
       scenario: makeScenario({ created_via_ai: true }),

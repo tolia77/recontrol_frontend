@@ -8,8 +8,8 @@ interface ContextMenuProps {
 
 /**
  * Cursor-positioned popup primitive used by the file manager listing for
- * right-click row + empty-area menus. Phase-10 minimum: 4-8 short items,
- * outside-click and Esc both close, auto-flip when near a viewport edge.
+ * right-click row + empty-area menus. Holds 4-8 short items; outside-click
+ * and Esc both close; auto-flips when near a viewport edge.
  *
  * Layered z-index strategy:
  *   - Invisible full-viewport overlay at z-40 catches outside clicks and right-

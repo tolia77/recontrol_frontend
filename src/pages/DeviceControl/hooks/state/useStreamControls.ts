@@ -16,11 +16,8 @@ export interface UseStreamControlsReturn {
  * Owns stream display controls: stats overlay visibility, video scaling mode
  * (fit / 1:1), FPS, and resolution.
  *
- * Per D-01: feature sub-hook extracted from DeviceControl's inline state.
- * Per D-02: plain useState (transitions are independent).
- * Per OQ-2 Option A: handleFpsChange / handleResolutionChange stay in
- * DeviceControl where they compose setCurrentFps/setCurrentResolution with
- * sendSingleAction. This hook is state-only.
+ * State-only: handleFpsChange / handleResolutionChange live in DeviceControl
+ * where they compose setCurrentFps/setCurrentResolution with sendSingleAction.
  */
 export function useStreamControls(): UseStreamControlsReturn {
   const [showStats, setShowStats] = useState(false);

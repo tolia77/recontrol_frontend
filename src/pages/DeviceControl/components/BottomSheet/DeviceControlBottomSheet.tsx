@@ -7,12 +7,12 @@ export interface Props {
   open: boolean;
   onClose: () => void;
   title: string;
-  /** Single active panel node (Files/Assistant/Scenarios) — one tool at a time (D-07) */
+  /** Single active panel node (Files/Assistant/Scenarios) — one tool at a time */
   children: ReactNode;
   /**
    * When true and portrait orientation, expands the sheet to h-dvh so the
-   * active panel (e.g. Assistant) is fully visible above the soft keyboard
-   * (DCTL-04 D-10). Landscape is always h-dvh so this has no effect there.
+   * active panel (e.g. Assistant) is fully visible above the soft keyboard.
+   * Landscape is always h-dvh so this has no effect there.
    */
   forceFullHeight?: boolean;
 }
@@ -21,16 +21,16 @@ export interface Props {
  * DeviceControlBottomSheet — always-mounted custom slide-up sheet.
  *
  * CRITICAL: This component NEVER returns null based on `open`. It must stay
- * mounted so the `<video>` stream behind it is never disturbed (DCTL-02,
- * T-36-08). Closed state uses CSS translate-y-full + invisible, NOT
- * conditional rendering.
+ * mounted so the `<video>` stream behind it is never disturbed. Closed state
+ * uses CSS translate-y-full + invisible, NOT conditional rendering.
  *
  * NOT ui/Modal: Modal does `if(!open) return null` which would tear down
  * children and risk the video.
  *
  * Portrait:  h-[50dvh]  (stream stays visible above the sheet)
  * Landscape: h-dvh      (full-screen; landscape viewport too short for half)
- * (D-05; driven off useOrientation hook, NEVER md:/lg: — S5 landmine)
+ * Driven off the useOrientation hook, NEVER md:/lg: breakpoints (landscape
+ * phones desync otherwise).
  */
 function DeviceControlBottomSheet({ open, onClose, title, children, forceFullHeight }: Props) {
   const { t } = useTranslation("deviceControl");
@@ -51,7 +51,7 @@ function DeviceControlBottomSheet({ open, onClose, title, children, forceFullHei
     };
   }, [open]);
 
-  // Drag handle pointer event handlers for swipe-down dismiss (D-06)
+  // Drag handle pointer event handlers for swipe-down dismiss
   const handleDragPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     dragStartY.current = e.clientY;
     dragCurrentY.current = e.clientY;
@@ -113,7 +113,7 @@ function DeviceControlBottomSheet({ open, onClose, title, children, forceFullHei
 
   return (
     <>
-      {/* Backdrop — only rendered when open (D-06 dismiss path 2) */}
+      {/* Backdrop — only rendered when open; tap to dismiss */}
       {open && (
         <div
           data-testid="sheet-backdrop"
@@ -123,7 +123,7 @@ function DeviceControlBottomSheet({ open, onClose, title, children, forceFullHei
         />
       )}
 
-      {/* Sheet panel — ALWAYS MOUNTED; visibility toggled via CSS (DCTL-02, T-36-08) */}
+      {/* Sheet panel — ALWAYS MOUNTED; visibility toggled via CSS so the video stream is never torn down */}
       <div
         ref={sheetRef}
         data-testid="bottom-sheet"
@@ -133,7 +133,7 @@ function DeviceControlBottomSheet({ open, onClose, title, children, forceFullHei
         aria-label={open ? title : undefined}
         className={`${baseClasses} ${orientationClasses} ${visibilityClasses}`}
       >
-        {/* Drag handle zone — 40px tall target for swipe-down dismiss (D-06 path 1) */}
+        {/* Drag handle zone — 40px tall target for swipe-down dismiss */}
         <div
           data-testid="drag-handle-zone"
           className="flex h-10 cursor-grab items-center justify-center active:cursor-grabbing"
@@ -146,7 +146,7 @@ function DeviceControlBottomSheet({ open, onClose, title, children, forceFullHei
           <div className="h-1 w-10 rounded-full bg-border" />
         </div>
 
-        {/* Header — title left, close button right (D-06 dismiss path 3) */}
+        {/* Header — title left, close button right */}
         <div className="flex items-center justify-between px-4 pb-0 pt-2">
           <span className="text-[20px] font-medium text-foreground">{title}</span>
           <button
@@ -159,7 +159,7 @@ function DeviceControlBottomSheet({ open, onClose, title, children, forceFullHei
           </button>
         </div>
 
-        {/* Panel content — one tool at a time per rightPaneActive (D-07) */}
+        {/* Panel content — one tool at a time per rightPaneActive */}
         <div className="overflow-y-auto px-4 py-2">{children}</div>
       </div>
     </>

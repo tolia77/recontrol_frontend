@@ -136,7 +136,7 @@ describe("uk scenarios plural coverage", () => {
 });
 
 // Defense-in-depth: assert UK has all four CLDR plural categories for
-// common.dashboard.devicesCount (WR-03). The PLURAL_SUFFIX normalisation in
+// common.dashboard.devicesCount. The PLURAL_SUFFIX normalisation in
 // collectKeys would otherwise let UK ship only _one+_other and still pass.
 describe("uk common devicesCount plural coverage", () => {
   it("has all four CLDR plural suffix variants", () => {
@@ -150,9 +150,9 @@ describe("uk common devicesCount plural coverage", () => {
 // The subscription namespace has no count-bearing keys (no {{count}} interpolation is
 // used by any component), so no CLDR plural coverage block is needed for it.
 
-// Verifier-greppable assertion that the PILL-06 banner literal is byte-exact.
-// This protects against the em-dash → hyphen-minus drift (Pitfall 1, RESEARCH lines 611-615).
-describe("clipboard PILL-06 banner literal", () => {
+// Assert the clipboard banner literal is byte-exact. This protects against
+// the em-dash → hyphen-minus drift.
+describe("clipboard banner literal", () => {
   it("has em dash U+2014 in en.toast.firstSync", () => {
     expect(en_clipboard.toast.firstSync).toBe(
       "Clipboard sync is active — copies are mirrored both ways",

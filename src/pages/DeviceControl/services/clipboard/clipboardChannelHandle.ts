@@ -14,8 +14,8 @@ export function createClipboardChannelHandle(
       log.warn("[clipboard] non-text frame dropped");
       return;
     }
-    // Phase 13 wire proof hook: strict parsing happens on desktop side; frontend
-    // side keeps this listener lightweight and policy-only for now.
+    // Strict parsing happens on the desktop side; this listener stays
+    // lightweight and policy-only.
     log.log("[clipboard] message received");
   };
 

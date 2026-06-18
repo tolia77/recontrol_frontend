@@ -10,9 +10,9 @@ export interface ChipInputProps {
   value: string[];
   onChange: (chips: string[]) => void;
   placeholder?: string;
-  /** EDIT-02 / D-05: cap on total chips (default 32). */
+  /** Cap on total chips (default 32). */
   maxChips?: number;
-  /** EDIT-02 / D-05: cap on per-chip length (default 1024). */
+  /** Cap on per-chip length (default 1024). */
   maxChipLength?: number;
   disabled?: boolean;
   "aria-label"?: string;
@@ -78,7 +78,7 @@ export default function ChipInput({
     if (disabled) return;
     const text = e.clipboardData.getData("text");
     if (!text) return;
-    // D-07: split on whitespace, no quote awareness.
+    // Split on whitespace, no quote awareness.
     const tokens = text.split(/\s+/).filter((t) => t.length > 0);
     if (tokens.length <= 1) return; // single token → let default paste fill the input
     e.preventDefault();

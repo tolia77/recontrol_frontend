@@ -14,15 +14,15 @@ import type { ChunkHeader } from "src/pages/DeviceControl/services/files/ChunkHe
  * The cancel-discard contract is enforced INSIDE this class. It MUST NOT live in
  * any caller; the state machine is the single source of truth so a cancel that
  * races finalize cannot accidentally drop a file in the user's Downloads folder
- * after they hit Cancel (CONTEXT-locked semantics).
+ * after they hit Cancel.
  *
  * Chunk accumulation: chunks are stored as ArrayBuffer[] then assembled into one
- * Blob at finalize time -- NEVER pre-concatenated per chunk (RESEARCH Pitfall:
- * O(n^2) memory churn on large downloads).
+ * Blob at finalize time -- NEVER pre-concatenated per chunk (avoids O(n^2)
+ * memory churn on large downloads).
  *
  * Anchor-tag finalize: createObjectURL + a.download = name + a.click + 60s
- * setTimeout-deferred URL.revokeObjectURL (RESEARCH Pitfall 4: Safari Blob URL
- * revocation safety -- synchronous revoke can break the in-flight save).
+ * setTimeout-deferred URL.revokeObjectURL (synchronous revoke can break the
+ * in-flight save on Safari).
  */
 export type DownloadState =
   | "pending"
@@ -34,7 +34,7 @@ export type DownloadState =
 export class DownloadTransfer {
   // erasableSyntaxOnly tsconfig forbids constructor parameter properties; use
   // explicit field declarations + body-side assignment (same pattern as
-  // TransferQueue.ts in Plan 11-03).
+  // TransferQueue.ts).
   readonly transferId: number;
   readonly name: string;
   readonly totalBytes: number;
@@ -46,8 +46,8 @@ export class DownloadTransfer {
   private blobUrl: string | null = null;
 
   /**
-   * Wall-clock timestamp of the most recent chunk arrival. Plan 11-06's stall
-   * watchdog reads this to decide when to flip the row state to 'stalled'.
+   * Wall-clock timestamp of the most recent chunk arrival. The stall watchdog
+   * reads this to decide when to flip the row state to 'stalled'.
    */
   lastChunkAtMs = Date.now();
 
@@ -94,14 +94,13 @@ export class DownloadTransfer {
 
   /**
    * Assemble the blob, fire the anchor-tag click, and defer URL revocation.
-   * NO-OP if state === 'cancelled' or already 'done' (CONTEXT cancel-discard
-   * contract).
+   * NO-OP if state === 'cancelled' or already 'done' (cancel-discard contract).
    *
    * Synchronous click() inside the same event-loop turn is load-bearing:
    * Safari's popup blocker treats deferred .click() as user-action-less and
-   * blocks the download (RESEARCH Pitfall 8). The download.complete event
-   * dispatcher in runDownload calls finalize() synchronously from the event
-   * listener so we ride the user gesture on Safari too.
+   * blocks the download. The download.complete event dispatcher in runDownload
+   * calls finalize() synchronously from the event listener so we ride the user
+   * gesture on Safari too.
    */
   finalize(): void {
     if (this.state === "cancelled") return;
@@ -120,10 +119,9 @@ export class DownloadTransfer {
     a.click();
     a.remove();
 
-    // Safari Blob URL revocation safety (RESEARCH Pitfall 4): synchronous
-    // revoke can interrupt the save dialog / the implicit Downloads-folder
-    // write. 60s gives every browser plenty of headroom while still
-    // releasing the URL eventually.
+    // Safari Blob URL revocation safety: synchronous revoke can interrupt the
+    // save dialog / the implicit Downloads-folder write. 60s gives every
+    // browser plenty of headroom while still releasing the URL eventually.
     const url = this.blobUrl;
     setTimeout(() => {
       URL.revokeObjectURL(url);
@@ -134,9 +132,9 @@ export class DownloadTransfer {
 
   /**
    * Discard buffered chunks; revoke any in-flight blob URL; flip terminal.
-   * NO-OP if state === 'done' (CONTEXT cancel-discard contract: a complete
-   * file already left the runner via finalize, and cancelling AFTER that
-   * point would not undo the user's downloaded copy).
+   * NO-OP if state === 'done' (cancel-discard contract: a complete file
+   * already left the runner via finalize, and cancelling AFTER that point
+   * would not undo the user's downloaded copy).
    */
   cancel(): void {
     if (this.state === "done") return;

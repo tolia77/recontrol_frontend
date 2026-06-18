@@ -408,7 +408,7 @@ describe("ScenariosPanel — launch flow (library → modal → run)", () => {
   });
 });
 
-describe("ScenariosPanel — single-in-flight Toast (D-22-11)", () => {
+describe("ScenariosPanel — single-in-flight Toast", () => {
   it("surfaces run_in_progress as a Toast and stays in modal", async () => {
     renderPanel();
     await waitFor(() => {

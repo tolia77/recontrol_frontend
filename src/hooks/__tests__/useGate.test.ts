@@ -74,7 +74,7 @@ afterEach(() => cleanup());
 
 // Tests
 
-describe("useGate — fail-open passthrough (T-34-06 mitigation)", () => {
+describe("useGate — fail-open passthrough", () => {
   it("returns allowed:true, reason:null when usage is null (loading)", () => {
     const ctx = makeContextValue(null);
     const { result } = renderHook(() => useGate("device_limit"), {
@@ -115,7 +115,7 @@ describe("useGate — boolean gate: device_sharing", () => {
   });
 });
 
-describe("useGate — boolean gate: ai_access (RD-2)", () => {
+describe("useGate — boolean gate: ai_access", () => {
   it("ai_access=false → allowed:false, reason:'feature'", () => {
     const ctx = makeContextValue(makeUsage({ ai_access: false }));
     const { result } = renderHook(() => useGate("ai_access"), {
@@ -217,7 +217,7 @@ describe("useGate — count gate: ai_draft_daily_limit", () => {
   });
 });
 
-describe("useGate — count-gate requiredPlan uses tier ORDERING (RD-1)", () => {
+describe("useGate — count-gate requiredPlan uses tier ORDERING", () => {
   it("FREE user at a count cap → requiredPlan === 'pro' (cheapest paid tier above free)", () => {
     // status null → treated as free
     const ctx = makeContextValue(

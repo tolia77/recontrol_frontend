@@ -7,8 +7,7 @@ import type { TransferQueue } from "src/pages/DeviceControl/services/transfer/Tr
 
 /**
  * 100 MiB download-warning threshold (mirrors the upload threshold in
- * useFileUpload.ts — both gates reference the same LARGE_FILE_THRESHOLD
- * from TRANSFER-06 / Plan 11-05).
+ * useFileUpload.ts — both gates use the same LARGE_FILE_THRESHOLD value).
  */
 const LARGE_FILE_THRESHOLD = 100 * 1024 * 1024;
 
@@ -31,12 +30,11 @@ export interface UseFileDownloadReturn {
  *
  * Owns: `enqueueDownload` (internal helper) + `triggerDownload` (public).
  *
- * Design invariants (T-27-02):
- *   - The `showSaveFilePicker` capability detection gate is preserved VERBATIM.
+ * Design invariants:
  *   - For files > 100 MiB:
  *     - If `showSaveFilePicker` is absent: calls `onDownloadBlocked` and returns.
  *     - If `showSaveFilePicker` is present: calls `onPendingDownloadWarn` and returns.
- *   - Directories are skipped immediately (DOWNLOAD-02).
+ *   - Directories are skipped immediately.
  *   - Files ≤ 100 MiB are enqueued directly.
  */
 export function useFileDownload({
@@ -75,7 +73,7 @@ export function useFileDownload({
   //   - Otherwise: enqueue immediately.
   const triggerDownload = useCallback(
     (entry: FileEntry) => {
-      if (entry.isDirectory) return; // DOWNLOAD-02
+      if (entry.isDirectory) return; // directories are not downloadable
       if (entry.sizeBytes > LARGE_FILE_THRESHOLD) {
         const hasFsa =
           typeof (window as { showSaveFilePicker?: unknown })

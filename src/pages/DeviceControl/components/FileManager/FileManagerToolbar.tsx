@@ -18,23 +18,22 @@ interface FileManagerToolbarProps {
   /** When no folder is selected, the refresh button is a no-op. */
   disabled?: boolean;
 
-  /** Plan 10-04: New Folder button is wired here. */
   onNewFolder: () => void;
-  /** Plan 10-04: Rename is enabled iff exactly one row is selected. */
+  /** Rename is enabled iff exactly one row is selected. */
   onRename: () => void;
   /** Number of currently-selected rows; gates the Rename button (== 1). */
   selectionCount: number;
 
-  /** Plan 10-05: Delete is enabled iff selectionCount > 0. */
+  /** Delete is enabled iff selectionCount > 0. */
   onDelete: () => void;
-  /** Plan 10-05: Move to… opens the FolderPickerModal in 'move' mode. */
+  /** Move to… opens the FolderPickerModal in 'move' mode. */
   onMoveTo: () => void;
-  /** Plan 10-05: Copy to… opens the FolderPickerModal in 'copy' mode. */
+  /** Copy to… opens the FolderPickerModal in 'copy' mode. */
   onCopyTo: () => void;
 
   /**
-   * Plan 11-04: Upload button. Receives the user-picked File array (multi-
-   * select) and forwards it to the panel's per-file enqueue path. The hidden
+   * Upload button. Receives the user-picked File array (multi-select) and
+   * forwards it to the panel's per-file enqueue path. The hidden
    * <input type="file" multiple> lives in this component; clicking the
    * Upload button triggers the OS file picker.
    */
@@ -55,8 +54,8 @@ interface FileManagerToolbarProps {
 }
 
 /**
- * Toolbar strip shown above the breadcrumb. Plan 10-04 wires New Folder and
- * Rename; plan 10-05 wires Delete + Move to… + Copy to….
+ * Toolbar strip shown above the breadcrumb. Hosts New Folder, Rename, Delete,
+ * Move to…, Copy to…, and Upload actions.
  */
 function FileManagerToolbar({
   showHidden,

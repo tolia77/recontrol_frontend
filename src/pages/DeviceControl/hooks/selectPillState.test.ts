@@ -1,6 +1,6 @@
-// Hook integration coverage strategy:
+// Coverage strategy:
 //   - selectPillState is a pure function with `now` injected; no React, no real time.
-//   - One fixture per precedence rung in D-02; first-true-wins behavior verified by
+//   - One fixture per precedence rung; first-true-wins behavior verified by
 //     constructing inputs that satisfy multiple rungs and asserting the higher rung wins.
 //   - vitest.config.ts has `globals: false`, so describe/expect/it are explicit imports
 //     (mirrors useClipboardCapability.test.ts).
@@ -41,7 +41,7 @@ function baseInput(
   };
 }
 
-describe("selectPillState precedence ladder (D-02)", () => {
+describe("selectPillState precedence ladder", () => {
   it("rung 1: disconnected when webRtcUp is false (outranks every other signal)", () => {
     const r = selectPillState(baseInput({ webRtcUp: false, isPaused: true }));
     expect(r.state).toBe("disconnected");
@@ -58,7 +58,7 @@ describe("selectPillState precedence ladder (D-02)", () => {
     expect(r.tooltipKey).toBe("pill.tooltip.unsupportedBrowser");
   });
 
-  it("rung 2b: unsupported-browser when isSecureContext is false even if read/write available (RESEARCH OQ 1)", () => {
+  it("rung 2b: unsupported-browser when isSecureContext is false even if read/write available", () => {
     const r = selectPillState(
       baseInput({
         browserCaps: { canRead: true, canWrite: true, isSecureContext: false },
@@ -73,7 +73,7 @@ describe("selectPillState precedence ladder (D-02)", () => {
     expect(r.tooltipKey).toBe("pill.tooltip.permissionRequired");
   });
 
-  it("rung 4: disabled when both directions disabled (D-04 master-off inference)", () => {
+  it("rung 4: disabled when both directions disabled (master-off inference)", () => {
     const r = selectPillState(
       baseInput({
         cachedDesktopCaps: caps({
@@ -178,7 +178,7 @@ describe("selectPillState precedence ladder (D-02)", () => {
     expect(r.tooltipKey).toBe("pill.tooltip.idle");
   });
 
-  it("refused-too-large outranks paused (D-02 — most recent volitional outcome wins mid-pause)", () => {
+  it("refused-too-large outranks paused (most recent volitional outcome wins mid-pause)", () => {
     const r = selectPillState(
       baseInput({
         isPaused: true,

@@ -9,8 +9,8 @@ import {
   type VerdictAtSave,
 } from "src/services/backend/scenariosService";
 
-// AI-draft prefill shape (D-12 — no `id` field; UUIDs assigned at save time
-// via Scenario#before_validation). Matches DraftResponse['draft'] from
+// AI-draft prefill shape (no `id` field; UUIDs assigned at save time via
+// Scenario#before_validation). Matches DraftResponse['draft'] from
 // scenariosService.ts but is repeated here so the editor's public prop
 // surface does not require importing the full draft envelope.
 // Re-exported so ScenarioEditor.tsx can import it from here without circular deps.
@@ -25,7 +25,7 @@ export interface ScenarioEditorPrefill {
   }>;
 }
 
-// LIB-07: server assigns step ids on create. Client-generated ids from
+// The server assigns step ids on create. Client-generated ids from
 // crypto.randomUUID() are stable in the editor for React keys + @dnd-kit, but
 // we omit them from the payload for steps that have not yet been persisted
 // (heuristic: no classified_intent_at_save snapshot). Persisted steps keep
@@ -121,10 +121,6 @@ export interface UseScenarioEditorReturn {
 /**
  * Owns all form state for ScenarioEditor: load/save/dirty detection,
  * step CRUD, DnD reorder, and the dirty-guard close flow.
- *
- * Per D-06: mechanical behavior-preserving extraction from ScenarioEditor.tsx.
- * Per D-02: plain useState (transitions are independent, no interrelation).
- * Extracted in Phase 28.1 Plan 01.
  */
 export function useScenarioEditor(
   args: UseScenarioEditorArgs,
@@ -154,12 +150,11 @@ export function useScenarioEditor(
       setNameError(null);
       setVerdicts({});
       if (editingId === "new") {
-        // Phase 23 / Plan 23-09: AI-draft prefill seeds the initial form
-        // state. Each prefilled step is wrapped in a client-side
-        // crypto.randomUUID() so the editor's @dnd-kit + dirty-state guard
-        // can key off `id`. The UUID is intentionally dropped at save time
-        // by toPayloadStep — server's Scenario#before_validation assigns
-        // canonical UUIDs (D-12).
+        // AI-draft prefill seeds the initial form state. Each prefilled step is
+        // wrapped in a client-side crypto.randomUUID() so the editor's @dnd-kit
+        // + dirty-state guard can key off `id`. The UUID is intentionally
+        // dropped at save time by toPayloadStep — the server's
+        // Scenario#before_validation assigns canonical UUIDs.
         const seedName = prefill?.name ?? "";
         const seedDescription = prefill?.description ?? "";
         const seedSteps: CommandStep[] = prefill
@@ -217,8 +212,8 @@ export function useScenarioEditor(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingId]);
 
-  // D-04: dirty detection — pure derived flag, recomputed on every relevant
-  // change. Compared against the snapshot captured at last load/save.
+  // Dirty detection — pure derived flag, recomputed on every relevant change.
+  // Compared against the snapshot captured at last load/save.
   useEffect(() => {
     const current = snapshotPayload(
       name,
@@ -230,8 +225,8 @@ export function useScenarioEditor(
     setDirty(current !== initialSnapshotRef.current);
   }, [name, description, pinnedDeviceId, isShared, steps]);
 
-  // SHARE-03: chained-control — `is_shared` is meaningless without a pin.
-  // If the user clears the pin while shared, force `is_shared` back to false.
+  // Chained control — `is_shared` is meaningless without a pin. If the user
+  // clears the pin while shared, force `is_shared` back to false.
   useEffect(() => {
     if (!pinnedDeviceId && isShared) setIsShared(false);
   }, [pinnedDeviceId, isShared]);
@@ -274,8 +269,8 @@ export function useScenarioEditor(
         setTopError(t("editor.errors.stepsTooMany"));
         return;
       }
-      // LIB-07 boundary: drop server-only snapshots from the copy so the
-      // duplicate is sent as a fresh step on save (server assigns a new id).
+      // Drop server-only snapshots from the copy so the duplicate is sent as a
+      // fresh step on save (the server assigns a new id).
       const src = steps[i];
       const copy: CommandStep = {
         id: crypto.randomUUID(),
@@ -310,7 +305,7 @@ export function useScenarioEditor(
     setTopError(null);
     setNameError(null);
     setVerdicts({});
-    // SHARE-03 client-side hint — server validates too.
+    // Client-side hint — the server validates too.
     if (isShared && !pinnedDeviceId) {
       setTopError(t("editor.errors.policyDenied"));
       return;
@@ -329,7 +324,7 @@ export function useScenarioEditor(
         editingId === "new"
           ? await scenariosService.create(payload)
           : await scenariosService.update(editingId, payload);
-      // D-10: render verdict badges per step.
+      // Render verdict badges per step.
       const v: Record<string, VerdictAtSave> = {};
       result.scenario.command_steps.forEach((s) => {
         if (s.verdict_at_save) v[s.id] = s.verdict_at_save;
@@ -349,9 +344,9 @@ export function useScenarioEditor(
       );
       setDirty(false);
     } catch (err) {
-      // D-10: 422 deny envelope handling. POLICY-04: deny is server-enforced;
-      // we render the red borders + top error and KEEP unsaved state so the
-      // user can fix the offending step(s) without re-typing.
+      // 422 deny envelope handling. Deny is server-enforced; we render the red
+      // borders + top error and KEEP unsaved state so the user can fix the
+      // offending step(s) without re-typing.
       const data = (err as { response?: { data?: unknown } } | undefined)
         ?.response?.data as
         | {
@@ -372,7 +367,7 @@ export function useScenarioEditor(
         setVerdicts(denyMap);
         setTopError(t("editor.errors.policyDenied"));
       } else if (data?.errors?.name?.length) {
-        // LIB-04 inline rename collision.
+        // Inline rename collision.
         setNameError(t("editor.errors.nameTaken"));
       } else {
         setTopError(t("editor.errors.policyDenied"));

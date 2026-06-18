@@ -12,20 +12,19 @@ export interface AssistantHeaderProps {
   onCopy: () => void;
   /** New chat: clears UI transcript + backend conversation history. Disabled while a loop is active. */
   onNewChat: () => void;
-  /** When true, header buttons receive min-h-[44px] min-w-[44px] touch targets (DCTL-04 D-11) */
+  /** When true, header buttons receive min-h-[44px] min-w-[44px] touch targets */
   isMobile?: boolean;
 }
 
 /**
- * Panel header bar (CHAT-06 / CHAT-07 / CHAT-09).
+ * Panel header bar.
  *
  * Layout: step counter on the left (hidden when `stepCount === 0`), New chat +
  * Copy as Markdown icon buttons on the right.
  *
  * Invariants:
- *   - Step counter hidden when 0 (CONTEXT "hidden when idle"; per RESEARCH
- *     §Pitfall 5 the counter increments on `tool_call_start` so a turn that
- *     never reaches a tool stays at 0).
+ *   - Step counter hidden when 0 (idle). The counter increments on
+ *     `tool_call_start`, so a turn that never reaches a tool stays at 0.
  *   - New chat is disabled while a loop is active (would discard an in-flight
  *     turn).
  *   - Copy as Markdown is variant `ghost` — non-destructive utility, always
@@ -33,12 +32,10 @@ export interface AssistantHeaderProps {
  *     empty-string clipboard write cleanly).
  *
  * Stop lives in the InputBox, not here: it replaces the Send button while a
- * loop is active (CHAT-07).
+ * loop is active.
  *
  * Click → backend wire:
  *   - onCopy → AssistantPanel writes the serialized transcript to clipboard.
- *
- * No quota meter (D-08 — deferred to v1.5+ admin tooling).
  */
 const AssistantHeader: FC<AssistantHeaderProps> = ({
   status,

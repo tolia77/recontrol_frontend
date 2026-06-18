@@ -9,7 +9,7 @@ import type {
 /**
  * Maximum number of terminal-state entries retained in completed history.
  * Older entries are dropped (oldest-completedAt first) once the count exceeds
- * this. CONTEXT-locked at 10 in 11-CONTEXT.md.
+ * this.
  */
 const HISTORY_LIMIT = 10;
 
@@ -23,20 +23,17 @@ const TERMINAL: ReadonlySet<TransferItem["state"]> = new Set([
 /**
  * Sequential, in-memory queue for upload + download transfers.
  *
- * TRANSFER-01 invariant: at most ONE active transfer at a time. tick() is the
- * single dispatch point; it short-circuits if activeId !== null. Promotion of
- * the next 'queued' item happens in tick()'s finally block, after the previous
+ * Invariant: at most ONE active transfer at a time. tick() is the single
+ * dispatch point; it short-circuits if activeId !== null. Promotion of the
+ * next 'queued' item happens in tick()'s finally block, after the previous
  * runner has resolved AND the previous item has been moved to a terminal
- * state. Pitfall "starting next transfer before complete handshake resolves"
- * is closed by the await + finally ordering.
+ * state. The await + finally ordering is what prevents starting the next
+ * transfer before the previous complete handshake resolves.
  *
- * The queue is NOT persisted to any storage. CONTEXT-locks "queue survives
- * panel close" as Phase 12. A panel close + reopen creates a fresh queue.
+ * The queue is NOT persisted to any storage; a panel close + reopen creates a
+ * fresh queue.
  *
  * Runner contract: runUpload / runDownload are injected at construction.
- * Plan 11-04 will pass the real upload runner; plan 11-05 the download
- * runner. This plan only ships stub implementations (see FileManagerPanel.tsx)
- * so the surface is exercisable end-to-end before runners exist.
  */
 export class TransferQueue implements TransferQueueAPI {
   private items: TransferItem[] = [];
@@ -165,9 +162,9 @@ export class TransferQueue implements TransferQueueAPI {
    * runner. Re-entrant: returns immediately if a transfer is already in
    * flight; recurses in the finally block to drain the queue.
    *
-   * Sequential await is load-bearing for TRANSFER-01: the next promotion
-   * cannot run until the current runner's promise resolves AND the item
-   * has been moved to a terminal state by the finally block.
+   * Sequential await is load-bearing for the one-active-transfer invariant:
+   * the next promotion cannot run until the current runner's promise resolves
+   * AND the item has been moved to a terminal state by the finally block.
    */
   private async tick(): Promise<void> {
     if (this.activeId !== null) return;
@@ -244,8 +241,7 @@ export class TransferQueue implements TransferQueueAPI {
         cb(snap);
       } catch (err: unknown) {
         // A throwing listener must NOT prevent siblings from firing.
-        // Mirrors the FilesChannelClient.onEvent dispatch loop pattern from
-        // plan 11-01.
+        // Mirrors the FilesChannelClient.onEvent dispatch loop pattern.
         console.error("[transfer-queue] listener threw", err);
       }
     }

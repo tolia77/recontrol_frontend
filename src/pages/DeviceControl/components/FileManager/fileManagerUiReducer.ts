@@ -2,17 +2,17 @@ import type { FileEntry } from "src/pages/DeviceControl/services/files/filesProt
 import type { ContextMenuState } from "./types";
 
 /**
- * FileManager UI-flow reducer (Plan 27-01 / FILES-03).
+ * FileManager UI-flow reducer.
  *
  * Models all dialog/prompt/editing/menu/operation-flow state that was
  * previously scattered across ~14 independent `useState` vars in
- * `FileManagerPanel.tsx` (D-03).
+ * `FileManagerPanel.tsx`.
  *
- * Design invariants (cross-reference 27-CONTEXT):
- *   - Pure function: no side effects, no I/O, no Promise resolvers (D-05).
+ * Design invariants:
+ *   - Pure function: no side effects, no I/O, no Promise resolvers.
  *     Resolver callbacks live in `pendingResolversRef` in the container.
  *   - `warningPrompt` and `conflictPrompt` carry display data ONLY — the
- *     `resolve()` callback is NOT stored here (D-05).
+ *     `resolve()` callback is NOT stored here.
  *   - `COMMIT_SUPPRESS_SINGLE_DELETE` is the ONLY transition that sets
  *     `suppressSingleDeleteConfirm: true`. The checkbox's pending value rides
  *     on `confirm.suppressOnConfirm` (toggled via `SET_SUPPRESS_ON_CONFIRM`)
@@ -54,14 +54,14 @@ export interface FileManagerUiState {
   /**
    * Upload warning prompt — display data only.
    * The resolve callback is stored in `pendingResolversRef` in the container
-   * (D-05). Never put `resolve` here.
+   * Never put `resolve` here.
    */
   warningPrompt: { fileName: string; sizeBytes: number } | null;
 
   /**
    * Conflict prompt — display data only.
    * The resolve callback is stored in `pendingResolversRef` in the container
-   * (D-05). Never put `resolve` here.
+   * Never put `resolve` here.
    */
   conflictPrompt: {
     operation: "upload" | "move" | "copy";
@@ -181,8 +181,8 @@ export function fileManagerUiReducer(
       return { ...state, isDeleting: action.payload };
 
     case "COMMIT_SUPPRESS_SINGLE_DELETE":
-      // Commit-on-confirm semantics (D-05 / §Established Patterns):
-      // only fired when the user actually confirms deletion AND the
+      // Commit-on-confirm semantics: only fired when the user actually
+      // confirms deletion AND the
       // suppressOnConfirm checkbox was checked. This is the ONLY transition
       // that flips the session-scoped suppress flag to true.
       return { ...state, suppressSingleDeleteConfirm: true };

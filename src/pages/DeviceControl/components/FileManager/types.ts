@@ -17,13 +17,12 @@ export interface SortState {
 
 /**
  * Full panel state persisted (per-device) to localStorage. Selection + scroll
- * position are intentionally NOT here -- they are in-memory React state only
- * (Phase-10 Research decision; Plan 10-03 wires selection).
+ * position are intentionally NOT here -- they are in-memory React state only.
  */
 export interface FileManagerState {
   panelOpen: boolean;
   splitRatio: number;
-  /** Phase 20 D-01/D-02 + Phase 21 UI-02: which right pane is active (mutex). null = all closed. */
+  /** Which right pane is active (mutex). null = all closed. */
   rightPaneActive: "files" | "assistant" | "scenarios" | null;
   currentPath: string | null;
   sort: SortState;
@@ -42,8 +41,8 @@ export type FileTypeKind =
   | "other";
 
 /**
- * In-memory selection state for the file manager listing. Plan 10-03 wires
- * Windows-Explorer-style single / shift / ctrl click semantics on top of this.
+ * In-memory selection state for the file manager listing, supporting
+ * Windows-Explorer-style single / shift / ctrl click semantics.
  *
  * - `selected`: the set of currently-selected entry paths.
  * - `focusedIndex`: row currently rendered as "focused" (arrow-key target);
@@ -51,8 +50,8 @@ export type FileTypeKind =
  * - `anchorIndex`: the row of the last single-click or ctrl-click; the pivot
  *   for shift-click range selection. -1 when no anchor exists.
  *
- * Selection is intentionally not persisted (Research Pattern 3 + Pitfall 5):
- * navigating to a new folder, or a different sort/filter that changes the
+ * Selection is intentionally not persisted: navigating to a new folder, or a
+ * different sort/filter that changes the
  * `entries` array identity, resets `selected` and `anchorIndex` to empty/-1
  * and clamps `focusedIndex` into the new range.
  */
@@ -63,9 +62,8 @@ export interface SelectionState {
 }
 
 /**
- * One row of a {@link ContextMenuState}. Plan 10-04 introduces this with a
- * Rename / Delete / Move / Copy shape; plan 10-05 turns the disabled stubs
- * live without changing the shape.
+ * One row of a {@link ContextMenuState}, with a Rename / Delete / Move / Copy
+ * shape.
  *
  * - `separator: true` renders as a divider; the `label` and `onSelect` fields
  *   are ignored for that row but still required for shape uniformity.
@@ -95,7 +93,7 @@ export interface ContextMenuState {
 }
 
 /**
- * Props for the {@link ConfirmDialog} primitive (plan 10-05). Used for the
+ * Props for the {@link ConfirmDialog} primitive. Used for the
  * destructive delete confirmation; reusable for any future yes/no modal that
  * needs to gate a wire round-trip behind explicit user assent.
  *

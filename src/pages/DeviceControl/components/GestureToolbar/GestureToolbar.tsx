@@ -16,7 +16,7 @@ export interface Props {
   addAction: (a: CommandAction) => void;
   disabled?: boolean;
   rightPaneActive: "files" | "assistant" | "scenarios" | null;
-  /** Sets rightPaneActive AND opens the sheet — combined handler from Plan 04 */
+  /** Sets rightPaneActive AND opens the sheet */
   onSelectPanel: (p: "files" | "assistant" | "scenarios") => void;
   aiAllowed: boolean;
   /** Called when Assistant tapped while AI is gated — show UpgradeModal upstream */
@@ -24,7 +24,7 @@ export interface Props {
   onDisconnect: () => void;
   deviceName?: string;
   /**
-   * Whether the user has `access_keyboard` permission (T-37-01 security gate).
+   * Whether the user has `access_keyboard` permission.
    * All keyboard.* dispatches are gated behind this flag.
    * Threaded from DeviceControl.tsx which reads it from usePermissions.
    */
@@ -76,19 +76,19 @@ function KeyboardIcon({ className = "w-5 h-5" }: { className?: string }) {
  * GestureToolbar — collapsible FAB cluster for the mobile DeviceControl shell.
  *
  * Collapsed: a single 52×52 bg-primary circle anchored to the bottom-right
- * corner, respecting safe-area insets (KBD-01, D-01, D-02).
+ * corner, respecting safe-area insets.
  *
  * Expanded: a vertical stack of action items expanding upward from the FAB
- * anchor (D-03). Actions: touch-mode indicator, Files, Assistant, Scenarios,
- * Keyboard (raises native soft keyboard via synchronous .focus() — D-10),
+ * anchor. Actions: touch-mode indicator, Files, Assistant, Scenarios,
+ * Keyboard (raises native soft keyboard via synchronous .focus()),
  * Power (re-hosts PowerPopover), Disconnect.
  *
  * iOS gotcha: keyboard focus() MUST be synchronous inside the tap handler.
  *
- * Phase 37 additions (KBD-02/KBD-03):
+ * Keyboard typing pipeline:
  * - onInput/onKeyDown handlers on the hidden input forward chars + control keys
  * - ModifierStrip mounted when keyboardRaised && rightPaneActive === null
- * - canUseKeyboard prop gates all keyboard.* dispatches (T-37-01)
+ * - canUseKeyboard prop gates all keyboard.* dispatches
  */
 function GestureToolbar({
   addAction,
@@ -109,7 +109,7 @@ function GestureToolbar({
   const hiddenInputRef = useRef<HTMLInputElement>(null);
   const modifierStripRef = React.useRef<ModifierStripHandle>(null);
 
-  // Maps timerId → vk for pending hidden-input keyUp timers (CR-02 fix)
+  // Maps timerId → vk for pending hidden-input keyUp timers
   const pendingKeyUpTimers = useRef<Map<number, number>>(new Map());
 
   // Unmount cleanup: flush any pending hidden-input keyUp timers synchronously.
@@ -124,7 +124,7 @@ function GestureToolbar({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Track keyboard height from VisualViewport for strip docking (D-05)
+  // Track keyboard height from VisualViewport for strip docking
   const { keyboardHeight } = useVisualViewport();
 
   // Outside-click + Escape to collapse (mirrors PowerPopover lines 50-65)
@@ -185,15 +185,15 @@ function GestureToolbar({
     navigate("/devices");
   };
 
-  // KBD-02: Hidden input typing pipeline
+  // Hidden input typing pipeline
 
   /**
    * handleHiddenInput — processes characters typed on the soft keyboard.
    *
-   * - Bail if keyboard not raised, disabled, or canUseKeyboard is false (T-37-01)
-   * - If a modifier is sticky, route char through deliverPrintable (D-09)
-   * - Otherwise dispatch keyboard.typeText (D-01 hybrid)
-   * - Clear input value after every send (D-03 no local echo)
+   * - Bail if keyboard not raised, disabled, or canUseKeyboard is false
+   * - If a modifier is sticky, route char through deliverPrintable
+   * - Otherwise dispatch keyboard.typeText
+   * - Clear input value after every send (no local echo)
    */
   const handleHiddenInput = useCallback(
     (e: React.FormEvent<HTMLInputElement>) => {
@@ -208,13 +208,13 @@ function GestureToolbar({
       // being truncated or corrupted.
       const isSingleLatinChar = text.length === 1 && /[\x20-\x7e]/.test(text);
       if (isSingleLatinChar && modifierStripRef.current?.hasActiveModifier()) {
-        // D-09: combo routing — route through sticky modifiers
+        // Combo routing — route through sticky modifiers
         modifierStripRef.current.deliverPrintable(text);
       } else {
-        // D-01: printable char — typeText envelope
+        // Printable char — typeText envelope
         addAction({ id: generateUUID(), type: "keyboard.typeText", payload: { Text: text } });
       }
-      // D-03: clear after send (RustDesk pattern, also fixes Pitfall 3)
+      // Clear after send so the input never accumulates / echoes locally
       e.currentTarget.value = "";
     },
     [keyboardRaised, disabled, canUseKeyboard, addAction],
@@ -225,7 +225,7 @@ function GestureToolbar({
    *
    * Passthrough keys (Enter, Backspace, Delete, Escape, Tab, arrows) are sent
    * as keyDown/keyUp pairs. Printable keys fall through to onInput.
-   * All dispatches gated on canUseKeyboard (T-37-01).
+   * All dispatches gated on canUseKeyboard.
    */
   const handleHiddenKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -271,9 +271,9 @@ function GestureToolbar({
         right: "calc(env(safe-area-inset-right) + 16px)",
       }}
     >
-      {/* Hidden off-screen input for native soft keyboard raise (D-10, KBD-01).
+      {/* Hidden off-screen input for native soft keyboard raise.
           Must NOT be display:none or visibility:hidden — must remain focusable.
-          Phase 37: onInput/onKeyDown handlers attached + D-02 autocorrect suppression. */}
+          onInput/onKeyDown handlers forward typing; autocorrect is suppressed. */}
       <input
         ref={hiddenInputRef}
         type="text"
@@ -304,7 +304,7 @@ function GestureToolbar({
       {/* Expanded action stack — appears above the FAB, transition via opacity/transform */}
       {open && (
         <div className="mb-3 flex flex-col items-end gap-2">
-          {/* 1. Touch mode indicator — read-only pill (D-04: Interactive-only on mobile) */}
+          {/* 1. Touch mode indicator — read-only pill */}
           <div
             className="flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 shadow-overlay"
             aria-label={t("mobile.toolbar.trackpadMode")}
@@ -355,7 +355,7 @@ function GestureToolbar({
             <span className="text-body">{t("mobile.toolbar.scenarios")}</span>
           </button>
 
-          {/* 5. Keyboard toggle (D-10) */}
+          {/* 5. Keyboard toggle */}
           <button
             type="button"
             onClick={handleKeyboardToggle}
@@ -374,7 +374,7 @@ function GestureToolbar({
             </span>
           </button>
 
-          {/* 6. Power — re-hosts the existing PowerPopover (T-36-06 gate) */}
+          {/* 6. Power — re-hosts the existing PowerPopover */}
           <div className="flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 shadow-overlay text-destructive">
             <PowerIcon className="h-5 w-5" />
             <span className="text-body">{t("mobile.toolbar.power")}</span>

@@ -13,14 +13,14 @@ interface FileManagerRowProps {
   index: number;
   isSelected: boolean;
   isFocused: boolean;
-  /** Plan 10-04: when this row's path === renamingPath, render inline input. */
+  /** When this row's path === renamingPath, render an inline edit input. */
   isRenaming: boolean;
   onClick: (e: MouseEvent<HTMLDivElement>) => void;
   onDoubleClick: () => void;
   onContextMenu: (e: MouseEvent<HTMLDivElement>) => void;
-  /** Plan 10-04: invoked when the inline rename input commits via Enter. */
+  /** Invoked when the inline rename input commits via Enter. */
   onRenameCommit: (newName: string) => void;
-  /** Plan 10-04: invoked on Esc / blur to cancel the rename. */
+  /** Invoked on Esc / blur to cancel the rename. */
   onRenameCancel: () => void;
   /** Mobile: when true, row uses 44px touch height and shows a kebab button. */
   isMobile?: boolean;

@@ -1,8 +1,8 @@
 // Unit tests for mapFilesErrorToMessage.
 //
-// Coverage focus: the share-level PERMISSION_DENIED discrimination introduced
-// in Phase 16, which branches on `error.data.permission` to surface a
-// read-specific or write-specific message instead of the generic OS-level
+// Coverage focus: the share-level PERMISSION_DENIED discrimination, which
+// branches on `error.data.permission` to surface a read-specific or
+// write-specific message instead of the generic OS-level
 // denial copy. Also smoke-covers the templated `errors.codes.<CODE>` fallback
 // path and the INVALID_NAME drill-down so future regressions on either branch
 // stay obvious. The mapping function is pure; we feed it a fake `t` that

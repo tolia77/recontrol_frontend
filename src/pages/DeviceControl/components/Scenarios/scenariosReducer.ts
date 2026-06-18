@@ -1,27 +1,21 @@
 /**
  * scenariosReducer — outer reducer for the ScenariosPanel run + history state.
  *
- * Composes `transcriptReducer` (from ../Assistant/transcriptReducer) for the
- * per-step transcript sub-state per UI-04. Handles the two new envelope types
- * `run_started` + `scenario_step_skipped` at this outer layer; delegates
+ * Composes the inner `transcriptReducer` (from ../Assistant/transcriptReducer)
+ * for the per-step transcript sub-state. Handles the `run_started` and
+ * `scenario_step_skipped` envelopes at this outer layer; delegates
  * `tool_call_start` / `tool_call_result` / `done` to the inner reducer.
  *
- * session_token convention (Pitfall 3, 22-RESEARCH.md):
- *   The ScenarioRunner emits `session_token: scenario_run.id` on every
- *   envelope. The outer reducer initializes `transcript.sessionToken` to the
- *   active run's `runId` (i.e. `scenario_run.id`) inside `run_launch` so that
- *   the inner transcriptReducer's STREAM-04 session_token filter passes our
- *   broadcasts through.
- *
- * Cross-run defense (T-22-22):
- *   When a broadcast carries `run_id`, the outer reducer compares it to
- *   `activeRun.runId` and ignores mismatches. This guards against late-
- *   arriving envelopes from a previous run polluting the new run's state.
- *
- * Idempotent terminal status (T-22 idempotent-done invariant):
- *   Once `activeRun.status` is in the terminal set, subsequent `done`
- *   broadcasts are no-ops. Matches the transcriptReducer's "first done event
- *   wins" pattern.
+ * Invariants:
+ *   - session_token: the runner emits `session_token: scenario_run.id` on every
+ *     envelope. We seed `transcript.sessionToken` to the active run's `runId`
+ *     (= scenario_run.id) so the inner reducer's session_token filter lets our
+ *     broadcasts through.
+ *   - Cross-run defense: a broadcast carrying a `run_id` that disagrees with the
+ *     active run is ignored, so late envelopes from a prior run can't leak in.
+ *   - Idempotent terminal status: once `activeRun.status` is terminal, later
+ *     `done` broadcasts are no-ops (mirrors the inner reducer's "first done
+ *     wins").
  */
 
 import {
@@ -178,8 +172,8 @@ export function scenariosReducer(
         stepCount: action.stepCount,
         status: "running",
         skipped: [],
-        // Initialize transcript.sessionToken to runId so the inner reducer's
-        // STREAM-04 filter passes our broadcasts (Pitfall 3). The runner emits
+        // Seed transcript.sessionToken to runId so the inner reducer's
+        // session_token filter passes our broadcasts; the runner emits
         // `session_token: scenario_run.id` on every envelope.
         transcript: { ...initialTranscriptState, sessionToken: action.runId },
       };
@@ -190,17 +184,16 @@ export function scenariosReducer(
       const msg = action.broadcast;
       const activeRun = state.activeRun;
 
-      // Cross-run defense (T-22-22): if the broadcast carries a run_id that
-      // disagrees with the current activeRun.runId, ignore. This protects
-      // against late-arriving envelopes from a previous run polluting the
-      // new run's state.
+      // Cross-run defense: if the broadcast carries a run_id that disagrees
+      // with the current activeRun.runId, ignore it — this blocks late
+      // envelopes from a previous run from polluting the new run's state.
       //
       // `run_started` is exempt: it IS the reconciliation envelope that swaps
       // the placeholder runId minted by run_launch (`pending-<ts>`) for the
       // real scenario_run.id. The run_started case handles the mismatch
-      // explicitly below; blocking it here strands the placeholder forever
-      // and every subsequent tool_call_* gets filtered by the inner
-      // transcriptReducer's session_token check.
+      // explicitly below; blocking it here would strand the placeholder
+      // forever and every subsequent tool_call_* would be filtered by the
+      // inner reducer's session_token check.
       if (
         activeRun &&
         msg.type !== "run_started" &&

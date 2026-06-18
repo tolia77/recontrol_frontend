@@ -76,7 +76,7 @@ export const NewChatIcon: FC<IconProps> = ({ className = "w-4 h-4" }) => (
 );
 
 /**
- * Warning triangle icon for ConfirmationCard zone-tinted accent (D-04).
+ * Warning triangle icon for ConfirmationCard zone-tinted accent.
  * Rendered alongside the zone badge in the confirmation card body.
  */
 export const WarningTriangleIcon: FC<IconProps> = ({

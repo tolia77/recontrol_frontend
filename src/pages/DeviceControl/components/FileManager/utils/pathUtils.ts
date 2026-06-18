@@ -4,8 +4,8 @@
  * The desktop returns paths verbatim (e.g. `C:\Users\me\Docs` on Windows or
  * `/home/me/Documents` on POSIX). These helpers stay fully string-level; they
  * do NOT touch the filesystem. The canonical shape is `(parts, sep)` for
- * joinPath -- the same signature is consumed by the breadcrumb caller in
- * plan 10-02 and by the move/copy destination builder in plan 10-05.
+ * joinPath -- consumed by both the breadcrumb caller and the move/copy
+ * destination builder.
  */
 
 export type PathSeparator = "/" | "\\";

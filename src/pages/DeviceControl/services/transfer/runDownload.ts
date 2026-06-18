@@ -19,9 +19,9 @@ import {
  *     chunks down files-data. Response carries `{ transferId, size, name }`.
  *  2. Construct a DownloadTransfer and register it with the FilesDataChannel
  *     chunk router BEFORE awaiting any complete event. The desktop's send
- *     loop runs AFTER serializing the begin response (Plan 11-02), and the
- *     begin promise resolves AFTER that serialization, so registration always
- *     precedes the first chunk's onmessage in practice.
+ *     loop runs AFTER serializing the begin response, and the begin promise
+ *     resolves AFTER that serialization, so registration always precedes the
+ *     first chunk's onmessage in practice.
  *  3. Race three promises: files.download.complete event, files.transfer.error
  *     event, OR the queue's cancel flag (polled every 100ms; the queue runs
  *     one transfer at a time so the poll cost is negligible).
@@ -29,8 +29,8 @@ import {
  *     have fired between the last chunk and the complete event). If the user
  *     cancelled in that window, suppress the anchor-tag click and send
  *     files.transfer.cancel. Otherwise call finalize() synchronously inside
- *     the same event-loop turn as the complete event landed (Pitfall 8 --
- *     Safari treats deferred click() as user-action-less and blocks).
+ *     the same event-loop turn as the complete event landed (Safari treats a
+ *     deferred click() as user-action-less and blocks the download).
  *  5. On error: discard chunks via DownloadTransfer.cancel() (no anchor-tag
  *     click possible), surface the wire error to the queue.
  *  6. On cancel: discard chunks AND fire files.transfer.cancel with reason
@@ -72,18 +72,18 @@ export interface CreateRunDownloadDeps {
    *  lands in the user's Downloads folder. */
   onSuccess: (name: string) => void;
   /**
-   * Plan 11-06: invoked with the active <see cref="DownloadTransfer"/>
-   * instance for the duration of an in-flight download (right after start();
-   * registerDownload), and again with `null` when the transfer reaches a
-   * terminal state. The panel uses this to read `lastChunkAtMs` from a 1 s
-   * setInterval and flip the row state to 'stalled' / 'active' accordingly.
+   * Invoked with the active DownloadTransfer instance for the duration of an
+   * in-flight download (right after start(); registerDownload), and again with
+   * `null` when the transfer reaches a terminal state. The panel uses this to
+   * read `lastChunkAtMs` from a 1 s setInterval and flip the row state to
+   * 'stalled' / 'active' accordingly.
    */
   onActiveChange?: (active: DownloadTransfer | null) => void;
 }
 
 /**
  * Build a RunDownloadFn closing over the channel deps. The factory shape
- * mirrors createRunUpload from Plan 11-04 so both runners stay symmetric.
+ * mirrors createRunUpload so both runners stay symmetric.
  */
 export function createRunDownload(deps: CreateRunDownloadDeps): RunDownloadFn {
   return async (item, queue) => {
@@ -137,10 +137,9 @@ export function createRunDownload(deps: CreateRunDownloadDeps): RunDownloadFn {
     );
     transfer.start();
     filesData.registerDownload(begin.transferId, transfer);
-    // Plan 11-06: surface the active transfer to the panel so the stall
-    // interval can read transfer.lastChunkAtMs. Cleared at every terminal
-    // exit below (after the router is unregistered) so a stale reference
-    // never lingers across runs.
+    // Surface the active transfer to the panel so the stall interval can read
+    // transfer.lastChunkAtMs. Cleared at every terminal exit below (after the
+    // router is unregistered) so a stale reference never lingers across runs.
     deps.onActiveChange?.(transfer);
 
     // 3. Race: complete | error | cancel
@@ -158,14 +157,14 @@ export function createRunDownload(deps: CreateRunDownloadDeps): RunDownloadFn {
         }
       });
     });
-    // Plan 11-06: STALLED is non-fatal. The desktop pushes
-    // files.transfer.error with code:'STALLED' for receivers idle > 10s, but
-    // the transfer is still alive (bytes may resume). We surface it as a row
-    // state ('stalled') WITHOUT resolving the error promise, so the runner
-    // keeps awaiting the real terminal event (complete | non-STALLED error |
-    // cancel). The state flip back to 'active' is handled by the panel's
-    // download stall interval (FileManagerPanel) when DownloadTransfer's
-    // lastChunkAtMs starts updating again.
+    // STALLED is non-fatal. The desktop pushes files.transfer.error with
+    // code:'STALLED' for receivers idle > 10s, but the transfer is still alive
+    // (bytes may resume). We surface it as a row state ('stalled') WITHOUT
+    // resolving the error promise, so the runner keeps awaiting the real
+    // terminal event (complete | non-STALLED error | cancel). The state flip
+    // back to 'active' is handled by the panel's download stall interval
+    // (FileManagerPanel) when DownloadTransfer's lastChunkAtMs starts updating
+    // again.
     const errorPromise = new Promise<Winner>((resolve) => {
       const off = filesClient.onEvent("files.transfer.error", (payload) => {
         const p = payload as ErrorPayload;
@@ -202,10 +201,10 @@ export function createRunDownload(deps: CreateRunDownloadDeps): RunDownloadFn {
     // Always unregister from the chunk router so post-terminal chunks are
     // silently dropped (cancel-race coverage on the data channel).
     filesData.unregisterDownload(begin.transferId);
-    // Plan 11-06: clear the panel's active-transfer reference at terminal
-    // exit. Done BEFORE the per-winner branches return so every code path
-    // below already sees a null active reference (the panel's stall
-    // interval becomes a no-op for this transferId immediately).
+    // Clear the panel's active-transfer reference at terminal exit. Done
+    // BEFORE the per-winner branches return so every code path below already
+    // sees a null active reference (the panel's stall interval becomes a no-op
+    // for this transferId immediately).
     deps.onActiveChange?.(null);
 
     if (winner.kind === "complete") {
@@ -235,7 +234,7 @@ export function createRunDownload(deps: CreateRunDownloadDeps): RunDownloadFn {
         return;
       }
       // Synchronous finalize: fire anchor-tag click in the same event-loop
-      // turn the complete event landed (Pitfall 8 -- Safari user-gesture).
+      // turn the complete event landed (Safari requires the user gesture).
       transfer.finalize();
       queue.updateItem(item.id, {
         state: "completed",

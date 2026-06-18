@@ -4,8 +4,8 @@ import { frontendLogger } from "src/utils/logger";
 
 /**
  * Handles incoming WebRTC signaling messages (webrtc.answer, webrtc.ice_candidate).
- * Internal to useWebRtc (D-09). Takes the pcRef owned by usePeerConnection so
- * it operates on the live RTCPeerConnection without needing to own it.
+ * Internal to useWebRtc. Takes the pcRef owned by usePeerConnection so it
+ * operates on the live RTCPeerConnection without needing to own it.
  */
 
 interface UseWebRtcSignalingOptions {
@@ -22,13 +22,13 @@ export interface UseWebRtcSignalingReturn {
 export function useWebRtcSignaling({
   pcRef,
 }: UseWebRtcSignalingOptions): UseWebRtcSignalingReturn {
-  // Phase 42.1 Fix 1 (FINDINGS): remote ICE candidates can arrive BEFORE the
-  // answer is applied (the desktop trickles a local candidate ~60ms before it
-  // sends the answer, and the slow ~1.49s offer handling widens the window).
-  // Calling addIceCandidate with a null remoteDescription throws
-  // "InvalidStateError: The remote description was null". Buffer candidates
-  // until setRemoteDescription(answer) resolves, then flush them — mirroring
-  // the desktop's existing "buffering ICE candidate (peer connection not ready)".
+  // Remote ICE candidates can arrive BEFORE the remote description is set (the
+  // desktop trickles a local candidate ~60ms before it sends the answer, and
+  // the slow ~1.49s offer handling widens the window). Calling addIceCandidate
+  // with a null remoteDescription throws "InvalidStateError: The remote
+  // description was null". Buffer candidates until setRemoteDescription(answer)
+  // resolves, then flush them — mirroring the desktop's own ICE-candidate
+  // buffering.
   const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
 
   const handleSignalingMessage = useCallback(
@@ -61,13 +61,13 @@ export function useWebRtcSignaling({
             frontendLogger.log('error', 'webrtc', `${command}_failed`, { err: String(err) });
           });
       } else if (command === "webrtc.ice_candidate") {
-        // Phase 42.1 Fix C (root cause): SIPSorcery (desktop) emits the bare
-        // candidate-attribute WITHOUT the spec-required "candidate:" prefix
-        // (e.g. "122548911 1 udp ... typ host"). Chrome rejects the prefix-less
-        // form with `OperationError: Error processing ICE candidate`, so every
-        // trickled remote candidate was dropped — the connection only survived
-        // when the answer SDP happened to carry a usable inline candidate
-        // (LAN), and failed off-LAN. Normalize by prepending the prefix.
+        // SIPSorcery (desktop) emits the bare candidate-attribute WITHOUT the
+        // spec-required "candidate:" prefix (e.g. "122548911 1 udp ... typ
+        // host"). Chrome rejects the prefix-less form with `OperationError:
+        // Error processing ICE candidate`, so every trickled remote candidate
+        // would be dropped — the connection only survives when the answer SDP
+        // happens to carry a usable inline candidate (LAN), and fails off-LAN.
+        // Normalize by prepending the prefix.
         const rawCandidate = payload.candidate as string;
         const candidate =
           rawCandidate && !rawCandidate.startsWith("candidate:")

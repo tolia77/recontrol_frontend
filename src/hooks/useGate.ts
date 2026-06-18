@@ -19,12 +19,12 @@ export interface GateResult {
   requiredPlan?: string;
 }
 
-// Tier ordering (RD-1)
+// Tier ordering
 
 const TIER_ORDER = ["free", "pro", "advanced", "business"] as const;
 
-// Static map: which tier first unlocks each boolean-gated feature (RD-1).
-// These are feature-unlock tiers only, NOT numeric limit values (honors D-10).
+// Static map: which tier first unlocks each boolean-gated feature.
+// These are feature-unlock tiers only, NOT numeric limit values.
 const BOOLEAN_GATE_UNLOCK_TIER: Record<"device_sharing" | "ai_access", string> =
   {
     device_sharing: "pro",
@@ -36,7 +36,7 @@ const BOOLEAN_GATE_UNLOCK_TIER: Record<"device_sharing" | "ai_access", string> =
 /**
  * Returns the plan name of the cheapest paid tier strictly ABOVE the user's
  * current plan, or undefined if the current plan is already the top tier.
- * Uses tier ordering only — no numeric per-plan limit constants (RD-1 / D-10).
+ * Uses tier ordering only — no numeric per-plan limit constants.
  */
 function nextTierAbove(currentPlanName: string): string | undefined {
   const idx = TIER_ORDER.indexOf(
@@ -54,7 +54,7 @@ function nextTierAbove(currentPlanName: string): string | undefined {
 export function useGate(gate: GateKey): GateResult {
   const { usage, plans, status } = useSubscription();
 
-  // Fail-open: if usage is null (still loading), never block the user (T-34-06).
+  // Fail-open: if usage is null (still loading), never block the user.
   if (!usage) return { allowed: true, reason: null };
 
   const currentPlanName = status?.plan_name ?? "free";

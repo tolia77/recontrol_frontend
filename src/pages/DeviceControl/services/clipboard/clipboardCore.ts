@@ -6,8 +6,8 @@ import type {
   ClipboardSetEnvelope,
 } from "./clipboardProtocol.generated";
 
-export const FOCUS_DAMPEN_MS = 1000; // CONTEXT D-11
-export const MAX_CONTENT_BYTES = 2_000_000; // Phase 13 lock
+export const FOCUS_DAMPEN_MS = 1000;
+export const MAX_CONTENT_BYTES = 2_000_000;
 
 export function detectCapability(
   nav: Navigator | undefined,
@@ -21,12 +21,11 @@ export function detectCapability(
   return { canRead, canWrite, isSecureContext: !!isSecure };
 }
 
-// Subset of ClipboardRefusalReason that the BROWSER can self-emit as a local
-// refusal (D-13/D-14). Excludes 'PAUSED' because the browser-local pause path
-// returns `skip-paused` -- pause is browser-local and the user already knows
-// they paused (D-15 keeps pause out of the refusal feed). Includes CAPS_UNKNOWN
-// (Phase 15 CR-03) so Phase 16 can render an honest "waiting for desktop /
-// requires v1.3+" toast instead of the misleading MASTER_DISABLED overload.
+// Subset of ClipboardRefusalReason that the browser can self-emit as a local
+// refusal. Excludes 'PAUSED' because the browser-local pause path returns
+// `skip-paused` and the user already knows they paused, so pause stays out of
+// the refusal feed. Includes CAPS_UNKNOWN so the UI can show an honest
+// "waiting for desktop" toast instead of the misleading MASTER_DISABLED.
 export type RefusalReasonForLocal =
   | "INBOUND_DISABLED"
   | "MASTER_DISABLED"
@@ -34,8 +33,8 @@ export type RefusalReasonForLocal =
   | "NON_TEXT"
   | "CAPS_UNKNOWN";
 
-// WR-05: removed dead 'skip-non-text' and 'skip-too-large' variants — D-14
-// replaced both with 'refused-local'; no caller references the silent kinds.
+// Non-text and too-large inputs both surface as 'refused-local' (with a reason)
+// rather than as silent skip-* variants, so they reach the refusal feed.
 export type OutboundDecision =
   | {
       kind: "send";
@@ -62,7 +61,7 @@ export interface PrepareOutboundInput {
   originId: string | null;
   /**
    * Latest desktop capabilities envelope received via ClipboardChannelClient
-   * subscribeCapabilities, or null if none received yet (D-13).
+   * subscribeCapabilities, or null if none received yet.
    */
   cachedDesktopCaps: ClipboardCapabilitiesEnvelope | null;
 }
@@ -75,16 +74,15 @@ function hex16ToBytes(hex: string): Uint8Array {
   return out;
 }
 
-// All gates are applied in the load-bearing order from CONTEXT D-13.
-// Pause MUST precede focus, focus precedes dampening, dampening precedes
-// empty, normalization refusal precedes byte cap, cap precedes loop gate.
+// Gates are applied in a load-bearing order:
+// pause -> focus -> dampening -> empty -> normalization refusal -> byte cap -> loop gate.
 export async function prepareOutbound(
   input: PrepareOutboundInput,
   nextSeq: () => number,
 ): Promise<OutboundDecision> {
   if (!input.originId) return { kind: "skip-no-channel" };
 
-  // D-13: cap-cache says desktop's inbound is off -> preempt before sending.
+  // Cap-cache says desktop's inbound is off -> preempt before sending.
   // Browser does not separately track desktop's "master" toggle; SendCapabilities
   // on the desktop folds master into outboundEnabled / inboundEnabled, so a false
   // here is sufficient.
@@ -104,13 +102,11 @@ export async function prepareOutbound(
     return { kind: "skip-empty" };
 
   const norm = normalizeClipboard(input.rawText);
-  // D-14: was 'skip-non-text' silent drop -- now produce refused-local for the
-  // lastRefusal feed (CAP-04 / CAP-05). The 'skip-non-text' variant is kept on
-  // the OutboundDecision union for backward compat / regression-guard tests.
+  // Surface non-text content as a refusal (not a silent skip) so it reaches the
+  // lastRefusal feed.
   if (norm.refused) return { kind: "refused-local", reason: "NON_TEXT" };
   const utf8 = new TextEncoder().encode(norm.text);
-  // D-14: was 'skip-too-large' silent drop -- now produce refused-local for the
-  // lastRefusal feed.
+  // Likewise surface over-cap content as a refusal for the lastRefusal feed.
   if (utf8.byteLength > MAX_CONTENT_BYTES)
     return { kind: "refused-local", reason: "TOO_LARGE" };
   if (utf8.byteLength === 0) return { kind: "skip-empty" };
@@ -145,7 +141,8 @@ export type InboundDecision =
 const HEX16_RE = /^[0-9a-f]{16}$/;
 
 // Pure decision (no side effects). Caller MUST call loopGate.recordApplied AFTER
-// deciding 'apply' and BEFORE writeText (Pitfall 1 / T-14-34 apply-then-suppress order).
+// deciding 'apply' and BEFORE writeText, or the resulting clipboard change can
+// echo back through the outbound path.
 export async function decideInbound(
   env: ClipboardSetEnvelope,
   ourOriginId: string | null,
@@ -185,7 +182,7 @@ export interface ListenerTargets {
 }
 
 /**
- * Binds DEGRADE-02 listeners (BOTH window 'focus' AND document 'visibilitychange').
+ * Binds BOTH window 'focus' AND document 'visibilitychange' listeners.
  * Returns a cleanup function that removes both.
  * The handler is called via a closure -- it MUST be stable across re-renders or the
  * listener will rebind every render. Caller is responsible for stability.

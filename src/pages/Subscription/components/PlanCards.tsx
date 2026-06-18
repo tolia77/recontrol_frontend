@@ -13,12 +13,12 @@ import { getErrorMessage } from "src/utils/getErrorMessage";
 import { formatPrice } from "src/utils/formatPrice";
 import PlanComparison from "./PlanComparison";
 
-// Free-tier limits for cancel-impact diff (D-16)
+// Free-tier limits for cancel-impact diff
 const FREE_DEVICE_LIMIT = 2;
 const FREE_SCENARIO_LIMIT = 3;
 const FREE_AI_DRAFT_LIMIT = 0;
 
-// LiqPay auto-POST helper (D-05, RESEARCH.md Pattern 3)
+// LiqPay auto-POST helper
 function submitToLiqPay(blob: LiqPayBlob): void {
   // Don't leak our referrer to LiqPay. In local dev the referrer is http://localhost,
   // which LiqPay stores in its own Matomo `_pk_ref` cookie and then its WAF 403s the
@@ -88,7 +88,7 @@ function PlanCards({ status }: PlanCardsProps) {
   const currentPlan = plans.find((p) => p.name === currentPlanName);
   const currentPrice = currentPlan?.monthly_price ?? 0;
 
-  // Determine CTA per plan card (D-02)
+  // Determine CTA per plan card
   type CtaVariant =
     | "current"
     | "none"
@@ -135,7 +135,7 @@ function PlanCards({ status }: PlanCardsProps) {
     return "subscribe";
   }
 
-  // Open cancel modal + fetch usage for diff (D-16)
+  // Open cancel modal + fetch usage for diff
   async function openCancelConfirm(plan: Plan) {
     try {
       const usage = await subscriptionService.getUsage();
@@ -224,7 +224,7 @@ function PlanCards({ status }: PlanCardsProps) {
     }
   }
 
-  // Build cancel-impact body (D-16)
+  // Build cancel-impact body
   function buildCancelImpactBody(): React.ReactNode {
     const lines: React.ReactNode[] = [];
 
@@ -354,14 +354,14 @@ function PlanCards({ status }: PlanCardsProps) {
 
   const modalConfig = getModalConfig();
 
-  // Per-plan CTA, rendered INSIDE each PlanComparison card (D-07 fix)
+  // Per-plan CTA, rendered INSIDE each PlanComparison card
   function renderCta(plan: Plan): React.ReactNode {
     const cta = getCta(plan);
     const isCurrent = cta === "current";
 
     return (
       <>
-        {/* Pending downgrade note — D-04: read-only, NO revert button */}
+        {/* Pending downgrade note — read-only, NO revert button */}
         {status?.scheduled_plan && plan.name === currentPlanName && (
           <p className="text-muted-foreground mb-3 text-body">
             {t("pendingDowngrade.note", {
@@ -408,7 +408,7 @@ function PlanCards({ status }: PlanCardsProps) {
           inside its own card on every viewport. The grid stacks on mobile. */}
       <PlanComparison plans={plans} renderCta={renderCta} />
 
-      {/* Confirm modal (D-03) */}
+      {/* Confirm modal */}
       {confirm && modalConfig && (
         <ConfirmModal
           open={true}

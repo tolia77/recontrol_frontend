@@ -9,22 +9,21 @@ import type { ToolRow } from "src/pages/DeviceControl/components/Assistant/trans
 
 /**
  * ScenariosRunMode — full-takeover panel that owns the device-control right
- * pane while a scenario run is alive (D-22-01 / 03 / 10). Renders the streaming
- * per-step output via the verbatim-reused ToolCallCard (UI-03 — wrapped by
- * RunOutput from this directory). On terminal status, swaps the Stop button
- * for back-button + Copy-as-Markdown (UI-06 — copyAsMarkdown reused verbatim).
+ * pane while a scenario run is alive. Renders the streaming per-step output via
+ * RunOutput (a wrapper around ToolCallCard). On terminal status, swaps the Stop
+ * button for back-button + Copy-as-Markdown.
  *
- * Pure-presentational + side-effects-bound: the parent (ScenariosPanel in Plan
- * 22.10) owns the scenariosReducer state and the hook's dispatch. This
- * component receives the ActiveRun snapshot and callbacks, owns only the
- * beforeunload listener (Pitfall 14) and the navigator.clipboard call.
+ * Pure-presentational + side-effects-bound: the parent (ScenariosPanel) owns
+ * the scenariosReducer state and dispatch. This component receives the
+ * ActiveRun snapshot and callbacks, owns only the beforeunload listener and the
+ * navigator.clipboard call.
  *
- * Pitfalls (22-RESEARCH):
- *   - beforeunload listener registered ONLY while status === 'running' to
- *     avoid spurious prompts after run finishes (T-22-32).
+ * Notes:
+ *   - beforeunload listener registered ONLY while status === 'running' to avoid
+ *     spurious prompts after the run finishes.
  *   - Step counter is derived per render — no state to keep in sync.
  *   - Stop button stays mounted during 'stopping' with loading + disabled so
- *     repeated clicks are no-ops (T-22-33).
+ *     repeated clicks are no-ops.
  */
 
 // Terminal statuses (mirror of TERMINAL_STATUSES in scenariosReducer.ts; we
@@ -62,9 +61,9 @@ export interface ScenariosRunModeProps {
   /**
    * The scenario's command_steps, in declaration order. Used to map the
    * `activeRun.skipped[].stepIndex` (numeric) to the tool row's `toolCallId`
-   * (which is the step UUID — runner uses step UUIDs as tool_call_ids per
-   * Plan 22.03). The parent ScenariosPanel has the scenario loaded so this is
-   * cheap to plumb through.
+   * (which is the step UUID — the runner uses step UUIDs as tool_call_ids).
+   * The parent ScenariosPanel has the scenario loaded so this is cheap to plumb
+   * through.
    */
   commandSteps: ReadonlyArray<ScenariosRunModeCommandStep>;
 }
@@ -85,7 +84,7 @@ function ScenariosRunMode({
   const isStopping = activeRun.status === "stopping";
 
   // beforeunload guard: only while running. Registers fresh on transition to
-  // running (T-22-32 — never while terminal).
+  // running, never while terminal.
   useEffect(() => {
     if (activeRun.status !== "running") return;
     const message = t("run.beforeUnloadMessage");

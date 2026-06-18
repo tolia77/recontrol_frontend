@@ -57,7 +57,7 @@ function renderStrip(
   );
 }
 
-// KBD-03: Sticky modifier mechanics
+// Sticky modifier mechanics
 
 describe("ModifierStrip — sticky modifier mechanics", () => {
   it("tapping Ctrl dispatches keyboard.keyDown with Key:17", () => {
@@ -122,7 +122,7 @@ describe("ModifierStrip — sticky modifier mechanics", () => {
   });
 });
 
-// KBD-03: Non-sticky keys (Esc, Tab, arrows)
+// Non-sticky keys (Esc, Tab, arrows)
 
 describe("ModifierStrip — non-sticky keys", () => {
   it("tapping Esc dispatches keyDown(27)", async () => {
@@ -164,7 +164,7 @@ describe("ModifierStrip — non-sticky keys", () => {
   });
 });
 
-// KBD-03: deliverPrintable — combo routing via imperative handle
+// deliverPrintable — combo routing via imperative handle
 
 describe("ModifierStrip — deliverPrintable (combo routing)", () => {
   it("with Ctrl sticky, deliverPrintable('c') → keyDown(67), keyUp(67), keyUp(17), clears sticky", () => {
@@ -240,7 +240,7 @@ describe("ModifierStrip — deliverPrintable (combo routing)", () => {
   });
 });
 
-// KBD-03: Ctrl+Alt+Del compound action
+// Ctrl+Alt+Del compound action
 
 describe("ModifierStrip — CAD (Ctrl+Alt+Del)", () => {
   it("tapping CAD dispatches keyDown(17,18,46) then keyUp(46,18,17)", async () => {
@@ -290,7 +290,7 @@ describe("ModifierStrip — CAD (Ctrl+Alt+Del)", () => {
   });
 });
 
-// Unmount cleanup: release sticky modifiers and flush pending keyUps (CR-01, CR-02)
+// Unmount cleanup: release sticky modifiers and flush pending keyUps
 
 describe("ModifierStrip — unmount cleanup", () => {
   it("unmount with Ctrl armed dispatches keyUp(17)", () => {

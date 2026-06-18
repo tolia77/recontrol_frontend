@@ -28,7 +28,7 @@ export interface UseWebRtcReturn {
   connectionState: WebRtcConnectionState;
   hasReceivedFrame: boolean;
   /**
-   * DC-RS-01: ref (not state) so stats-channel ticks don't trigger root re-renders.
+   * Ref (not state) so stats-channel ticks don't trigger root re-renders.
    * useStreamStats reads this inside its 2s polling interval.
    */
   desktopStatsRef: React.RefObject<{ framesSkipped: number; encoder?: string } | null>;
@@ -43,8 +43,8 @@ export interface UseWebRtcReturn {
   filesClientRef: React.RefObject<FilesChannelClient | null>;
   /**
    * Live ref to the FilesDataChannel WRAPPER (not the raw RTCDataChannel).
-   * Plan 11-05's runDownload reads this so it can call
-   * registerDownload / unregisterDownload on the chunk router.
+   * runDownload reads this so it can call registerDownload /
+   * unregisterDownload on the chunk router.
    */
   filesDataChannelRef: React.RefObject<FilesDataChannel | null>;
   filesCtlOpen: boolean;
@@ -56,18 +56,17 @@ export interface UseWebRtcReturn {
    * Mirrors the clipboard RTCDataChannel readyState as React state so consumers
    * (useClipboardSync) can re-run effects when the channel actually opens. The
    * 'open' event fires AFTER pc.connectionState transitions to 'connected', so
-   * a connectionState-only effect would miss the transition (CR-04).
+   * a connectionState-only effect would miss the transition.
    */
   clipboardCtlOpen: boolean;
 }
 
 /**
  * Composer hook: composes usePeerConnection, useWebRtcSignaling, and
- * useDataChannels internally and returns the unchanged flat UseWebRtcReturn
- * surface (D-08/D-09/D-10). All consumers (useFilesChannel, useClipboardSync,
- * useStreamStats, DeviceControl destructure) continue to work unchanged.
+ * useDataChannels internally and returns a flat UseWebRtcReturn surface.
+ * Consumers (useFilesChannel, useClipboardSync, useStreamStats, DeviceControl).
  *
- * Internal split per D-09:
+ * Internal split:
  * - usePeerConnection: peer lifecycle, reconnect, video, stats
  * - useWebRtcSignaling: handleSignalingMessage
  * - useDataChannels: files + clipboard data-channel setup
@@ -78,7 +77,7 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
   const dataChannels = useDataChannels();
 
   // Peer connection lifecycle; calls setupDataChannels(pc) before createOffer
-  // and cleanupDataChannels() before pc.close() (Spike C ordering).
+  // and cleanupDataChannels() before pc.close().
   const peer = usePeerConnection({
     sendMessage,
     setupDataChannels: dataChannels.setupDataChannels,
@@ -107,7 +106,7 @@ export function useWebRtc({ sendMessage }: UseWebRtcOptions): UseWebRtcReturn {
     filesClientRef: dataChannels.filesClientRef,
     filesDataChannelRef: dataChannels.filesDataChannelRef,
     filesCtlOpen: dataChannels.filesCtlOpen,
-    // clipboardCtlRef is the internal clipboardRef (original line 539 alias preserved)
+    // clipboardCtlRef is the internal clipboardRef (alias preserved)
     clipboardCtlRef: dataChannels.clipboardRef,
     clipboardOriginIdRef: dataChannels.clipboardOriginIdRef,
     clipboardLoopGate: dataChannels.clipboardLoopGateRef.current,

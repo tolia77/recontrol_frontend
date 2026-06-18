@@ -19,8 +19,8 @@ const MAX_TEXTAREA_PX = 192;
 /**
  * Compute hours+minutes remaining until the next 00:00 UTC boundary.
  *
- * RESEARCH §Pitfall 7: read `Date.now()` at render time so the value can never
- * drift while the tab is throttled in the background. A `setInterval` is only
+ * Read `Date.now()` at render time so the value can never drift while the tab
+ * is throttled in the background. A `setInterval` is only
  * used to force a re-render every ~30 s; the *displayed* value is always
  * derived from the current wall-clock.
  */
@@ -53,14 +53,14 @@ export interface InputBoxProps {
   onSubmit: (text: string) => void;
   /**
    * Interrupt the running agent loop. While the loop is active the Send button
-   * is replaced by a Stop button wired to this handler (CHAT-07).
+   * is replaced by a Stop button wired to this handler.
    */
   onStop: () => void;
-  /** When true, mobile-specific adaptations are applied (DCTL-04) */
+  /** When true, mobile-specific adaptations are applied */
   isMobile?: boolean;
   /**
    * When >0 and isMobile, the outer container applies paddingBottom equal to
-   * this value so the input is pinned above the soft keyboard (DCTL-04 D-10).
+   * this value so the input is pinned above the soft keyboard.
    */
   keyboardHeightPx?: number;
   /**
@@ -73,19 +73,19 @@ export interface InputBoxProps {
 }
 
 /**
- * Multi-line input box (CHAT-08 / D-07 / QUOTA-06).
+ * Multi-line input box.
  *
  * Behavior:
- *   - Enter submits; Shift+Enter inserts a newline (CHAT-08).
+ *   - Enter submits; Shift+Enter inserts a newline.
  *   - Auto-grows from 1 row up to ~8 lines (192px); past that, scrolls.
  *   - Disabled while a loop is running (`status === 'streaming' |
  *     'awaiting_confirmation'`) with a localized tooltip.
  *   - Disabled with an inline reset-time message above the input when
- *     `status === 'halted_quota'` (D-07). The countdown is derived from
- *     `Date.now()` each render and re-rendered every 30 s via `setInterval`
- *     (RESEARCH §Pitfall 7 — countdown drift on tab inactivity).
- *   - Send button is always visible (CONTEXT discretion: discoverability) and
- *     disabled when input is empty or the panel is disabled.
+ *     `status === 'halted_quota'`. The countdown is derived from `Date.now()`
+ *     each render and re-rendered every 30 s via `setInterval` (guards against
+ *     countdown drift on tab inactivity).
+ *   - Send button is always visible (for discoverability) and disabled when
+ *     input is empty or the panel is disabled.
  */
 const InputBox: FC<InputBoxProps> = ({
   status,
@@ -162,7 +162,7 @@ const InputBox: FC<InputBoxProps> = ({
   }
 
   // When on mobile with the keyboard open, pad the outer container so the
-  // input rides above the soft keyboard (DCTL-04 D-10). The transcript above
+  // input rides above the soft keyboard. The transcript above
   // (overflow-y-auto) keeps scrolling normally; only this container shifts.
   const outerStyle =
     isMobile && keyboardHeightPx > 0

@@ -1,20 +1,18 @@
 /**
- * DraftReviewModal — Phase 23 / Plan 23-09 Task 1.
+ * DraftReviewModal — center-screen review overlay for an AI-generated draft.
  *
- * Center-screen review overlay for an AI-generated draft. Mirrors
- * PolicyPreviewModal's overlay+card sizing pattern (D-22-04 / UI-SPEC
- * §DraftReviewModal lines 167-208) but with a different body: per-step rows
- * carrying the AI-draft binary+args+cwd summary plus an optional amber
- * `dry_intent_warning` badge.
+ * Mirrors PolicyPreviewModal's overlay+card sizing but with a different body:
+ * per-step rows carrying the AI-draft binary+args+cwd summary plus an optional
+ * amber `dry_intent_warning` badge.
  *
- * Pure-presentational: accept / edit / regenerate / cancel are callback
- * props delegated to the parent. The parent (ScenariosPanel, Task 3) owns
+ * Pure-presentational: accept / edit / regenerate / cancel are callback props
+ * delegated to the parent. The parent (ScenariosPanel) owns
  * `scenariosService.create({...draft, created_via_ai: true})` on accept and
  * routes [Edit Draft] back into ScenarioEditor with `prefill` + `backTarget`.
  *
- * Per D-11, the parent strips `dry_intent_warning` before persisting; this
- * modal preserves it in its prop tree so the badge stays visible across
- * modal re-opens (e.g. operator hits Edit Draft, returns via dirty guard).
+ * The parent strips `dry_intent_warning` before persisting; this modal
+ * preserves it in its prop tree so the badge stays visible across modal
+ * re-opens (e.g. operator hits Edit Draft, returns via dirty guard).
  */
 
 import { useEffect } from "react";
@@ -37,10 +35,9 @@ export interface DraftReviewModalProps {
   onCancel: () => void;
 }
 
-// UI-SPEC §DraftReviewModal lines 256-266: 7 pattern IDs map to canonical
-// English display strings. These flow into the amber badge label
-// (`⚠ <display>`); the tooltip text comes from `t(message_key)` which is
-// localized per the locale keys shipped in Plan 23-07.
+// Maps pattern IDs to canonical English display strings. These flow into the
+// amber badge label (`⚠ <display>`); the tooltip text comes from the localized
+// `t(message_key)`.
 const PATTERN_DISPLAY_NAMES: Record<string, string> = {
   find_delete: "find -delete",
   dd_of_dev: "dd of=/dev/",
@@ -55,7 +52,7 @@ function patternDisplayName(pattern: string): string {
   return PATTERN_DISPLAY_NAMES[pattern] ?? pattern;
 }
 
-// 80-char truncation for the binary+args row per UI-SPEC line 182.
+// Truncate the binary+args row to 80 chars.
 function truncate80(text: string): string {
   if (text.length <= 80) return text;
   return `${text.slice(0, 77)}...`;
@@ -100,7 +97,7 @@ export default function DraftReviewModal({
 }: DraftReviewModalProps) {
   const { t } = useTranslation("scenarios");
 
-  // ESC dismisses while open — mirrors PolicyPreviewModal lines 91-100.
+  // ESC dismisses while open.
   useEffect(() => {
     if (!open) return undefined;
     const handler = (e: KeyboardEvent): void => {

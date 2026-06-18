@@ -25,7 +25,7 @@ export interface StreamStats {
 export function useStreamStats(
   pcRef: React.RefObject<RTCPeerConnection | null>,
   enabled: boolean,
-  // DC-RS-01: accept a ref so reading desktopStats inside the interval doesn't
+  // Accept a ref so reading desktopStats inside the interval doesn't
   // cause this hook (or DeviceControl) to re-render on every stats-channel tick.
   desktopStatsRef?: React.RefObject<{ framesSkipped: number; encoder?: string } | null>,
 ): StreamStats | null {
@@ -80,7 +80,7 @@ export function useStreamStats(
             const packetsReceived = (stat.packetsReceived as number | undefined) ?? null;
             const bytesReceived = (stat.bytesReceived as number | undefined) ?? null;
 
-            // framesDropped is NOT a spec field — compute as framesReceived - framesDecoded (RF-2)
+            // framesDropped is NOT a standard stats field — compute as framesReceived - framesDecoded
             const framesDropped =
               framesReceived !== null && framesDecoded !== null
                 ? framesReceived - framesDecoded
@@ -93,7 +93,7 @@ export function useStreamStats(
                 stat.frameWidth && stat.frameHeight
                   ? `${stat.frameWidth}x${stat.frameHeight}`
                   : "unknown",
-              // DC-RS-01: read from ref — no React state involved
+              // Read from ref — no React state involved
               framesSkipped: desktopStatsRef?.current?.framesSkipped,
               encoder: desktopStatsRef?.current?.encoder,
               framesDecoded: framesDecoded ?? undefined,
@@ -142,10 +142,10 @@ export function useStreamStats(
       } catch {
         // PC may have been closed between check and getStats
       }
-    }, 2000); // 2 s cadence (RF-2 — halves overhead vs 1 s for always-on period)
+    }, 2000); // 2 s cadence — halves overhead vs 1 s for an always-on poll
 
     return () => clearInterval(interval);
-  // DC-RS-01: desktopStatsRef is a stable ref object — not needed in deps.
+  // desktopStatsRef is a stable ref object — not needed in deps.
   // The interval reads .current at poll time so it always has fresh data.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pcRef, enabled]);

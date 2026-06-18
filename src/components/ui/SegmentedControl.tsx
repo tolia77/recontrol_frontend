@@ -3,13 +3,13 @@ import type { KeyboardEvent } from "react";
 /**
  * SegmentedControl — generic pill-group view-switcher primitive.
  *
- * Phase 22 Plan 06 / UI-04 / UI-05. Renders a horizontal row of pills inside
- * a `role="tablist"` container. Exactly one pill is active at a time; click /
- * Enter / Space all fire `onChange(option.value)`. Parents own state +
- * decide whether to dedupe same-value clicks.
+ * Renders a horizontal row of pills inside a `role="tablist"` container.
+ * Exactly one pill is active at a time; click / Enter / Space all fire
+ * `onChange(option.value)`. Parents own state and decide whether to dedupe
+ * same-value clicks.
  *
- * sessionStorage persistence (UI-SPEC §SegmentedControl) is the consumer's
- * responsibility — the panel that mounts this primitive owns the storage key.
+ * sessionStorage persistence is the consumer's responsibility — the panel
+ * that mounts this primitive owns the storage key.
  */
 export interface SegmentedControlOption<T extends string> {
   readonly value: T;

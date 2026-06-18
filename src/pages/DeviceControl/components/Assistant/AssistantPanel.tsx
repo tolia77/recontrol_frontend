@@ -33,12 +33,11 @@ export interface AssistantPanelProps {
    * ownership has resolved, so it never flashes for a real owner mid-load.
    */
   accessDenied?: boolean;
-  /** When true, mobile adaptations are applied (DCTL-04) */
+  /** When true, mobile adaptations are applied */
   isMobile?: boolean;
   /**
    * Called when the full-height state changes — the parent threads this signal
-   * to DeviceControlBottomSheet's forceFullHeight prop (DCTL-04 D-10).
-   * 37-04 will wire this callback at the DeviceControl.tsx call site.
+   * to DeviceControlBottomSheet's forceFullHeight prop.
    */
   onFullHeightChange?: (full: boolean) => void;
 }
@@ -46,16 +45,15 @@ export interface AssistantPanelProps {
 /**
  * Mint a session_token UUID for the new prompt.
  *
- * The reducer uses this value as the STREAM-04 broadcast filter. The backend
- * (`AssistantChannel#run_prompt`) mints its own session_token and broadcasts
- * with that value — the client-minted value here is the local discriminator
- * the reducer keeps until the panel learns the backend's via a future
- * `accepted` envelope (currently unused). In practice both values coexist on
- * the wire: the backend's session_token shows up in every broadcast and
- * passes the reducer's filter only if the reducer has been seeded with the
+ * The reducer uses this value as the broadcast session_token filter. The
+ * backend (`AssistantChannel#run_prompt`) mints its own session_token and
+ * broadcasts with that value — the client-minted value here is the local
+ * discriminator the reducer keeps until the panel learns the backend's via a
+ * future `accepted` envelope (currently unused). In practice both values
+ * coexist on the wire: the backend's session_token shows up in every broadcast
+ * and passes the reducer's filter only if the reducer has been seeded with the
  * matching value. Today the reducer trusts whatever submit_prompt provides;
- * future hardening should reconcile with the backend's accepted-envelope
- * token (deferred — see threat model T-20-09-04).
+ * future hardening should reconcile with the backend's accepted-envelope token.
  */
 function generateSessionToken(): string {
   if (
@@ -68,7 +66,7 @@ function generateSessionToken(): string {
 }
 
 /**
- * Top-level assistant panel — Plan 20-09 final wiring.
+ * Top-level assistant panel.
  *
  * Layout: AssistantHeader (step counter + Stop + Copy) on top, Transcript (or
  * idle placeholder) in the middle, InputBox on the bottom. The InputBox owns
@@ -83,7 +81,7 @@ function generateSessionToken(): string {
  *
  * Conversation state lives in DeviceControl's `useReducer` (lifted so it
  * survives pane switches) — nothing in localStorage, nothing persisted in the
- * backend (CHAT-11). Leaving the page / closing the tab clears the panel. The
+ * backend. Leaving the page / closing the tab clears the panel. The
  * 80% quota Toast also lives in DeviceControl (a panel-local mount ref would
  * re-fire it on every remount).
  */
@@ -100,7 +98,7 @@ function AssistantPanel({
   const { t } = useTranslation("assistant");
   const toast = useToast();
 
-  // Mobile: track keyboard height to pin InputBox above soft keyboard (DCTL-04 D-10).
+  // Mobile: track keyboard height to pin InputBox above soft keyboard.
   // The hook is always called (Rules of Hooks), but only has effect on mobile where
   // the VisualViewport API is available. On desktop, keyboardHeight stays 0.
   const { keyboardHeight } = useVisualViewport();

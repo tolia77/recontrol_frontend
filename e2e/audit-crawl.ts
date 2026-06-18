@@ -1,9 +1,9 @@
-// e2e/audit-crawl.ts — Phase 42.2 headless hot-path audit crawl.
+// e2e/audit-crawl.ts — headless hot-path network audit crawl.
 //
 // Captures per-route network waterfalls for all headless-crawlable routes.
-// The operator-assisted DeviceControl path is out of scope for this script
-// (it requires a real desktop device connected — D-03). Only routes that
-// render correctly in headless mode are included in HOT_PATHS below.
+// The operator-assisted DeviceControl path is excluded (it requires a real
+// desktop device connected). Only routes that render correctly in headless
+// mode are included in HOT_PATHS below.
 //
 // Auth flows via the committed audit fixtures (e2e/audit-fixtures.ts) through
 // the auth.setup.ts storageState — credentials are NOT read from the environment.
@@ -25,7 +25,7 @@ const AUDIT_BACKEND_HOST = "127.0.0.1:3013";
 
 // Headless-crawlable hot paths derived from App.tsx route table.
 // Routes requiring an operator-assisted session are intentionally omitted:
-//   - The streaming control page requires a real desktop device (D-03).
+//   - The streaming control page requires a real desktop device.
 //   - /subscription/return requires a payment-provider redirect.
 //   - /devices/:deviceId/settings requires a known device UUID in the URL.
 const HOT_PATHS = [

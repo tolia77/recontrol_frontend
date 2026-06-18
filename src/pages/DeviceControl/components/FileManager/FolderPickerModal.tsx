@@ -65,7 +65,7 @@ const EMPTY_NODE: NodeState = {
 };
 
 /**
- * Tree-view folder picker used by Move to… and Copy to… (plan 10-05).
+ * Tree-view folder picker used by Move to… and Copy to….
  *
  * Card is wider (`size="lg"`) since the tree wants a little horizontal
  * breathing room.
@@ -74,16 +74,16 @@ const EMPTY_NODE: NodeState = {
  *   - On open, calls `files.listRoots({})` and seeds the top-level nodes.
  *   - First-time expansion of any node fires `files.list({ path })` and
  *     caches the directories from `entries` (files filtered out -- this is
- *     a folder picker). Subsequent expansions are instant (Research
- *     Pitfall 6 -- avoid re-fetching on every collapse / expand cycle).
+ *     a folder picker). Subsequent expansions are instant — the cache
+ *     avoids re-fetching on every collapse / expand cycle.
  *
  * Selection vs. expansion:
  *   - Clicking the chevron toggles expansion only.
  *   - Clicking the row name selects that node as the destination.
  *   - A row in `disallowedPaths` is greyed out and clicks are no-ops.
  *
- * NO breadcrumbs and NO in-modal create-folder (CONTEXT-locked omissions
- * for Phase 10; both are listed as "deferred" in 10-CONTEXT.md).
+ * No breadcrumbs and no in-modal create-folder — the tree is the only way to
+ * pick a destination.
  *
  * In-flight safety (`isBusy`): once Confirm fires the panel's move/copy
  * loop, the modal stays mounted with `isBusy=true`. Confirm + Cancel are

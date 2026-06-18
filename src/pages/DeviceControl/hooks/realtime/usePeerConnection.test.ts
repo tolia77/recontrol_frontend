@@ -1,6 +1,6 @@
 /**
  * Tests for usePeerConnection — peer lifecycle, reconnect/backoff, and the
- * 45-second watchdog regression (D-05).
+ * 45-second watchdog regression.
  *
  * Key isolation decisions:
  * - vi.mock("src/services/backend/turnService") so getCredentials resolves
@@ -229,7 +229,7 @@ describe("usePeerConnection", () => {
   });
 
   // ---------------------------------------------------------------------
-  // 6. 45s watchdog regression (D-05)
+  // 6. 45s watchdog regression
   //
   // The stub peer is created, we connect once, then fail → reconnecting.
   // The retry pc is created but its connectionState stays "new" (never
@@ -243,7 +243,7 @@ describe("usePeerConnection", () => {
   // onconnectionstatechange: we deliberately never fire it after the initial
   // failure, so the only path to "failed" is the WATCHDOG_MS re-entry.
   // ---------------------------------------------------------------------
-  it("declares failure via the WATCHDOG after ~45s with peer stuck non-connected (D-05 REGRESSION)", async () => {
+  it("declares failure via the WATCHDOG after ~45s with peer stuck non-connected", async () => {
     const { hook } = setup();
 
     act(() => {

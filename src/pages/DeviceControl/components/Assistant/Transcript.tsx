@@ -7,10 +7,10 @@ import ToolCallCard from "./ToolCallCard";
 import ConfirmationCard from "./ConfirmationCard";
 
 /**
- * Scroll container + RowRenderer dispatcher (Plan 20-07; ToolRowPlaceholder
- * replaced by ToolCallCard / ConfirmationCard in Plan 20-08).
+ * Scroll container + RowRenderer dispatcher. Tool rows render as ToolCallCard
+ * or ConfirmationCard depending on row state.
  *
- * Auto-scroll behavior (CHAT-02 / RESEARCH §Pattern 2):
+ * Auto-scroll behavior:
  *   - Pinned to bottom as new rows arrive while the operator has not
  *     scrolled up.
  *   - Disengages on scroll-up (≥16px distance from bottom).
@@ -19,9 +19,9 @@ import ConfirmationCard from "./ConfirmationCard";
  * 16px tolerance handles sub-pixel rounding and the moment between a token
  * append and the layout pass that grows scrollHeight; we explicitly avoid
  * smooth-scrolling because the intermediate frames would trip the disengage
- * threshold (RESEARCH §Pattern 2 Pitfall).
+ * threshold.
  *
- * Tool-row dispatching (20-08):
+ * Tool-row dispatching:
  *   - `row.state === 'awaiting_confirmation'` → ConfirmationCard. The card
  *     receives an `onConfirm(decision)` callback that closes over the row's
  *     `confirmationId` (validated upstream).

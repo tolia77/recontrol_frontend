@@ -127,7 +127,7 @@ export const StopIcon: React.FC<IconProps> = ({ className = "w-4 h-4" }) => (
 );
 
 /**
- * Scenarios Icon (clipboard with checklist) — sidebar third toggle (Phase 21, UI-01).
+ * Scenarios Icon (clipboard with checklist) — sidebar third toggle.
  * Sibling of FilesToggleIcon / AssistantToggleIcon, but lives in the top-level
  * DeviceControl icon module so the Scenarios feature module can stay isolated.
  */

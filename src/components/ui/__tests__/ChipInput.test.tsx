@@ -86,8 +86,8 @@ describe("ChipInput", () => {
     expect(onChange).toHaveBeenLastCalledWith(["foo", "bar", "baz"]);
   });
 
-  it("paste of quoted text splits naively on whitespace per D-07", () => {
-    // D-07 trade-off: --message='hello world' becomes two chips, not one quoted chip.
+  it("paste of quoted text splits naively on whitespace", () => {
+    // Trade-off: --message='hello world' becomes two chips, not one quoted chip.
     const onChange = vi.fn();
     render(<Harness initial={[]} onChange={onChange} />);
     const input = getInput();

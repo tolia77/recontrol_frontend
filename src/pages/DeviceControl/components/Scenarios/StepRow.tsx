@@ -17,9 +17,9 @@ export interface StepRowProps {
   disabled?: boolean;
 }
 
-// D-10 / D-11: server returns verdict_at_save per step on save; platform-agnostic
-// allow / needs_confirm / deny is rendered as a coloured pill using the project
-// palette (accent / amber / error tokens defined in src/index.css @theme).
+// The server returns a verdict_at_save per step on save. Renders the
+// allow / needs_confirm / deny decision as a coloured pill (success / warning /
+// destructive theme tokens).
 function VerdictBadge({ verdict }: { verdict?: VerdictAtSave }) {
   const { t } = useTranslation("scenarios");
   if (!verdict) return null;
@@ -52,7 +52,7 @@ function VerdictBadge({ verdict }: { verdict?: VerdictAtSave }) {
   );
 }
 
-// D-08: compact row anatomy —
+// Compact row anatomy —
 //   [≡ drag][step#][verdict?]  [Duplicate][×]
 //   [binary 40% | cwd 60%]
 //   [args ChipInput]

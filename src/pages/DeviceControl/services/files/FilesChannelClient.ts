@@ -7,7 +7,7 @@ import type { FilesError, FilesErrorCode } from "./filesProtocol.generated";
  *
  * The `info` field carries the structured FilesError from the generated schema,
  * so callers can branch on `err.info.code` (e.g. `UNKNOWN_COMMAND`, `TIMEOUT`)
- * and render localized messages via the Phase-12 i18n layer.
+ * and render localized messages via the i18n layer.
  */
 export class FilesChannelError extends Error {
   readonly info: FilesError;
@@ -41,10 +41,6 @@ interface FilesResponse {
  *
  * Correlation is by UUID (crypto.randomUUID); the default timeout is 15 s and
  * can be overridden per-call via the third argument.
- *
- * Phase-9 note: the desktop side has no handlers registered yet. A request
- * with any command name will reject with `{ code: 'UNKNOWN_COMMAND' }` until
- * Plan 09-05 wires `files.list` into the dispatcher.
  */
 export class FilesChannelClient {
   private readonly dc: RTCDataChannel;
@@ -138,10 +134,10 @@ export class FilesChannelClient {
    * onmessage event-loop turn; do not throw from listeners (the channel
    * is shared by every transfer).
    *
-   * Phase-11 events: `files.download.complete` (payload:
-   * FilesDownloadCompletePayload) and `files.transfer.error` (payload:
-   * FilesTransferErrorPayload). The payload is delivered untyped (`unknown`);
-   * callers that want type-safety should cast at the subscription site.
+   * Events: `files.download.complete` (payload: FilesDownloadCompletePayload)
+   * and `files.transfer.error` (payload: FilesTransferErrorPayload). The
+   * payload is delivered untyped (`unknown`); callers that want type-safety
+   * should cast at the subscription site.
    */
   onEvent(command: string, listener: (payload: unknown) => void): () => void {
     let set = this.eventListeners.get(command);
@@ -169,10 +165,10 @@ export class FilesChannelClient {
       return;
     }
 
-    // Server-push event branch (Phase 11). Event envelopes have no id;
-    // they correlate by command name to the listener registry, NOT to
-    // the pending-request map. Returns immediately so the rest of the
-    // method only runs for request/response correlation.
+    // Server-push event branch. Event envelopes have no id; they correlate
+    // by command name to the listener registry, NOT to the pending-request
+    // map. Returns immediately so the rest of the method only runs for
+    // request/response correlation.
     const maybeEvent = parsed as unknown as {
       status?: string;
       command?: string;
@@ -235,9 +231,9 @@ export class FilesChannelClient {
    * outstanding request with a {@link FilesChannelError} of code DISPOSED,
    * and mark the client so any subsequent request() call rejects immediately.
    *
-   * Does NOT call `dc.close()` -- per 09-SPIKE-FINDINGS Spike C, the desktop
-   * never observes a frontend-initiated dc.close(), so tear-down is driven by
-   * `pc.close()` on the RTCPeerConnection instead. Repeated calls are safe.
+   * Does NOT call `dc.close()` -- the desktop never observes a
+   * frontend-initiated dc.close(), so tear-down is driven by `pc.close()` on
+   * the RTCPeerConnection instead. Repeated calls are safe.
    */
   dispose(): void {
     if (this.disposed) return;

@@ -16,13 +16,13 @@ export interface SidebarProps {
   permissions?: PermissionsSubset;
   disabled?: boolean;
   connectionState?: WebRtcConnectionState;
-  // file manager panel toggle (Phase 10)
+  // file manager panel toggle
   onTogglePanel?: () => void;
   panelOpen?: boolean;
-  // assistant panel toggle (Phase 20-06) — radio group with onTogglePanel per D-02
+  // assistant panel toggle — radio group with onTogglePanel
   onToggleAiPanel?: () => void;
   aiPanelOpen?: boolean;
-  // scenarios panel toggle (Phase 21, UI-01) — third radio sibling alongside files/assistant
+  // scenarios panel toggle — third radio sibling alongside files/assistant
   onToggleScenarios?: () => void;
   scenariosPanelOpen?: boolean;
 }
@@ -77,12 +77,12 @@ export interface MainContentProps {
   streamStats?: StreamStats | null;
   showStats?: boolean;
   scalingMode?: ScalingMode;
-  // file manager panel (Phase 10)
+  // file manager panel
   panelOpen?: boolean;
   fileManagerNode?: React.ReactNode;
-  // assistant panel (Phase 20-06) — D-01 mutex with fileManagerNode
+  // assistant panel — mutex with fileManagerNode
   assistantPanelNode?: React.ReactNode;
-  // scenarios panel (Phase 21-06) — third mutex sibling with files/assistant
+  // scenarios panel — third mutex sibling with files/assistant
   scenariosPanelNode?: React.ReactNode;
   splitRatio?: number;
   setSplitRatio?: (r: number) => void;

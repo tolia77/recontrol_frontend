@@ -112,7 +112,7 @@ describe("prepareOutbound", () => {
     expect(result.kind).toBe("skip-empty");
   });
 
-  it("C6: isPaused=true -> skip-paused (POLICY-06)", async () => {
+  it("C6: isPaused=true -> skip-paused", async () => {
     seqCounter = 0;
     const result = await prepareOutbound(
       baseInput("hello", { isPaused: true }),
@@ -139,7 +139,7 @@ describe("prepareOutbound", () => {
     expect(result.kind).toBe("skip-not-focused");
   });
 
-  it("C9: dampened (delta=500 < 1000) -> skip-dampened (DEGRADE-04)", async () => {
+  it("C9: dampened (delta=500 < 1000) -> skip-dampened", async () => {
     seqCounter = 0;
     const result = await prepareOutbound(
       baseInput("hello", { nowMs: 10_500, lastRemoteApplyTimeMs: 10_000 }),
@@ -157,7 +157,7 @@ describe("prepareOutbound", () => {
     expect(result.kind).toBe("send");
   });
 
-  it("C11: non-text refused (96% control bytes) -> refused-local NON_TEXT (CLIP-08, D-14)", async () => {
+  it("C11: non-text refused (96% control bytes) -> refused-local NON_TEXT", async () => {
     seqCounter = 0;
     // 24 control chars (U+0001), 1 normal char => 24/25 = 96%
     const controlText = "\x01".repeat(24) + "a";
@@ -168,7 +168,7 @@ describe("prepareOutbound", () => {
     }
   });
 
-  it("C12: CRLF normalized (CLIP-07)", async () => {
+  it("C12: CRLF normalized", async () => {
     seqCounter = 0;
     const result = await prepareOutbound(baseInput("a\r\nb"), nextSeq);
     expect(result.kind).toBe("send");
@@ -177,7 +177,7 @@ describe("prepareOutbound", () => {
     }
   });
 
-  it("C13: rawText utf8 length > 2MB -> refused-local TOO_LARGE (D-14)", async () => {
+  it("C13: rawText utf8 length > 2MB -> refused-local TOO_LARGE", async () => {
     seqCounter = 0;
     // Build a string that's just over 2 MB of ASCII (each char = 1 byte in UTF-8)
     const bigText = "A".repeat(MAX_CONTENT_BYTES + 1);
@@ -188,7 +188,7 @@ describe("prepareOutbound", () => {
     }
   });
 
-  it("C14: loop-gate suppresses outbound (sender second-guard LOOP-01)", async () => {
+  it("C14: loop-gate suppresses outbound (sender second-guard)", async () => {
     seqCounter = 0;
     const clock = new FakeClock();
     const loopGate = new ClipboardLoopGate(clock);
@@ -207,7 +207,7 @@ describe("prepareOutbound", () => {
     expect(result.kind).toBe("skip-loop-gate");
   });
 
-  it("C15: loop-gate suppresses inbound echo (echo-of-just-applied LOOP-01)", async () => {
+  it("C15: loop-gate suppresses inbound echo (echo-of-just-applied)", async () => {
     seqCounter = 0;
     const clock = new FakeClock();
     const loopGate = new ClipboardLoopGate(clock);
@@ -262,7 +262,7 @@ describe("prepareOutbound", () => {
     expect(result.kind).toBe("skip-no-channel");
   });
 
-  it("C19b: cap-cache says inboundEnabled=false -> refused-local INBOUND_DISABLED (D-13)", async () => {
+  it("C19b: cap-cache says inboundEnabled=false -> refused-local INBOUND_DISABLED", async () => {
     seqCounter = 0;
     const caps = makeCaps({ inboundEnabled: false });
     const result = await prepareOutbound(

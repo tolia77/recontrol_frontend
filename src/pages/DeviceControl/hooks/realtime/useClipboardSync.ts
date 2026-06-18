@@ -24,7 +24,7 @@ export interface UseClipboardSync {
   togglePause: () => void;
   status: ClipboardSyncStatus;
   lastSyncAt: number | null;
-  // Phase 15 D-10: discrete fields for Phase 16's selectPillState() consumption.
+  // Discrete fields consumed by selectPillState().
   cachedDesktopCaps: ClipboardCapabilitiesEnvelope | null;
   lastRefusal: {
     reason: ClipboardRefusalReason;
@@ -41,17 +41,17 @@ export interface UseClipboardSyncArgs {
   loopGate: ClipboardLoopGate;
   lastRemoteApplyTimeRef: React.MutableRefObject<number>;
   /**
-   * CR-04: clipboard data-channel readyState mirrored as React state so the
-   * inbound subscription effect can re-run when the channel actually opens
-   * (which fires AFTER connectionState='connected'). Without this state,
-   * the effect deps only see ref identity and never re-run.
+   * Clipboard data-channel readyState mirrored as React state so the inbound
+   * subscription effect can re-run when the channel actually opens (which fires
+   * AFTER connectionState='connected'). Without this state, the effect deps
+   * only see ref identity and never re-run.
    */
   clipboardCtlOpen: boolean;
   /**
-   * Phase 15 CAP-01 / D-18: browser-side capability detection (from
-   * useClipboardCapability) used to construct the outgoing capabilities
-   * envelope. Defaults to the same all-false shape useClipboardCapability
-   * returns at first render so legacy callers keep type-checking.
+   * Browser-side capability detection (from useClipboardCapability) used to
+   * construct the outgoing capabilities envelope. Defaults to the same all-false
+   * shape useClipboardCapability returns at first render so callers that omit it
+   * keep type-checking.
    */
   caps?: ClipboardCapability;
 }
@@ -65,12 +65,9 @@ const DEFAULT_CAPS: ClipboardCapability = {
 /**
  * Clipboard sync over the WebRTC data channel.
  *
- * Channel pattern: options-object shape (UseClipboardSyncArgs).
- * Exception per D-13: does NOT subscribe to a raw WebSocket — it uses the
- * clipboard RTCDataChannel via ClipboardChannelClient. The options-object
- * shape satisfies D-11 structurally without adding a `socket` arg that would
- * go unused. pcRef and clipboardCtlRef are the integration surface from
- * useWebRtc (D-08 contract).
+ * Does NOT subscribe to a raw WebSocket — it uses the clipboard RTCDataChannel
+ * via ClipboardChannelClient. pcRef and clipboardCtlRef are the integration
+ * surface from useWebRtc.
  */
 export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
   const {
@@ -87,7 +84,7 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
   const [status, setStatus] = useState<ClipboardSyncStatus>("idle");
   const [lastSyncAt, setLastSyncAt] = useState<number | null>(null);
 
-  // Phase 15: three new discrete fields for Phase 16's pill (D-10).
+  // Discrete fields consumed by the clipboard pill.
   const [cachedDesktopCaps, setCachedDesktopCaps] =
     useState<ClipboardCapabilitiesEnvelope | null>(null);
   const [lastRefusal, setLastRefusal] = useState<{
@@ -101,22 +98,21 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
   const clientRef = useRef<ClipboardChannelClient | null>(null);
   const statusRef = useRef(status);
 
-  // Phase 15: refs mirror the new state so async callbacks read live values
-  // without stale-closure (Pattern F: dual state + ref mirroring).
+  // Refs mirror the state so async callbacks read live values without
+  // stale-closure.
   const cachedDesktopCapsRef = useRef(cachedDesktopCaps);
   const lastRefusalRef = useRef(lastRefusal);
-  // D-18 re-advertise tracking: remember last advertised flag pair so we only
-  // re-send when the flag combination actually flips (avoids T-15-19 flap-loop).
+  // Re-advertise tracking: remember the last advertised flag pair so we only
+  // re-send when the flag combination actually flips (avoids a flap-loop).
   const prevSentCapsRef = useRef<{
     outboundEnabled: boolean;
     inboundEnabled: boolean;
   } | null>(null);
-  // CR-01: mirror current caps into a ref so buildCapsEnvelope is stable across
-  // caps changes. The previous shape listed caps.* in buildCapsEnvelope's deps,
-  // which made the inbound-subscribe effect tear down (wiping the cache) every
-  // time useClipboardCapability flipped from initial-false to detected.
-  // Splitting into a separate re-advertise effect (below) preserves the
-  // channel-lifecycle isolation D-06 demands.
+  // Mirror current caps into a ref so buildCapsEnvelope is stable across caps
+  // changes. Listing caps.* in its deps would make the inbound-subscribe effect
+  // tear down (wiping the cache) every time useClipboardCapability flips from
+  // initial-false to detected; a separate re-advertise effect (below) keeps the
+  // channel lifecycle isolated from caps changes.
   const capsRef = useRef(caps);
   useEffect(() => {
     capsRef.current = caps;
@@ -154,12 +150,11 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
     return seqRef.current;
   }, []);
 
-  // Phase 15 D-17 / D-18: build the outgoing capabilities envelope from current
-  // browser-side caps detection. Returns null if originId is not yet minted.
-  // CR-01: reads `caps` via capsRef so the callback identity is stable across
-  // caps flips. The inbound subscribe effect lists this in its deps and must
-  // NOT re-run when caps detection resolves -- doing so wipes the cache (see
-  // CR-01 in 15-REVIEW.md).
+  // Build the outgoing capabilities envelope from current browser-side caps
+  // detection. Returns null if originId is not yet minted. Reads `caps` via
+  // capsRef so the callback identity is stable across caps flips: the inbound
+  // subscribe effect lists this in its deps and must NOT re-run when caps
+  // detection resolves, or it wipes the cache.
   const buildCapsEnvelope =
     useCallback((): ClipboardCapabilitiesEnvelope | null => {
       const originId = clipboardOriginIdRef.current;
@@ -179,11 +174,12 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
 
   const togglePause = useCallback(() => setIsPaused((p) => !p), []);
 
-  // Outbound: focus / visibilitychange driven readText -> envelope
-  // WR-10: use explicit primitive/ref deps instead of the entire `args` object.
-  // The args object is reconstructed on every parent render via inline destructuring,
-  // so `[args, nextSeq]` would re-bind focus/visibilitychange listeners on every
-  // render -- the unsubscribe-resubscribe window can drop a focus event.
+  // Outbound: focus / visibilitychange driven readText -> envelope.
+  // Use explicit primitive/ref deps instead of the entire `args` object. The
+  // args object is reconstructed on every parent render via inline
+  // destructuring, so `[args, nextSeq]` would re-bind focus/visibilitychange
+  // listeners every render -- the unsubscribe-resubscribe window can drop a
+  // focus event.
   const maybeReadAndPush = useCallback(async () => {
     if (connectionState !== "connected") return;
     const dc = clipboardCtlRef.current;
@@ -195,19 +191,19 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
         setStatus("unsupported");
         return;
       }
-      // POLICY-06 listener-layer: pause gates BEFORE readText to avoid
-      // unnecessary permission prompts while paused.
+      // Pause gates BEFORE readText to avoid unnecessary permission prompts
+      // while paused.
       if (isPausedRef.current) return;
       if (document.visibilityState !== "visible") return;
-      if (!document.hasFocus()) return; // Pitfall 13
-      // DEGRADE-04 dampening pre-check: avoid readText immediately after a remote
-      // apply (reduces permission-prompt churn on browsers that prompt every read).
+      // writeText/readText require document focus on Chrome/Edge.
+      if (!document.hasFocus()) return;
+      // Dampening pre-check: avoid readText immediately after a remote apply
+      // (reduces permission-prompt churn on browsers that prompt every read).
       const now = Date.now();
       if (now - lastRemoteApplyTimeRef.current < 1000) {
-        // IN-01: demoted from console.log to console.debug. This branch fires
-        // on every focus event during the 1s post-remote-write dampening
-        // window -- in normal use that's once per paste -- and the prior level
-        // was spamming the production console with no operator value.
+        // console.debug, not console.log: this branch fires on every focus
+        // event during the 1s post-remote-write dampening window -- in normal
+        // use once per paste -- so a higher level would spam the console.
         console.debug(
           "[clipboard] skipped focus-read due to recent remote write",
         );
@@ -215,7 +211,7 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
       }
       raw = await navigator.clipboard.readText();
     } catch {
-      // D-12: catch readText rejection -> permission-required. NO permissions.query.
+      // readText rejection -> permission-required (no permissions.query call).
       setStatus("permission-required");
       return;
     }
@@ -240,10 +236,10 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
         clientRef.current.send(decision.envelope);
         setLastSyncAt(Date.now());
         if (statusRef.current === "permission-required") setStatus("idle");
-        // D-18 re-advertise on permission resolve: a successful readText+send
-        // proves canRead is now actually true; if our flag pair flipped from the
-        // last advertised, send a fresh capabilities envelope so the desktop
-        // unblocks its inbound gate.
+        // Re-advertise on permission resolve: a successful readText+send proves
+        // canRead is now actually true; if our flag pair flipped from the last
+        // advertised, send a fresh capabilities envelope so the desktop unblocks
+        // its inbound gate.
         const c = capsRef.current;
         const desired = {
           outboundEnabled: c.canRead && c.isSecureContext,
@@ -262,16 +258,15 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
         }
       }
     } else if (decision.kind === "refused-local") {
-      // D-13 / D-14: surface local refusal to the pill feed. source='local'
-      // disambiguates from desktop-replied refused for any future direction-
-      // specific UX in Phase 16.
+      // Surface local refusal to the pill feed; source='local' disambiguates
+      // from a desktop-replied refusal.
       setLastRefusal({
         reason: decision.reason as ClipboardRefusalReason,
         at: Date.now(),
         source: "local",
       });
     }
-    // CR-01: caps.* read via capsRef so this callback's identity is stable.
+    // caps.* read via capsRef so this callback's identity is stable.
   }, [
     connectionState,
     clipboardCtlRef,
@@ -282,12 +277,12 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
     buildCapsEnvelope,
   ]);
 
-  // Inbound: subscribe to ClipboardChannelClient when channel opens
-  // CR-04: depend on clipboardCtlOpen state so the effect re-runs when the data
-  // channel actually transitions to 'open' (which is normally AFTER
-  // connectionState='connected'). The previous version snapshotted
-  // clipboardCtlRef.current once and never re-ran when the ref's inner value
-  // changed -- silently dropping all inbound clipboard messages.
+  // Inbound: subscribe to ClipboardChannelClient when the channel opens.
+  // Depend on clipboardCtlOpen state so the effect re-runs when the data
+  // channel actually transitions to 'open' (normally AFTER
+  // connectionState='connected'). Snapshotting clipboardCtlRef.current once
+  // would never re-run when the ref's inner value changed -- silently dropping
+  // all inbound clipboard messages.
   useEffect(() => {
     if (connectionState !== "connected") return;
     if (!clipboardCtlOpen) return;
@@ -298,14 +293,13 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
     const client = new ClipboardChannelClient(dc);
     clientRef.current = client;
 
-    // WR-03: reset the per-channel seq counter on every channel-open so the
-    // first capabilities envelope is seq=1 and matches the desktop's
-    // AttachChannel reset. Without this, the browser-side counter carries
-    // across reconnects, breaking log correlation symmetry with the desktop.
+    // Reset the per-channel seq counter on every channel-open so the first
+    // capabilities envelope is seq=1 and matches the desktop's reset. Without
+    // this, the browser-side counter carries across reconnects, breaking log
+    // correlation symmetry with the desktop.
     seqRef.current = 0;
-    // CR-01: also clear the prev-sent tracker so the first send on the new
-    // channel is unconditional (the previous channel's tracker is meaningless
-    // here).
+    // Also clear the prev-sent tracker so the first send on the new channel is
+    // unconditional (the previous channel's tracker is meaningless here).
     prevSentCapsRef.current = null;
 
     client.subscribe(async (env) => {
@@ -316,7 +310,8 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
         loopGate,
       );
       if (decision.kind !== "apply") return;
-      // Pitfall 1: RECORD FIRST, THEN WRITE (T-14-34).
+      // Record the applied hash BEFORE writing, so the resulting OS clipboard
+      // event is recognized as our own and suppressed by the loop gate.
       loopGate.recordApplied(decision.hashBytes);
       try {
         if (typeof navigator?.clipboard?.writeText !== "function") {
@@ -327,8 +322,8 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
         lastRemoteApplyTimeRef.current = Date.now();
         setLastSyncAt(Date.now());
         if (statusRef.current === "permission-required") setStatus("idle");
-        // D-18 re-advertise: writeText resolved cleanly -> canWrite is actually
-        // true. Re-send caps envelope if the flag pair flipped from the last
+        // Re-advertise: writeText resolved cleanly -> canWrite is actually true.
+        // Re-send the caps envelope if the flag pair flipped from the last
         // advertised value.
         const c = capsRef.current;
         const desired = {
@@ -360,13 +355,13 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
       }
     });
 
-    // Phase 15 D-06: cache desktop caps on receipt so the pill and outbound
-    // gate reflect the desktop's advertised policy.
+    // Cache desktop caps on receipt so the pill and outbound gate reflect the
+    // desktop's advertised policy.
     client.subscribeCapabilities((capsEnv: ClipboardCapabilitiesEnvelope) => {
       setCachedDesktopCaps(capsEnv);
     });
 
-    // Phase 15 D-11: refusal feed source='remote' for desktop-replied refusals.
+    // Refusal feed, source='remote' for desktop-replied refusals.
     client.subscribeRefused((refusedEnv) => {
       setLastRefusal({
         reason: refusedEnv.reason as ClipboardRefusalReason,
@@ -375,10 +370,9 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
       });
     });
 
-    // Phase 15 D-17: send browser's capabilities envelope on open. Synchronous
-    // (mirrors desktop's WR-06-safe send). Uses optimistic detection from
-    // useClipboardCapability output -- D-18 re-advertise covers the case where
-    // a permission prompt later flips the actual flag.
+    // Send the browser's capabilities envelope on open. Uses optimistic
+    // detection from useClipboardCapability output -- the re-advertise paths
+    // cover the case where a permission prompt later flips the actual flag.
     const capsEnvelope = buildCapsEnvelope();
     if (capsEnvelope) {
       client.send(capsEnvelope);
@@ -389,17 +383,17 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
     }
 
     return () => {
-      // D-06: cache cleared on channel close so a fresh channel re-handshakes
-      // from scratch (mirrors Phase 13 D-17 reset philosophy). prevSentCapsRef
-      // also reset so the next channel always re-advertises on open.
+      // Cache cleared on channel close so a fresh channel re-handshakes from
+      // scratch. prevSentCapsRef is also reset so the next channel always
+      // re-advertises on open.
       setCachedDesktopCaps(null);
       prevSentCapsRef.current = null;
       clientRef.current?.dispose();
       clientRef.current = null;
     };
-    // CR-01: caps.* are intentionally NOT in this effect's dependency array.
-    // The subscribe lifecycle is per-CHANNEL, not per-caps. caps flipping must
-    // not tear down the cache or re-create the client. A separate effect below
+    // caps.* are intentionally NOT in this effect's dependency array: the
+    // subscribe lifecycle is per-CHANNEL, not per-caps. caps flipping must not
+    // tear down the cache or re-create the client. A separate effect below
     // handles re-advertise on caps change.
   }, [
     connectionState,
@@ -411,11 +405,10 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
     buildCapsEnvelope,
   ]);
 
-  // CR-01 / D-18: dedicated re-advertise effect. Runs whenever the browser-side
-  // caps detection flips and a client is currently attached, sending a fresh
+  // Dedicated re-advertise effect. Runs whenever the browser-side caps
+  // detection flips and a client is currently attached, sending a fresh
   // capabilities envelope WITHOUT touching the inbound subscription or the
-  // cached desktop caps. This is the per-caps surface that the previous design
-  // conflated with channel teardown.
+  // cached desktop caps.
   useEffect(() => {
     const client = clientRef.current;
     if (!client) return;
@@ -456,7 +449,7 @@ export function useClipboardSync(args: UseClipboardSyncArgs): UseClipboardSync {
     }
   }, [loopGate, lastRemoteApplyTimeRef]);
 
-  // Listener registration: window 'focus' + document 'visibilitychange' (DEGRADE-02)
+  // Listener registration: window 'focus' + document 'visibilitychange'.
   // Browsers expose no clipboard-change event, and a user controlling a remote
   // desktop in-tab never loses browser focus — so 'copy'/'cut' are also bound
   // here. Without them, Ctrl+C in the browser does not push outbound until the

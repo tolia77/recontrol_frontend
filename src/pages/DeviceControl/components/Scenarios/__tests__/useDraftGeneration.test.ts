@@ -1,5 +1,5 @@
 /**
- * useDraftGeneration vitest — Phase 23 / Plan 23-08 Task 1.
+ * useDraftGeneration vitest.
  *
  * Drives the hook deterministically through every transition of the 5-state
  * machine. scenariosService.createDraft is vi.mocked with a manual deferred

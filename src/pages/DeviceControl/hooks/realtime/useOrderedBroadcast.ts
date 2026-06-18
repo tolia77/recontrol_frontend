@@ -3,14 +3,12 @@ import { useCallback, useEffect, useRef } from "react";
 export const GAP_CLOSE_TIMEOUT_MS = 500;
 
 /**
- * Shared seq-ordered reorder buffer base hook (D-12).
+ * Shared seq-ordered reorder buffer base hook.
  *
- * Both useAssistantChannel and useScenarioRunChannel duplicate this machinery
- * verbatim (Phase 18 STREAM-02 / Phase 22 Pitfall 2). Extracted once,
- * parameterized for the three documented twin differences, composed by each
- * channel hook.
+ * Extracted once and shared by useAssistantChannel and useScenarioRunChannel,
+ * parameterized for the three twin differences, composed by each channel hook.
  *
- * Behavioral invariants (byte-equivalent to both originals):
+ * Behavioral invariants:
  *  - `bufferRef` accumulates out-of-order messages keyed by seq.
  *  - `expectedSeqRef` starts at 1 (backend post-increments from @seq=0;
  *    first broadcast carries seq: 1).
@@ -22,7 +20,7 @@ export const GAP_CLOSE_TIMEOUT_MS = 500;
  *    pending gap timer. Channel hooks call this when they receive the
  *    reset-marker broadcast (e.g. "accepted" or "run_started").
  *  - `closedRef` is set by the channel hook's onClose handler to suppress
- *    the gap-close timer firing post-teardown (VERIFY-04 invariant).
+ *    the gap-close timer firing post-teardown.
  *
  * Three twin differences parameterized via options:
  *  - `resetMarker`: the broadcast type that triggers buffer reset between runs
@@ -38,8 +36,8 @@ export const GAP_CLOSE_TIMEOUT_MS = 500;
  *    called by channel hooks in their own onClose handlers.
  *
  * NOT in this base — the CONNECTING→OPEN socket-lifecycle logic stays in
- * each channel hook's own useEffect (Landmine 5). Subscribe/unsubscribe
- * framing is also channel-hook-owned.
+ * each channel hook's own useEffect. Subscribe/unsubscribe framing is also
+ * channel-hook-owned.
  */
 
 export interface UseOrderedBroadcastOptions<T> {
@@ -105,7 +103,7 @@ export function useOrderedBroadcast<T extends { type: string; seq?: number }>(
     makeGapCloseErrorRef.current = makeGapCloseError;
   }, [makeGapCloseError]);
 
-  // Seq-ordered reorder buffer per Phase 18 STREAM-02 / D-16.
+  // Seq-ordered reorder buffer.
   const bufferRef = useRef<Map<number, T>>(new Map());
   // expectedSeqRef starts at 1 — backend post-increments from @seq=0 so the
   // first broadcast emitted by the backend carries seq: 1.
@@ -131,8 +129,8 @@ export function useOrderedBroadcast<T extends { type: string; seq?: number }>(
     if (bufferRef.current.size > 0 && gapTimerRef.current === null) {
       gapTimerRef.current = window.setTimeout(() => {
         gapTimerRef.current = null;
-        // VERIFY-04 invariant: suppress synthetic gap-close error after socket
-        // close; the close handler already delivered `connection_lost`.
+        // Suppress the synthetic gap-close error after socket close; the close
+        // handler already delivered `connection_lost`.
         if (closedRef.current) return;
         const errorEvent = makeGapCloseErrorRef.current(
           expectedSeqRef.current,

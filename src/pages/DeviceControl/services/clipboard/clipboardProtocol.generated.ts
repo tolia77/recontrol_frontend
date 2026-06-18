@@ -51,8 +51,7 @@ export interface ClipboardChunkEnvelope {
 export type ChunkEnvelopeKind = "chunk";
 
 /**
- * Categorized refusal reason. Stable; new entries added rather than repurposed. Locked by
- * CONTEXT D-03.
+ * Categorized refusal reason. Stable; new entries added rather than repurposed.
  */
 export type ClipboardRefusalReason =
     | "TOO_LARGE"
@@ -93,11 +92,11 @@ export interface ClipboardSetEnvelope {
      */
     chunkSeq?: number;
     /**
-     * UTF-8 text payload. <= 2_000_000 UTF-8 bytes pre-hash (TRANSPORT-02).
+     * UTF-8 text payload. <= 2_000_000 UTF-8 bytes pre-hash.
      */
     content: string;
     /**
-     * SHA-256 of UTF-8 content bytes, first 8 bytes, lowercase hex (LOOP-02).
+     * SHA-256 of UTF-8 content bytes, first 8 bytes, lowercase hex.
      */
     contentHash: string;
     kind:        SetEnvelopeKind;
@@ -106,11 +105,11 @@ export interface ClipboardSetEnvelope {
      */
     originId: string;
     /**
-     * Monotonic per-origin counter. Diagnostic only (D-04).
+     * Monotonic per-origin counter. Diagnostic only.
      */
     seq: number;
     /**
-     * Sender wall-clock epoch ms. Diagnostic only (D-04).
+     * Sender wall-clock epoch ms. Diagnostic only.
      */
     ts: number;
 }

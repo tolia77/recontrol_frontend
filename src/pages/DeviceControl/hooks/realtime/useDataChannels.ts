@@ -11,14 +11,14 @@ import type React from "react";
 
 /**
  * Owns the files + clipboard data-channel refs, state, and setup/cleanup
- * callbacks. Internal to useWebRtc (D-09). Provides setupDataChannels(pc)
- * and cleanupDataChannels() for usePeerConnection to call during
+ * callbacks. Internal to useWebRtc. Provides setupDataChannels(pc) and
+ * cleanupDataChannels() for usePeerConnection to call during
  * createPeerConnection / cleanupPeerConnection respectively.
  *
- * Cleanup ordering (Spike C / Landmine 6): cleanupDataChannels() disposes
- * all file/clipboard wrappers BEFORE the caller (usePeerConnection) calls
- * pc.close(). This is intentional — dc.close() from this side does not
- * propagate to the SIPSorcery peer, so pc.close() drives teardown.
+ * Cleanup ordering: cleanupDataChannels() disposes all file/clipboard
+ * wrappers BEFORE the caller (usePeerConnection) calls pc.close(). This is
+ * intentional — dc.close() from this side does not propagate to the
+ * SIPSorcery peer, so pc.close() drives teardown.
  */
 
 export interface UseDataChannelsReturn {
@@ -60,16 +60,16 @@ export function useDataChannels(): UseDataChannelsReturn {
   // file-ctl can fire ~100ms AFTER pc.connectionState transitions to
   // 'connected', so a one-shot setTimeout(0) check would race and miss it.
   const [filesCtlOpen, setFilesCtlOpen] = useState(false);
-  // CR-04: mirror clipboard data-channel 'open' state so useClipboardSync can
-  // re-run its inbound subscription effect when the channel opens (which fires
-  // AFTER pc.connectionState='connected').
+  // Mirror clipboard data-channel 'open' state so useClipboardSync can re-run
+  // its inbound subscription effect when the channel opens (which fires AFTER
+  // pc.connectionState='connected').
   const [clipboardCtlOpen, setClipboardCtlOpen] = useState(false);
 
   // Called by usePeerConnection inside cleanupPeerConnection BEFORE pc.close().
-  // Dispose file-channel wrappers BEFORE closing the RTCPeerConnection. Per
-  // 09-SPIKE-FINDINGS Spike C, dc.close() from this side does not propagate
-  // to the SIPSorcery peer -- so we rely on pc.close() below to drive the
-  // teardown. Here we only detach listeners and reject pending requests.
+  // Dispose file-channel wrappers BEFORE closing the RTCPeerConnection.
+  // dc.close() from this side does not propagate to the SIPSorcery peer -- so
+  // we rely on pc.close() below to drive the teardown. Here we only detach
+  // listeners and reject pending requests.
   const cleanupDataChannels = useCallback(() => {
     frontendLogger.log('info', 'webrtc', 'data_channels_cleanup', {});
     filesClientRef.current?.dispose();
@@ -92,16 +92,15 @@ export function useDataChannels(): UseDataChannelsReturn {
 
   // Called by usePeerConnection inside createPeerConnection.
   // Creates the two file-transfer data channels BEFORE createOffer so they
-  // appear in the initial SDP offer's single SCTP m-section (per
-  // 09-RESEARCH.md Pattern 2 and 09-CONTEXT.md -- frontend-as-offerer).
+  // appear in the initial SDP offer's single SCTP m-section (frontend is the
+  // offerer).
   //
   // The { ordered: true } init option is authoritative because the browser's
   // RTCDataChannelInit round-trips cleanly through DCEP. The desktop side
   // NEVER calls createDataChannel for files-ctl/files-data; it consumes them
   // via pc.ondatachannel. This design intentionally routes around SIPSorcery
-  // issue #701 regardless of whether 09-SPIKE-FINDINGS.md marked Spike A as
-  // VERIFIED or UNVERIFIED. Do not add desktop-side createDataChannel calls
-  // for these labels without rechecking Spike A.
+  // issue #701. Do not add desktop-side createDataChannel calls for these
+  // labels.
   const setupDataChannels = useCallback(
     (pc: RTCPeerConnection) => {
       try {
@@ -111,7 +110,7 @@ export function useDataChannels(): UseDataChannelsReturn {
           console.log("[files-ctl] open");
           frontendLogger.log('info', 'webrtc', 'data_channel_open', { label: filesCtl.label });
           filesClientRef.current = new FilesChannelClient(filesCtl);
-          // Expose on window so Plan 09-05's browser-console demo can call
+          // Expose on window so a browser-console demo can call
           // window.__filesCtl.request('files.list', { path: '...' }).
           (
             window as unknown as { __filesCtl?: FilesChannelClient }
@@ -158,7 +157,7 @@ export function useDataChannels(): UseDataChannelsReturn {
             clipboardLoopGateRef.current,
             console,
           );
-          // CR-04: signal channel-open as React state so useClipboardSync can
+          // Signal channel-open as React state so useClipboardSync can
           // (re-)wire its inbound subscription. Fires after pc.connectionState='connected'.
           setClipboardCtlOpen(true);
         });
@@ -166,7 +165,7 @@ export function useDataChannels(): UseDataChannelsReturn {
           clipboardHandleRef.current?.dispose();
           clipboardHandleRef.current = null;
           clipboardRef.current = null;
-          // WR-01: clear originId on close so a stale value cannot pass the
+          // Clear originId on close so a stale value cannot pass the
           // self-origin-drop check on a subsequent reconnect/race.
           clipboardOriginIdRef.current = null;
           clipboardLoopGateRef.current.reset();

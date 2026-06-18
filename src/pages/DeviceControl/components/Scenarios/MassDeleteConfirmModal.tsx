@@ -3,11 +3,11 @@ import { useTranslation } from "react-i18next";
 
 import { Button, Input, Modal } from "src/components/ui";
 
-// D-22-12 / AUDIT-05 mass-delete arm: highest-friction destructive confirm.
-// Operator must type the literal "DELETE" (case-sensitive, no transliteration
-// in any locale — per D-22 mandate) before [Delete all] enables. Modal shell
-// owns scroll-lock and focus management; Esc is handled at window level for
-// test compatibility (suppressEsc on shell prevents double-firing).
+// Highest-friction destructive confirm for deleting all runs. Operator must
+// type the literal "DELETE" (case-sensitive, identical in every locale — never
+// transliterated) before [Delete all] enables. The Modal shell owns scroll-lock
+// and focus management; Esc is handled at window level (suppressEsc on the shell
+// prevents double-firing).
 
 export interface MassDeleteConfirmModalProps {
   open: boolean;
@@ -17,8 +17,8 @@ export interface MassDeleteConfirmModalProps {
   loading?: boolean;
 }
 
-// The literal phrase is identical across EN+UK by D-22 discretion. Defined as
-// a const so the equality check stays a single grep-able choke point.
+// The required phrase is identical across EN and UK. Defined as a const so the
+// equality check stays a single grep-able choke point.
 const REQUIRED_PHRASE = "DELETE";
 
 export default function MassDeleteConfirmModal({
@@ -38,8 +38,8 @@ export default function MassDeleteConfirmModal({
   }, [open]);
 
   // Escape dismiss via window-level listener. Modal shell receives suppressEsc
-  // so only this handler fires (avoids double-calling onCancel). Gate on
-  // !loading (WR-06) so a mid-delete Esc cannot abandon the dialog.
+  // so only this handler fires (avoids double-calling onCancel). Gated on
+  // !loading so a mid-delete Esc cannot abandon the dialog.
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -61,11 +61,10 @@ export default function MassDeleteConfirmModal({
       suppressOverlayClick
       ariaLabel={t("history.deleteAllConfirm.title")}
     >
-      {/* Inner wrapper carries testids and mouseDown-based backdrop dismiss so
-          existing tests (MassDeleteConfirmModal.test.tsx) continue to pass
-          without modification. The outer div acts as the "backdrop area" for
-          tests; the inner card div stops mouseDown propagation.
-          nested dialog role removed (WR-04) — the Modal shell owns the only boundary. */}
+      {/* Inner wrapper carries the testids and a mouseDown-based backdrop
+          dismiss: the outer div is the "backdrop area" (mouseDown on it cancels)
+          and the inner card div stops mouseDown propagation. The Modal shell
+          owns the only dialog role/boundary. */}
       <div
         data-testid="mass-delete-modal"
         onMouseDown={(e) => {

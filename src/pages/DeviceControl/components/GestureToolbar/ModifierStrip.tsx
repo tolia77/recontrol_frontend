@@ -5,7 +5,7 @@ import { generateUUID } from "src/utils/uuid";
 
 // VK constants (derived from utils/keyboard.ts — raw Windows VK codes)
 // The strip calls addAction directly with VK numbers (bypasses mapToVirtualKey
-// which requires a React.KeyboardEvent — see RESEARCH §Pitfall 8).
+// which requires a React.KeyboardEvent).
 
 const MODIFIER_VK = {
   Ctrl: 17,
@@ -59,8 +59,8 @@ interface ModifierStripProps {
  * ModifierStrip — sticky modifier + special-key row, docked above the soft
  * keyboard using VisualViewport positioning.
  *
- * Implements KBD-03: one-shot sticky modifiers (Ctrl/Alt/Win/Shift), non-sticky
- * special keys (Esc/Tab/arrows), an Fn page with F1–F12 + Ctrl+Alt+Del, and the
+ * Provides one-shot sticky modifiers (Ctrl/Alt/Win/Shift), non-sticky special
+ * keys (Esc/Tab/arrows), an Fn page with F1–F12 + Ctrl+Alt+Del, and the
  * `deliverPrintable` imperative API for combo routing in GestureToolbar.
  */
 const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
@@ -116,7 +116,7 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Core dispatch — no-ops when disabled (T-37-02 security gate)
+    // Core dispatch — no-ops when disabled (keyboard-permission gate)
 
     const send = useCallback(
       (type: string, payload: Record<string, unknown>) => {
@@ -158,7 +158,7 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
       pendingTimers.current.set(id, vk);
     };
 
-    // Ctrl+Alt+Del compound action (D-07 — not sticky, single compound press)
+    // Ctrl+Alt+Del compound action — not sticky, single compound press
 
     const handleCtrlAltDel = () => {
       send("keyboard.keyDown", { Key: 17 }); // Ctrl
@@ -174,7 +174,7 @@ const ModifierStrip = forwardRef<ModifierStripHandle, ModifierStripProps>(
       pendingTimers.current.set(id, [46, 18, 17]);
     };
 
-    // Imperative handle for GestureToolbar combo routing (D-09)
+    // Imperative handle for GestureToolbar combo routing
 
     useImperativeHandle(
       ref,

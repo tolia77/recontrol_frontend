@@ -1,20 +1,16 @@
 /**
- * useTouchGestures.ts
- *
  * Pointer-event gesture classifier → mouse.* envelopes through the injected
- * addAction permission gate (S1 — never accesses the socket directly).
+ * addAction permission gate (never accesses the socket directly).
  *
- * Implements the locked gesture map (36-CONTEXT D-08/D-09, 36-UI-SPEC §D,
- * RESEARCH Pattern 3):
- *   - 1-finger drag → useVirtualCursor.move (TOUCH-01)
- *   - 1-finger tap  → left click down/up (TOUCH-02)
- *   - double-tap    → two left down/up sequences (TOUCH-02)
- *   - tap-hold-drag → mouse.down on arm, mouse.move during drag, mouse.up on lift (TOUCH-03)
- *   - 2-finger tap  → right click via mapButtonToBackend(2) (TOUCH-04)
- *   - 2-finger drag → mouse.scroll with natural direction (TOUCH-05, D-09)
+ * Gesture map:
+ *   - 1-finger drag → useVirtualCursor.move
+ *   - 1-finger tap  → left click down/up
+ *   - double-tap    → two left down/up sequences
+ *   - tap-hold-drag → mouse.down on arm, mouse.move during drag, mouse.up on lift
+ *   - 2-finger tap  → right click via mapButtonToBackend(2)
+ *   - 2-finger drag → mouse.scroll with natural direction
  *
- * All envelopes flow exclusively through the injected `addAction` (V4/Elevation
- * control — T-36-03). No `sendMessagePayload` reference exists in this file.
+ * All envelopes flow exclusively through the injected `addAction`.
  */
 
 import { useRef, useCallback, useEffect } from "react";
@@ -22,8 +18,7 @@ import { mapButtonToBackend } from "src/pages/DeviceControl/utils/mouse";
 import type { CommandAction } from "src/pages/DeviceControl/types";
 import type { useVirtualCursor } from "./useVirtualCursor";
 
-// Locked threshold constants (36-UI-SPEC §D / RESEARCH Pattern 3)
-// These are spec-locked and intentionally named for single-point tuning in UAT.
+// Gesture threshold constants, intentionally named for single-point tuning.
 
 /** Maximum press duration (ms) for a touch to be classified as a tap. */
 export const TAP_MAX_MS = 200;
@@ -38,14 +33,14 @@ export const DOUBLE_TAP_WINDOW_MS = 300;
 export const LONG_PRESS_MS = 400;
 
 /**
- * Scroll direction sign (RESEARCH Pitfall 5 / OQ 1 — D-09 natural scroll).
+ * Scroll direction sign (natural scroll).
  *
  * Natural scroll convention: drag fingers UP → remote content scrolls DOWN.
  * Drag up → dy is negative (clientY decreases) → negating gives positive Clicks.
  *
- * SINGLE ON-DEVICE UAT CALIBRATION POINT: if the scroll direction is inverted
- * on the real device, flip this constant between 1 and -1. Do NOT change any
- * other logic — this is the sole scroll-sign control.
+ * Single on-device calibration point: if the scroll direction is inverted on
+ * the real device, flip this constant between 1 and -1. Do NOT change any other
+ * logic — this is the sole scroll-sign control.
  *
  * Formula: Clicks = (-dy * SCROLL_SIGN) / PIXELS_PER_NOTCH
  *   SCROLL_SIGN = 1:  drag up (dy<0) → (-(-120)*1)/120 = +1 → positive Clicks → natural scroll ✓
@@ -84,8 +79,8 @@ export function classifyTap(entry: PointerEntry, nowT: number): boolean {
 /**
  * Convert a net vertical CSS-pixel delta from a two-finger drag into Clicks.
  *
- * Natural scroll (D-09): drag up → dy negative → positive Clicks (remote
- * content scrolls down). SCROLL_SIGN is the single calibration constant.
+ * Natural scroll: drag up → dy negative → positive Clicks (remote content
+ * scrolls down). SCROLL_SIGN is the single calibration constant.
  *
  * Returns 0 when dy is less than one notch. Ensures at least ±1 when non-zero.
  */
@@ -103,22 +98,22 @@ export function clicksFromDelta(dy: number): number {
 type VirtualCursorHandle = ReturnType<typeof useVirtualCursor>;
 
 export interface TouchGesturesOptions {
-  /** Permission gate — ALL envelopes flow through this (S1, T-36-03). */
+  /** Permission gate — ALL envelopes flow through this. */
   addAction: (action: CommandAction) => void;
   /** When true, no envelope is emitted and all timers are suppressed. */
   disabled: boolean;
   /**
    * Returns the video container's BoundingClientRect at call time.
-   * Threaded from MainContent (S2) so the hook never needs a DOM reference.
+   * Threaded from MainContent so the hook never needs a DOM reference.
    */
   getRect: () => DOMRect | null;
   /**
    * Returns the intrinsic video dimensions {nW, nH} at call time.
-   * Threaded from MainContent (S2).
+   * Threaded from MainContent.
    */
   getIntrinsic: () => { nW: number; nH: number } | null;
   /**
-   * The useVirtualCursor instance driving one-finger move (TOUCH-01).
+   * The useVirtualCursor instance driving one-finger move.
    * Optional so the hook works in tests without a real cursor.
    */
   cursor?: VirtualCursorHandle;
@@ -143,10 +138,8 @@ type SingleFingerMode =
 // useTouchGestures hook
 
 /**
- * useTouchGestures
- *
- * Classifies pointer events into the locked gesture map and emits the correct
- * mouse.* command envelopes through the injected `addAction` gate.
+ * Classifies pointer events into the gesture map and emits the correct mouse.*
+ * command envelopes through the injected `addAction` gate.
  *
  * Returns React pointer-event handlers to spread onto the gesture overlay div.
  */
@@ -189,7 +182,7 @@ export function useTouchGestures({
     nowT: number;
   } | null>(null);
 
-  // rAF cleanup on unmount (mirrors MainContent 149-154 / S3)
+  // rAF and timer cleanup on unmount.
   useEffect(
     () => () => {
       if (scrollRafRef.current != null) {
@@ -202,7 +195,7 @@ export function useTouchGestures({
     [],
   );
 
-  // Emission helpers — all go through addAction (S1)
+  // Emission helpers — all go through addAction
 
   const emit = useCallback(
     (action: CommandAction) => {
@@ -232,7 +225,7 @@ export function useTouchGestures({
     [emit],
   );
 
-  // Schedule one rAF-coalesced scroll send (S3 — mirrors MainContent pendingMoveRef pattern)
+  // Schedule one rAF-coalesced scroll send.
   const scheduleScroll = useCallback(
     (dy: number) => {
       pendingScrollDyRef.current += dy;

@@ -356,10 +356,10 @@ describe("useFileOperations — requestDelete", () => {
 });
 
 // ---------------------------------------------------------------------------
-// performMoveOrCopy — isAncestor guard (T-27-04 regression)
+// performMoveOrCopy — isAncestor guard regression
 // ---------------------------------------------------------------------------
 
-describe("useFileOperations — performMoveOrCopy isAncestor guard (T-27-04)", () => {
+describe("useFileOperations — performMoveOrCopy isAncestor guard", () => {
   it("blocks moving a folder into its own descendant and calls toast.error(cannotMoveIntoSelf)", async () => {
     const requestFn = vi.fn().mockResolvedValue({});
     const toast = makeToast();

@@ -134,16 +134,11 @@ export interface UseScenariosPanelActionsReturn {
 }
 
 /**
- * Owns the ScenariosPanel channel, modal, AI draft, and all action handlers.
- * Moves the scenariosReducer pair, policy-preview modal state, draft-review
- * modal state, AI ephemeral state (lastAIPrompt, regenerateToken),
- * modalOpenRef + its sync effect, the useScenarioRunChannel subscription, and
- * all panel action handlers out of ScenariosPanel into this hook.
- *
- * Per D-06: mechanical behavior-preserving extraction — no logic rewrites,
- * protocol, or UX changes.
- * Per D-03: genuine cohesion seam — reducer + run channel + AI-draft handlers
- * extract cleanly, leaving the component with only segment/mode state + JSX.
+ * Owns the ScenariosPanel channel, modal, AI draft, and all action handlers:
+ * the scenariosReducer pair, policy-preview modal state, draft-review modal
+ * state, AI ephemeral state (lastAIPrompt, regenerateToken), modalOpenRef +
+ * its sync effect, the useScenarioRunChannel subscription, and all panel
+ * action handlers. This leaves the component with only segment/mode state + JSX.
  */
 export function useScenariosPanelActions(
   args: UseScenariosPanelActionsArgs,
@@ -164,36 +159,34 @@ export function useScenariosPanelActions(
   // Modal state for PolicyPreviewModal.
   const [modalState, setModalState] = useState<ModalState>(initialModalState);
 
-  // Phase 23 / Plan 23-09: DraftReviewModal state.
+  // DraftReviewModal state.
   const [draftModal, setDraftModal] =
     useState<DraftModalState>(initialDraftModal);
 
-  // Phase 23 / Plan 23-09: last operator prompt (captured at generate time;
-  // re-submitted verbatim by [Regenerate Draft]). Component-state only —
-  // never persisted, matches the D-04 ephemerality posture.
+  // Last operator prompt (captured at generate time; re-submitted verbatim by
+  // [Regenerate Draft]). Component-state only — never persisted.
   const [lastAIPrompt, setLastAIPrompt] = useState<string | null>(null);
 
-  // Phase 23 / Plan 23-09: regenerate signal — bumping this number causes
-  // the mounted ScenariosAISegment to re-fire generate(lastAIPrompt) via its
-  // own effect. The segment uses the AbortController inside its hook so any
-  // prior in-flight request is cancelled.
+  // Regenerate signal — bumping this number causes the mounted
+  // ScenariosAISegment to re-fire generate(lastAIPrompt) via its own effect.
+  // The segment uses the AbortController inside its hook so any prior in-flight
+  // request is cancelled.
   const [regenerateToken, setRegenerateToken] = useState(0);
 
   // Keep a stable ref to the active modal state so the broadcast handler does
-  // not need to re-mount on every modal mutation. (RESEARCH Risk/A1: these
-  // must stay co-located with modalState to prevent stale closure in onBroadcast.)
+  // not need to re-mount on every modal mutation. The ref must stay co-located
+  // with modalState to prevent a stale closure in onBroadcast.
   const modalOpenRef = useRef<boolean>(false);
   useEffect(() => {
     modalOpenRef.current = modalState.open;
   }, [modalState.open]);
 
   // Channel broadcast handler. Dispatches into the reducer; surfaces the
-  // single-in-flight rejection as a Toast (D-22-11).
-  // useCallback wrapping preserved from the original to avoid re-subscribe
-  // on every render (RESEARCH Pitfall 2).
+  // single-in-flight rejection as a Toast. The useCallback wrapping avoids
+  // re-subscribing on every render.
   const onBroadcast = useCallback(
     (msg: ScenarioRunBroadcast): void => {
-      // D-22-11: single-in-flight rejection. Seqless error envelopes with the
+      // Single-in-flight rejection. Seqless error envelopes with the
       // run_in_progress message land here; surface as a Toast and stay in the
       // modal so the operator can [Dismiss] to back out.
       if (msg.type === "error" && msg.message === "run_in_progress") {
@@ -212,9 +205,9 @@ export function useScenariosPanelActions(
     onBroadcast,
   });
 
-  // Library → modal opener flow per D-22-07 + RUN-01.
-  // The library row already holds the full Scenario from the index payload, so
-  // we hand it straight to the modal and only the policy preview round-trips.
+  // Library → modal opener flow. The library row already holds the full
+  // Scenario from the index payload, so we hand it straight to the modal and
+  // only the policy preview round-trips.
   const handleRunClick = useCallback(
     async (scenario: Scenario) => {
       setModalState({
@@ -311,13 +304,13 @@ export function useScenariosPanelActions(
     setSegment("history");
   }, [setMode, setSegment]);
 
-  // Phase 23 / Plan 23-09 — AI draft flow handlers
+  // AI draft flow handlers
 
   // ScenariosAISegment → onDraftReady. Opens DraftReviewModal with the
   // draft payload. Quota piggyback stays internal to the AI segment.
-  // Phase 23 / Plan 23-11 (AI-10): `totalTokens` is the OpenRouter per-call
-  // usage captured at draft time — stashed on the modal state so
-  // [Accept and save] can forward it as `created_via_ai_token_count`.
+  // `totalTokens` is the OpenRouter per-call usage captured at draft time —
+  // stashed on the modal state so [Accept and save] can forward it as
+  // `created_via_ai_token_count`.
   const handleDraftReady = useCallback(
     (draft: DraftResponse["draft"], totalTokens: number) => {
       setDraftModal({ open: true, draft, totalTokens, loading: false });
@@ -332,11 +325,11 @@ export function useScenariosPanelActions(
     setLastAIPrompt(prompt);
   }, []);
 
-  // DraftReviewModal [Accept and save]. D-11: strip `dry_intent_warning`
-  // from every step via destructure-rest BEFORE POSTing — guarantees the
-  // saved scenario row carries zero AI-draft-time annotations. Mutation-
-  // free: the in-memory draft state retains the warning so if the operator
-  // re-opens the modal the badge still renders.
+  // DraftReviewModal [Accept and save]. Strip `dry_intent_warning` from every
+  // step via destructure-rest BEFORE POSTing — guarantees the saved scenario
+  // row carries zero AI-draft-time annotations. Mutation-free: the in-memory
+  // draft state retains the warning so if the operator re-opens the modal the
+  // badge still renders.
   const handleAcceptDraft = useCallback(async () => {
     if (!draftModal.draft) return;
     setDraftModal((prev) => ({ ...prev, loading: true }));
@@ -352,10 +345,10 @@ export function useScenariosPanelActions(
         description: draft.description,
         command_steps: cleanedSteps,
         created_via_ai: true,
-        // Phase 23 / Plan 23-11 (AI-10): forward the OpenRouter per-call
-        // token total so backend persists it on the scenarios row and stamps
-        // scenario_runs.total_ai_gen_tokens at run start. Omit entirely when
-        // null so the backend default applies (rather than sending 0).
+        // Forward the OpenRouter per-call token total so the backend persists
+        // it on the scenarios row and stamps scenario_runs.total_ai_gen_tokens
+        // at run start. Omit entirely when null so the backend default applies
+        // (rather than sending 0).
         ...(totalTokens != null
           ? { created_via_ai_token_count: totalTokens }
           : {}),
@@ -395,8 +388,8 @@ export function useScenariosPanelActions(
 
   // DraftReviewModal [Regenerate Draft]. Closes the modal + bumps the
   // regenerate token so the ScenariosAISegment effect re-fires generate()
-  // with `lastAIPrompt`. If the editor takeover has dirty state (D-03),
-  // the dirty-guard fires inside the editor when [← Back] is clicked; the
+  // with `lastAIPrompt`. If the editor takeover has dirty state, the
+  // dirty-guard fires inside the editor when [← Back] is clicked; the
   // regenerate flow itself does not touch the editor.
   const handleRegenerateDraft = useCallback(() => {
     setDraftModal(initialDraftModal);
