@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react";
-// S-02c: streamdown CSS pulled into this lazy chunk so it only loads when the AI
+// streamdown CSS is pulled into this lazy chunk so it only loads when the AI
 // panel is first opened, removing mermaid-adjacent CSS from the main bundle.
 import "streamdown/styles.css";
 import { useVisualViewport } from "src/pages/DeviceControl/hooks/useVisualViewport";

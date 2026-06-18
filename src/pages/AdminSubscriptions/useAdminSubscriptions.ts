@@ -37,8 +37,8 @@ export function useAdminSubscriptions(): UseAdminSubscriptionsReturn {
   const { t } = useTranslation("adminSubscriptions");
   const toast = useToast();
 
-  // RC-02: use plans from the global SubscriptionProvider context instead of
-  // fetching /plans separately (eliminated a redundant 4th /plans call on mount).
+  // Use plans from the global SubscriptionProvider context instead of fetching
+  // /plans separately (eliminates a redundant /plans call on mount).
   const { plans } = useSubscription();
 
   const [loading, setLoading] = useState(false);

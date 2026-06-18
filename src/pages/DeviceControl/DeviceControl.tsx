@@ -479,7 +479,7 @@ function DeviceControl({ wsUrl }: CommandWebSocketProps) {
 
   const overallDisabled = !connected || permissionsLoading || !permissions;
 
-  // T-37-WIRE-01: permission gate for mobile typing (access_keyboard → GestureToolbar)
+  // Permission gate for mobile typing (access_keyboard → GestureToolbar)
   const canUseKeyboard = !!permissions?.access_keyboard;
 
   // Tracks whether the Assistant input is focused on mobile — drives sheet forceFullHeight

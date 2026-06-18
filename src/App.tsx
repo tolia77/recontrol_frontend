@@ -17,13 +17,13 @@ import Spinner from "src/components/ui/Spinner";
 import ToastProvider from "src/components/ui/Toast";
 import SubscriptionProvider from "src/contexts/SubscriptionContext";
 
-// S-02a: admin pages lazy-loaded — non-admins never download these chunks
+// Admin pages lazy-loaded — non-admins never download these chunks
 const AdminUsers = lazy(() => import("src/pages/AdminUsers/AdminUsers"));
 const AdminSubscriptions = lazy(() => import("src/pages/AdminSubscriptions/AdminSubscriptions"));
 const AdminDevices = lazy(() => import("src/pages/AdminDevices/AdminDevices"));
 const AdminAiUsage = lazy(() => import("src/pages/AdminAiUsage/AdminAiUsage"));
 
-// S-02b: DeviceControl lazy-loaded — heavy page, only loaded when user navigates there
+// DeviceControl lazy-loaded — heavy page, only loaded when user navigates there
 const DeviceControl = lazy(() => import("src/pages/DeviceControl/DeviceControl"));
 
 const pageFallback = (
@@ -33,7 +33,7 @@ const pageFallback = (
 );
 
 function App() {
-  // S-01r: SubscriptionProvider wraps the router (not a route element) so it
+  // SubscriptionProvider wraps the router (not a route element) so it
   // mounts once per app session and stays mounted across all routes — including
   // the standalone /device-control route, whose gates consume it. ToastProvider
   // sits outermost so toasts are available everywhere.
